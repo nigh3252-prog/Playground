@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playground File Index</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.32), transparent 28rem),
+        radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.25), transparent 24rem),
+        #111827;
+    }
+
+    main {
+      width: min(100%, 52rem);
+      padding: clamp(1.5rem, 5vw, 3rem);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 1.5rem;
+      background: rgba(17, 24, 39, 0.78);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(18px);
+    }
+
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    p {
+      margin: 0 0 2rem;
+      color: #cbd5e1;
+      font-size: 1.05rem;
+    }
+
+    ul {
+      display: grid;
+      gap: 0.85rem;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.95rem;
+      color: #f8fafc;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.06);
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    a::after {
+      content: "Open →";
+      flex: 0 0 auto;
+      color: #93c5fd;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    a:hover,
+    a:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(147, 197, 253, 0.7);
+      background: rgba(59, 130, 246, 0.15);
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Playground File Index</h1>
+    <p>Open any file in this folder from one place.</p>
+    <ul>
+      <li><a href="fusion-lab-v2.html">fusion-lab-v2.html</a></li>
+      <li><a href="melee_combat_director_lab_v6.html">melee_combat_director_lab_v6.html</a></li>
+      <li><a href="pocket_hole_hoarder_storage_fix.html">pocket_hole_hoarder_storage_fix.html</a></li>
+      <li><a href="punch-lab.html">punch-lab.html</a></li>
+      <li><a href="southpoint.html">southpoint.html</a></li>
+      <li><a href="sudden-impact-pilebunker.html">sudden-impact-pilebunker.html</a></li>
+      <li><a href="threejs_midair_lifted_ground_slice_v1.html">threejs_midair_lifted_ground_slice_v1.html</a></li>
+    </ul>
+  </main>
+</body>
+</html>
