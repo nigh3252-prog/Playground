@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Phone Melee Combat Director Lab v6</title>
+<style>
+  :root {
+    --panel-bg: rgba(13, 16, 24, 0.88);
+    --panel-border: rgba(255,255,255,0.16);
+    --text: #f2f5ff;
+    --muted: #aeb7d1;
+    --accent: #8ec5ff;
+    --danger: #ff7777;
+    --good: #8dffbd;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #10131d;
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    touch-action: none;
+    user-select: none;
+  }
+  #game {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    background: radial-gradient(circle at 50% 50%, #23283b, #10131d 68%, #080a0f);
+  }
+  #topBar {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .btn, select, input[type="range"] {
+    pointer-events: auto;
+  }
+  .btn {
+    border: 1px solid var(--panel-border);
+    background: rgba(24, 30, 45, 0.92);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 9px 11px;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.22);
+  }
+  .btn:active { transform: translateY(1px); }
+  #titlePill {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--panel-border);
+    background: rgba(18, 23, 34, 0.82);
+    border-radius: 14px;
+    padding: 8px 10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.22);
+  }
+  #titlePill strong { display:block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #titlePill span { display:block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #panel {
+    position: fixed;
+    top: 58px;
+    left: 8px;
+    right: 8px;
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+    z-index: 9;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    box-shadow: 0 12px 36px rgba(0,0,0,.36);
+    padding: 10px;
+    backdrop-filter: blur(8px);
+  }
+  #panel.collapsed { display: none; }
+  .sectionTitle {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin: 8px 4px 6px;
+  }
+  .modeGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .modeBtn {
+    min-height: 43px;
+    padding: 7px 6px;
+    font-size: 11px;
+    line-height: 1.15;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.055);
+    color: var(--text);
+  }
+  .modeBtn.active {
+    outline: 2px solid var(--accent);
+    background: rgba(142,197,255,.18);
+  }
+  .sliderRow {
+    display: grid;
+    grid-template-columns: 118px 1fr 42px;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 2px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  input[type="range"] { width: 100%; }
+  .toggleRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 2px;
+  }
+  .smallNote {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.35;
+    margin: 8px 3px 2px;
+  }
+  #hud {
+    position: fixed;
+    left: 8px;
+    bottom: 8px;
+    right: 8px;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .hudCard.wide { grid-column: 1 / -1; }
+  .hudCard {
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(8, 10, 15, .62);
+    border-radius: 12px;
+    padding: 7px 9px;
+    font-size: 11px;
+    color: var(--muted);
+    min-height: 34px;
+  }
+  .hudCard strong { color: var(--text); }
+  #joystickBase, #joystickKnob, #attackBase, #attackKnob {
+    position: fixed;
+    z-index: 4;
+    border-radius: 999px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    display: none;
+  }
+  #joystickBase, #attackBase {
+    width: 112px;
+    height: 112px;
+    border: 2px solid rgba(255,255,255,.24);
+    background: rgba(255,255,255,.05);
+    box-shadow: inset 0 0 24px rgba(255,255,255,.06), 0 6px 24px rgba(0,0,0,.25);
+  }
+  #joystickKnob, #attackKnob {
+    width: 46px;
+    height: 46px;
+    border: 2px solid rgba(255,255,255,.36);
+    background: rgba(142,197,255,.35);
+  }
+  #attackBase { border-color: rgba(255,227,114,.32); background: rgba(255,227,114,.055); }
+  #attackKnob { border-color: rgba(255,227,114,.44); background: rgba(255,227,114,.32); }
+  #errorScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    background: #190e12;
+    color: #ffe4e4;
+    padding: 18px;
+    display: none;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  #errorScreen h1 { font-size: 19px; margin: 0 0 10px; color: #ff9d9d; }
+  #errorScreen pre { white-space: pre-wrap; font-size: 12px; line-height: 1.35; }
+  @media (min-width: 760px) {
+    #panel { left: 12px; right: auto; width: 430px; }
+    #hud { width: 440px; right: auto; }
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="topBar">
+  <button class="btn" id="menuBtn">☰</button>
+  <div id="titlePill">
+    <strong id="modeTitle">Phone Melee Combat Lab</strong>
+    <span id="modeSubtitle">Walk with joystick. Quick drag toward enemies = attack. Flick away = dodge.</span>
+  </div>
+  <button class="btn" id="resetBtn">Reset</button>
+  <button class="btn" id="fullBtn">⛶</button>
+</div>
+
+<div id="panel">
+  <div class="sectionTitle">Encounter director style</div>
+  <div class="modeGrid" id="modeGrid"></div>
+
+  <div class="sectionTitle">Input lab</div>
+  <div class="modeGrid" id="controlGrid"></div>
+
+  <div class="sectionTitle">Tuning</div>
+  <div class="sliderRow"><label>Enemy count</label><input id="enemyCount" type="range" min="2" max="9" step="1" value="5"><span id="enemyCountVal">5</span></div>
+  <div class="sliderRow"><label>Pressure budget</label><input id="pressureBudget" type="range" min="0.5" max="4" step="0.25" value="1.5"><span id="pressureBudgetVal">1.5</span></div>
+  <div class="sliderRow"><label>Enemy speed</label><input id="enemySpeed" type="range" min="0.25" max="1.2" step="0.05" value="0.65"><span id="enemySpeedVal">0.65</span></div>
+  <div class="sliderRow"><label>Telegraph time</label><input id="telegraph" type="range" min="0.55" max="1.75" step="0.05" value="1"><span id="telegraphVal">1.0</span></div>
+  <div class="sliderRow"><label>Attack reach</label><input id="lunge" type="range" min="0.7" max="1.7" step="0.05" value="1"><span id="lungeVal">1.0</span></div>
+  <div class="sliderRow"><label>Auto-aim</label><input id="autoAim" type="range" min="0" max="1" step="0.05" value="0.45"><span id="autoAimVal">0.45</span></div>
+
+  <div class="sectionTitle">Display</div>
+  <div class="toggleRow">
+    <button class="btn" id="debugBtn">Debug: On</button>
+    <button class="btn" id="pauseBtn">Pause</button>
+    <button class="btn" id="helpBtn">Help</button>
+  </div>
+  <div class="smallNote" id="helpText">
+    Lab goal: keep player controls identical, then swap enemy director rules. Menu open pauses the fight. Clearing a wave cycles to the next director style. Yellow ring/token = enemy currently allowed to attack.
+  </div>
+</div>
+
+<div id="hud">
+  <div class="hudCard" id="hudA"><strong>HP</strong> 100</div>
+  <div class="hudCard" id="hudB"><strong>Director</strong> ready</div>
+  <div class="hudCard wide" id="hudC"><strong>Input lab</strong> ready</div>
+</div>
+<div id="joystickBase"></div>
+<div id="joystickKnob"></div>
+<div id="attackBase"></div>
+<div id="attackKnob"></div>
+<div id="errorScreen"><h1>Prototype error</h1><pre id="errorText"></pre></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const errorScreen = document.getElementById('errorScreen');
+  const errorText = document.getElementById('errorText');
+  function showError(message) {
+    errorScreen.style.display = 'block';
+    errorText.textContent = String(message && message.stack ? message.stack : message);
+  }
+  window.onerror = (msg, src, line, col, err) => showError(err || `${msg}\n${src}:${line}:${col}`);
+  window.onunhandledrejection = (event) => showError(event.reason || event);
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const menuBtn = document.getElementById('menuBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const fullBtn = document.getElementById('fullBtn');
+  const panel = document.getElementById('panel');
+  const modeGrid = document.getElementById('modeGrid');
+  const controlGrid = document.getElementById('controlGrid');
+  const modeTitle = document.getElementById('modeTitle');
+  const modeSubtitle = document.getElementById('modeSubtitle');
+  const hudA = document.getElementById('hudA');
+  const hudB = document.getElementById('hudB');
+  const hudC = document.getElementById('hudC');
+  const joyBase = document.getElementById('joystickBase');
+  const joyKnob = document.getElementById('joystickKnob');
+  const attackBase = document.getElementById('attackBase');
+  const attackKnob = document.getElementById('attackKnob');
+  const debugBtn = document.getElementById('debugBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const helpBtn = document.getElementById('helpBtn');
+  const helpText = document.getElementById('helpText');
+
+  const sliders = {
+    enemyCount: document.getElementById('enemyCount'),
+    pressureBudget: document.getElementById('pressureBudget'),
+    enemySpeed: document.getElementById('enemySpeed'),
+    telegraph: document.getElementById('telegraph'),
+    lunge: document.getElementById('lunge'),
+    autoAim: document.getElementById('autoAim')
+  };
+  const sliderVals = {
+    enemyCount: document.getElementById('enemyCountVal'),
+    pressureBudget: document.getElementById('pressureBudgetVal'),
+    enemySpeed: document.getElementById('enemySpeedVal'),
+    telegraph: document.getElementById('telegraphVal'),
+    lunge: document.getElementById('lungeVal'),
+    autoAim: document.getElementById('autoAimVal')
+  };
+
+  const modes = [
+    { id:'attackChain', label:'Attack Chain', subtitle:'Weak goblins. Tests quick-drag toward enemies.', desc:'Enemies are fragile and passive so the attack input gets the spotlight.' },
+    { id:'dodgeTraining', label:'Dodge Training', subtitle:'Slow mace tells. Tests flick-away dodges.', desc:'Mace goblins use readable windups and long punish windows.' },
+    { id:'chaos', label:'Chaos Test', subtitle:'No director. Everyone attacks independently.', desc:'A baseline that usually feels unfair. Useful because the other systems should beat it.' },
+    { id:'oneAttacker', label:'One Attacker', subtitle:'Absolum-like: one active melee threat.', desc:'Only one enemy may commit to an attack. Others orbit, posture, or wait.' },
+    { id:'battleCircle', label:'Battle Circle', subtitle:'Enemies occupy slots around the player.', desc:'A cinematic brawler circle. Looks surrounded, but only one attacker.' },
+    { id:'pressureBudget', label:'Pressure Budget', subtitle:'Big attacks cost more than small attacks.', desc:'A mace swing can consume the whole moment; small pokes can overlap.' },
+    { id:'nearFar', label:'Near / Far Groups', subtitle:'Only nearby group can attack.', desc:'Lets larger crowds exist while only a small near group threatens.' },
+    { id:'wavePacing', label:'Wave Pacing', subtitle:'Enemies enter over time.', desc:'The room composes pressure instead of dumping the whole fight immediately.' },
+    { id:'eliteSpotlight', label:'Elite Spotlight', subtitle:'Captain gets priority; grunts support.', desc:'A main threat plus noisy extras. Grunts get aggressive when the captain is stunned.' }
+  ];
+
+  const controlSchemes = [
+    { id:'oneZone', label:'One-Zone Flick', subtitle:'slow drag walk / toward attack / away dodge', desc:'One thumb does everything. Slow drag walks. Quick drag toward an enemy attacks. Quick flick away dodges.' },
+    { id:'tapSwipe', label:'Tap + Swipe', subtitle:'left walk / right tap attack / right swipe dodge', desc:'Left side is a walking joystick. Right side tap auto-attacks nearest; right side swipe dodges. This keeps movement reliable while testing Dragalia / Monster Hunter Now style verbs.' },
+    { id:'rightStick', label:'Right Attack Stick', subtitle:'left walk / right aim attack or dodge', desc:'Left side is the walking joystick. Right side is an attack/dodge gesture stick. Tap right side auto-attacks nearest.' },
+    { id:'arenaGesture', label:'Arena Gesture', subtitle:'no walk stick / tap attack / swipe dodge', desc:'Bleak Sword-ish: no continuous walking. Tap to attack nearest, swipe to dodge/step, enemies come to you.' }
+  ];
+
+  const typeDefs = {
+    grunt:   { name:'Grunt',   hp: 45,  r: 15, speed: 54, color:'#78d878', outline:'#c7ffc7', attacks:['slash'], score:10 },
+    dagger:  { name:'Dagger',  hp: 34,  r: 13, speed: 76, color:'#ff7272', outline:'#ffd0d0', attacks:['poke'], score:14 },
+    mace:    { name:'Mace',    hp: 88,  r: 18, speed: 42, color:'#d99a45', outline:'#ffe0ab', attacks:['maceOverhead'], score:24 },
+    rock:    { name:'Rock',    hp: 38,  r: 14, speed: 42, color:'#bd83ff', outline:'#ead3ff', attacks:['rockThrow'], score:16 },
+    captain: { name:'Captain', hp: 170, r: 23, speed: 38, color:'#f0c24d', outline:'#fff4b0', attacks:['captainSmash'], score:60 }
+  };
+
+  const attackDefs = {
+    slash: { name:'Slash', kind:'melee', range:48, tokenCost:1.0, windup:.58, active:.15, recovery:.50, cooldown:1.45, damage:10, arc:1.1, knock:.5 },
+    poke: { name:'Poke', kind:'melee', range:43, tokenCost:.75, windup:.36, active:.12, recovery:.36, cooldown:1.05, damage:7, arc:.75, knock:.25 },
+    maceOverhead: { name:'Mace Overhead', kind:'melee', range:67, tokenCost:1.75, windup:1.05, active:.18, recovery:.78, cooldown:1.95, damage:24, arc:.9, knock:1.0, wantsSolo:true },
+    rockThrow: { name:'Rock Throw', kind:'ranged', range:210, tokenCost:.5, windup:.78, active:.06, recovery:.60, cooldown:2.05, damage:8, projectile:true },
+    captainSmash: { name:'Captain Smash', kind:'melee', range:78, tokenCost:2.25, windup:1.20, active:.22, recovery:.95, cooldown:2.15, damage:30, arc:1.0, knock:1.2, wantsSolo:true }
+  };
+
+
+  const safeStorage = {
+    memory: Object.create(null),
+    get(key, fallback) {
+      if (Object.prototype.hasOwnProperty.call(this.memory, key)) return this.memory[key];
+      try {
+        const value = window.localStorage && window.localStorage.getItem(key);
+        return value == null ? fallback : value;
+      } catch (err) {
+        console.warn('Local storage unavailable; using in-memory settings only.', err);
+        return fallback;
+      }
+    },
+    set(key, value) {
+      const text = String(value);
+      this.memory[key] = text;
+      try {
+        if (window.localStorage) window.localStorage.setItem(key, text);
+        return true;
+      } catch (err) {
+        console.warn('Local storage save skipped; browser quota or content:// storage blocked it.', err);
+        return false;
+      }
+    }
+  };
+
+  const state = {
+    w: 1, h: 1, dpr: 1,
+    mode: safeStorage.get('meleeLabMode', 'oneAttacker'),
+    controlScheme: safeStorage.get('meleeLabControlScheme', 'oneZone'),
+    showDebug: true,
+    paused: false,
+    time: 0,
+    score: 0,
+    kills: 0,
+    waveStep: 0,
+    waveTimer: 0,
+    waveNumber: 1,
+    autoAdvanceCooldown: 0,
+    messageTimer: 0,
+    message: '',
+    enemies: [],
+    projectiles: [],
+    particles: [],
+    orbitSlots: [],
+    director: {
+      activeTokens: [],
+      cooldownPressure: 0,
+      lastThreatTime: -99,
+      nextId: 1
+    },
+    player: {
+      x: 0, y: 0, vx: 0, vy: 0, r: 16,
+      hp: 100, maxHp: 100,
+      state: 'normal', stateTime: 0,
+      invuln: 0, attackDir: {x:1,y:0},
+      attackWindup: .12, attackActive: .17, attackRecovery: .12,
+      attackHitIds: new Set(),
+      lastInput: 'none'
+    },
+    input: {
+      active: false,
+      id: null,
+      startX:0, startY:0, x:0, y:0,
+      startTime:0,
+      move: {x:0,y:0},
+      maxStick: 56
+    },
+    gesture: {
+      active: false,
+      id: null,
+      startX:0, startY:0, x:0, y:0,
+      startTime:0,
+      move: {x:0,y:0},
+      maxStick: 56
+    },
+    inputDebug: {
+      classification:'Ready', reason:'Try a control scheme.', speed:0, mag:0, duration:0,
+      flickAngle:'-', enemyAngle:'-', threatAngle:'-'
+    }
+  };
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function rand(min, max) { return min + Math.random() * (max - min); }
+  function len(x,y) { return Math.hypot(x,y); }
+  function norm(v) { const l = Math.hypot(v.x, v.y) || 1; return {x:v.x/l, y:v.y/l}; }
+  function dot(a,b) { return a.x*b.x + a.y*b.y; }
+  function dist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
+  function angleOf(v) { return Math.atan2(v.y, v.x); }
+  function angleDiff(a,b) { let d = a-b; while (d > Math.PI) d -= Math.PI*2; while (d < -Math.PI) d += Math.PI*2; return d; }
+  function format1(v) { return Number(v).toFixed(v % 1 === 0 ? 0 : 2).replace(/\.00$/, ''); }
+
+  function resize() {
+    state.dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+    state.w = window.innerWidth;
+    state.h = window.innerHeight;
+    canvas.width = Math.floor(state.w * state.dpr);
+    canvas.height = Math.floor(state.h * state.dpr);
+    ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+    if (!state.player.x) {
+      state.player.x = state.w * .5;
+      state.player.y = state.h * .58;
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function currentSettings() {
+    return {
+      enemyCount: parseInt(sliders.enemyCount.value, 10),
+      pressureBudget: parseFloat(sliders.pressureBudget.value),
+      enemySpeed: parseFloat(sliders.enemySpeed.value),
+      telegraph: parseFloat(sliders.telegraph.value),
+      lunge: parseFloat(sliders.lunge.value),
+      autoAim: parseFloat(sliders.autoAim.value)
+    };
+  }
+  function refreshSliderLabels() {
+    const s = currentSettings();
+    sliderVals.enemyCount.textContent = s.enemyCount;
+    sliderVals.pressureBudget.textContent = format1(s.pressureBudget);
+    sliderVals.enemySpeed.textContent = format1(s.enemySpeed);
+    sliderVals.telegraph.textContent = format1(s.telegraph);
+    sliderVals.lunge.textContent = format1(s.lunge);
+    sliderVals.autoAim.textContent = format1(s.autoAim);
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    safeStorage.set('meleeLabMode', mode);
+    for (const btn of modeGrid.querySelectorAll('.modeBtn')) btn.classList.toggle('active', btn.dataset.mode === mode);
+    const m = modes.find(x => x.id === mode) || modes[0];
+    modeTitle.textContent = m.label;
+    modeSubtitle.textContent = m.subtitle;
+    helpText.textContent = m.desc + '  Debug: yellow token ring = attacker permission, pale dots = orbit/slot targets.';
+    resetGame();
+  }
+
+  function buildModeButtons() {
+    for (const m of modes) {
+      const btn = document.createElement('button');
+      btn.className = 'modeBtn';
+      btn.dataset.mode = m.id;
+      btn.innerHTML = `<strong>${m.label}</strong><br><span>${m.subtitle}</span>`;
+      btn.addEventListener('click', () => setMode(m.id));
+      modeGrid.appendChild(btn);
+    }
+  }
+  buildModeButtons();
+
+  function setControlScheme(scheme) {
+    state.controlScheme = scheme;
+    safeStorage.set('meleeLabControlScheme', scheme);
+    for (const btn of controlGrid.querySelectorAll('.modeBtn')) btn.classList.toggle('active', btn.dataset.scheme === scheme);
+    const c = controlSchemes.find(x => x.id === scheme) || controlSchemes[0];
+    recordInputDebug('Control scheme', c.desc, 0, 0, 0, null);
+    state.player.lastInput = c.label;
+    hideTouchVisuals();
+  }
+
+  function buildControlButtons() {
+    for (const c of controlSchemes) {
+      const btn = document.createElement('button');
+      btn.className = 'modeBtn';
+      btn.dataset.scheme = c.id;
+      btn.innerHTML = `<strong>${c.label}</strong><br><span>${c.subtitle}</span>`;
+      btn.addEventListener('click', () => setControlScheme(c.id));
+      controlGrid.appendChild(btn);
+    }
+  }
+  buildControlButtons();
+
+  function spawnEnemy(type, x, y) {
+    const def = typeDefs[type];
+    const e = {
+      id: state.director.nextId++, type,
+      x, y, vx:0, vy:0, r:def.r,
+      hp:def.hp, maxHp:def.hp,
+      state:'approach', stateTime:0,
+      facing:{x:1,y:0},
+      cooldown: rand(.2, 1.1),
+      attack:null, token:null,
+      windup:0, active:0, recovery:0,
+      hitDone:false,
+      stunned:0,
+      nearEligible:true,
+      slotIndex:-1,
+      deniedTimer:0,
+      personality: rand(.85, 1.15)
+    };
+    state.enemies.push(e);
+    return e;
+  }
+
+  function spawnAround(types) {
+    const cx = state.w * .5;
+    const cy = state.h * .48;
+    const radius = Math.min(state.w, state.h) * .36;
+    types.forEach((type, i) => {
+      const a = -Math.PI * .72 + i * (Math.PI * 1.44 / Math.max(1, types.length-1));
+      const x = clamp(cx + Math.cos(a) * radius + rand(-18,18), 32, state.w-32);
+      const y = clamp(cy + Math.sin(a) * radius + rand(-18,18), 82, state.h-72);
+      spawnEnemy(type, x, y);
+    });
+  }
+
+  function modeEnemyTypes(mode, count) {
+    if (mode === 'attackChain') return Array.from({length: Math.max(4, count)}, () => 'grunt');
+    if (mode === 'dodgeTraining') return ['mace','mace','grunt','grunt'];
+    if (mode === 'chaos') return ['grunt','grunt','dagger','mace','rock','grunt','dagger','mace'].slice(0, count);
+    if (mode === 'oneAttacker') return ['grunt','grunt','mace','grunt','dagger','rock','grunt','mace'].slice(0, count);
+    if (mode === 'battleCircle') return ['grunt','grunt','grunt','dagger','mace','grunt','rock','dagger'].slice(0, count);
+    if (mode === 'pressureBudget') return ['grunt','mace','rock','dagger','grunt','mace','rock','dagger'].slice(0, count);
+    if (mode === 'nearFar') return ['grunt','grunt','dagger','mace','rock','grunt','mace','dagger','grunt'].slice(0, count);
+    if (mode === 'eliteSpotlight') return ['captain','grunt','grunt','dagger','grunt','rock','grunt'].slice(0, Math.max(4, Math.min(count, 7)));
+    if (mode === 'wavePacing') return ['grunt','grunt'];
+    return ['grunt','grunt','mace','dagger'].slice(0, count);
+  }
+
+  function resetGame() {
+    state.time = 0; state.score = 0; state.kills = 0; state.waveStep = 0; state.waveTimer = 0; state.waveNumber = 1; state.autoAdvanceCooldown = .35;
+    state.message = ''; state.messageTimer = 0;
+    state.enemies.length = 0; state.projectiles.length = 0; state.particles.length = 0;
+    state.director.activeTokens.length = 0; state.director.cooldownPressure = 0; state.director.lastThreatTime = -99; state.director.nextId = 1;
+    state.player.x = state.w * .5; state.player.y = state.h * .62;
+    state.player.vx = 0; state.player.vy = 0; state.player.hp = state.player.maxHp; state.player.state = 'normal'; state.player.stateTime = 0; state.player.invuln = 0; state.player.attackWindup = .12; state.player.attackActive = .17; state.player.attackRecovery = .12; state.player.attackHitIds.clear(); state.player.lastInput = 'ready';
+    recordInputDebug('Ready', 'Touch the playfield. Menu open pauses the fight. In Tap + Swipe, left side walks and right side attacks/dodges.', 0, 0, 0, null);
+    const s = currentSettings();
+    spawnAround(modeEnemyTypes(state.mode, s.enemyCount));
+    updateOrbitSlots();
+    announce('Reset: ' + (modes.find(m => m.id === state.mode)?.label || state.mode), 1.4);
+  }
+
+  function announce(msg, sec=1.2) { state.message = msg; state.messageTimer = sec; }
+
+  function isMenuOpen() { return !panel.classList.contains('collapsed'); }
+  function isGamePaused() { return state.paused || isMenuOpen(); }
+
+  function nextModeId() {
+    const index = Math.max(0, modes.findIndex(m => m.id === state.mode));
+    return modes[(index + 1) % modes.length].id;
+  }
+
+  function cycleEncounterStyle() {
+    const next = nextModeId();
+    const nextLabel = modes.find(m => m.id === next)?.label || next;
+    setMode(next);
+    announce('Wave clear → ' + nextLabel, 1.8);
+  }
+
+  function releaseToken(enemy) {
+    if (!enemy || !enemy.token) return;
+    const token = enemy.token;
+    state.director.activeTokens = state.director.activeTokens.filter(t => t !== token);
+    state.director.cooldownPressure += token.cost * .55;
+    enemy.token = null;
+  }
+
+  function removeDeadTokens() {
+    for (const e of state.enemies) {
+      if (e.hp <= 0 || e.state === 'dead' || e.stunned > 0) releaseToken(e);
+    }
+    state.director.activeTokens = state.director.activeTokens.filter(t => t.enemy && t.enemy.hp > 0 && t.enemy.state !== 'dead');
+  }
+
+  function countActiveKind(kind) {
+    return state.director.activeTokens.filter(t => t.kind === kind).length;
+  }
+  function activeCost() {
+    return state.director.activeTokens.reduce((sum, t) => sum + t.cost, 0);
+  }
+
+  function directorCanGrant(enemy, attack) {
+    if (!enemy || !attack) return false;
+    if (state.mode === 'chaos') return true;
+    const s = currentSettings();
+    const now = state.time;
+    const active = state.director.activeTokens;
+    const gap = state.mode === 'attackChain' ? 1.4 : state.mode === 'dodgeTraining' ? .85 : .48;
+    const kind = attack.kind;
+
+    if (state.mode === 'nearFar' && !enemy.nearEligible) return false;
+    if (state.mode === 'attackChain') return active.length < 1 && now - state.director.lastThreatTime > 1.35;
+    if (state.mode === 'dodgeTraining') return active.length < 1 && now - state.director.lastThreatTime > .75;
+    if (state.mode === 'oneAttacker' || state.mode === 'battleCircle' || state.mode === 'wavePacing') {
+      return active.length < 1 && now - state.director.lastThreatTime > gap;
+    }
+    if (state.mode === 'eliteSpotlight') {
+      const captainAlive = state.enemies.some(e => e.type === 'captain' && e.hp > 0 && e.stunned <= 0);
+      if (enemy.type !== 'captain' && captainAlive && active.length === 0) {
+        // Let grunts nip occasionally, but give the captain first claim on the stage.
+        if (Math.random() < .72) return false;
+      }
+      return active.length < 1 && now - state.director.lastThreatTime > .35;
+    }
+    if (state.mode === 'pressureBudget' || state.mode === 'nearFar') {
+      const maxBudget = s.pressureBudget;
+      if (activeCost() + state.director.cooldownPressure + attack.tokenCost > maxBudget) return false;
+      if (kind === 'melee' && countActiveKind('melee') >= (maxBudget >= 2.25 ? 2 : 1)) return false;
+      if (kind === 'ranged' && countActiveKind('ranged') >= 1) return false;
+      return now - state.director.lastThreatTime > .18;
+    }
+    return active.length < 1;
+  }
+
+  function grantToken(enemy, attack) {
+    if (state.mode === 'chaos') return null;
+    const token = { id: 't' + Math.random().toString(36).slice(2), enemy, attack, cost: attack.tokenCost, kind: attack.kind, started: state.time };
+    state.director.activeTokens.push(token);
+    enemy.token = token;
+    state.director.lastThreatTime = state.time;
+    return token;
+  }
+
+  function chooseAttack(enemy, d) {
+    const def = typeDefs[enemy.type];
+    let choices = def.attacks.map(id => attackDefs[id]);
+    if (enemy.type === 'rock' && d < 78) return null;
+    choices = choices.filter(a => d <= a.range + (a.kind === 'ranged' ? 55 : 18));
+    if (!choices.length) return null;
+    return choices[0];
+  }
+
+  function startEnemyAttack(enemy, attack) {
+    const s = currentSettings();
+    enemy.attack = attack;
+    enemy.state = 'windup';
+    enemy.stateTime = 0;
+    enemy.windup = attack.windup * s.telegraph;
+    enemy.active = attack.active;
+    enemy.recovery = attack.recovery;
+    enemy.hitDone = false;
+    enemy.facing = norm({x: state.player.x - enemy.x, y: state.player.y - enemy.y});
+    grantToken(enemy, attack);
+  }
+
+  function deniedBehavior(enemy, player, dt) {
+    enemy.deniedTimer -= dt;
+    if (enemy.deniedTimer <= 0) enemy.deniedTimer = rand(.4, 1.2);
+    if (state.mode === 'battleCircle') {
+      moveToOrbitSlot(enemy, player, dt);
+      return;
+    }
+    if (state.mode === 'nearFar' && !enemy.nearEligible) {
+      const away = norm({x: enemy.x - player.x, y: enemy.y - player.y});
+      const desired = 155;
+      const d = dist(enemy, player);
+      if (d < desired) steer(enemy, away.x, away.y, .7, dt);
+      else orbit(enemy, player, dt, .55);
+      return;
+    }
+    if (enemy.type === 'mace' || enemy.type === 'captain') orbit(enemy, player, dt, .38);
+    else if (enemy.type === 'rock') keepRange(enemy, player, dt, 175);
+    else orbit(enemy, player, dt, .65);
+  }
+
+  function steer(enemy, dx, dy, amount, dt) {
+    const def = typeDefs[enemy.type];
+    const s = currentSettings();
+    enemy.vx += dx * def.speed * s.enemySpeed * amount * 3.4 * dt;
+    enemy.vy += dy * def.speed * s.enemySpeed * amount * 3.4 * dt;
+  }
+
+  function approach(enemy, player, dt) {
+    const to = norm({x: player.x - enemy.x, y: player.y - enemy.y});
+    steer(enemy, to.x, to.y, 1, dt);
+  }
+
+  function orbit(enemy, player, dt, amount=.55) {
+    const toEnemy = {x: enemy.x - player.x, y: enemy.y - player.y};
+    const d = Math.hypot(toEnemy.x, toEnemy.y) || 1;
+    const away = {x: toEnemy.x/d, y: toEnemy.y/d};
+    const sideSign = enemy.id % 2 ? 1 : -1;
+    const tangent = {x: -away.y * sideSign, y: away.x * sideSign};
+    const desired = enemy.type === 'rock' ? 180 : enemy.type === 'mace' ? 92 : 70;
+    const radial = (d < desired - 12) ? 1 : (d > desired + 28 ? -1 : 0);
+    const dir = norm({x: tangent.x * .85 - away.x * radial, y: tangent.y * .85 - away.y * radial});
+    steer(enemy, dir.x, dir.y, amount, dt);
+    enemy.facing = norm({x: player.x - enemy.x, y: player.y - enemy.y});
+  }
+
+  function keepRange(enemy, player, dt, desired) {
+    const away = norm({x: enemy.x - player.x, y: enemy.y - player.y});
+    const d = dist(enemy, player);
+    if (d < desired - 20) steer(enemy, away.x, away.y, 1, dt);
+    else if (d > desired + 35) steer(enemy, -away.x, -away.y, .7, dt);
+    else orbit(enemy, player, dt, .35);
+    enemy.facing = norm({x: player.x - enemy.x, y: player.y - enemy.y});
+  }
+
+  function updateOrbitSlots() {
+    state.orbitSlots.length = 0;
+    const count = 8;
+    const radius = 92;
+    for (let i=0; i<count; i++) {
+      const a = -Math.PI * .9 + i * (Math.PI*1.8/(count-1));
+      state.orbitSlots.push({a, radius, enemyId:null});
+    }
+  }
+
+  function assignSlots() {
+    if (state.mode !== 'battleCircle') return;
+    for (const slot of state.orbitSlots) slot.enemyId = null;
+    const live = state.enemies.filter(e => e.hp > 0 && e.state !== 'dead');
+    live.sort((a,b) => dist(a, state.player) - dist(b, state.player));
+    live.forEach((e, i) => { e.slotIndex = i % state.orbitSlots.length; state.orbitSlots[e.slotIndex].enemyId = e.id; });
+  }
+
+  function moveToOrbitSlot(enemy, player, dt) {
+    if (enemy.slotIndex < 0 || !state.orbitSlots[enemy.slotIndex]) { orbit(enemy, player, dt); return; }
+    const slot = state.orbitSlots[enemy.slotIndex];
+    const x = player.x + Math.cos(slot.a) * slot.radius;
+    const y = player.y + Math.sin(slot.a) * slot.radius;
+    const to = norm({x: x - enemy.x, y: y - enemy.y});
+    const d = Math.hypot(x-enemy.x, y-enemy.y);
+    if (d > 12) steer(enemy, to.x, to.y, .9, dt);
+    else orbit(enemy, player, dt, .18);
+    enemy.facing = norm({x: player.x - enemy.x, y: player.y - enemy.y});
+  }
+
+  function updateNearFar() {
+    const live = state.enemies.filter(e => e.hp > 0 && e.state !== 'dead');
+    live.sort((a,b) => dist(a, state.player) - dist(b, state.player));
+    const nearSize = state.mode === 'nearFar' ? 3 : 999;
+    live.forEach((e, i) => e.nearEligible = i < nearSize);
+  }
+
+  function enemyHit(enemy, damage, knockDir, stun=.18) {
+    enemy.hp -= damage;
+    enemy.stunned = Math.max(enemy.stunned, stun);
+    enemy.state = enemy.hp <= 0 ? 'dead' : 'stunned';
+    enemy.stateTime = 0;
+    enemy.vx += knockDir.x * 155;
+    enemy.vy += knockDir.y * 155;
+    releaseToken(enemy);
+    burst(enemy.x, enemy.y, enemy.hp <= 0 ? '#ffffff' : '#8ec5ff', enemy.hp <= 0 ? 16 : 8);
+    if (enemy.hp <= 0) {
+      state.score += typeDefs[enemy.type].score;
+      state.kills++;
+      announce('KO: ' + typeDefs[enemy.type].name, .55);
+    }
+  }
+
+  function burst(x,y,color,count) {
+    for (let i=0; i<count; i++) {
+      const a = rand(0, Math.PI*2);
+      const sp = rand(40, 210);
+      state.particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:rand(.25,.65),max: .65, color});
+    }
+  }
+
+  function playerTakeDamage(dmg, from) {
+    const p = state.player;
+    if (p.invuln > 0 || p.state === 'dodging') {
+      state.score += 1;
+      announce('Dodged!', .45);
+      return;
+    }
+    p.hp = Math.max(0, p.hp - dmg);
+    const away = norm({x:p.x - from.x, y:p.y - from.y});
+    p.state = 'hurt';
+    p.stateTime = 0;
+    p.vx = away.x * 165;
+    p.vy = away.y * 165;
+    p.invuln = .55;
+    burst(p.x, p.y, '#ff7777', 10);
+    announce('Hit for ' + dmg, .65);
+    if (p.hp <= 0) announce('Player down — tap Reset', 3);
+  }
+
+
+
+  function startPlayerAttack(dir) {
+    const p = state.player;
+    if (p.hp <= 0 || p.state !== 'normal') return;
+    const s = currentSettings();
+    let d = norm(dir);
+    const target = findAutoAimTarget(d, 155);
+    if (target && s.autoAim > 0) {
+      const to = norm({x: target.x - p.x, y: target.y - p.y});
+      d = norm({x: d.x * (1-s.autoAim) + to.x * s.autoAim, y: d.y * (1-s.autoAim) + to.y * s.autoAim});
+    }
+    p.state = 'attackWindup';
+    p.stateTime = 0;
+    p.attackDir = d;
+    p.attackHitIds.clear();
+    p.attackWindup = .13;
+    p.attackActive = .17;
+    p.attackRecovery = .13;
+    p.invuln = .03;
+    // Wind up is rooted; the hit comes slightly later so attacks have readable timing.
+    p.vx = 0;
+    p.vy = 0;
+    p.lastInput = 'Wind up';
+    announce('Wind up', .25);
+  }
+
+  function startPlayerDodge(dir) {
+    const p = state.player;
+    if (p.hp <= 0) return;
+    const d = norm(dir);
+    p.state = 'dodging';
+    p.stateTime = 0;
+    p.attackDir = d;
+    p.invuln = .34;
+    p.vx = d.x * 370;
+    p.vy = d.y * 370;
+    p.lastInput = 'Dodge';
+    announce('Dodge', .35);
+  }
+
+
+
+  function findAutoAimTarget(dir, range) {
+    let best = null, bestScore = -999;
+    const p = state.player;
+    for (const e of state.enemies) {
+      if (e.hp <= 0 || e.state === 'dead') continue;
+      const vx = e.x-p.x, vy = e.y-p.y;
+      const d = Math.hypot(vx,vy);
+      if (d > range) continue;
+      const nd = {x:vx/(d||1), y:vy/(d||1)};
+      const score = dot(dir, nd) * 2 - d / range;
+      if (score > bestScore && dot(dir, nd) > .25) { best = e; bestScore = score; }
+    }
+    return best;
+  }
+
+  function nearestEnemy() {
+    let best = null, bd = Infinity;
+    for (const e of state.enemies) {
+      if (e.hp <= 0 || e.state === 'dead') continue;
+      const d = dist(e, state.player);
+      if (d < bd) { bd = d; best = e; }
+    }
+    return best;
+  }
+
+  function nearestThreat() {
+    let best = null, bd = Infinity;
+    const p = state.player;
+    for (const e of state.enemies) {
+      if (e.hp <= 0 || e.state === 'dead') continue;
+      let weight = (e.state === 'windup' || e.state === 'active' || e.token) ? .55 : 1.0;
+      const d = dist(e, p) * weight;
+      if (d < bd) { bd = d; best = e; }
+    }
+    for (const pr of state.projectiles) {
+      const d = dist(pr, p) * .6;
+      if (d < bd) { bd = d; best = pr; }
+    }
+    return best;
+  }
+
+  function degreesFromVector(v) {
+    if (!v) return '-';
+    const deg = Math.round((Math.atan2(v.y, v.x) * 180 / Math.PI + 360) % 360);
+    return deg + '°';
+  }
+
+  function dirToNearestEnemy(fallbackDir) {
+    const enemy = nearestEnemy();
+    if (!enemy) return norm(fallbackDir || state.player.attackDir || {x:1,y:0});
+    return norm({x: enemy.x - state.player.x, y: enemy.y - state.player.y});
+  }
+
+  function recordInputDebug(classification, reason, speed, mag, duration, dir) {
+    const enemy = nearestEnemy();
+    const threat = nearestThreat();
+    const p = state.player;
+    state.inputDebug = {
+      classification,
+      reason,
+      speed: Math.round(speed || 0),
+      mag: Math.round(mag || 0),
+      duration: Math.round(duration || 0),
+      flickAngle: dir ? degreesFromVector(dir) : '-',
+      enemyAngle: enemy ? degreesFromVector({x:enemy.x-p.x, y:enemy.y-p.y}) : '-',
+      threatAngle: threat ? degreesFromVector({x:threat.x-p.x, y:threat.y-p.y}) : '-'
+    };
+  }
+
+  function classifyGesture(dx, dy, duration, scheme) {
+    const mag = Math.hypot(dx, dy);
+    const secs = Math.max(.001, duration / 1000);
+    const speed = mag / secs;
+    const dir = mag > 0 ? {x: dx/mag, y: dy/mag} : norm(state.player.attackDir || {x:1,y:0});
+    const enemy = nearestEnemy();
+    const threat = nearestThreat();
+    const toEnemy = enemy ? norm({x: enemy.x - state.player.x, y: enemy.y - state.player.y}) : null;
+    const toThreat = threat ? norm({x: threat.x - state.player.x, y: threat.y - state.player.y}) : toEnemy;
+    const towardEnemy = toEnemy ? dot(dir, toEnemy) : 0;
+    const awayThreat = toThreat ? dot(dir, toThreat) < -.22 : false;
+    const enemyNear = enemy ? dist(enemy, state.player) < 270 : false;
+
+    if (scheme === 'tapSwipe' || scheme === 'arenaGesture') {
+      if (duration < 230 && mag < 24) {
+        const attackDir = dirToNearestEnemy(state.player.attackDir);
+        recordInputDebug('ATTACK', 'Tap = auto-attack nearest enemy.', speed, mag, duration, attackDir);
+        return { type:'attack', dir: attackDir };
+      }
+      if (duration < 420 && mag > 38) {
+        recordInputDebug('DODGE', 'Swipe = dodge/step. This scheme does not use swipe-to-attack.', speed, mag, duration, dir);
+        return { type:'dodge', dir };
+      }
+      recordInputDebug('WALK / NONE', mag < 24 ? 'Touch was too long to be a tap.' : 'Swipe was too slow/long; treated as movement only.', speed, mag, duration, dir);
+      return null;
+    }
+
+    if (scheme === 'rightStick') {
+      if (duration < 240 && mag < 24) {
+        const attackDir = dirToNearestEnemy(state.player.attackDir);
+        recordInputDebug('ATTACK', 'Right-side tap = auto-attack nearest enemy.', speed, mag, duration, attackDir);
+        return { type:'attack', dir: attackDir };
+      }
+      if (duration < 520 && mag > 28) {
+        if (awayThreat) {
+          recordInputDebug('DODGE', 'Right-stick flick is away from the nearest threat.', speed, mag, duration, dir);
+          return { type:'dodge', dir };
+        }
+        recordInputDebug('ATTACK', 'Right-stick drag/release = aimed melee attack.', speed, mag, duration, dir);
+        return { type:'attack', dir };
+      }
+      recordInputDebug('NONE', 'Right-side gesture was too slow/short.', speed, mag, duration, dir);
+      return null;
+    }
+
+    // One-zone: the experimental all-in-one control.
+    if (duration > 360 || mag < 38) {
+      recordInputDebug('WALK / NONE', duration > 360 ? 'Release was slow, so it stays walking only.' : 'Drag was too short for attack/dodge.', speed, mag, duration, dir);
+      return null;
+    }
+    if (towardEnemy > .34 && enemyNear) {
+      recordInputDebug('ATTACK', 'Quick drag points toward nearest enemy.', speed, mag, duration, dir);
+      return {type:'attack', dir};
+    }
+    recordInputDebug('DODGE', enemy ? 'Quick drag is not toward the enemy, so it becomes a dodge.' : 'No enemy found, so flick becomes dodge.', speed, mag, duration, dir);
+    return {type:'dodge', dir};
+  }
+
+  function showStick(base, knob, x, y) {
+    base.style.display = 'block'; knob.style.display = 'block';
+    base.style.left = x + 'px'; base.style.top = y + 'px';
+    knob.style.left = x + 'px'; knob.style.top = y + 'px';
+  }
+  function updateStickVisual(stick, knob) {
+    const dx = stick.x - stick.startX, dy = stick.y - stick.startY;
+    const m = Math.hypot(dx, dy);
+    const cl = Math.min(stick.maxStick, m);
+    const nx = m ? dx/m : 0, ny = m ? dy/m : 0;
+    stick.move = {x: nx * (cl/stick.maxStick), y: ny * (cl/stick.maxStick)};
+    knob.style.left = (stick.startX + nx * cl) + 'px';
+    knob.style.top = (stick.startY + ny * cl) + 'px';
+  }
+  function hideTouchVisuals() {
+    joyBase.style.display = 'none'; joyKnob.style.display = 'none';
+    attackBase.style.display = 'none'; attackKnob.style.display = 'none';
+    state.input.active = false; state.input.id = null; state.input.move = {x:0,y:0};
+    state.gesture.active = false; state.gesture.id = null; state.gesture.move = {x:0,y:0};
+  }
+
+  function pointerDown(ev) {
+    if (ev.target.closest && ev.target.closest('#panel, #topBar')) return;
+    const scheme = state.controlScheme;
+    const rightSide = ev.clientX > state.w * .52;
+    const useGesture = scheme === 'arenaGesture' || (scheme === 'rightStick' && rightSide) || (scheme === 'tapSwipe' && rightSide);
+    const stick = useGesture ? state.gesture : state.input;
+    if (stick.active) return;
+    ev.preventDefault();
+    stick.active = true;
+    stick.id = ev.pointerId;
+    stick.startX = stick.x = ev.clientX;
+    stick.startY = stick.y = ev.clientY;
+    stick.startTime = performance.now();
+    stick.move = {x:0,y:0};
+    if (useGesture) showStick(attackBase, attackKnob, ev.clientX, ev.clientY);
+    else showStick(joyBase, joyKnob, ev.clientX, ev.clientY);
+    try { canvas.setPointerCapture(ev.pointerId); } catch(e) {}
+  }
+  function pointerMove(ev) {
+    ev.preventDefault();
+    if (state.input.active && ev.pointerId === state.input.id) {
+      const i = state.input;
+      i.x = ev.clientX; i.y = ev.clientY;
+      updateStickVisual(i, joyKnob);
+      return;
+    }
+    if (state.gesture.active && ev.pointerId === state.gesture.id) {
+      const g = state.gesture;
+      g.x = ev.clientX; g.y = ev.clientY;
+      updateStickVisual(g, attackKnob);
+    }
+  }
+  function finishPointer(stick, ev, base, knob, allowAction) {
+    const dx = ev.clientX - stick.startX, dy = ev.clientY - stick.startY;
+    const duration = performance.now() - stick.startTime;
+    if (allowAction) {
+      const result = classifyGesture(dx, dy, duration, state.controlScheme);
+      if (result) {
+        if (result.type === 'attack') startPlayerAttack(result.dir);
+        else startPlayerDodge(result.dir);
+      }
+    }
+    stick.active = false; stick.id = null; stick.move = {x:0,y:0};
+    base.style.display = 'none'; knob.style.display = 'none';
+  }
+  function pointerUp(ev) {
+    ev.preventDefault();
+    if (state.input.active && ev.pointerId === state.input.id) {
+      const scheme = state.controlScheme;
+      const allowAction = scheme === 'oneZone';
+      finishPointer(state.input, ev, joyBase, joyKnob, allowAction);
+      return;
+    }
+    if (state.gesture.active && ev.pointerId === state.gesture.id) {
+      finishPointer(state.gesture, ev, attackBase, attackKnob, true);
+    }
+  }
+  canvas.addEventListener('pointerdown', pointerDown);
+  canvas.addEventListener('pointermove', pointerMove);
+  canvas.addEventListener('pointerup', pointerUp);
+  canvas.addEventListener('pointercancel', pointerUp);
+
+  function updatePlayer(dt) {
+    const p = state.player;
+    if (p.hp <= 0) return;
+    p.invuln = Math.max(0, p.invuln - dt);
+    p.stateTime += dt;
+
+    if (p.state === 'normal') {
+      const allowMove = state.controlScheme !== 'arenaGesture';
+      const m = (allowMove && state.input.active) ? state.input.move : {x:0, y:0};
+      const speed = state.controlScheme === 'rightStick' ? 126 : 118;
+      // Walking movement: direct velocity, no accumulated air-hockey slide.
+      p.vx = m.x * speed;
+      p.vy = m.y * speed;
+      if (Math.hypot(m.x,m.y) > .2) p.attackDir = norm(m);
+    } else if (p.state === 'attackWindup') {
+      p.vx = 0;
+      p.vy = 0;
+      if (p.stateTime >= p.attackWindup) {
+        const s = currentSettings();
+        p.state = 'attacking';
+        p.stateTime = 0;
+        p.invuln = .06;
+        // Short committed step during active frames, not a dash-through.
+        p.vx = p.attackDir.x * 72 * s.lunge;
+        p.vy = p.attackDir.y * 72 * s.lunge;
+        p.lastInput = 'Attack';
+        announce('Attack', .25);
+      }
+    } else if (p.state === 'attacking') {
+      if (p.stateTime <= p.attackActive) resolvePlayerAttack();
+      if (p.stateTime > p.attackActive) { p.state = 'attackRecovery'; p.stateTime = 0; p.vx = 0; p.vy = 0; }
+      else { p.vx *= Math.pow(.08, dt); p.vy *= Math.pow(.08, dt); }
+    } else if (p.state === 'attackRecovery') {
+      if (p.stateTime > p.attackRecovery) { p.state = 'normal'; p.vx = 0; p.vy = 0; }
+      else { p.vx = 0; p.vy = 0; }
+    } else if (p.state === 'dodging') {
+      if (p.stateTime > .26) { p.state = 'normal'; p.vx = 0; p.vy = 0; }
+      else { p.vx *= Math.pow(.18, dt); p.vy *= Math.pow(.18, dt); }
+    } else if (p.state === 'hurt') {
+      if (p.stateTime > .20) { p.state = 'normal'; p.vx = 0; p.vy = 0; }
+      else { p.vx *= Math.pow(.20, dt); p.vy *= Math.pow(.20, dt); }
+    }
+
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.x = clamp(p.x, 22, state.w-22); p.y = clamp(p.y, 76, state.h-30);
+  }
+
+
+
+  function resolvePlayerAttack() {
+    const p = state.player;
+    const range = 76 * currentSettings().lunge;
+    const arc = 1.15;
+    const a0 = angleOf(p.attackDir);
+    for (const e of state.enemies) {
+      if (e.hp <= 0 || e.state === 'dead' || p.attackHitIds.has(e.id)) continue;
+      const vx = e.x-p.x, vy = e.y-p.y;
+      const d = Math.hypot(vx,vy);
+      if (d > range + e.r) continue;
+      const ad = Math.abs(angleDiff(Math.atan2(vy,vx), a0));
+      if (ad < arc*.5 || d < 28) {
+        p.attackHitIds.add(e.id);
+        enemyHit(e, state.mode === 'attackChain' ? 35 : 28, p.attackDir, .22);
+        state.score += 2;
+      }
+    }
+  }
+
+  function spawnProjectile(enemy) {
+    const d = norm({x: state.player.x - enemy.x, y: state.player.y - enemy.y});
+    state.projectiles.push({x:enemy.x + d.x*18, y:enemy.y + d.y*18, vx:d.x*135, vy:d.y*135, life:2.2, r:6, damage:enemy.attack.damage, owner:enemy.id});
+  }
+
+  function updateEnemy(enemy, dt) {
+    if (enemy.hp <= 0 || enemy.state === 'dead') {
+      enemy.state = 'dead';
+      return;
+    }
+    const p = state.player;
+    enemy.stateTime += dt;
+    enemy.cooldown = Math.max(0, enemy.cooldown - dt);
+    enemy.stunned = Math.max(0, enemy.stunned - dt);
+    if (enemy.stunned > 0) {
+      enemy.x += enemy.vx * dt; enemy.y += enemy.vy * dt;
+      enemy.vx *= Math.pow(.08, dt); enemy.vy *= Math.pow(.08, dt);
+      if (enemy.stunned <= .01) { enemy.state = 'approach'; enemy.cooldown = Math.max(enemy.cooldown, .35); }
+      return;
+    }
+
+    if (enemy.state === 'windup') {
+      enemy.facing = norm({x: p.x - enemy.x, y: p.y - enemy.y});
+      const wiggle = Math.sin(state.time * 20 + enemy.id) * 12;
+      enemy.vx += -enemy.facing.y * wiggle * dt;
+      enemy.vy += enemy.facing.x * wiggle * dt;
+      if (enemy.stateTime >= enemy.windup) {
+        enemy.state = 'active'; enemy.stateTime = 0;
+        if (enemy.attack.projectile) spawnProjectile(enemy);
+      }
+    } else if (enemy.state === 'active') {
+      if (!enemy.hitDone && !enemy.attack.projectile) {
+        resolveEnemyMelee(enemy);
+        enemy.hitDone = true;
+      }
+      if (enemy.stateTime >= enemy.active) {
+        enemy.state = 'recovery'; enemy.stateTime = 0; releaseToken(enemy);
+      }
+    } else if (enemy.state === 'recovery') {
+      if (enemy.stateTime >= enemy.recovery) {
+        enemy.state = 'approach'; enemy.stateTime = 0;
+        enemy.cooldown = enemy.attack ? enemy.attack.cooldown * enemy.personality : 1.0;
+        enemy.attack = null;
+      }
+    } else {
+      const d = dist(enemy, p);
+      const attack = chooseAttack(enemy, d);
+      if (attack && enemy.cooldown <= 0 && directorCanGrant(enemy, attack)) {
+        startEnemyAttack(enemy, attack);
+      } else {
+        if (attack && enemy.cooldown <= 0) deniedBehavior(enemy, p, dt);
+        else if (enemy.type === 'rock') keepRange(enemy, p, dt, 175);
+        else if (state.mode === 'battleCircle') moveToOrbitSlot(enemy, p, dt);
+        else if (d > (enemy.type === 'mace' ? 86 : 64)) approach(enemy, p, dt);
+        else orbit(enemy, p, dt, .4);
+      }
+    }
+
+    // Soft collision separation with player and other enemies.
+    const toEnemy = {x: enemy.x-p.x, y: enemy.y-p.y};
+    let d = Math.hypot(toEnemy.x,toEnemy.y) || 1;
+    const minD = enemy.r + p.r + 2;
+    if (d < minD) {
+      const n = {x:toEnemy.x/d, y:toEnemy.y/d};
+      enemy.vx += n.x * 120 * dt; enemy.vy += n.y * 120 * dt;
+    }
+    for (const other of state.enemies) {
+      if (other === enemy || other.hp <= 0) continue;
+      const vx = enemy.x-other.x, vy = enemy.y-other.y;
+      d = Math.hypot(vx,vy) || 1;
+      const md = enemy.r + other.r + 4;
+      if (d < md) {
+        enemy.vx += (vx/d) * 55 * dt;
+        enemy.vy += (vy/d) * 55 * dt;
+      }
+    }
+
+    enemy.x += enemy.vx * dt; enemy.y += enemy.vy * dt;
+    enemy.vx *= Math.pow(.18, dt); enemy.vy *= Math.pow(.18, dt);
+    enemy.x = clamp(enemy.x, 22, state.w-22); enemy.y = clamp(enemy.y, 78, state.h-30);
+  }
+
+  function resolveEnemyMelee(enemy) {
+    const p = state.player;
+    const attack = enemy.attack;
+    const vx = p.x-enemy.x, vy = p.y-enemy.y;
+    const d = Math.hypot(vx,vy);
+    const ad = Math.abs(angleDiff(Math.atan2(vy,vx), angleOf(enemy.facing)));
+    if (d < attack.range + p.r && ad < (attack.arc || 1.0)) {
+      playerTakeDamage(attack.damage, enemy);
+    }
+  }
+
+  function updateProjectiles(dt) {
+    for (const pr of state.projectiles) {
+      pr.x += pr.vx * dt; pr.y += pr.vy * dt; pr.life -= dt;
+      if (pr.life > 0 && dist(pr, state.player) < pr.r + state.player.r) {
+        playerTakeDamage(pr.damage, pr);
+        pr.life = 0;
+      }
+    }
+    state.projectiles = state.projectiles.filter(p => p.life > 0 && p.x > -20 && p.y > -20 && p.x < state.w+20 && p.y < state.h+20);
+  }
+
+  function updateParticles(dt) {
+    for (const pa of state.particles) {
+      pa.x += pa.vx * dt; pa.y += pa.vy * dt; pa.life -= dt;
+      pa.vx *= Math.pow(.2, dt); pa.vy *= Math.pow(.2, dt);
+    }
+    state.particles = state.particles.filter(p => p.life > 0);
+  }
+
+  function updateWavePacing(dt) {
+    if (state.mode !== 'wavePacing') return;
+    const live = state.enemies.filter(e => e.hp > 0 && e.state !== 'dead').length;
+    state.waveTimer += dt;
+    if (state.waveStep === 0 && state.kills >= 1) {
+      state.waveStep = 1; spawnAround(['mace']); announce('Wave: Mace enters', 1);
+    }
+    if (state.waveStep === 1 && (state.kills >= 2 || state.waveTimer > 16)) {
+      state.waveStep = 2; spawnAround(['dagger','dagger']); announce('Wave: Dagger flankers', 1);
+    }
+    if (state.waveStep === 2 && (state.waveTimer > 28 || live <= 0)) {
+      state.waveStep = 3; spawnAround(['rock']); announce('Wave: Rock thrower', 1);
+    }
+  }
+
+  function checkWaveClear(dt) {
+    state.autoAdvanceCooldown = Math.max(0, state.autoAdvanceCooldown - dt);
+    if (state.player.hp <= 0 || state.autoAdvanceCooldown > 0) return;
+    const live = state.enemies.filter(e => e.hp > 0 && e.state !== 'dead').length;
+    if (live > 0) return;
+    if (state.mode === 'wavePacing' && state.waveStep < 3) return;
+    state.autoAdvanceCooldown = 1.0;
+    cycleEncounterStyle();
+  }
+
+  function resolveBodyCollisions() {
+    const p = state.player;
+    const live = state.enemies.filter(e => e.hp > 0 && e.state !== 'dead');
+    for (let iter = 0; iter < 3; iter++) {
+      // Player/enemy collision: enemies are solid, so attacks and dodges do not pass through bodies.
+      for (const e of live) {
+        let dx = p.x - e.x, dy = p.y - e.y;
+        let d = Math.hypot(dx, dy);
+        if (d < .001) { dx = 1; dy = 0; d = 1; }
+        const minD = p.r + e.r + 1.5;
+        if (d < minD) {
+          const nx = dx / d, ny = dy / d;
+          const overlap = minD - d;
+          const pShare = e.type === 'captain' ? .86 : .72;
+          p.x += nx * overlap * pShare;
+          p.y += ny * overlap * pShare;
+          e.x -= nx * overlap * (1 - pShare);
+          e.y -= ny * overlap * (1 - pShare);
+          const pInto = p.vx * nx + p.vy * ny;
+          if (pInto < 0) { p.vx -= nx * pInto; p.vy -= ny * pInto; }
+          const eInto = e.vx * nx + e.vy * ny;
+          if (eInto > 0) { e.vx -= nx * eInto; e.vy -= ny * eInto; }
+        }
+      }
+      // Enemy/enemy collision keeps the pack from stacking into one blob.
+      for (let i = 0; i < live.length; i++) {
+        for (let j = i + 1; j < live.length; j++) {
+          const a = live[i], b = live[j];
+          let dx = a.x - b.x, dy = a.y - b.y;
+          let d = Math.hypot(dx, dy);
+          if (d < .001) { dx = 1; dy = 0; d = 1; }
+          const minD = a.r + b.r + 3;
+          if (d < minD) {
+            const nx = dx / d, ny = dy / d;
+            const overlap = (minD - d) * .5;
+            a.x += nx * overlap; a.y += ny * overlap;
+            b.x -= nx * overlap; b.y -= ny * overlap;
+          }
+        }
+      }
+    }
+    p.x = clamp(p.x, 22, state.w-22); p.y = clamp(p.y, 76, state.h-30);
+    for (const e of live) {
+      e.x = clamp(e.x, 22, state.w-22);
+      e.y = clamp(e.y, 78, state.h-30);
+    }
+  }
+
+  function update(dt) {
+    if (isGamePaused()) return;
+    state.time += dt;
+    state.messageTimer = Math.max(0, state.messageTimer - dt);
+    const coolDecay = currentSettings().pressureBudget * .7;
+    state.director.cooldownPressure = Math.max(0, state.director.cooldownPressure - dt * coolDecay);
+    removeDeadTokens();
+    assignSlots();
+    updateNearFar();
+    updatePlayer(dt);
+    for (const e of state.enemies) updateEnemy(e, dt);
+    resolveBodyCollisions();
+    updateProjectiles(dt);
+    updateParticles(dt);
+    updateWavePacing(dt);
+    state.enemies = state.enemies.filter(e => e.hp > 0 || e.stateTime < .35 || e.state !== 'dead');
+    checkWaveClear(dt);
+  }
+
+  function drawGround() {
+    ctx.clearRect(0,0,state.w,state.h);
+    ctx.save();
+    ctx.fillStyle = '#151927';
+    ctx.fillRect(0,0,state.w,state.h);
+    ctx.strokeStyle = 'rgba(255,255,255,.045)';
+    ctx.lineWidth = 1;
+    const grid = 42;
+    for (let x = ((state.time*6)%grid)-grid; x < state.w+grid; x += grid) {
+      ctx.beginPath(); ctx.moveTo(x,70); ctx.lineTo(x,state.h); ctx.stroke();
+    }
+    for (let y = 70; y < state.h; y += grid) {
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(state.w,y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawArcCone(x,y,dir,range,arc,color,alpha=.24) {
+    const a = angleOf(dir);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.arc(x,y,range,a-arc/2,a+arc/2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDebug() {
+    if (!state.showDebug) return;
+    if (state.mode === 'battleCircle') {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,.16)';
+      for (const slot of state.orbitSlots) {
+        const x = state.player.x + Math.cos(slot.a) * slot.radius;
+        const y = state.player.y + Math.sin(slot.a) * slot.radius;
+        ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+      }
+      ctx.restore();
+    }
+    if (state.mode === 'nearFar') {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(142,197,255,.16)';
+      ctx.setLineDash([7,7]);
+      ctx.beginPath(); ctx.arc(state.player.x, state.player.y, 154, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawPlayer() {
+    const p = state.player;
+    ctx.save();
+    if (p.state === 'attackWindup') {
+      const progress = clamp(p.stateTime / Math.max(.01, p.attackWindup), 0, 1);
+      drawArcCone(p.x, p.y, p.attackDir, 58 * currentSettings().lunge, .85, '#ffe372', .12 + progress*.18);
+      ctx.strokeStyle = `rgba(255,227,114,${.35 + progress*.45})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r + 9, -Math.PI/2, -Math.PI/2 + Math.PI*2*progress);
+      ctx.stroke();
+    }
+    if (p.state === 'attacking') drawArcCone(p.x, p.y, p.attackDir, 80 * currentSettings().lunge, 1.15, '#8ec5ff', .32);
+    if (p.state === 'attackRecovery') drawArcCone(p.x, p.y, p.attackDir, 66 * currentSettings().lunge, 1.05, '#8ec5ff', .10);
+    if (p.state === 'dodging') {
+      ctx.strokeStyle = 'rgba(142,197,255,.65)'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r+8, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.fillStyle = p.state === 'attackWindup' ? '#ffe372' : (p.invuln > 0 ? '#9dd8ff' : '#66aaff');
+    ctx.strokeStyle = '#e6f4ff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    const markerLen = p.state === 'attackWindup' ? 18 : 25;
+    const backPull = p.state === 'attackWindup' ? -7 : 0;
+    ctx.beginPath();
+    ctx.moveTo(p.x + p.attackDir.x*backPull, p.y + p.attackDir.y*backPull);
+    ctx.lineTo(p.x + p.attackDir.x*markerLen, p.y + p.attackDir.y*markerLen);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawEnemy(e) {
+    if (e.hp <= 0 && e.state === 'dead') return;
+    const def = typeDefs[e.type];
+    ctx.save();
+    if (e.state === 'windup' && e.attack) {
+      const progress = clamp(e.stateTime / e.windup, 0, 1);
+      const alpha = .12 + progress * .28;
+      drawArcCone(e.x, e.y, e.facing, e.attack.range + 14, e.attack.arc || .75, e.type === 'mace' || e.type === 'captain' ? '#ffbf62' : '#ff7777', alpha);
+      ctx.strokeStyle = `rgba(255,210,110,${.35 + .55*progress})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 8 + progress*6, -Math.PI/2, -Math.PI/2 + Math.PI*2*progress); ctx.stroke();
+    }
+    if (e.token) {
+      ctx.strokeStyle = '#ffe372'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 11, 0, Math.PI*2); ctx.stroke();
+    } else if (state.showDebug && e.nearEligible && state.mode === 'nearFar') {
+      ctx.strokeStyle = 'rgba(142,197,255,.35)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r+8, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.fillStyle = def.color;
+    ctx.strokeStyle = def.outline;
+    ctx.lineWidth = 2;
+    if (e.type === 'mace' || e.type === 'captain') {
+      roundRect(ctx, e.x-e.r*.85, e.y-e.r, e.r*1.7, e.r*2, 9); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+    // little weapon / facing marker
+    ctx.strokeStyle = e.type === 'rock' ? '#f4ddff' : '#2b1b12';
+    ctx.lineWidth = e.type === 'mace' || e.type === 'captain' ? 5 : 3;
+    ctx.lineCap = 'round';
+    const reach = e.type === 'mace' || e.type === 'captain' ? 26 : 18;
+    ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.facing.x*reach, e.y + e.facing.y*reach); ctx.stroke();
+    // HP bar
+    const hpw = e.r*2.2;
+    ctx.fillStyle = 'rgba(0,0,0,.38)'; ctx.fillRect(e.x-hpw/2, e.y-e.r-12, hpw, 4);
+    ctx.fillStyle = e.hp/e.maxHp > .45 ? '#8dffbd' : '#ff7777'; ctx.fillRect(e.x-hpw/2, e.y-e.r-12, hpw*clamp(e.hp/e.maxHp,0,1), 4);
+    if (state.showDebug) {
+      ctx.fillStyle = 'rgba(255,255,255,.72)'; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+      const tag = e.token ? 'TOKEN' : (e.state === 'windup' ? 'WIND' : e.state.toUpperCase().slice(0,5));
+      ctx.fillText(tag, e.x, e.y + e.r + 14);
+    }
+    ctx.restore();
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+  }
+
+  function drawProjectiles() {
+    ctx.save();
+    for (const pr of state.projectiles) {
+      ctx.fillStyle = '#d9b5ff';
+      ctx.strokeStyle = '#fff2ff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(pr.x, pr.y, pr.r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    ctx.save();
+    for (const p of state.particles) {
+      ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawMessage() {
+    if (state.messageTimer <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = clamp(state.messageTimer, 0, 1);
+    ctx.fillStyle = 'rgba(0,0,0,.45)';
+    ctx.strokeStyle = 'rgba(255,255,255,.14)';
+    ctx.lineWidth = 1;
+    const text = state.message;
+    ctx.font = '700 15px system-ui';
+    const w = Math.min(state.w - 28, ctx.measureText(text).width + 30);
+    const x = state.w/2 - w/2, y = 76;
+    roundRect(ctx, x, y, w, 34, 12); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, state.w/2, y + 17);
+    ctx.restore();
+  }
+
+  function draw() {
+    drawGround();
+    drawDebug();
+    const sorted = [...state.enemies].sort((a,b) => a.y-b.y);
+    for (const e of sorted) drawEnemy(e);
+    drawProjectiles();
+    drawPlayer();
+    drawParticles();
+    drawMessage();
+  }
+
+  function updateHud() {
+    const p = state.player;
+    const active = state.director.activeTokens.length;
+    const cost = activeCost().toFixed(2);
+    const s = currentSettings();
+    hudA.innerHTML = `<strong>HP</strong> ${Math.ceil(p.hp)} / ${p.maxHp}<br><strong>Score</strong> ${state.score} &nbsp; <strong>KOs</strong> ${state.kills}`;
+    const pauseLabel = isMenuOpen() ? 'Menu paused' : (state.paused ? 'Paused' : p.lastInput);
+    hudB.innerHTML = `<strong>Input</strong> ${pauseLabel}<br><strong>Tokens</strong> ${active} / cost ${cost} / budget ${s.pressureBudget}`;
+    const dbg = state.inputDebug;
+    const c = controlSchemes.find(x => x.id === state.controlScheme) || controlSchemes[0];
+    hudC.innerHTML = `<strong>${c.label}</strong> → ${dbg.classification}<br>${dbg.reason}<br><strong>spd</strong> ${dbg.speed}px/s &nbsp; <strong>dur</strong> ${dbg.duration}ms &nbsp; <strong>flick</strong> ${dbg.flickAngle} &nbsp; <strong>enemy</strong> ${dbg.enemyAngle} &nbsp; <strong>threat</strong> ${dbg.threatAngle}`;
+  }
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(.033, (now - last) / 1000 || .016);
+    last = now;
+    update(dt);
+    draw();
+    updateHud();
+    requestAnimationFrame(loop);
+  }
+
+  menuBtn.addEventListener('click', () => { panel.classList.toggle('collapsed'); hideTouchVisuals(); });
+  resetBtn.addEventListener('click', resetGame);
+  fullBtn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        fullBtn.textContent = '⛶';
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      recordInputDebug('Fullscreen blocked', 'Browser denied fullscreen. Try opening the file in Chrome and tap the button again.', 0, 0, 0, null);
+    }
+  });
+  debugBtn.addEventListener('click', () => { state.showDebug = !state.showDebug; debugBtn.textContent = 'Debug: ' + (state.showDebug ? 'On' : 'Off'); });
+  pauseBtn.addEventListener('click', () => { state.paused = !state.paused; pauseBtn.textContent = state.paused ? 'Resume' : 'Pause'; });
+  helpBtn.addEventListener('click', () => helpText.style.display = helpText.style.display === 'none' ? 'block' : 'none');
+  for (const key of Object.keys(sliders)) {
+    sliders[key].addEventListener('input', refreshSliderLabels);
+    sliders[key].addEventListener('change', () => {
+      refreshSliderLabels();
+      if (key === 'enemyCount') resetGame();
+    });
+  }
+
+  refreshSliderLabels();
+  setControlScheme(state.controlScheme);
+  setMode(state.mode);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

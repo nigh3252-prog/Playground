@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>PUNCH LAB — procedural strikes</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0d191b;height:100%;touch-action:none;
+    -webkit-user-select:none;user-select:none;font-family:ui-monospace,Menlo,Consolas,monospace}
+  canvas{display:block}
+  #hud{position:fixed;top:10px;left:50%;transform:translateX(-50%);text-align:center;
+    color:#7fb8b0;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;pointer-events:none;text-shadow:0 1px 0 #000}
+  #hud b{color:#e8a04c;font-size:15px}
+  #hint{position:fixed;top:10px;right:12px;color:#4a6f6a;font-size:10px;letter-spacing:.06em;
+    text-align:right;pointer-events:none;line-height:1.6}
+  .btnrow{position:fixed;bottom:18px;right:14px;display:flex;gap:10px}
+  .pbtn{width:72px;height:72px;border-radius:50%;border:2px solid #2c4a47;color:#9fd2c9;
+    background:rgba(18,36,38,.72);font-family:inherit;font-size:11px;letter-spacing:.1em;
+    display:flex;align-items:center;justify-content:center;touch-action:none;
+    box-shadow:0 3px 0 #081112}
+  .pbtn:active{background:#2c4a47;transform:translateY(2px);box-shadow:0 1px 0 #081112}
+  .pbtn.hk{border-color:#6e3a24;color:#e8a04c}
+
+  #tuneToggle{position:fixed;top:10px;left:12px;z-index:20;font-family:inherit;font-size:11px;
+    letter-spacing:.12em;color:#e8a04c;background:rgba(18,36,38,.82);border:1px solid #6e3a24;
+    padding:7px 12px;border-radius:4px}
+  #tuneToggle:active{background:#2c4a47}
+  #panel{position:fixed;top:46px;left:0;z-index:19;width:44vw;max-width:216px;
+    max-height:calc(100vh - 60px);overflow-y:auto;padding:10px 12px 16px;box-sizing:border-box;
+    background:linear-gradient(180deg,rgba(10,20,22,.93),rgba(10,20,22,.80));
+    border-right:1px solid #2c4a47;border-bottom:1px solid #2c4a47;border-radius:0 0 8px 0;
+    transform:translateX(0);transition:transform .22s ease;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch}
+  #panel:not(.open){transform:translateX(-101%)}
+  .ptitle{color:#4a6f6a;font-size:9px;letter-spacing:.2em;margin:0 0 8px}
+  #presets{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:13px}
+  #presets button{font-family:inherit;font-size:9.5px;letter-spacing:.05em;color:#9fd2c9;
+    background:rgba(30,52,52,.7);border:1px solid #2c4a47;border-radius:4px;padding:8px 2px}
+  #presets button:active{background:#2c4a47;color:#e8a04c}
+  .srow{margin-bottom:11px}
+  .slabel{color:#7fb8b0;font-size:9.5px;letter-spacing:.06em;display:flex;
+    justify-content:space-between;margin-bottom:2px}
+  .sval{color:#e8a04c}
+  #panel input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;
+    background:transparent;margin:0}
+  #panel input[type=range]::-webkit-slider-runnable-track{height:3px;background:#243f3d;border-radius:2px}
+  #panel input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;
+    margin-top:-6px;border-radius:50%;background:#e8a04c;border:2px solid #0d191b;
+    box-shadow:0 0 0 1px #6e3a24}
+  #panel input[type=range]::-moz-range-track{height:3px;background:#243f3d;border-radius:2px}
+  #panel input[type=range]::-moz-range-thumb{width:13px;height:13px;border:2px solid #0d191b;
+    border-radius:50%;background:#e8a04c}
+</style>
+</head>
+<body>
+<div id="hud"><b id="atk">GUARD</b><div id="combo"></div></div>
+<div id="hint">backbone: □ jab · △ cross · ○ hook<br>keys: J K L</div>
+<div class="btnrow">
+  <button class="pbtn" data-a="jab">JAB</button>
+  <button class="pbtn" data-a="cross">CROSS</button>
+  <button class="pbtn hk" data-a="hook">HOOK</button>
+</div>
+
+<button id="tuneToggle">TUNE ◂</button>
+<div id="panel" class="open">
+  <div class="ptitle">FEEL — ×BASE VALUE</div>
+  <div id="presets">
+    <button data-p="WIMPY">WIMPY</button>
+    <button data-p="DEFAULT">RESET</button>
+    <button data-p="HAYMAKER">HAYMAKER</button>
+    <button data-p="CARTOON">CARTOON</button>
+  </div>
+  <div id="sliders"></div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
+
+/* ============================================================
+   PUNCH LAB — step 1-5 testbed
+   guard pose · 3 attacks via 2-bone IK wrist paths
+   ballistic strike easing (easeOutBack overshoot)
+   kinetic chain: hips lead chest, shoulder lead, off-hand guard
+   swept fist vs capsule (segSegDist) gated by damage window
+   hit-stop / directional shake / knuckle trail / sparks
+   procedural whoosh + impact (WebAudio)
+   ============================================================ */
+
+const V3 = (x,y,z)=>new THREE.Vector3(x,y,z);
+const UP = V3(0,1,0);
+const clamp = THREE.MathUtils.clamp;
+const lerp  = THREE.MathUtils.lerp;
+
+/* ---------- scene ---------- */
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d191b);
+scene.fog = new THREE.Fog(0x0d191b, 5.5, 12);
+
+const camera = new THREE.PerspectiveCamera(38, innerWidth/innerHeight, .1, 50);
+const camBase = V3(2.05, 1.55, -1.35);
+const camLook = V3(0, 1.12, 0.62);
+
+scene.add(new THREE.HemisphereLight(0x9fd8d0, 0x1a2325, 0.9));
+const sun = new THREE.DirectionalLight(0xffe0b8, 1.15);
+sun.position.set(2.5, 4, -2);
+scene.add(sun);
+
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(9, 40),
+  new THREE.MeshLambertMaterial({color:0x142a2c})
+);
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
+const ring = new THREE.Mesh(
+  new THREE.RingGeometry(1.55,1.62,48),
+  new THREE.MeshBasicMaterial({color:0x24484a})
+);
+ring.rotation.x = -Math.PI/2; ring.position.y = .005; ring.position.z = .5;
+scene.add(ring);
+
+/* ---------- helpers ---------- */
+// hash-based vertex jitter — welded across duplicated face verts
+function crumple(geo, amt){
+  const p = geo.attributes.position;
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+    const h1 = Math.sin(x*127.1 + y*311.7 + z*74.7)*43758.5453;
+    const h2 = Math.sin(x*269.5 + y*183.3 + z*246.1)*28001.8384;
+    const h3 = Math.sin(x*113.5 + y*271.9 + z*124.6)*41414.4141;
+    p.setXYZ(i,
+      x + ((h1-Math.floor(h1))-.5)*amt,
+      y + ((h2-Math.floor(h2))-.5)*amt,
+      z + ((h3-Math.floor(h3))-.5)*amt);
+  }
+  p.needsUpdate = true;
+  return geo;
+}
+function box(w,h,d,color,amt=0.018){
+  return new THREE.Mesh(
+    crumple(new THREE.BoxGeometry(w,h,d), amt),
+    new THREE.MeshLambertMaterial({color, flatShading:true})
+  );
+}
+// unit-height limb, stretched between joints each frame
+function limb(thick,color){
+  const m = box(thick,1,thick,color,0.012);
+  return m;
+}
+const _dir = V3(0,0,0);
+function setLimb(mesh,A,B){
+  mesh.position.copy(A).add(B).multiplyScalar(.5);
+  _dir.copy(B).sub(A);
+  const len = Math.max(_dir.length(), 1e-4);
+  mesh.scale.y = len;
+  mesh.quaternion.setFromUnitVectors(UP, _dir.normalize());
+}
+
+/* ---------- character ---------- */
+const STONE=0x8f8a80, STONE_D=0x6e6a62, WRAP=0x314b48;
+const char = new THREE.Group(); scene.add(char);
+
+const hips = new THREE.Group(); hips.position.y = 0.95; char.add(hips);
+const pelvis = box(.34,.20,.24, STONE_D); hips.add(pelvis);
+const chest = new THREE.Group(); chest.position.y = 0.34; hips.add(chest);
+const torso = box(.42,.40,.28, STONE); torso.position.y = -.06; chest.add(torso);
+const head  = box(.20,.24,.22, STONE); head.position.y = .34; chest.add(head);
+const brow  = box(.22,.05,.06, 0xe8a04c, .01); brow.position.set(0,.36,.11); chest.add(brow);
+
+// legs — static stance
+for(const s of [-1,1]){
+  const th = limb(.13, STONE_D); char.add(th);
+  const sh = limb(.11, STONE_D); char.add(sh);
+  const hp=V3(s*.13,.88,0), kn=V3(s*.15,.46, s>0?-.10:.14), ft=V3(s*.16,.06, s>0?-.16:.22);
+  setLimb(th,hp,kn); setLimb(sh,kn,ft);
+  const foot = box(.14,.09,.26, STONE_D); foot.position.set(s*.16,.05, s>0?-.10:.28);
+  char.add(foot);
+}
+
+// shoulder anchors (children of chest → carried by twist)
+const shAnchor = {};
+const shBaseZ = 0.02;
+for(const s of ['L','R']){
+  const g = new THREE.Group();
+  g.position.set(s==='L'?-.27:.27, .20, shBaseZ);
+  chest.add(g); shAnchor[s]=g;
+  const pad = box(.15,.13,.15, STONE); g.add(pad);
+}
+
+// arm meshes live directly under char — driven in char-local space
+const arm = {};
+for(const s of ['L','R']){
+  arm[s] = {
+    upper: limb(.10, STONE),
+    fore:  limb(.085, WRAP),
+    fist:  box(.13,.11,.14, STONE),
+    prevFistWorld: V3(0,0,0),
+    fistWorld: V3(0,0,0)
+  };
+  char.add(arm[s].upper, arm[s].fore, arm[s].fist);
+}
+const L1=0.30, L2=0.28;
+
+/* ---------- 2-bone analytic IK ---------- */
+const _st=V3(0,0,0), _pp=V3(0,0,0), _perp=V3(0,0,0), _e=V3(0,0,0), _tc=V3(0,0,0);
+function solveArm(S, T, pole, out){
+  _st.copy(T).sub(S);
+  let d = _st.length();
+  const reach = L1+L2-1e-4;
+  if(d > reach) d = reach;
+  _st.normalize();
+  _tc.copy(S).addScaledVector(_st, d);           // clamped wrist
+  const a = (L1*L1 - L2*L2 + d*d) / (2*d);
+  const h = Math.sqrt(Math.max(0, L1*L1 - a*a));
+  _pp.copy(pole).sub(S);
+  _perp.copy(_pp).addScaledVector(_st, -_pp.dot(_st));
+  if(_perp.lengthSq() < 1e-8) _perp.set(0,-1,0);
+  _perp.normalize();
+  _e.copy(S).addScaledVector(_st, a).addScaledVector(_perp, h);
+  out.elbow.copy(_e); out.wrist.copy(_tc);
+}
+const ik = { L:{elbow:V3(0,0,0),wrist:V3(0,0,0)}, R:{elbow:V3(0,0,0),wrist:V3(0,0,0)} };
+
+/* ---------- enemy ---------- */
+const RUST=0x8a3b24;
+const enemy = new THREE.Group(); enemy.position.set(0,0,1.02); scene.add(enemy);
+const eBody = new THREE.Group(); eBody.position.y=0; enemy.add(eBody);
+const eMat = new THREE.MeshLambertMaterial({color:RUST, flatShading:true, emissive:0x000000});
+const eCyl = new THREE.Mesh(crumple(new THREE.CylinderGeometry(.21,.24,.95,9),.02), eMat);
+eCyl.position.y = 0.95; eBody.add(eCyl);
+const eCap = new THREE.Mesh(crumple(new THREE.SphereGeometry(.21,9,7),.02), eMat);
+eCap.position.y = 1.44; eBody.add(eCap);
+const eEye = box(.20,.04,.05, 0x1a1210, .01); eEye.position.set(0,1.47,-.17); eBody.add(eEye);
+const eBase = new THREE.Mesh(crumple(new THREE.CylinderGeometry(.30,.36,.28,9),.02),
+  new THREE.MeshLambertMaterial({color:0x5c2818, flatShading:true}));
+eBase.position.y=.14; eBody.add(eBase);
+// spring state
+const eSpr = { rx:0, rvx:0, pz:0, pvz:0, flash:0 };
+
+/* ---------- attack data ---------- */
+// wrist paths in char-local space; poles too. side L = lead hand.
+const GUARD = {
+  L:{ w:V3(-.16,1.36,.32), pole:V3(-.58,.90,.05) },
+  R:{ w:V3( .16,1.32,.26), pole:V3( .58,.88,.02) }
+};
+const CHIN = { L:V3(-.09,1.44,.30), R:V3(.09,1.44,.30) };
+
+const ATTACKS = {
+  jab: {
+    side:'L', windup:.09, strike:.065, recover:.22,
+    windupPos:V3(-.13,1.34,.20),
+    strikePath:(e,out)=>out.set(lerp(-.13,-.04,e), lerp(1.34,1.42,e), lerp(.20,.78,e)),
+    poleRest:V3(-.55,.92,.05), poleStrike:V3(-.32,1.00,.45), poleWindup:V3(-.64,1.18,-.34),
+    hipTwist:.16, chestTwist:.34, lunge:.10, weight:.55,
+    dmg:[0,.9], cancelFrac:.30, overshoot:1.6, next:'cross'
+  },
+  cross: {
+    side:'R', windup:.15, strike:.08, recover:.32,
+    windupPos:V3(.20,1.30,.10),
+    strikePath:(e,out)=>out.set(lerp(.20,.02,e), lerp(1.30,1.38,e), lerp(.10,.84,e)),
+    poleRest:V3(.58,.86,-.02), poleStrike:V3(.30,1.02,.48), poleWindup:V3(.72,1.22,-.44),
+    hipTwist:.42, chestTwist:.72, lunge:.26, weight:1.0,
+    dmg:[0,.85], cancelFrac:.35, overshoot:2.0, next:'hook'
+  },
+  hook: {
+    side:'L', windup:.14, strike:.10, recover:.34,
+    windupPos:V3(-.48,1.34,.06),
+    // horizontal arc around a chest-front pivot
+    strikePath:(e,out)=>{
+      const a0=Math.PI*1.12, a1=Math.PI*.38, a=a0+(a1-a0)*e;
+      out.set(Math.cos(a)*.50, 1.35+e*.03, .28+Math.sin(a)*.50);
+    },
+    poleRest:V3(-.60,1.10,-.05), poleStrike:V3(-.44,1.52,.30), poleWindup:V3(-.80,1.38,-.30),  // elbow flared high
+    hipTwist:.36, chestTwist:.62, lunge:.16, weight:.85,
+    dmg:[.05,.95], cancelFrac:.35, overshoot:1.7, next:'jab'
+  }
+};
+window.PUNCH = ATTACKS;   // live-tweak from console
+
+/* ---------- easing ---------- */
+const easeOutCubic = t=>1-Math.pow(1-t,3);
+const easeInOut    = t=>t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+function easeOutBack(t,c1){ const c3=c1+1; const u=t-1; return 1 + c3*u*u*u + c1*u*u; }
+
+/* ---------- combat state ---------- */
+const state = {
+  cur:null, t:0, queued:null,
+  hitDone:false, whooshDone:false,
+  lunge:0, hipT:0, chestT:0, shLead:0
+};
+const hud = { atk:document.getElementById('atk'), combo:document.getElementById('combo') };
+
+/* ---------- tuning: global multipliers over the attack table ---------- */
+const PARAMS = [
+  {k:'windup',    label:'WINDUP TIME', min:.2, max:3,   def:1},
+  {k:'coil',      label:'COIL BACK',   min:.2, max:2.5, def:1},
+  {k:'strike',    label:'STRIKE TIME', min:.3, max:2,   def:1},
+  {k:'overshoot', label:'OVERSHOOT',   min:0,  max:3,   def:1},
+  {k:'twist',     label:'BODY TWIST',  min:0,  max:2.5, def:1},
+  {k:'lunge',     label:'LUNGE STEP',  min:0,  max:3,   def:1},
+  {k:'recover',   label:'RECOVERY',    min:.3, max:3,   def:1},
+  {k:'impact',    label:'IMPACT',      min:.2, max:2.5, def:1},
+];
+const PRESETS = {
+  WIMPY:    {windup:.35, coil:.35, strike:.7,  overshoot:.3,  twist:.35, lunge:.25, recover:.6,  impact:.35},
+  DEFAULT:  {windup:1,   coil:1,   strike:1,   overshoot:1,   twist:1,   lunge:1,   recover:1,   impact:1},
+  HAYMAKER: {windup:2.2, coil:1.9, strike:1.05,overshoot:1.5, twist:1.7, lunge:2.0, recover:1.5, impact:1.8},
+  CARTOON:  {windup:2.8, coil:2.3, strike:.85, overshoot:3,   twist:2.2, lunge:2.5, recover:2.4, impact:2.2},
+};
+const scale = {};
+PARAMS.forEach(p => scale[p.k] = p.def);
+window.PUNCH_TUNE = scale;   // live-tweak from console too
+
+const sliderEls = {};
+const sliderBox = document.getElementById('sliders');
+PARAMS.forEach(p => {
+  const row = document.createElement('div'); row.className = 'srow';
+  const lab = document.createElement('div'); lab.className = 'slabel';
+  const val = document.createElement('span'); val.className = 'sval'; val.textContent = p.def.toFixed(2);
+  lab.textContent = p.label + ' '; lab.appendChild(val);
+  const inp = document.createElement('input');
+  inp.type = 'range'; inp.min = p.min; inp.max = p.max; inp.step = .05; inp.value = p.def;
+  inp.addEventListener('input', () => {
+    scale[p.k] = parseFloat(inp.value);
+    val.textContent = parseFloat(inp.value).toFixed(2);
+  });
+  row.appendChild(lab); row.appendChild(inp); sliderBox.appendChild(row);
+  sliderEls[p.k] = { inp, val };
+});
+function applyPreset(name){
+  const pr = PRESETS[name]; if(!pr) return;
+  for(const k in pr){
+    scale[k] = pr[k];
+    const e = sliderEls[k];
+    if(e){ e.inp.value = pr[k]; e.val.textContent = pr[k].toFixed(2); }
+  }
+  requestAttack('cross');   // instant preview of the new feel
+}
+document.querySelectorAll('#presets button').forEach(b => {
+  b.addEventListener('click', () => applyPreset(b.dataset.p));
+});
+const panel = document.getElementById('panel');
+const tuneToggle = document.getElementById('tuneToggle');
+tuneToggle.addEventListener('click', () => {
+  tuneToggle.textContent = panel.classList.toggle('open') ? 'TUNE ◂' : 'TUNE ▸';
+});
+
+function startAttack(name){
+  const a = ATTACKS[name]; if(!a) return;
+  state.cur = name; state.t = 0;
+  state.s = { ...scale };   // freeze feel multipliers for this punch
+  state.queued = null; state.hitDone = false; state.whooshDone = false;
+  arm[a.side].prevFistWorld.copy(arm[a.side].fistWorld);
+  hud.atk.textContent = name.toUpperCase();
+  hud.combo.textContent = '→ ' + a.next;
+}
+function requestAttack(name){
+  ensureAudio();
+  if(!state.cur){ startAttack(name); return; }
+  state.queued = name;   // buffered — fires at cancel point or attack end
+}
+
+/* ---------- input ---------- */
+document.querySelectorAll('.pbtn').forEach(b=>{
+  b.addEventListener('pointerdown', e=>{ e.preventDefault(); requestAttack(b.dataset.a); });
+});
+addEventListener('keydown', e=>{
+  if(e.repeat) return;
+  if(e.key==='j') requestAttack('jab');
+  if(e.key==='k') requestAttack('cross');
+  if(e.key==='l') requestAttack('hook');
+});
+// Backbone / standard mapping: 0 ✕  1 ○  2 □  3 △
+const padPrev = [false,false,false,false];
+function pollPad(){
+  const gp = navigator.getGamepads?.()[0];
+  if(!gp) return;
+  const map = {0:'jab', 2:'jab', 3:'cross', 1:'hook'};
+  for(const i of [0,1,2,3]){
+    const down = gp.buttons[i]?.pressed;
+    if(down && !padPrev[i]) requestAttack(map[i]);
+    padPrev[i] = down;
+  }
+}
+
+/* ---------- audio ---------- */
+let ac=null, master=null, noiseBuf=null;
+function ensureAudio(){
+  if(ac) return;
+  ac = new (window.AudioContext||window.webkitAudioContext)();
+  master = ac.createGain(); master.gain.value = .8;
+  const comp = ac.createDynamicsCompressor();
+  master.connect(comp); comp.connect(ac.destination);
+  noiseBuf = ac.createBuffer(1, ac.sampleRate*1, ac.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+}
+function whoosh(w){
+  if(!ac) return; const t = ac.currentTime;
+  const src = ac.createBufferSource(); src.buffer = noiseBuf;
+  src.playbackRate.value = .9 + Math.random()*.2;
+  const bp = ac.createBiquadFilter(); bp.type='bandpass'; bp.Q.value = 1.4;
+  bp.frequency.setValueAtTime(240+320*w, t);
+  bp.frequency.exponentialRampToValueAtTime(850+1100*w, t+.085);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(.0001, t);
+  g.gain.exponentialRampToValueAtTime(.14+.30*w, t+.03);
+  g.gain.exponentialRampToValueAtTime(.0001, t+.16);
+  src.connect(bp); bp.connect(g); g.connect(master);
+  src.start(t); src.stop(t+.2);
+}
+function impact(w){
+  if(!ac) return; const t = ac.currentTime;
+  // low thump
+  const o = ac.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(110+40*w + Math.random()*12, t);
+  o.frequency.exponentialRampToValueAtTime(36, t+.13);
+  const og = ac.createGain();
+  og.gain.setValueAtTime(.7*w+.2, t);
+  og.gain.exponentialRampToValueAtTime(.0001, t+.16);
+  o.connect(og); og.connect(master); o.start(t); o.stop(t+.18);
+  // knuckle crack
+  const n1 = ac.createBufferSource(); n1.buffer = noiseBuf;
+  const b1 = ac.createBiquadFilter(); b1.type='bandpass';
+  b1.frequency.value = 650 + Math.random()*500; b1.Q.value = 8;
+  const g1 = ac.createGain();
+  g1.gain.setValueAtTime(.5*w, t);
+  g1.gain.exponentialRampToValueAtTime(.0001, t+.05);
+  n1.connect(b1); b1.connect(g1); g1.connect(master); n1.start(t); n1.stop(t+.07);
+  // body resonance
+  const n2 = ac.createBufferSource(); n2.buffer = noiseBuf;
+  const b2 = ac.createBiquadFilter(); b2.type='bandpass';
+  b2.frequency.value = 165 + Math.random()*40; b2.Q.value = 12;
+  const g2 = ac.createGain();
+  g2.gain.setValueAtTime(.4*w, t+.005);
+  g2.gain.exponentialRampToValueAtTime(.0001, t+.13);
+  n2.connect(b2); b2.connect(g2); g2.connect(master); n2.start(t); n2.stop(t+.15);
+}
+
+/* ---------- knuckle trail ---------- */
+const TRAIL_MAX = 28;
+const trailPts = [];   // {p:Vector3, life}
+const trailGeo = new THREE.BufferGeometry();
+const tPos = new Float32Array(TRAIL_MAX*2*3);
+const tCol = new Float32Array(TRAIL_MAX*2*3);
+trailGeo.setAttribute('position', new THREE.BufferAttribute(tPos,3).setUsage(THREE.DynamicDrawUsage));
+trailGeo.setAttribute('color',    new THREE.BufferAttribute(tCol,3).setUsage(THREE.DynamicDrawUsage));
+{
+  const idx = [];
+  for(let i=0;i<TRAIL_MAX-1;i++){
+    const a=i*2, b=i*2+1, c=i*2+2, d=i*2+3;
+    idx.push(a,b,c, b,d,c);
+  }
+  trailGeo.setIndex(idx);
+}
+const trailMesh = new THREE.Mesh(trailGeo, new THREE.MeshBasicMaterial({
+  vertexColors:true, blending:THREE.AdditiveBlending, transparent:true,
+  depthWrite:false, side:THREE.DoubleSide
+}));
+trailMesh.frustumCulled = false;
+scene.add(trailMesh);
+const AMBER = new THREE.Color(0xffb04a);
+const _seg=V3(0,0,0), _side=V3(0,0,0), _camF=V3(0,0,0);
+function updateTrail(rawDt){
+  for(let i=trailPts.length-1;i>=0;i--){
+    trailPts[i].life -= rawDt*6.5;
+    if(trailPts[i].life<=0) trailPts.splice(i,1);
+  }
+  const n = trailPts.length;
+  if(n<2){ trailGeo.setDrawRange(0,0); return; }
+  camera.getWorldDirection(_camF);
+  for(let i=0;i<n;i++){
+    const pt = trailPts[i];
+    const nx = trailPts[Math.min(i+1,n-1)].p, pv = trailPts[Math.max(i-1,0)].p;
+    _seg.copy(nx).sub(pv);
+    _side.crossVectors(_seg,_camF);
+    if(_side.lengthSq()<1e-8) _side.set(0,1,0);
+    _side.normalize().multiplyScalar(.028*pt.life + .006);
+    const o=i*6;
+    tPos[o  ]=pt.p.x-_side.x; tPos[o+1]=pt.p.y-_side.y; tPos[o+2]=pt.p.z-_side.z;
+    tPos[o+3]=pt.p.x+_side.x; tPos[o+4]=pt.p.y+_side.y; tPos[o+5]=pt.p.z+_side.z;
+    const c = pt.life*pt.life;
+    tCol[o  ]=AMBER.r*c; tCol[o+1]=AMBER.g*c; tCol[o+2]=AMBER.b*c;
+    tCol[o+3]=AMBER.r*c; tCol[o+4]=AMBER.g*c; tCol[o+5]=AMBER.b*c;
+  }
+  trailGeo.attributes.position.needsUpdate = true;
+  trailGeo.attributes.color.needsUpdate = true;
+  trailGeo.setDrawRange(0,(n-1)*6);
+}
+
+/* ---------- sparks (raw-dt during hitstop) ---------- */
+const sparks = [];
+const sparkGeo = crumple(new THREE.BoxGeometry(.035,.035,.035),.01);
+const sparkMat = new THREE.MeshBasicMaterial({color:0xffc46a});
+const sparkPool = [];
+for(let i=0;i<40;i++){
+  const m = new THREE.Mesh(sparkGeo, sparkMat);
+  m.visible=false; scene.add(m); sparkPool.push(m);
+}
+function burst(p, dirZ, w){
+  const n = 6 + Math.floor(8*w);
+  for(let i=0;i<n;i++){
+    const m = sparkPool.find(s=>!s.visible); if(!m) break;
+    m.visible = true; m.position.copy(p);
+    m.scale.setScalar(.6+Math.random()*.9);
+    sparks.push({m,
+      v:V3((Math.random()-.5)*2.2, Math.random()*2.4+.6, dirZ*(.5+Math.random()*2.0)),
+      life:.28+Math.random()*.22});
+  }
+}
+function updateSparks(rawDt){
+  for(let i=sparks.length-1;i>=0;i--){
+    const s = sparks[i];
+    s.life -= rawDt;
+    if(s.life<=0){ s.m.visible=false; sparks.splice(i,1); continue; }
+    s.v.y -= 9*rawDt;
+    s.m.position.addScaledVector(s.v, rawDt);
+    s.m.scale.multiplyScalar(Math.pow(.02, rawDt));
+  }
+}
+
+/* ---------- segment-segment distance (Ericson) ---------- */
+const _d1=V3(0,0,0),_d2=V3(0,0,0),_r=V3(0,0,0),_c1=V3(0,0,0),_c2=V3(0,0,0);
+function segSegDist(p1,q1,p2,q2,outPoint){
+  _d1.copy(q1).sub(p1); _d2.copy(q2).sub(p2); _r.copy(p1).sub(p2);
+  const a=_d1.dot(_d1), e=_d2.dot(_d2), f=_d2.dot(_r);
+  let s=0,t=0;
+  if(a<=1e-9 && e<=1e-9){ /* both points */ }
+  else if(a<=1e-9){ t=clamp(f/e,0,1); }
+  else {
+    const c=_d1.dot(_r);
+    if(e<=1e-9){ s=clamp(-c/a,0,1); }
+    else {
+      const b=_d1.dot(_d2), den=a*e-b*b;
+      s = den>1e-9 ? clamp((b*f-c*e)/den,0,1) : 0;
+      t = (b*s+f)/e;
+      if(t<0){ t=0; s=clamp(-c/a,0,1); }
+      else if(t>1){ t=1; s=clamp((b-c)/a,0,1); }
+    }
+  }
+  _c1.copy(p1).addScaledVector(_d1,s);
+  _c2.copy(p2).addScaledVector(_d2,t);
+  if(outPoint) outPoint.copy(_c1);
+  return _c1.distanceTo(_c2);
+}
+
+/* ---------- feel: hitstop + shake ---------- */
+let hitstop = 0, hitstopScale = .06;
+const shake = V3(0,0,0), shakeVel = V3(0,0,0);
+function onHit(point, w){
+  hitstop = .04 + .05*w;
+  shakeVel.z += .9*w; shakeVel.x += (Math.random()-.5)*.5*w; shakeVel.y -= .3*w;
+  eSpr.rvx += 5.5*w; eSpr.pvz += 2.0*w; eSpr.flash = 1;
+  burst(point, 1, w);
+  impact(w);
+}
+
+/* ---------- per-frame pose ---------- */
+const wristT = { L:V3(0,0,0), R:V3(0,0,0) };
+const poleT  = { L:V3(0,0,0), R:V3(0,0,0) };
+const _sPos=V3(0,0,0), _tmp=V3(0,0,0), _hit=V3(0,0,0), _capA=V3(0,0,0), _capB=V3(0,0,0),
+      _coilExtra=V3(0,0,0), _wtarget=V3(0,0,0), _poleExtra=V3(0,0,0);
+const CAP_R = 0.21, FIST_R = 0.095;
+let idleT = 0;
+
+function updateCombat(dt){
+  // -------- guard defaults + idle sway --------
+  idleT += dt;
+  const bobA = Math.sin(idleT*2.1)*.012, bobB = Math.sin(idleT*1.7+1.3)*.012;
+  wristT.L.copy(GUARD.L.w); wristT.L.y += bobA;
+  wristT.R.copy(GUARD.R.w); wristT.R.y += bobB;
+  poleT.L.copy(GUARD.L.pole); poleT.R.copy(GUARD.R.pole);
+  let hipTw = Math.sin(idleT*1.3)*.03;
+  let chestTw = hipTw*1.4;
+  let lungeTarget = 0, shLead = 0, crouch = 0, activeSide = null;
+
+  if(state.cur){
+    const a = ATTACKS[state.cur];
+    const s = state.s;                            // frozen feel multipliers
+    const sign = a.side==='L' ? 1 : -1;
+    activeSide = a.side;
+    state.t += dt;
+    const t = state.t;
+    const wU = a.windup*s.windup, wS = a.strike*s.strike, wR = a.recover*s.recover;
+    const T1 = wU, T2 = T1+wS, T3 = T2+wR;
+    const os = a.overshoot*s.overshoot;
+    const W = wristT[a.side];
+    // extra coil beyond the base windup — faded out over the strike so the fist still lands on target
+    _coilExtra.copy(a.windupPos).sub(GUARD[a.side].w).multiplyScalar(s.coil - 1);
+    // matching elbow draw-back: pull the pole toward its windup target, scaled by coil
+    _poleExtra.copy(a.poleWindup).sub(a.poleRest).multiplyScalar(s.coil - 1);
+
+    if(t < T1){                                   /* --- windup --- */
+      const p = easeOutCubic(t/T1);
+      _wtarget.copy(a.windupPos).add(_coilExtra);           // guard + offset*coil
+      W.lerpVectors(GUARD[a.side].w, _wtarget, p);
+      poleT[a.side].copy(a.poleRest).addScaledVector(_poleExtra, p);   // elbow cocks back with the fist
+      hipTw   = -sign * a.hipTwist  *s.twist* .35 * p;       // coil away
+      chestTw = -sign * a.chestTwist*s.twist* .35 * p;
+      crouch  = .045*p*s.coil;
+    }
+    else if(t < T2){                              /* --- strike --- */
+      if(!state.whooshDone){ whoosh(a.weight*s.impact); state.whooshDone = true; }
+      const p = (t-T1)/wS;
+      const e = easeOutBack(p, os);               // ballistic + overshoot
+      a.strikePath(e, W);
+      W.addScaledVector(_coilExtra, 1-clamp(p,0,1));         // fade the wind-back out
+      poleT[a.side].lerpVectors(a.poleRest, a.poleStrike, clamp(e,0,1));
+      poleT[a.side].addScaledVector(_poleExtra, 1-clamp(p,0,1));   // elbow un-cocks as the arm extends
+      // kinetic chain: hips sampled ahead of chest
+      const eh = easeOutBack(clamp(p*1.3+.06,0,1), os*.7);
+      const ec = easeOutBack(p, os*.8);
+      hipTw   = sign * a.hipTwist  *s.twist* lerp(-.35,1, eh);
+      chestTw = sign * a.chestTwist*s.twist* lerp(-.35,1, ec);
+      lungeTarget = a.lunge*s.lunge * clamp(e,0,1.1);
+      shLead = .12 * clamp(e,0,1.1);
+      crouch = .045*(1-p*.5)*s.coil;
+      // off-hand pulls to chin
+      const off = a.side==='L'?'R':'L';
+      wristT[off].lerp(CHIN[off], clamp(p*2,0,1)*.85);
+      // trail
+      trailPts.push({p:arm[a.side].fistWorld.clone(), life:1});
+      if(trailPts.length>TRAIL_MAX) trailPts.shift();
+      // -------- swept fist vs capsule, gated by damage window --------
+      if(!state.hitDone && p>=a.dmg[0] && p<=a.dmg[1]){
+        _capA.set(enemy.position.x, .45, enemy.position.z + eSpr.pz);
+        _capB.set(enemy.position.x, 1.5, enemy.position.z + eSpr.pz);
+        const d = segSegDist(arm[a.side].prevFistWorld, arm[a.side].fistWorld, _capA, _capB, _hit);
+        if(d < CAP_R + FIST_R){
+          state.hitDone = true;
+          onHit(_hit, a.weight*s.impact);
+        }
+      }
+    }
+    else if(t < T3){                              /* --- recover --- */
+      const p = easeInOut((t-T2)/wR);
+      a.strikePath(1,_tmp);
+      W.lerpVectors(_tmp, GUARD[a.side].w, p);
+      poleT[a.side].lerpVectors(a.poleStrike, a.poleRest, p);
+      hipTw   = sign*a.hipTwist  *s.twist*(1-p);
+      chestTw = sign*a.chestTwist*s.twist*(1-p);
+      lungeTarget = a.lunge*s.lunge*(1-p);
+      shLead = .12*(1-p);
+      const off = a.side==='L'?'R':'L';
+      wristT[off].lerp(CHIN[off], (1-p)*.85);
+      // cancel window → fire buffered attack
+      if(state.queued && (t-T2)/wR >= a.cancelFrac){
+        startAttack(state.queued);
+      }
+    }
+    else {
+      const q = state.queued;
+      state.cur = null;
+      hud.atk.textContent = 'GUARD'; hud.combo.textContent = '';
+      if(q) startAttack(q);
+    }
+  }
+
+  // -------- apply pose --------
+  state.lunge = lerp(state.lunge, lungeTarget, 1-Math.pow(.0001,dt));
+  char.position.z = state.lunge;
+  state.hipT   = lerp(state.hipT,   hipTw,   1-Math.pow(.000001,dt));
+  state.chestT = lerp(state.chestT, chestTw, 1-Math.pow(.000001,dt));
+  hips.rotation.y  = state.hipT;
+  chest.rotation.y = state.chestT - state.hipT;   // chest world twist = chestT
+  head.rotation.y  = -state.chestT*.7;            // counter-rotate for stability
+  brow.rotation.y  = head.rotation.y;
+  hips.position.y  = .95 - crouch + Math.sin(idleT*2.1)*.008;
+  for(const s of ['L','R']){
+    shAnchor[s].position.z = shBaseZ + (s===activeSide ? shLead : 0);
+  }
+
+  // -------- solve arms --------
+  for(const s of ['L','R']){
+    const A = arm[s];
+    A.prevFistWorld.copy(A.fistWorld);
+    shAnchor[s].getWorldPosition(_sPos);
+    char.worldToLocal(_sPos);
+    solveArm(_sPos, wristT[s], poleT[s], ik[s]);
+    setLimb(A.upper, _sPos, ik[s].elbow);
+    setLimb(A.fore,  ik[s].elbow, ik[s].wrist);
+    _dir.copy(ik[s].wrist).sub(ik[s].elbow).normalize();
+    A.fist.position.copy(ik[s].wrist).addScaledVector(_dir,.07);
+    A.fist.quaternion.setFromUnitVectors(UP,_dir);
+    A.fistWorld.copy(A.fist.position);
+    char.localToWorld(A.fistWorld);
+  }
+}
+
+/* ---------- enemy springs ---------- */
+function updateEnemy(dt){
+  const k=55, c=7.5;
+  eSpr.rvx += (-k*eSpr.rx - c*eSpr.rvx)*dt;  eSpr.rx += eSpr.rvx*dt;
+  eSpr.pvz += (-k*eSpr.pz - c*eSpr.pvz)*dt;  eSpr.pz += eSpr.pvz*dt;
+  eBody.rotation.x = eSpr.rx;
+  eBody.position.z = eSpr.pz;
+  eBody.rotation.y = Math.sin(idleT*.9)*.06;
+  eSpr.flash = Math.max(0, eSpr.flash - dt*7);
+  eMat.emissive.setRGB(eSpr.flash*.9, eSpr.flash*.45, eSpr.flash*.1);
+}
+
+/* ---------- camera ---------- */
+function updateCamera(rawDt){
+  shakeVel.addScaledVector(shake,-140*rawDt).addScaledVector(shakeVel,-12*rawDt);
+  shake.addScaledVector(shakeVel,rawDt);
+  camera.position.set(
+    camBase.x + Math.sin(idleT*.4)*.06 + shake.x,
+    camBase.y + Math.sin(idleT*.31)*.03 + shake.y,
+    camBase.z + shake.z
+  );
+  camera.lookAt(camLook.x+shake.x*.5, camLook.y, camLook.z+shake.z*.5);
+}
+
+/* ---------- main loop ---------- */
+const clock = new THREE.Clock();
+function frame(){
+  requestAnimationFrame(frame);
+  const rawDt = Math.min(clock.getDelta(), .05);
+  let dt = rawDt;
+  if(hitstop > 0){ hitstop -= rawDt; dt = rawDt*hitstopScale; }  // world freezes…
+
+  pollPad();
+  updateCombat(dt);
+  updateEnemy(dt);
+  updateSparks(rawDt);      // …particles don't
+  updateTrail(rawDt);
+  updateCamera(rawDt);
+  renderer.render(scene, camera);
+}
+frame();
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>

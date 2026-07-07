@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Three.js Stylized Ground Fluid Demo v2</title>
+<style>
+  :root{
+    --bg0:#09040c;
+    --bg1:#291522;
+    --panel:rgba(10,14,24,.93);
+    --text:rgba(242,246,255,.96);
+    --muted:rgba(190,214,255,.68);
+    --accent:#55c6ff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg0);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  body{position:fixed;inset:0}
+  #app{position:fixed;inset:0;z-index:1;touch-action:none}
+  #hud{position:fixed;z-index:50;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));display:flex;align-items:end;justify-content:space-between;gap:10px;pointer-events:none}
+  .card{pointer-events:auto;border:1px solid rgba(120,180,255,.18);background:var(--panel);backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.42)}
+  #hint{padding:10px 12px;max-width:calc(100vw - 114px);font-size:12px;line-height:1.25;color:var(--muted)}
+  #hint b{color:var(--text)}
+  #settingsBtn{pointer-events:auto;width:68px;height:68px;min-width:68px;min-height:68px;border:1px solid rgba(120,180,255,.25);border-radius:21px;background:rgba(10,18,32,.97);color:var(--text);font-size:16px;font-weight:750;touch-action:manipulation}
+  #panel{display:none;position:fixed;z-index:100;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));width:min(400px,calc(100vw - 20px));max-height:calc(100vh - 20px);overflow-y:auto;padding:10px 12px 12px;touch-action:auto}
+  #panel.open{display:block}
+  #panelHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;font-size:13px;font-weight:800}
+  #closeBtn{width:42px;height:38px;border-radius:10px;border:1px solid rgba(105,185,255,.22);background:rgba(16,27,45,.96);color:var(--text);font-size:20px;touch-action:manipulation}
+  .row{display:grid;grid-template-columns:124px 1fr 52px;align-items:center;gap:8px;margin:9px 0;font-size:12px;color:var(--muted)}
+  input[type="range"]{width:100%;accent-color:var(--accent);touch-action:pan-x}
+  .value{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+  .button-row{display:flex;gap:8px;margin-top:10px}
+  .small-button{flex:1;padding:10px 8px;border-radius:11px;border:1px solid rgba(105,185,255,.20);background:rgba(16,27,45,.96);color:var(--text);touch-action:manipulation}
+  .small-button.active{border-color:rgba(120,210,255,.72);box-shadow:0 0 18px rgba(54,170,255,.26) inset}
+  .note{margin-top:9px;font-size:11px;line-height:1.25;color:rgba(184,215,255,.55)}
+  #errorBadge{display:none;position:fixed;z-index:9999;left:12px;top:12px;max-width:calc(100vw - 24px);padding:8px 10px;border-radius:10px;border:1px solid #9b3333;background:#3b1111;color:#ffd9d9;font:12px system-ui;pointer-events:auto}
+  @media(max-width:520px){.row{grid-template-columns:110px 1fr 48px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="errorBadge"></div>
+
+<div id="panel" class="card">
+  <div id="panelHeader">
+    <span>Stylized Ground Fluid Demo v2</span>
+    <button id="closeBtn" aria-label="Close settings">×</button>
+  </div>
+
+  <div class="button-row">
+    <button id="quadModeBtn" class="small-button active">Flat Quads</button>
+    <button id="cubeModeBtn" class="small-button">Cubes</button>
+    <button id="cameraBtn" class="small-button">Camera</button>
+  </div>
+
+  <div class="button-row">
+    <button id="arcaneBtn" class="small-button">Arcane</button>
+    <button id="blueBtn" class="small-button active">Blue</button>
+    <button id="emberBtn" class="small-button">Ember</button>
+  </div>
+
+  <div class="row"><label for="push">Push</label><input id="push" type="range" min="0.3" max="4.0" value="1.9" step="0.05"><span id="pushVal" class="value"></span></div>
+  <div class="row"><label for="ink">Material</label><input id="ink" type="range" min="0.1" max="3.5" value="1.45" step="0.05"><span id="inkVal" class="value"></span></div>
+  <div class="row"><label for="heat">Heat</label><input id="heat" type="range" min="0.1" max="4.0" value="1.85" step="0.05"><span id="heatVal" class="value"></span></div>
+  <div class="row"><label for="curl">Curl</label><input id="curl" type="range" min="0" max="4.0" value="2.45" step="0.05"><span id="curlVal" class="value"></span></div>
+  <div class="row"><label for="momentum">Momentum</label><input id="momentum" type="range" min="0.900" max="0.995" value="0.984" step="0.001"><span id="momentumVal" class="value"></span></div>
+  <div class="row"><label for="fade">Material Life</label><input id="fade" type="range" min="0.955" max="0.999" value="0.989" step="0.001"><span id="fadeVal" class="value"></span></div>
+  <div class="row"><label for="radius">Brush</label><input id="radius" type="range" min="10" max="90" value="42" step="1"><span id="radiusVal" class="value"></span></div>
+  <div class="row"><label for="layers">3D Layers</label><input id="layers" type="range" min="1" max="6" value="4" step="1"><span id="layersVal" class="value"></span></div>
+  <div class="row"><label for="height">Layer Height</label><input id="height" type="range" min="0.05" max="1.9" value="0.95" step="0.05"><span id="heightVal" class="value"></span></div>
+  <div class="row"><label for="voxelSize">Voxel Size</label><input id="voxelSize" type="range" min="0.25" max="1.8" value="0.82" step="0.05"><span id="voxelSizeVal" class="value"></span></div>
+  <div class="row"><label for="breakup">Breakup</label><input id="breakup" type="range" min="0.0" max="0.95" value="0.38" step="0.01"><span id="breakupVal" class="value"></span></div>
+  <div class="row"><label for="ground">Ground Glow</label><input id="ground" type="range" min="0.0" max="2.4" value="0.00" step="0.05"><span id="groundVal" class="value"></span></div>
+  <div class="row"><label for="glow">Voxel Glow</label><input id="glow" type="range" min="0.2" max="4.0" value="2.25" step="0.05"><span id="glowVal" class="value"></span></div>
+  <div class="row"><label for="accent">Accent Streaks</label><input id="accent" type="range" min="0.0" max="3.0" value="1.8" step="0.05"><span id="accentVal" class="value"></span></div>
+  <div class="row"><label for="quality">Quality</label><input id="quality" type="range" min="0" max="2" value="0" step="1"><span id="qualityVal" class="value"></span></div>
+
+  <div class="button-row">
+    <button id="clearBtn" class="small-button">Clear</button>
+    <button id="fullscreenBtn" class="small-button">Fullscreen</button>
+  </div>
+
+  <div class="button-row">
+    <button id="duelBtn" class="small-button">Duel</button>
+    <button id="cloudBtn" class="small-button">Cloud</button>
+    <button id="trailBtn" class="small-button">Trail</button>
+  </div>
+
+  <div class="note">
+    This variant lifts the exact ground-color look into a middle air slice: the hidden ground texture still renders, but stacked midair slices and a dense middle voxel layer now carry the same color field upward.
+  </div>
+</div>
+
+<div id="hud">
+  <div id="hint" class="card">
+    <b>Drag on the ground plane.</b><br>
+    Ground glow is hidden by default. The same color field that used to live on the floor is now rendered on lifted midair slices, with the voxel cloud sampling that exact same color buffer.
+  </div>
+  <button id="settingsBtn">SET</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  function showError(msg) {
+    const badge = document.getElementById("errorBadge");
+    if (badge) {
+      badge.style.display = "block";
+      badge.textContent = msg;
+    }
+  }
+
+  window.addEventListener("error", (e) => {
+    showError("Script error: " + (e.message || "unknown"));
+  });
+
+  if (!window.THREE) {
+    showError("Three.js did not load. This file uses a CDN, so it needs internet access unless Three.js is bundled locally.");
+    return;
+  }
+
+  const app = document.getElementById("app");
+  const panel = document.getElementById("panel");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const closeBtn = document.getElementById("closeBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+  const quadModeBtn = document.getElementById("quadModeBtn");
+  const cubeModeBtn = document.getElementById("cubeModeBtn");
+  const cameraBtn = document.getElementById("cameraBtn");
+  const arcaneBtn = document.getElementById("arcaneBtn");
+  const blueBtn = document.getElementById("blueBtn");
+  const emberBtn = document.getElementById("emberBtn");
+
+  const controls = {
+    push: document.getElementById("push"),
+    ink: document.getElementById("ink"),
+    heat: document.getElementById("heat"),
+    curl: document.getElementById("curl"),
+    momentum: document.getElementById("momentum"),
+    fade: document.getElementById("fade"),
+    radius: document.getElementById("radius"),
+    layers: document.getElementById("layers"),
+    height: document.getElementById("height"),
+    voxelSize: document.getElementById("voxelSize"),
+    breakup: document.getElementById("breakup"),
+    ground: document.getElementById("ground"),
+    glow: document.getElementById("glow"),
+    accent: document.getElementById("accent"),
+    quality: document.getElementById("quality")
+  };
+
+  const qualityLabels = ["Low", "Med", "High"];
+  let renderMode = "quads";
+  let palette = "blue";
+  let cameraMode = "tilt";
+  let readyToResize = false;
+
+  function settings() {
+    return {
+      push: Number(controls.push.value),
+      ink: Number(controls.ink.value),
+      heat: Number(controls.heat.value),
+      curl: Number(controls.curl.value),
+      momentum: Number(controls.momentum.value),
+      fade: Number(controls.fade.value),
+      radius: Number(controls.radius.value),
+      layers: Number(controls.layers.value),
+      height: Number(controls.height.value),
+      voxelSize: Number(controls.voxelSize.value),
+      breakup: Number(controls.breakup.value),
+      ground: Number(controls.ground.value),
+      glow: Number(controls.glow.value),
+      accent: Number(controls.accent.value),
+      quality: Number(controls.quality.value)
+    };
+  }
+
+  function bindValue(id, digits = 2) {
+    const input = controls[id];
+    const output = document.getElementById(id + "Val");
+    const update = () => {
+      if (id === "quality") {
+        output.textContent = qualityLabels[Number(input.value)] || "Low";
+        if (readyToResize) resizeAndReset();
+        return;
+      }
+      const n = Number(input.value);
+      if (id === "radius" || id === "layers") output.textContent = String(Math.round(n));
+      else output.textContent = n.toFixed(digits);
+    };
+    input.addEventListener("input", update);
+    update();
+  }
+
+  for (const id of Object.keys(controls)) {
+    bindValue(id, (id === "momentum" || id === "fade") ? 3 : 2);
+  }
+
+  const PATCH_W = 15.5;
+  const PATCH_D = 13.5;
+  const MAX_LAYERS = 6;
+  const VIS_COLS = 26;
+  const VIS_ROWS = 24;
+  const MAX_INSTANCES = VIS_COLS * VIS_ROWS * MAX_LAYERS;
+  const MAX_STROKES = 40;
+
+  let simW = 50;
+  let simH = 44;
+  let N = simW * simH;
+  let u, v, u0, v0, dye, dye0, heat, heat0, pressure, divergence, curlField, solid;
+
+  const dyeCanvas = document.createElement("canvas");
+  const dyeCtx = dyeCanvas.getContext("2d", { alpha: true });
+  let imageData, pix, dyeTexture;
+
+  const touches = new Map();
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a0f19);
+  scene.fog = new THREE.FogExp2(0x1a0f19, 0.032);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: "high-performance" });
+  renderer.setClearColor(0x1a0f19, 1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  app.appendChild(renderer.domElement);
+
+  const camera = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
+  const raycaster = new THREE.Raycaster();
+  const groundPlaneRay = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const ndc = new THREE.Vector2();
+  const hit = new THREE.Vector3();
+
+  const color = new THREE.Color();
+  const color2 = new THREE.Color();
+  const dummy = new THREE.Object3D();
+
+  const seeds = new Float32Array(MAX_INSTANCES);
+  const jitterX = new Float32Array(MAX_INSTANCES);
+  const jitterZ = new Float32Array(MAX_INSTANCES);
+  for (let i = 0; i < MAX_INSTANCES; i++) {
+    seeds[i] = Math.random();
+    jitterX[i] = Math.random() - 0.5;
+    jitterZ[i] = Math.random() - 0.5;
+  }
+
+  const strokeSeeds = new Float32Array(MAX_STROKES);
+  for (let i = 0; i < MAX_STROKES; i++) strokeSeeds[i] = Math.random();
+
+  const strokes = [];
+  const obstacleDefs = [];
+
+  function cfg() {
+    const q = Number(controls.quality.value);
+    if (q === 0) return { dprCap: 1.0, simW: 48, simH: 42, pressureIters: 4 };
+    if (q === 1) return { dprCap: 1.15, simW: 60, simH: 52, pressureIters: 6 };
+    return { dprCap: 1.30, simW: 72, simH: 62, pressureIters: 8 };
+  }
+
+  function worldToGridX(x) {
+    return (x / PATCH_W + 0.5) * simW;
+  }
+
+  function worldToGridY(z) {
+    return (z / PATCH_D + 0.5) * simH;
+  }
+
+  function idx(x, y) {
+    return x + y * simW;
+  }
+
+  function sample(field, x, y) {
+    x = Math.max(0.5, Math.min(simW - 1.5, x));
+    y = Math.max(0.5, Math.min(simH - 1.5, y));
+
+    const x0 = Math.floor(x);
+    const y0 = Math.floor(y);
+    const x1 = x0 + 1;
+    const y1 = y0 + 1;
+    const sx = x - x0;
+    const sy = y - y0;
+
+    const i00 = idx(x0, y0);
+    const i10 = idx(x1, y0);
+    const i01 = idx(x0, y1);
+    const i11 = idx(x1, y1);
+
+    const a = field[i00] * (1 - sx) + field[i10] * sx;
+    const b = field[i01] * (1 - sx) + field[i11] * sx;
+    return a * (1 - sy) + b * sy;
+  }
+
+  function makeDyeTexture() {
+    dyeCanvas.width = simW;
+    dyeCanvas.height = simH;
+    imageData = dyeCtx.createImageData(simW, simH);
+    pix = imageData.data;
+    dyeTexture = new THREE.CanvasTexture(dyeCanvas);
+    dyeTexture.colorSpace = THREE.SRGBColorSpace;
+    dyeTexture.minFilter = THREE.NearestFilter;
+    dyeTexture.magFilter = THREE.NearestFilter;
+    dyeTexture.generateMipmaps = false;
+    dyeTexture.wrapS = THREE.ClampToEdgeWrapping;
+    dyeTexture.wrapT = THREE.ClampToEdgeWrapping;
+  }
+
+  // --- Scene setup ---
+  const ambient = new THREE.AmbientLight(0xd4b6cc, 0.75);
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffcfb2, 1.4);
+  dir.position.set(-4, 10, 8);
+  scene.add(dir);
+
+  const rim = new THREE.DirectionalLight(0xb96fff, 0.7);
+  rim.position.set(6, 8, -6);
+  scene.add(rim);
+
+  const skyCanvas = document.createElement("canvas");
+  skyCanvas.width = 512;
+  skyCanvas.height = 256;
+  const skyCtx = skyCanvas.getContext("2d");
+  const grad = skyCtx.createLinearGradient(0, 0, 0, skyCanvas.height);
+  grad.addColorStop(0, "#8b566f");
+  grad.addColorStop(0.55, "#d38c7e");
+  grad.addColorStop(1, "#70456d");
+  skyCtx.fillStyle = grad;
+  skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+  skyCtx.globalAlpha = 0.22;
+  skyCtx.fillStyle = "#fff2f0";
+  skyCtx.beginPath();
+  skyCtx.arc(110, 70, 38, 0, Math.PI * 2);
+  skyCtx.fill();
+  skyCtx.globalCompositeOperation = "destination-out";
+  skyCtx.beginPath();
+  skyCtx.arc(130, 62, 36, 0, Math.PI * 2);
+  skyCtx.fill();
+  skyCtx.globalCompositeOperation = "source-over";
+  const skyTex = new THREE.CanvasTexture(skyCanvas);
+  skyTex.colorSpace = THREE.SRGBColorSpace;
+
+  const skyPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(34, 18),
+    new THREE.MeshBasicMaterial({ map: skyTex, depthWrite: false })
+  );
+  skyPlane.position.set(0, 9, -12);
+  scene.add(skyPlane);
+
+  const baseFloor = new THREE.Mesh(
+    new THREE.PlaneGeometry(PATCH_W * 1.65, PATCH_D * 1.55),
+    new THREE.MeshLambertMaterial({ color: 0x7f6051, emissive: 0x161116, side: THREE.DoubleSide })
+  );
+  baseFloor.rotation.x = -Math.PI / 2;
+  baseFloor.position.y = -0.02;
+  scene.add(baseFloor);
+
+  const patchBorder = new THREE.Mesh(
+    new THREE.RingGeometry(4.6, 5.05, 4),
+    new THREE.MeshBasicMaterial({ color: 0x462f3e, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
+  );
+  patchBorder.rotation.x = -Math.PI / 2;
+  patchBorder.scale.set(PATCH_W / 9.8, PATCH_D / 9.8, 1);
+  patchBorder.position.y = -0.015;
+  scene.add(patchBorder);
+
+  const grid = new THREE.GridHelper(PATCH_W, 16, 0x6d475d, 0x513746);
+  grid.material.transparent = true;
+  grid.material.opacity = 0.18;
+  grid.position.y = 0.004;
+  scene.add(grid);
+
+  makeDyeTexture();
+
+  const fluidPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(PATCH_W, PATCH_D),
+    new THREE.MeshBasicMaterial({
+      map: dyeTexture,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+  fluidPlane.rotation.x = -Math.PI / 2;
+  fluidPlane.position.y = 0.025;
+  scene.add(fluidPlane);
+
+  const fluidGlowPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(PATCH_W * 1.02, PATCH_D * 1.02),
+    new THREE.MeshBasicMaterial({
+      map: dyeTexture,
+      transparent: true,
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+  fluidGlowPlane.rotation.x = -Math.PI / 2;
+  fluidGlowPlane.position.y = 0.035;
+  scene.add(fluidGlowPlane);
+
+  const airPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(PATCH_W, PATCH_D),
+    new THREE.MeshBasicMaterial({
+      map: dyeTexture,
+      transparent: true,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+  airPlane.rotation.x = -Math.PI / 2;
+  airPlane.position.y = 0.92;
+  scene.add(airPlane);
+
+  const airGlowPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(PATCH_W * 1.03, PATCH_D * 1.03),
+    new THREE.MeshBasicMaterial({
+      map: dyeTexture,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+  airGlowPlane.rotation.x = -Math.PI / 2;
+  airGlowPlane.position.y = 1.02;
+  scene.add(airGlowPlane);
+
+  const airHaloPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(PATCH_W * 1.08, PATCH_D * 1.08),
+    new THREE.MeshBasicMaterial({
+      map: dyeTexture,
+      transparent: true,
+      opacity: 0.24,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+  airHaloPlane.rotation.x = -Math.PI / 2;
+  airHaloPlane.position.y = 1.10;
+  scene.add(airHaloPlane);
+
+  const quadMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.78,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    vertexColors: true,
+    side: THREE.DoubleSide
+  });
+
+  const cubeMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.75,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    vertexColors: true
+  });
+
+  const strokeMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.95,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    vertexColors: true,
+    side: THREE.DoubleSide
+  });
+
+  const quadMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), quadMaterial, MAX_INSTANCES);
+  const cubeMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), cubeMaterial, MAX_INSTANCES);
+  const strokeMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), strokeMaterial, MAX_STROKES);
+
+  quadMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  cubeMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  strokeMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+  quadMesh.frustumCulled = false;
+  cubeMesh.frustumCulled = false;
+  strokeMesh.frustumCulled = false;
+
+  scene.add(quadMesh);
+  scene.add(cubeMesh);
+  scene.add(strokeMesh);
+
+  function makeMat(colorHex) {
+    return new THREE.MeshLambertMaterial({ color: colorHex });
+  }
+
+  const stoneMat = makeMat(0x7d6c6d);
+  const darkMat = makeMat(0x1c1920);
+  const redMat = makeMat(0x7d2231);
+  const purpleMat = makeMat(0x67416b);
+  const violetMat = makeMat(0x47294d);
+  const steelMat = makeMat(0x8a868f);
+  const tealMat = makeMat(0x6fd8ff);
+
+  function addRectObstacle(x, z, w, h) {
+    obstacleDefs.push({ type: "rect", x, z, w, h });
+  }
+
+  function addCircleObstacle(x, z, r) {
+    obstacleDefs.push({ type: "circle", x, z, r });
+  }
+
+  function addRuins() {
+    const left = new THREE.Group();
+    const right = new THREE.Group();
+
+    const arch1 = new THREE.Mesh(new THREE.BoxGeometry(1.15, 2.4, 0.7), stoneMat);
+    arch1.position.set(-6.6, 1.2, -0.8);
+    scene.add(arch1);
+
+    const arch2 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.8, 0.55), stoneMat);
+    arch2.position.set(-7.4, 0.9, -0.7);
+    scene.add(arch2);
+
+    const archTop = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.35, 0.75), stoneMat);
+    archTop.position.set(-7.0, 2.2, -0.8);
+    scene.add(archTop);
+
+    const wallR = new THREE.Mesh(new THREE.BoxGeometry(1.1, 3.6, 0.85), stoneMat);
+    wallR.position.set(7.0, 1.8, -0.2);
+    scene.add(wallR);
+
+    const wallR2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.1, 0.65), stoneMat);
+    wallR2.position.set(6.2, 1.05, -0.55);
+    scene.add(wallR2);
+
+    const tower = new THREE.Mesh(new THREE.BoxGeometry(1.05, 5.6, 1.0), stoneMat);
+    tower.position.set(0.2, 2.8, -5.2);
+    scene.add(tower);
+
+    const tower2 = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.2, 1.2), stoneMat);
+    tower2.position.set(0.2, 5.8, -5.2);
+    scene.add(tower2);
+
+    addRectObstacle(-7.0, -0.8, 1.8, 1.1);
+    addRectObstacle(6.8, -0.25, 1.5, 1.2);
+    addRectObstacle(0.2, -5.2, 1.3, 1.2);
+  }
+
+  function addPlayerFigure() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.7, 5), darkMat);
+    body.position.set(0, 1.3, 0);
+    body.rotation.y = Math.PI * 0.15;
+    g.add(body);
+
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 1.4, 6), darkMat);
+    torso.position.set(0, 1.95, 0);
+    g.add(torso);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), darkMat);
+    head.position.set(0, 2.75, 0);
+    g.add(head);
+
+    const hat = new THREE.Mesh(new THREE.ConeGeometry(0.95, 0.28, 8), darkMat);
+    hat.rotation.x = Math.PI;
+    hat.position.set(0, 3.0, 0);
+    g.add(hat);
+
+    const sword = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.7), steelMat);
+    sword.position.set(0.55, 0.95, 0.45);
+    sword.rotation.x = Math.PI * 0.5;
+    sword.rotation.z = -0.72;
+    g.add(sword);
+
+    const pet = new THREE.Mesh(new THREE.CapsuleGeometry(0.23, 0.25, 4, 8), stoneMat);
+    pet.position.set(0.8, 0.35, 1.0);
+    pet.rotation.y = 0.4;
+    g.add(pet);
+
+    g.position.set(-4.5, 0, 2.6);
+    scene.add(g);
+    addCircleObstacle(-4.5, 2.6, 0.78);
+    addCircleObstacle(-3.7, 3.5, 0.32);
+  }
+
+  function addRedFighter() {
+    const g = new THREE.Group();
+
+    const cloak = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.8, 5), redMat);
+    cloak.position.set(0, 0.9, 0);
+    cloak.rotation.y = Math.PI * 0.2;
+    g.add(cloak);
+
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 1.1, 6), darkMat);
+    torso.position.set(0, 1.4, 0);
+    g.add(torso);
+
+    const hood = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.6, 6), redMat);
+    hood.position.set(0, 2.1, 0);
+    g.add(hood);
+
+    const sword = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.09, 3.0), steelMat);
+    sword.position.set(1.25, 0.9, 0.25);
+    sword.rotation.x = Math.PI * 0.5;
+    sword.rotation.z = 1.35;
+    g.add(sword);
+
+    const shield = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.08, 14), stoneMat);
+    shield.rotation.z = Math.PI * 0.5;
+    shield.position.set(-0.55, 0.8, 0.3);
+    g.add(shield);
+
+    g.position.set(2.1, 0, 0.5);
+    scene.add(g);
+    addCircleObstacle(2.1, 0.5, 0.72);
+  }
+
+  function addGiant() {
+    const g = new THREE.Group();
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(1.55, 2.9, 1.2), purpleMat);
+    torso.position.set(0, 2.2, 0);
+    g.add(torso);
+
+    const pelvis = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.1, 0.95), violetMat);
+    pelvis.position.set(0, 0.95, 0);
+    g.add(pelvis);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.48, 10, 10), violetMat);
+    head.position.set(0.1, 4.0, -0.05);
+    g.add(head);
+
+    const arm1 = new THREE.Mesh(new THREE.BoxGeometry(0.52, 2.2, 0.52), purpleMat);
+    arm1.position.set(1.0, 2.25, 0.0);
+    arm1.rotation.z = -0.2;
+    g.add(arm1);
+
+    const arm2 = new THREE.Mesh(new THREE.BoxGeometry(0.52, 2.2, 0.52), purpleMat);
+    arm2.position.set(-1.0, 2.15, -0.05);
+    arm2.rotation.z = 0.22;
+    g.add(arm2);
+
+    const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.9, 0.6), purpleMat);
+    leg1.position.set(0.45, -0.1, 0.05);
+    g.add(leg1);
+
+    const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.9, 0.6), purpleMat);
+    leg2.position.set(-0.45, -0.05, -0.05);
+    g.add(leg2);
+
+    const mane = new THREE.Mesh(new THREE.ConeGeometry(1.75, 2.2, 7), violetMat);
+    mane.position.set(0.25, 3.2, -0.35);
+    mane.rotation.x = -0.4;
+    mane.rotation.z = 1.4;
+    g.add(mane);
+
+    g.position.set(5.25, 0.25, -0.45);
+    scene.add(g);
+    addCircleObstacle(5.25, -0.45, 1.3);
+  }
+
+  addRuins();
+  addPlayerFigure();
+  addRedFighter();
+  addGiant();
+
+  // --- Simulation / obstacles ---
+  function stampRect(worldX, worldZ, worldW, worldH) {
+    const gx0 = Math.floor(worldToGridX(worldX - worldW * 0.5));
+    const gx1 = Math.ceil(worldToGridX(worldX + worldW * 0.5));
+    const gy0 = Math.floor(worldToGridY(worldZ - worldH * 0.5));
+    const gy1 = Math.ceil(worldToGridY(worldZ + worldH * 0.5));
+
+    for (let y = Math.max(1, gy0); y <= Math.min(simH - 2, gy1); y++) {
+      for (let x = Math.max(1, gx0); x <= Math.min(simW - 2, gx1); x++) {
+        solid[idx(x, y)] = 1;
+      }
+    }
+  }
+
+  function stampCircle(worldX, worldZ, worldR) {
+    const cx = worldToGridX(worldX);
+    const cy = worldToGridY(worldZ);
+    const r = worldR / PATCH_W * simW;
+    const r2 = r * r;
+
+    for (let y = Math.max(1, Math.floor(cy - r)); y <= Math.min(simH - 2, Math.ceil(cy + r)); y++) {
+      const yy = y - cy;
+      for (let x = Math.max(1, Math.floor(cx - r)); x <= Math.min(simW - 2, Math.ceil(cx + r)); x++) {
+        const xx = x - cx;
+        if (xx * xx + yy * yy <= r2) {
+          solid[idx(x, y)] = 1;
+        }
+      }
+    }
+  }
+
+  function buildSolidMask() {
+    solid.fill(0);
+    for (const o of obstacleDefs) {
+      if (o.type === "rect") stampRect(o.x, o.z, o.w, o.h);
+      else stampCircle(o.x, o.z, o.r);
+    }
+  }
+
+  function resizeAndReset() {
+    const c = cfg();
+    simW = c.simW;
+    simH = c.simH;
+    N = simW * simH;
+
+    u = new Float32Array(N);
+    v = new Float32Array(N);
+    u0 = new Float32Array(N);
+    v0 = new Float32Array(N);
+    dye = new Float32Array(N);
+    dye0 = new Float32Array(N);
+    heat = new Float32Array(N);
+    heat0 = new Float32Array(N);
+    pressure = new Float32Array(N);
+    divergence = new Float32Array(N);
+    curlField = new Float32Array(N);
+    solid = new Uint8Array(N);
+
+    makeDyeTexture();
+    fluidPlane.material.map = dyeTexture;
+    fluidGlowPlane.material.map = dyeTexture;
+    airPlane.material.map = dyeTexture;
+    airGlowPlane.material.map = dyeTexture;
+    airHaloPlane.material.map = dyeTexture;
+    fluidPlane.material.needsUpdate = true;
+    fluidGlowPlane.material.needsUpdate = true;
+    airPlane.material.needsUpdate = true;
+    airGlowPlane.material.needsUpdate = true;
+    airHaloPlane.material.needsUpdate = true;
+
+    buildSolidMask();
+    clearSim(false);
+    resizeRenderer();
+  }
+
+  function resizeRenderer() {
+    const c = cfg();
+    const dpr = Math.min(window.devicePixelRatio || 1, c.dprCap);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    const viewH = cameraMode === "top" ? 17.0 : 16.0;
+    camera.left = -viewH * aspect * 0.5;
+    camera.right = viewH * aspect * 0.5;
+    camera.top = viewH * 0.5;
+    camera.bottom = -viewH * 0.5;
+    camera.updateProjectionMatrix();
+    updateCamera();
+  }
+
+  function updateCamera() {
+    if (cameraMode === "top") {
+      camera.position.set(0, 22, 0.01);
+      camera.lookAt(0, 0, 0);
+    } else {
+      camera.position.set(0, 14.5, 13.5);
+      camera.lookAt(0, 1.0, -0.7);
+    }
+  }
+
+  function clearSim(clearTouches = true) {
+    if (!u) return;
+    u.fill(0); v.fill(0);
+    u0.fill(0); v0.fill(0);
+    dye.fill(0); dye0.fill(0);
+    heat.fill(0); heat0.fill(0);
+    pressure.fill(0); divergence.fill(0); curlField.fill(0);
+    strokes.length = 0;
+    if (clearTouches) touches.clear();
+  }
+
+  function injectWorld(x, z, dx, dz, pressureValue = 1) {
+    const s = settings();
+    if (x < -PATCH_W * 0.55 || x > PATCH_W * 0.55 || z < -PATCH_D * 0.55 || z > PATCH_D * 0.55) return;
+
+    const gx = worldToGridX(x);
+    const gy = worldToGridY(z);
+    const radiusGrid = Math.max(1.8, s.radius / 100 * simW * 0.19);
+    const r2 = radiusGrid * radiusGrid;
+
+    const vx = (dx / PATCH_W) * simW * s.push * 0.95 * pressureValue;
+    const vy = (dz / PATCH_D) * simH * s.push * 0.95 * pressureValue;
+    const speed = Math.hypot(dx, dz);
+
+    const minX = Math.max(2, Math.floor(gx - radiusGrid));
+    const maxX = Math.min(simW - 3, Math.ceil(gx + radiusGrid));
+    const minY = Math.max(2, Math.floor(gy - radiusGrid));
+    const maxY = Math.min(simH - 3, Math.ceil(gy + radiusGrid));
+
+    for (let y = minY; y <= maxY; y++) {
+      const yy = y - gy;
+      for (let x = minX; x <= maxX; x++) {
+        const i = idx(x, y);
+        if (solid[i]) continue;
+
+        const xx = x - gx;
+        const dist2 = xx * xx + yy * yy;
+        if (dist2 > r2) continue;
+
+        const falloff = Math.pow(1 - dist2 / r2, 1.7);
+
+        u[i] += vx * falloff;
+        v[i] += vy * falloff;
+
+        const side = Math.sign(vx * yy - vy * xx || 1);
+        const tangent = 0.032 * s.curl * s.push * falloff;
+        u[i] += -yy * tangent * side;
+        v[i] +=  xx * tangent * side;
+
+        const dAdd = (0.022 + speed * 0.85) * s.ink * falloff;
+        const hAdd = (0.06 + speed * 1.2) * s.heat * falloff;
+
+        dye[i] = Math.min(4.0, dye[i] + dAdd);
+        heat[i] = Math.min(4.0, heat[i] + hAdd);
+      }
+    }
+
+    if (speed > 0.08) addStroke(x, z, dx, dz, speed);
+  }
+
+  function addStroke(x, z, dx, dz, speed) {
+    const len = Math.hypot(dx, dz);
+    if (len < 0.01) return;
+    strokes.push({
+      x0: x - dx * 1.8,
+      z0: z - dz * 1.8,
+      x1: x,
+      z1: z,
+      life: 1,
+      heat: Math.min(1, 0.20 + speed * 1.25),
+      width: 0.18 + speed * 0.55,
+      len: len
+    });
+    if (strokes.length > MAX_STROKES) strokes.shift();
+  }
+
+  function advectVector() {
+    const s = settings();
+    u0.set(u);
+    v0.set(v);
+
+    const dt = 0.95;
+
+    for (let y = 1; y < simH - 1; y++) {
+      for (let x = 1; x < simW - 1; x++) {
+        const i = idx(x, y);
+        if (solid[i]) {
+          u[i] = 0;
+          v[i] = 0;
+          continue;
+        }
+        const px = x - u0[i] * dt;
+        const py = y - v0[i] * dt;
+        u[i] = sample(u0, px, py) * s.momentum;
+        v[i] = sample(v0, px, py) * s.momentum;
+      }
+    }
+  }
+
+  function advectScalar(field, prev, fadeFactor) {
+    prev.set(field);
+    const dt = 0.98;
+    for (let y = 1; y < simH - 1; y++) {
+      for (let x = 1; x < simW - 1; x++) {
+        const i = idx(x, y);
+        if (solid[i]) {
+          field[i] = 0;
+          continue;
+        }
+        const px = x - u[i] * dt;
+        const py = y - v[i] * dt;
+        let d = sample(prev, px, py) * fadeFactor;
+        if (d < 0.018) d *= 0.92;
+        field[i] = Math.min(4.0, d);
+      }
+    }
+  }
+
+  function addVorticity() {
+    const s = settings();
+
+    for (let y = 1; y < simH - 1; y++) {
+      for (let x = 1; x < simW - 1; x++) {
+        const i = idx(x, y);
+        if (solid[i]) {
+          curlField[i] = 0;
+          continue;
+        }
+        const dv_dx = (v[idx(x + 1, y)] - v[idx(x - 1, y)]) * 0.5;
+        const du_dy = (u[idx(x, y + 1)] - u[idx(x, y - 1)]) * 0.5;
+        curlField[i] = dv_dx - du_dy;
+      }
+    }
+
+    const strength = 0.0165 * s.curl;
+    for (let y = 2; y < simH - 2; y++) {
+      for (let x = 2; x < simW - 2; x++) {
+        const i = idx(x, y);
+        if (solid[i]) continue;
+
+        const l = Math.abs(curlField[idx(x - 1, y)]);
+        const r = Math.abs(curlField[idx(x + 1, y)]);
+        const b = Math.abs(curlField[idx(x, y - 1)]);
+        const t = Math.abs(curlField[idx(x, y + 1)]);
+
+        let nx = r - l;
+        let ny = t - b;
+        const len = Math.hypot(nx, ny) + 1e-5;
+        nx /= len;
+        ny /= len;
+
+        const c = curlField[i];
+        u[i] += ny * -c * strength;
+        v[i] += nx *  c * strength;
+      }
+    }
+  }
+
+  function project() {
+    const c = cfg();
+    pressure.fill(0);
+
+    for (let y = 1; y < simH - 1; y++) {
+      for (let x = 1; x < simW - 1; x++) {
+        const i = idx(x, y);
+        if (solid[i]) {
+          divergence[i] = 0;
+          continue;
+        }
+        divergence[i] =
+          (u[idx(x + 1, y)] - u[idx(x - 1, y)] +
+           v[idx(x, y + 1)] - v[idx(x, y - 1)]) * -0.5;
+      }
+    }
+
+    for (let k = 0; k < c.pressureIters; k++) {
+      for (let y = 1; y < simH - 1; y++) {
+        for (let x = 1; x < simW - 1; x++) {
+          const i = idx(x, y);
+          if (solid[i]) continue;
+          pressure[i] =
+            (divergence[i] +
+             pressure[idx(x - 1, y)] + pressure[idx(x + 1, y)] +
+             pressure[idx(x, y - 1)] + pressure[idx(x, y + 1)]) * 0.25;
+        }
+      }
+    }
+
+    for (let y = 1; y < simH - 1; y++) {
+      for (let x = 1; x < simW - 1; x++) {
+        const i = idx(x, y);
+        if (solid[i]) continue;
+        u[i] -= (pressure[idx(x + 1, y)] - pressure[idx(x - 1, y)]) * 0.5;
+        v[i] -= (pressure[idx(x, y + 1)] - pressure[idx(x, y - 1)]) * 0.5;
+      }
+    }
+  }
+
+  function applySolids() {
+    for (let y = 1; y < simH - 1; y++) {
+      for (let x = 1; x < simW - 1; x++) {
+        const i = idx(x, y);
+        if (solid[i]) {
+          u[i] = 0;
+          v[i] = 0;
+          dye[i] = 0;
+          heat[i] = 0;
+          continue;
+        }
+
+        const left = solid[idx(x - 1, y)];
+        const right = solid[idx(x + 1, y)];
+        const down = solid[idx(x, y - 1)];
+        const up = solid[idx(x, y + 1)];
+
+        if (left && u[i] < 0) u[i] *= -0.38;
+        if (right && u[i] > 0) u[i] *= -0.38;
+        if (down && v[i] < 0) v[i] *= -0.38;
+        if (up && v[i] > 0) v[i] *= -0.38;
+
+        if (left || right || down || up) {
+          u[i] *= 0.94;
+          v[i] *= 0.94;
+        }
+      }
+    }
+  }
+
+  function updateStrokes() {
+    const s = settings();
+    for (let i = strokes.length - 1; i >= 0; i--) {
+      const st = strokes[i];
+      st.life *= 0.86;
+      st.width *= 0.965;
+      st.heat *= 0.965;
+      if (st.life < 0.02 || st.width < 0.02 || s.accent < 0.05) strokes.splice(i, 1);
+    }
+  }
+
+  function updateSim() {
+    advectVector();
+    addVorticity();
+    project();
+    applySolids();
+    advectScalar(dye, dye0, settings().fade);
+    advectScalar(heat, heat0, 0.955);
+    applySolids();
+    updateStrokes();
+  }
+
+  // --- Palette ---
+  function mix3(a, b, t, out) {
+    out.copy(a).lerp(b, t);
+  }
+
+  function paletteColor(body, hot, layerT, out) {
+    const cool = Math.max(0, body - hot * 0.55);
+    const core = Math.min(1, hot * 1.25);
+    const haze = Math.min(1, cool * (0.65 + layerT * 0.35));
+
+    if (palette === "blue") {
+      // white -> cyan -> teal -> indigo/violet
+      const c0 = new THREE.Color(1.00, 0.99, 1.00);
+      const c1 = new THREE.Color(0.48, 0.98, 1.00);
+      const c2 = new THREE.Color(0.12, 0.66, 1.00);
+      const c3 = new THREE.Color(0.38, 0.20, 0.78);
+
+      if (core > 0.68) mix3(c1, c0, (core - 0.68) / 0.32, out);
+      else if (core > 0.30) mix3(c2, c1, (core - 0.30) / 0.38, out);
+      else mix3(c3, c2, Math.min(1, core / 0.30), out);
+
+      color2.setRGB(0.10, 0.06, 0.22);
+      out.lerp(color2, Math.min(0.55, haze * 0.55 + layerT * 0.14));
+      out.multiplyScalar(0.26 + body * 0.95 + core * 0.65);
+      return;
+    }
+
+    if (palette === "ember") {
+      // white/yellow core -> orange -> magenta -> deep purple haze
+      const c0 = new THREE.Color(1.00, 0.98, 0.92);
+      const c1 = new THREE.Color(1.00, 0.86, 0.22);
+      const c2 = new THREE.Color(1.00, 0.48, 0.08);
+      const c3 = new THREE.Color(0.96, 0.20, 0.66);
+      const c4 = new THREE.Color(0.26, 0.06, 0.26);
+
+      if (core > 0.70) mix3(c1, c0, (core - 0.70) / 0.30, out);
+      else if (core > 0.44) mix3(c2, c1, (core - 0.44) / 0.26, out);
+      else if (core > 0.22) mix3(c3, c2, (core - 0.22) / 0.22, out);
+      else mix3(c4, c3, Math.min(1, core / 0.22), out);
+
+      color2.setRGB(0.19, 0.05, 0.14);
+      out.lerp(color2, Math.min(0.44, haze * 0.42 + layerT * 0.12));
+      out.multiplyScalar(0.26 + body * 1.02 + core * 0.62);
+      return;
+    }
+
+    // arcane: teal/white hot core + magenta/violet body + yellow/orange fire edge feel
+    const c0 = new THREE.Color(1.00, 0.99, 0.98);
+    const c1 = new THREE.Color(0.40, 1.00, 0.96);
+    const c2 = new THREE.Color(0.16, 0.70, 1.00);
+    const c3 = new THREE.Color(0.98, 0.24, 0.80);
+    const c4 = new THREE.Color(1.00, 0.68, 0.18);
+    const c5 = new THREE.Color(0.26, 0.08, 0.33);
+
+    if (core > 0.78) mix3(c1, c0, (core - 0.78) / 0.22, out);
+    else if (core > 0.50) mix3(c2, c1, (core - 0.50) / 0.28, out);
+    else if (core > 0.24) mix3(c3, c2, (core - 0.24) / 0.26, out);
+    else mix3(c5, c3, Math.min(1, core / 0.24), out);
+
+    // add a little ember/orange accent into dense, cooling zones
+    const emberT = Math.min(1, cool * 0.95 * (1 - layerT * 0.25));
+    out.lerp(c4, emberT * 0.22);
+    out.lerp(c5, Math.min(0.40, haze * 0.38 + layerT * 0.10));
+    out.multiplyScalar(0.25 + body * 1.00 + core * 0.68);
+  }
+
+  function hotAccentColor(hot, out) {
+    if (palette === "blue") {
+      out.setRGB(0.62, 1.00, 1.00);
+      out.lerp(new THREE.Color(1, 1, 1), Math.min(1, hot * 0.55));
+      return;
+    }
+    if (palette === "ember") {
+      out.setRGB(1.00, 0.74, 0.14);
+      out.lerp(new THREE.Color(1.0, 0.95, 0.90), Math.min(1, hot * 0.68));
+      return;
+    }
+    out.setRGB(0.62, 1.00, 0.96);
+    out.lerp(new THREE.Color(1.00, 0.80, 0.24), 0.20);
+    out.lerp(new THREE.Color(1.00, 1.00, 1.00), Math.min(1, hot * 0.65));
+  }
+
+  function renderGroundTexture() {
+    const s = settings();
+
+    for (let i = 0, p = 0; i < N; i++, p += 4) {
+      if (solid[i]) {
+        pix[p + 0] = 0;
+        pix[p + 1] = 0;
+        pix[p + 2] = 0;
+        pix[p + 3] = 0;
+        continue;
+      }
+
+      const d = Math.max(0, dye[i]);
+      const h = Math.max(0, heat[i]);
+      const body = Math.min(1, Math.pow(d * 1.25, 0.75));
+      const hot = Math.min(1, Math.pow(Math.min(d, h) * 1.45, 0.78));
+
+      if (body < 0.035) {
+        pix[p + 0] = 0;
+        pix[p + 1] = 0;
+        pix[p + 2] = 0;
+        pix[p + 3] = 0;
+        continue;
+      }
+
+      paletteColor(body, hot, 0, color);
+
+      // Keep the rendered color buffer independent of the Ground Glow slider.
+      // The ground slider only controls whether the floor copies are shown.
+      const a = Math.min(1, body * 0.78 + hot * 0.35);
+      pix[p + 0] = Math.floor(Math.min(255, color.r * 255));
+      pix[p + 1] = Math.floor(Math.min(255, color.g * 255));
+      pix[p + 2] = Math.floor(Math.min(255, color.b * 255));
+      pix[p + 3] = Math.floor(Math.min(255, a * 255));
+    }
+
+    dyeCtx.putImageData(imageData, 0, 0);
+    dyeTexture.needsUpdate = true;
+
+    fluidPlane.material.opacity = s.ground <= 0.001 ? 0 : Math.min(1.6, 0.92 * s.ground);
+    fluidGlowPlane.material.opacity = s.ground <= 0.001 ? 0 : Math.min(1.2, 0.42 * s.ground);
+
+    // The air copies are the new main carrier of the exact ground-color look.
+    airPlane.material.opacity = Math.min(1.45, 0.78 + s.glow * 0.18);
+    airGlowPlane.material.opacity = Math.min(1.10, 0.26 + s.glow * 0.16);
+    airHaloPlane.material.opacity = Math.min(0.75, 0.10 + s.glow * 0.08);
+  }
+
+  function sampleRenderedGroundColor(gx, gy, out) {
+    const x = Math.max(0, Math.min(simW - 1, Math.floor(gx)));
+    const y = Math.max(0, Math.min(simH - 1, Math.floor(gy)));
+    const p = (x + y * simW) * 4;
+    out.setRGB(pix[p + 0] / 255, pix[p + 1] / 255, pix[p + 2] / 255);
+    return pix[p + 3] / 255;
+  }
+
+  function updateVoxelInstances(time) {
+    const s = settings();
+    const mesh = renderMode === "cubes" ? cubeMesh : quadMesh;
+    const other = renderMode === "cubes" ? quadMesh : cubeMesh;
+    mesh.visible = true;
+    other.visible = false;
+
+    const activeLayers = s.layers;
+    const voxelBaseW = PATCH_W / VIS_COLS;
+    const voxelBaseD = PATCH_D / VIS_ROWS;
+    const baseSize = Math.min(voxelBaseW, voxelBaseD) * s.voxelSize;
+    const midLayer = Math.max(0, Math.min(activeLayers - 1, Math.round((activeLayers - 1) * 0.55)));
+
+    let instance = 0;
+
+    for (let row = 0; row < VIS_ROWS; row++) {
+      for (let col = 0; col < VIS_COLS; col++) {
+        const gx = (col + 0.5) / VIS_COLS * (simW - 2) + 1;
+        const gy = (row + 0.5) / VIS_ROWS * (simH - 2) + 1;
+
+        const iApprox = idx(
+          Math.max(1, Math.min(simW - 2, Math.floor(gx))),
+          Math.max(1, Math.min(simH - 2, Math.floor(gy)))
+        );
+        const isSolid = solid[iApprox];
+
+        const d = sample(dye, gx, gy);
+        const speed = Math.hypot(sample(u, gx, gy), sample(v, gx, gy));
+        const swirl = sample(curlField, gx, gy);
+        const body = Math.min(1, Math.pow(d * 1.30, 0.75));
+        const groundAlpha = sampleRenderedGroundColor(gx, gy, color);
+
+        const worldX = (col / (VIS_COLS - 1) - 0.5) * PATCH_W;
+        const worldZ = (row / (VIS_ROWS - 1) - 0.5) * PATCH_D;
+
+        for (let layer = 0; layer < MAX_LAYERS; layer++) {
+          const layerT = layer / Math.max(1, MAX_LAYERS - 1);
+          const seed = seeds[instance];
+          const distFromMid = Math.abs(layer - midLayer);
+          const layerFocus = Math.exp(-Math.pow(distFromMid / 0.95, 2));
+          const breakupNoise = seed * 0.06 + 0.05 * Math.sin(time * 1.1 + seed * 18 + layer * 1.6);
+          const threshold = 0.05 + s.breakup * 0.08 + distFromMid * 0.14 + breakupNoise;
+          const visible = !isSolid && layer < activeLayers && groundAlpha > threshold;
+
+          if (!visible) {
+            dummy.position.set(0, -999, 0);
+            dummy.scale.set(0.001, 0.001, 0.001);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(instance, dummy.matrix);
+            mesh.setColorAt(instance, color.setRGB(0, 0, 0));
+            instance++;
+            continue;
+          }
+
+          const drift = layer * (0.06 + s.height * 0.10);
+          const dx = sample(u, gx, gy) * drift + jitterX[instance] * baseSize * (0.18 + distFromMid * 0.06);
+          const dz = sample(v, gx, gy) * drift + jitterZ[instance] * baseSize * (0.18 + distFromMid * 0.06);
+          const swirlPush = Math.sin(time * 1.7 + seed * 12.0) * swirl * 0.008 * (0.4 + layer);
+
+          const y = 0.28 + layer * (0.14 + s.height * 0.17) + groundAlpha * (0.12 + 0.16 * layerFocus);
+          const size = baseSize * (0.68 + groundAlpha * 0.92 + layerFocus * 0.24) * (1.0 - distFromMid * 0.06);
+          const pulse = 1 + 0.06 * Math.sin(time * 4.6 + seed * 100);
+
+          dummy.position.set(worldX + dx + swirlPush, y, worldZ + dz - swirlPush);
+
+          if (renderMode === "quads") {
+            dummy.quaternion.copy(camera.quaternion);
+            dummy.scale.set(size * pulse, size * pulse, 1);
+          } else {
+            dummy.rotation.set(0, seed * Math.PI * 2, 0);
+            dummy.scale.set(size * pulse, size * (0.45 + groundAlpha * 0.95 + layerFocus * 0.22), size * pulse);
+          }
+
+          dummy.updateMatrix();
+          mesh.setMatrixAt(instance, dummy.matrix);
+
+          // Re-sample the exact rendered ground color so the voxels inherit the
+          // same hot blue/teal core and edge falloff that the floor texture has.
+          sampleRenderedGroundColor(gx, gy, color);
+          color.multiplyScalar((0.72 + groundAlpha * 0.82 + speed * 0.03) * (0.66 + layerFocus * 0.58));
+          mesh.setColorAt(instance, color);
+
+          instance++;
+        }
+      }
+    }
+
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }
+
+  function updateStrokeInstances() {
+    const s = settings();
+    for (let i = 0; i < MAX_STROKES; i++) {
+      const st = strokes[i];
+      if (!st || st.life <= 0 || s.accent <= 0.03) {
+        dummy.position.set(0, -999, 0);
+        dummy.scale.set(0.001, 0.001, 0.001);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        strokeMesh.setMatrixAt(i, dummy.matrix);
+        strokeMesh.setColorAt(i, color.setRGB(0, 0, 0));
+        continue;
+      }
+
+      const mx = (st.x0 + st.x1) * 0.5;
+      const mz = (st.z0 + st.z1) * 0.5;
+      const dx = st.x1 - st.x0;
+      const dz = st.z1 - st.z0;
+      const len = Math.max(0.01, Math.hypot(dx, dz));
+      const ang = Math.atan2(dz, dx);
+
+      dummy.position.set(mx, 0.94 + st.heat * 0.10, mz);
+      dummy.rotation.set(-Math.PI * 0.5, 0, -ang);
+      dummy.scale.set(len * 2.0, st.width * s.accent * (0.65 + st.life * 0.55), 1);
+      dummy.updateMatrix();
+      strokeMesh.setMatrixAt(i, dummy.matrix);
+
+      hotAccentColor(st.heat, color);
+      color.multiplyScalar(0.75 + st.life * 0.45);
+      strokeMesh.setColorAt(i, color);
+    }
+
+    strokeMesh.instanceMatrix.needsUpdate = true;
+    if (strokeMesh.instanceColor) strokeMesh.instanceColor.needsUpdate = true;
+  }
+
+  function getGroundPoint(event, out) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    ndc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    const result = raycaster.ray.intersectPlane(groundPlaneRay, out);
+    return !!result;
+  }
+
+  function dragMove(key, next) {
+    const prev = touches.get(key);
+    if (!prev) {
+      touches.set(key, { x: next.x, z: next.z });
+      return;
+    }
+
+    const dx = next.x - prev.x;
+    const dz = next.z - prev.z;
+    const dist = Math.hypot(dx, dz);
+    const steps = Math.max(1, Math.ceil(dist / 0.25));
+
+    for (let s = 1; s <= steps; s++) {
+      const t = s / steps;
+      injectWorld(
+        prev.x + dx * t,
+        prev.z + dz * t,
+        dx / steps,
+        dz / steps,
+        1
+      );
+    }
+
+    touches.set(key, { x: next.x, z: next.z });
+  }
+
+  renderer.domElement.addEventListener("pointerdown", (e) => {
+    if (e.target !== renderer.domElement) return;
+    e.preventDefault();
+    renderer.domElement.setPointerCapture?.(e.pointerId);
+    if (getGroundPoint(e, hit)) {
+      touches.set(e.pointerId, { x: hit.x, z: hit.z });
+      injectWorld(hit.x, hit.z, 0, 0, 1);
+    }
+  }, { passive: false });
+
+  renderer.domElement.addEventListener("pointermove", (e) => {
+    if (e.target !== renderer.domElement) return;
+    e.preventDefault();
+    if (getGroundPoint(e, hit)) {
+      dragMove(e.pointerId, { x: hit.x, z: hit.z });
+    }
+  }, { passive: false });
+
+  function endPointer(e) {
+    touches.delete(e.pointerId);
+  }
+  renderer.domElement.addEventListener("pointerup", endPointer);
+  renderer.domElement.addEventListener("pointercancel", endPointer);
+  renderer.domElement.addEventListener("lostpointercapture", endPointer);
+
+  renderer.domElement.addEventListener("touchstart", (e) => {
+    if (e.target !== renderer.domElement) return;
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (getGroundPoint(t, hit)) {
+        touches.set("t" + t.identifier, { x: hit.x, z: hit.z });
+        injectWorld(hit.x, hit.z, 0, 0, 1);
+      }
+    }
+  }, { passive: false });
+
+  renderer.domElement.addEventListener("touchmove", (e) => {
+    if (e.target !== renderer.domElement) return;
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (getGroundPoint(t, hit)) {
+        dragMove("t" + t.identifier, { x: hit.x, z: hit.z });
+      }
+    }
+  }, { passive: false });
+
+  renderer.domElement.addEventListener("touchend", (e) => {
+    for (const t of e.changedTouches) touches.delete("t" + t.identifier);
+  }, { passive: false });
+
+  renderer.domElement.addEventListener("touchcancel", (e) => {
+    for (const t of e.changedTouches) touches.delete("t" + t.identifier);
+  }, { passive: false });
+
+  function setActive(group, active) {
+    for (const btn of group) btn.classList.remove("active");
+    active.classList.add("active");
+  }
+
+  quadModeBtn.addEventListener("click", () => {
+    renderMode = "quads";
+    setActive([quadModeBtn, cubeModeBtn], quadModeBtn);
+  });
+
+  cubeModeBtn.addEventListener("click", () => {
+    renderMode = "cubes";
+    setActive([quadModeBtn, cubeModeBtn], cubeModeBtn);
+  });
+
+  cameraBtn.addEventListener("click", () => {
+    cameraMode = cameraMode === "tilt" ? "top" : "tilt";
+    resizeRenderer();
+  });
+
+  arcaneBtn.addEventListener("click", () => {
+    palette = "arcane";
+    setActive([arcaneBtn, blueBtn, emberBtn], arcaneBtn);
+  });
+
+  blueBtn.addEventListener("click", () => {
+    palette = "blue";
+    setActive([arcaneBtn, blueBtn, emberBtn], blueBtn);
+  });
+
+  emberBtn.addEventListener("click", () => {
+    palette = "ember";
+    setActive([arcaneBtn, blueBtn, emberBtn], emberBtn);
+  });
+
+  function openPanel(e) {
+    e.preventDefault?.();
+    e.stopPropagation?.();
+    panel.classList.add("open");
+  }
+
+  function closePanel(e) {
+    e.preventDefault?.();
+    e.stopPropagation?.();
+    panel.classList.remove("open");
+  }
+
+  settingsBtn.addEventListener("click", openPanel);
+  settingsBtn.addEventListener("touchstart", openPanel, { passive: false });
+  closeBtn.addEventListener("click", closePanel);
+  closeBtn.addEventListener("touchstart", closePanel, { passive: false });
+
+  panel.addEventListener("click", (e) => e.stopPropagation());
+  panel.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+  panel.addEventListener("touchmove", (e) => e.stopPropagation(), { passive: true });
+
+  clearBtn.addEventListener("click", () => clearSim());
+
+  fullscreenBtn.addEventListener("click", async () => {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch (err) {
+      console.warn(err);
+    }
+  });
+
+  function set(id, value) {
+    controls[id].value = String(value);
+    controls[id].dispatchEvent(new Event("input"));
+  }
+
+  document.getElementById("duelBtn").addEventListener("click", () => {
+    set("push", 1.95);
+    set("ink", 1.45);
+    set("heat", 1.85);
+    set("curl", 2.45);
+    set("momentum", 0.984);
+    set("fade", 0.989);
+    set("radius", 42);
+    set("layers", 4);
+    set("height", 0.95);
+    set("voxelSize", 0.82);
+    set("breakup", 0.38);
+    set("ground", 0.00);
+    set("glow", 2.25);
+    set("accent", 1.8);
+    clearSim();
+  });
+
+  document.getElementById("cloudBtn").addEventListener("click", () => {
+    set("push", 1.55);
+    set("ink", 1.75);
+    set("heat", 1.35);
+    set("curl", 2.05);
+    set("momentum", 0.986);
+    set("fade", 0.992);
+    set("radius", 52);
+    set("layers", 5);
+    set("height", 1.22);
+    set("voxelSize", 0.98);
+    set("breakup", 0.26);
+    set("ground", 0.00);
+    set("glow", 1.95);
+    set("accent", 1.1);
+    clearSim();
+  });
+
+  document.getElementById("trailBtn").addEventListener("click", () => {
+    set("push", 2.35);
+    set("ink", 1.10);
+    set("heat", 2.35);
+    set("curl", 2.75);
+    set("momentum", 0.982);
+    set("fade", 0.984);
+    set("radius", 28);
+    set("layers", 4);
+    set("height", 0.72);
+    set("voxelSize", 0.68);
+    set("breakup", 0.48);
+    set("ground", 0.00);
+    set("glow", 2.55);
+    set("accent", 2.55);
+    clearSim();
+  });
+
+  window.addEventListener("resize", resizeRenderer);
+  window.addEventListener("orientationchange", () => setTimeout(resizeRenderer, 250));
+
+  let last = performance.now();
+  function animate(now) {
+    const t = now * 0.001;
+    last = now;
+
+    updateSim();
+    renderGroundTexture();
+    updateVoxelInstances(t);
+    updateStrokeInstances();
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(animate);
+  }
+
+  readyToResize = true;
+  resizeAndReset();
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

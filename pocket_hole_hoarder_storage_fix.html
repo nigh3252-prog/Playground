@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pocket Hole Hoarder - Joystick Build</title>
+  <style>
+    :root {
+      --panel: rgba(12, 17, 28, 0.72);
+      --panel-strong: rgba(12, 17, 28, 0.92);
+      --text: #f7f1df;
+      --accent: #8ee6ff;
+      --danger: #ff3b3b;
+      --good: #9dff90;
+      --disabled: rgba(255,255,255,0.32);
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #111927;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+
+    #game {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      touch-action: none;
+    }
+
+    #hud {
+      position: fixed;
+      top: env(safe-area-inset-top, 0);
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 10px 0;
+      pointer-events: none;
+    }
+
+    .pill {
+      pointer-events: auto;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.22);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 750;
+      font-size: clamp(12px, 3.4vw, 16px);
+      line-height: 1;
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+    }
+
+    .button {
+      min-height: 36px;
+      border: 0;
+      color: var(--text);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .button:active:not(:disabled) {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .button:disabled {
+      color: var(--disabled);
+      border-color: rgba(255,255,255,0.08);
+      opacity: 0.58;
+    }
+
+    #rightButtons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #progressWrap {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: calc(env(safe-area-inset-top, 0) + 54px);
+      z-index: 10;
+      height: 12px;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    #progress {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #65dfff, #a4ff8d);
+      transition: width 0.12s linear;
+    }
+
+    #stageMarkers {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .stage-mark {
+      position: absolute;
+      top: -3px;
+      bottom: -3px;
+      width: 2px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.82);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.42);
+      transform: translateX(-1px);
+    }
+
+    #powerups {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0) + 74px);
+      left: 12px;
+      right: 12px;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    #powerups .button {
+      pointer-events: auto;
+      background: rgba(26, 42, 64, 0.75);
+    }
+
+    #pulseBtn.active,
+    #megaBtn.active {
+      background: rgba(70, 132, 170, 0.9);
+      border-color: rgba(142, 230, 255, 0.8);
+    }
+
+    #joystick {
+      position: fixed;
+      left: max(18px, env(safe-area-inset-left, 0) + 18px);
+      bottom: max(22px, env(safe-area-inset-bottom, 0) + 22px);
+      width: min(31vw, 126px);
+      height: min(31vw, 126px);
+      min-width: 104px;
+      min-height: 104px;
+      max-width: 140px;
+      max-height: 140px;
+      border-radius: 50%;
+      z-index: 11;
+      background: rgba(142, 230, 255, 0.075);
+      border: 2px solid rgba(255,255,255,0.28);
+      box-shadow: none;
+      touch-action: none;
+      pointer-events: auto;
+      backdrop-filter: none;
+    }
+
+    #joystick::before,
+    #joystick::after {
+      display: none;
+    }
+
+    #stick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 40%;
+      height: 40%;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(142, 230, 255, 0.72);
+      border: 2px solid rgba(255,255,255,0.62);
+      box-shadow: none;
+      pointer-events: none;
+    }
+
+    #message {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 12;
+      transform: translate(-50%, -50%);
+      width: min(88vw, 540px);
+      padding: 20px 18px;
+      border-radius: 24px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.42);
+      text-align: center;
+      display: none;
+      pointer-events: auto;
+      backdrop-filter: blur(14px);
+    }
+
+    #message h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 7vw, 42px);
+    }
+
+    #message p {
+      margin: 7px 0;
+      color: rgba(255,255,255,0.86);
+      font-size: clamp(14px, 3.6vw, 18px);
+    }
+
+    #message button {
+      margin-top: 14px;
+      background: #f7f1df;
+      color: #111927;
+      font-weight: 850;
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #pauseOptions {
+      display: none;
+      margin: 14px auto 0;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    #pauseOptions .label {
+      margin-bottom: 8px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.88);
+    }
+
+    #pauseOptions .toggleRow {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #pauseOptions button {
+      margin-top: 0;
+      padding: 9px 13px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.18);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+
+    #pauseOptions button.selected {
+      background: #f7f1df;
+      color: #111927;
+      border-color: transparent;
+    }
+
+    .load-error-detail {
+      display: block;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.28);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.76);
+      word-break: break-word;
+    }
+
+    #tip {
+      position: fixed;
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom, 0) + 12px);
+      transform: translateX(-50%);
+      z-index: 10;
+      max-width: min(92vw, 640px);
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.36);
+      color: rgba(255,255,255,0.84);
+      font-size: clamp(12px, 3.2vw, 15px);
+      text-align: center;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    @media (max-height: 590px) {
+      #tip { display: none; }
+      #progressWrap { top: calc(env(safe-area-inset-top, 0) + 48px); }
+      #powerups { top: calc(env(safe-area-inset-top, 0) + 65px); }
+      .pill { padding: 7px 10px; min-height: 30px; }
+      #joystick {
+        width: 104px;
+        height: 104px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      #powerups .pill {
+        font-size: 12px;
+        padding: 7px 9px;
+      }
+    }
+  </style>
+<!-- STORAGE_FIX_BUILD: joystick localStorage errors are ignored -->
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div id="stats" class="pill">Level 1 · 0 / 0 · Hole 0.7 · Shield ♥♥♥</div>
+    <div id="rightButtons">
+      <button id="pauseBtn" class="pill button">Pause</button>
+      <button id="maxBtn" class="pill button">Maximize</button>
+    </div>
+  </div>
+
+  <div id="progressWrap"><div id="progress"></div><div id="stageMarkers"></div></div>
+
+  <div id="powerups">
+    <button id="pulseBtn" class="pill button">Magnet Pulse ×3</button>
+    <button id="megaBtn" class="pill button">Mega Magnet ×1</button>
+  </div>
+
+  <div id="joystick" aria-label="Virtual joystick"><div id="stick"></div></div>
+
+  <div id="message">
+    <h1 id="messageTitle">Pocket Hole Hoarder</h1>
+    <p id="messageBody">Use the joystick to steer the hole. Eat small things first, grow, then swallow logs, blocks, crates, and buildings.</p>
+    <div id="pauseOptions">
+      <div class="label">Joystick mode</div>
+      <div class="toggleRow">
+        <button id="fixedJoyBtn" type="button">Fixed joystick</button>
+        <button id="floatingJoyBtn" type="button">Floating joystick</button>
+      </div>
+    </div>
+    <button id="messageButton">Start</button>
+  </div>
+
+  <div id="tip">Use the bottom-left joystick. Eat tiny pieces first. Magnet buttons pull nearby eligible objects.</div>
+  <script>
+    (function () {
+      "use strict";
+      const threeUrls = [
+        "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+        "https://unpkg.com/three@0.160.0/build/three.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"
+      ];
+      let done = false;
+
+      function showLoadError(lastUrl) {
+        done = true;
+        const stats = document.getElementById("stats");
+        const progress = document.getElementById("progress");
+        const msg = document.getElementById("message");
+        const title = document.getElementById("messageTitle");
+        const body = document.getElementById("messageBody");
+        const btn = document.getElementById("messageButton");
+        const pauseOptions = document.getElementById("pauseOptions");
+        if (stats) stats.textContent = "Three.js load error";
+        if (progress) progress.style.width = "0%";
+        if (pauseOptions) pauseOptions.style.display = "none";
+        if (title) title.textContent = "Three.js did not load";
+        if (body) body.innerHTML =
+          "The game needs the Three.js library before it can start. This usually means the phone/browser could not reach the CDN from this local download page." +
+          "<span class='load-error-detail'>Tried: " + threeUrls.join("<br>") + "<br><br>Last attempt: " + (lastUrl || "none") + "<br><br>Things to try: turn on internet, open the file in Chrome, or host it from GitHub Pages instead of opening through content://downloads.</span>";
+        if (btn) {
+          btn.textContent = "Retry Load";
+          btn.onclick = () => location.reload();
+        }
+        if (msg) msg.style.display = "block";
+      }
+
+      function showRuntimeError(error) {
+        done = true;
+        const stats = document.getElementById("stats");
+        const progress = document.getElementById("progress");
+        const msg = document.getElementById("message");
+        const title = document.getElementById("messageTitle");
+        const body = document.getElementById("messageBody");
+        const btn = document.getElementById("messageButton");
+        const pauseOptions = document.getElementById("pauseOptions");
+        if (stats) stats.textContent = "Game startup error";
+        if (progress) progress.style.width = "0%";
+        if (pauseOptions) pauseOptions.style.display = "none";
+        if (title) title.textContent = "Game code error";
+        if (body) body.innerHTML = "Three.js loaded, but the game hit an error while starting." +
+          "<span class='load-error-detail'>" + (error && (error.stack || error.message) ? String(error.stack || error.message) : String(error)) + "</span>";
+        if (btn) {
+          btn.textContent = "Retry";
+          btn.onclick = () => location.reload();
+        }
+        if (msg) msg.style.display = "block";
+      }
+
+      function startGameSafely() {
+        try {
+          startThreeGame();
+        } catch (error) {
+          console.error(error);
+          showRuntimeError(error);
+        }
+      }
+
+      function loadThree(index) {
+        if (done) return;
+        if (window.THREE) {
+          done = true;
+          startGameSafely();
+          return;
+        }
+        if (index >= threeUrls.length) {
+          showLoadError(threeUrls[threeUrls.length - 1]);
+          return;
+        }
+        const url = threeUrls[index];
+        const script = document.createElement("script");
+        script.src = url;
+        script.async = true;
+        let settled = false;
+        const timeout = setTimeout(() => {
+          if (settled || done) return;
+          settled = true;
+          script.remove();
+          loadThree(index + 1);
+        }, 4500);
+        script.onload = () => {
+          if (settled || done) return;
+          settled = true;
+          clearTimeout(timeout);
+          if (window.THREE) {
+            done = true;
+            startGameSafely();
+          } else {
+            loadThree(index + 1);
+          }
+        };
+        script.onerror = () => {
+          if (settled || done) return;
+          settled = true;
+          clearTimeout(timeout);
+          script.remove();
+          loadThree(index + 1);
+        };
+        document.head.appendChild(script);
+      }
+
+      function startThreeGame() {
+        (() => {
+              "use strict";
+
+              const canvas = document.getElementById("game");
+              const statsEl = document.getElementById("stats");
+              const progressEl = document.getElementById("progress");
+              const stageMarkersEl = document.getElementById("stageMarkers");
+              const pauseBtn = document.getElementById("pauseBtn");
+              const maxBtn = document.getElementById("maxBtn");
+              const pulseBtn = document.getElementById("pulseBtn");
+              const megaBtn = document.getElementById("megaBtn");
+              const joystickEl = document.getElementById("joystick");
+              const stickEl = document.getElementById("stick");
+              const tipEl = document.getElementById("tip");
+              const msg = document.getElementById("message");
+              const msgTitle = document.getElementById("messageTitle");
+              const msgBody = document.getElementById("messageBody");
+              const msgButton = document.getElementById("messageButton");
+              const pauseOptions = document.getElementById("pauseOptions");
+              const fixedJoyBtn = document.getElementById("fixedJoyBtn");
+              const floatingJoyBtn = document.getElementById("floatingJoyBtn");
+
+              const DPR_CAP = 1.55;
+              const ARENA = 38;
+              const HALF = ARENA / 2;
+              const clock = new THREE.Clock();
+
+              let renderer, scene, camera;
+              let holeMesh, holeRim, holeGlow, magnetRing;
+              let level = 1;
+              let swallowed = 0;
+              let safeTotal = 0;
+              let shield = 3;
+              let state = "intro";
+              let objects = [];
+              let bombs = [];
+              let particles = [];
+              let shockwaves = [];
+              let levelCompleteTimer = 0;
+              let shake = 0;
+              let hole = {
+                pos: new THREE.Vector3(0, 0.03, 0),
+                vel: new THREE.Vector3(),
+                radius: 0.72,
+                targetRadius: 0.72
+              };
+
+              let growXP = 0;
+              let sizeStage = 0;
+              let growthThresholds = [];
+              let growthRadii = [];
+              function safeStorageGet(key, fallback) {
+  try {
+    const value = window.localStorage ? localStorage.getItem(key) : null;
+    return value || fallback;
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    if (window.localStorage) localStorage.setItem(key, value);
+  } catch (err) {
+    // Mobile Chrome can throw quota/security errors on local content:// files.
+    // Preferences are nice-to-have only, never worth blocking play.
+  }
+}
+
+let joystickMode = safeStorageGet("holeHoarderJoystickMode", "fixed");
+
+              const joy = {
+                active: false,
+                pointerId: null,
+                x: 0,
+                y: 0
+              };
+
+              const keys = {
+                left: false,
+                right: false,
+                up: false,
+                down: false
+              };
+
+              const power = {
+                pulse: 3,
+                mega: 1,
+                active: null
+              };
+
+              let audioCtx = null;
+              let audioUnlocked = false;
+              let towerSerial = 1;
+
+
+              const palette = {
+                ground: 0x273b2d,
+                rim: 0x111927,
+                black: 0x000000,
+                coin: 0xffd45e,
+                tiny: 0xfff1a6,
+                blockA: 0x8ee6ff,
+                blockB: 0xff9f7e,
+                blockC: 0xa4ff8d,
+                crate: 0xb98a5a,
+                gem: 0xda9dff,
+                log: 0xb8793b,
+                logDark: 0x6d3f20,
+                roof: 0xd86161,
+                bomb: 0xff2525
+              };
+
+              const mats = {
+                coin: new THREE.MeshStandardMaterial({ color: palette.coin, roughness: 0.48, metalness: 0.18 }),
+                tiny: new THREE.MeshStandardMaterial({ color: palette.tiny, roughness: 0.55, metalness: 0.05 }),
+                blockA: new THREE.MeshStandardMaterial({ color: palette.blockA, roughness: 0.72, metalness: 0.03 }),
+                blockB: new THREE.MeshStandardMaterial({ color: palette.blockB, roughness: 0.68, metalness: 0.03 }),
+                blockC: new THREE.MeshStandardMaterial({ color: palette.blockC, roughness: 0.76, metalness: 0.02 }),
+                crate: new THREE.MeshStandardMaterial({ color: palette.crate, roughness: 0.82, metalness: 0.0 }),
+                gem: new THREE.MeshStandardMaterial({ color: palette.gem, roughness: 0.42, metalness: 0.08 }),
+                log: new THREE.MeshStandardMaterial({ color: palette.log, roughness: 0.78, metalness: 0.02 }),
+                logDark: new THREE.MeshStandardMaterial({ color: palette.logDark, roughness: 0.82, metalness: 0.02 }),
+                roof: new THREE.MeshStandardMaterial({ color: palette.roof, roughness: 0.72, metalness: 0.02 }),
+                bomb: new THREE.MeshStandardMaterial({ color: palette.bomb, emissive: 0x550000, roughness: 0.34, metalness: 0.08 }),
+                fuse: new THREE.MeshStandardMaterial({ color: 0x202020, roughness: 0.8 }),
+                black: new THREE.MeshBasicMaterial({ color: 0x000000 }),
+                rim: new THREE.MeshStandardMaterial({ color: palette.rim, roughness: 0.45, metalness: 0.02 }),
+                ghost: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16, depthWrite: false }),
+                magnet: new THREE.MeshBasicMaterial({ color: 0x8ee6ff, transparent: true, opacity: 0.0, depthWrite: false })
+              };
+
+              const geo = {
+                coin: new THREE.CylinderGeometry(0.28, 0.28, 0.10, 16),
+                tinyCube: new THREE.BoxGeometry(0.38, 0.28, 0.38),
+                cube: new THREE.BoxGeometry(0.68, 0.68, 0.68),
+                towerCube: new THREE.BoxGeometry(0.74, 0.74, 0.74),
+                supportBrick: new THREE.BoxGeometry(0.48, 0.24, 0.48),
+                bigCube: new THREE.BoxGeometry(1.12, 1.12, 1.12),
+                brick: new THREE.BoxGeometry(1.02, 0.44, 0.62),
+                crate: new THREE.BoxGeometry(0.86, 0.86, 0.86),
+                bigCrate: new THREE.BoxGeometry(1.28, 1.28, 1.28),
+                gem: new THREE.OctahedronGeometry(0.44, 0),
+                log: new THREE.CylinderGeometry(0.15, 0.15, 1.75, 10),
+                logLong: new THREE.CylinderGeometry(0.17, 0.17, 2.35, 10),
+                logEnd: new THREE.SphereGeometry(0.18, 8, 6),
+                roof: new THREE.BoxGeometry(2.15, 0.26, 0.82),
+                bomb: new THREE.SphereGeometry(0.48, 18, 12),
+                fuse: new THREE.CylinderGeometry(0.055, 0.055, 0.42, 8),
+                particle: new THREE.SphereGeometry(0.12, 8, 6)
+              };
+
+              function rand(min, max) {
+                return min + Math.random() * (max - min);
+              }
+
+              function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+              }
+
+              function smoothstep(edge0, edge1, x) {
+                const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+                return t * t * (3 - 2 * t);
+              }
+
+
+              function ensureAudio() {
+                if (audioUnlocked) return;
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (!AC) return;
+                if (!audioCtx) audioCtx = new AC();
+                if (audioCtx.state === "suspended") audioCtx.resume();
+                audioUnlocked = true;
+              }
+
+              function tone(freq, duration, type, gain, delay, endFreq) {
+                if (!audioCtx) return;
+                const t0 = audioCtx.currentTime + (delay || 0);
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                osc.type = type || "sine";
+                osc.frequency.setValueAtTime(freq, t0);
+                if (endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), t0 + duration);
+                g.gain.setValueAtTime(0.0001, t0);
+                g.gain.exponentialRampToValueAtTime(gain || 0.08, t0 + 0.012);
+                g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+                osc.connect(g).connect(audioCtx.destination);
+                osc.start(t0);
+                osc.stop(t0 + duration + 0.02);
+              }
+
+              function noiseBurst(duration, gain, delay, filterFreq) {
+                if (!audioCtx) return;
+                const t0 = audioCtx.currentTime + (delay || 0);
+                const len = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
+                const buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+                const src = audioCtx.createBufferSource();
+                const filter = audioCtx.createBiquadFilter();
+                const g = audioCtx.createGain();
+                filter.type = "lowpass";
+                filter.frequency.setValueAtTime(filterFreq || 1600, t0);
+                g.gain.setValueAtTime(gain || 0.05, t0);
+                g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+                src.buffer = buffer;
+                src.connect(filter).connect(g).connect(audioCtx.destination);
+                src.start(t0);
+                src.stop(t0 + duration + 0.02);
+              }
+
+              function playSound(kind, obj) {
+                if (!audioUnlocked || !audioCtx) return;
+                const jitter = rand(-35, 35);
+                if (kind === "coin") {
+                  tone(880 + jitter, 0.08, "sine", 0.055, 0, 1350 + jitter);
+                  tone(1320 + jitter, 0.06, "triangle", 0.025, 0.025, 1600 + jitter);
+                } else if (kind === "tiny") {
+                  tone(620 + jitter, 0.09, "triangle", 0.045, 0, 920 + jitter);
+                } else if (kind === "medium") {
+                  tone(180 + jitter, 0.12, "square", 0.04, 0, 95);
+                  noiseBurst(0.06, 0.025, 0.01, 900);
+                } else if (kind === "wood" || kind === "log" || kind === "crate") {
+                  tone(135 + jitter, 0.13, "triangle", 0.052, 0, 85);
+                  noiseBurst(0.08, 0.035, 0.008, 650);
+                } else if (kind === "big") {
+                  tone(88, 0.18, "sawtooth", 0.055, 0, 52);
+                  noiseBurst(0.12, 0.04, 0, 500);
+                } else if (kind === "grow") {
+                  tone(520, 0.13, "sine", 0.05, 0, 700);
+                  tone(780, 0.13, "sine", 0.04, 0.09, 1040);
+                  tone(1160, 0.16, "triangle", 0.035, 0.18, 1420);
+                } else if (kind === "magnet") {
+                  tone(240, 0.30, "sawtooth", 0.045, 0, 620);
+                  tone(480, 0.24, "triangle", 0.032, 0.04, 960);
+                } else if (kind === "tower") {
+                  for (let i = 0; i < 7; i++) {
+                    tone(170 + i * 28 + rand(-16, 16), 0.07, i % 2 ? "square" : "triangle", 0.028, i * 0.035, 90 + i * 12);
+                    noiseBurst(0.04, 0.018, i * 0.032, 700 + i * 70);
+                  }
+                } else if (kind === "bomb") {
+                  tone(74, 0.45, "sawtooth", 0.11, 0, 34);
+                  noiseBurst(0.42, 0.12, 0, 1100);
+                }
+              }
+
+              function playSwallowSound(o) {
+                if (!o) return;
+                if (o.kind === "coin") playSound("coin", o);
+                else if (o.kind === "tiny" || o.isSupport) playSound("tiny", o);
+                else if (o.kind === "log" || o.kind === "roof") playSound("log", o);
+                else if (o.kind === "crate" || o.kind === "big-crate") playSound("crate", o);
+                else if (o.kind === "big-block" || o.kind === "tower-block") playSound("big", o);
+                else playSound("medium", o);
+              }
+
+              function init() {
+                renderer = new THREE.WebGLRenderer({
+                  canvas,
+                  antialias: false,
+                  powerPreference: "high-performance"
+                });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_CAP));
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = false;
+                renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x111927);
+                scene.fog = new THREE.Fog(0x111927, 38, 64);
+
+                camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 120);
+                camera.position.set(0, 30, 30);
+                camera.lookAt(0, 0, 0);
+
+                const hemi = new THREE.HemisphereLight(0xfff5d2, 0x273c62, 2.3);
+                scene.add(hemi);
+
+                const sun = new THREE.DirectionalLight(0xffffff, 1.35);
+                sun.position.set(-8, 18, 12);
+                scene.add(sun);
+
+                buildArena();
+                buildHole();
+                addEvents();
+                resize();
+
+                showMessage(
+                  "Pocket Hole Hoarder",
+                  "Use the bottom-left joystick to steer. The hole starts tiny, so eat coins and little nubs first. Grow big enough for blocks, crates, and Lincoln Log buildings. Magnet buttons pull nearby pieces.",
+                  "Start",
+                  () => {
+                    hideMessage();
+                    state = "running";
+                    resetGame();
+                  }
+                );
+
+                animate();
+              }
+
+              function buildArena() {
+                const groundGroup = new THREE.Group();
+                groundGroup.name = "Arena";
+                scene.add(groundGroup);
+
+                const groundMat = new THREE.MeshStandardMaterial({ color: palette.ground, roughness: 0.92, metalness: 0.0 });
+                const ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA, ARENA, 1, 1), groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -0.02;
+                groundGroup.add(ground);
+
+                const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.075 });
+                for (let i = -HALF; i <= HALF; i += 2) {
+                  const a = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(-HALF, 0.01, i),
+                    new THREE.Vector3(HALF, 0.01, i)
+                  ]);
+                  const b = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(i, 0.01, -HALF),
+                    new THREE.Vector3(i, 0.01, HALF)
+                  ]);
+                  groundGroup.add(new THREE.Line(a, lineMat));
+                  groundGroup.add(new THREE.Line(b, lineMat));
+                }
+
+                const wallMat = new THREE.MeshStandardMaterial({ color: 0x1d2c35, roughness: 0.8 });
+                const wallGeoH = new THREE.BoxGeometry(ARENA + 2, 1.2, 1.2);
+                const wallGeoV = new THREE.BoxGeometry(1.2, 1.2, ARENA + 2);
+                const wallPositions = [
+                  [0, 0.55, -HALF - 0.6, wallGeoH],
+                  [0, 0.55, HALF + 0.6, wallGeoH],
+                  [-HALF - 0.6, 0.55, 0, wallGeoV],
+                  [HALF + 0.6, 0.55, 0, wallGeoV]
+                ];
+                for (const [x, y, z, g] of wallPositions) {
+                  const w = new THREE.Mesh(g, wallMat);
+                  w.position.set(x, y, z);
+                  groundGroup.add(w);
+                }
+              }
+
+              function buildHole() {
+                holeMesh = new THREE.Mesh(new THREE.CircleGeometry(1, 64), mats.black);
+                holeMesh.rotation.x = -Math.PI / 2;
+                holeMesh.position.copy(hole.pos);
+                holeMesh.renderOrder = 4;
+                scene.add(holeMesh);
+
+                holeRim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.075, 8, 72), mats.rim);
+                holeRim.rotation.x = Math.PI / 2;
+                holeRim.position.copy(hole.pos);
+                holeRim.renderOrder = 5;
+                scene.add(holeRim);
+
+                holeGlow = new THREE.Mesh(new THREE.CircleGeometry(1, 64), mats.ghost);
+                holeGlow.rotation.x = -Math.PI / 2;
+                holeGlow.position.set(0, 0.025, 0);
+                scene.add(holeGlow);
+
+                magnetRing = new THREE.Mesh(new THREE.TorusGeometry(1, 0.035, 8, 96), mats.magnet);
+                magnetRing.rotation.x = Math.PI / 2;
+                magnetRing.position.set(0, 0.08, 0);
+                magnetRing.renderOrder = 6;
+                scene.add(magnetRing);
+              }
+
+              function addEvents() {
+                window.addEventListener("resize", resize);
+
+                joystickEl.addEventListener("pointerdown", (e) => {
+                  beginJoystick(e);
+                }, { passive: false });
+
+                canvas.addEventListener("pointerdown", (e) => {
+                  if (joystickMode !== "floating") return;
+                  if (e.target.closest && e.target.closest("#hud, #powerups, #message, #joystick")) return;
+                  beginJoystick(e);
+                }, { passive: false });
+
+                window.addEventListener("pointermove", (e) => {
+                  if (!joy.active || e.pointerId !== joy.pointerId) return;
+                  e.preventDefault();
+                  updateJoystickFromEvent(e);
+                }, { passive: false });
+
+                window.addEventListener("pointerup", endJoystick, { passive: true });
+                window.addEventListener("pointercancel", endJoystick, { passive: true });
+
+                function beginJoystick(e) {
+                  ensureAudio();
+                  e.preventDefault();
+                  joy.active = true;
+                  joy.pointerId = e.pointerId;
+                  if (joystickMode === "floating") {
+                    placeFloatingJoystick(e.clientX, e.clientY);
+                  }
+                  try { joystickEl.setPointerCapture(e.pointerId); } catch {}
+                  updateJoystickFromEvent(e);
+                  if (state === "intro") {
+                    hideMessage();
+                    resetGame();
+                    state = "running";
+                  }
+                }
+
+                function endJoystick(e) {
+                  if (joy.pointerId !== null && e.pointerId !== joy.pointerId) return;
+                  joy.active = false;
+                  joy.pointerId = null;
+                  joy.x = 0;
+                  joy.y = 0;
+                  stickEl.style.transform = "translate(-50%, -50%)";
+                  try { joystickEl.releasePointerCapture(e.pointerId); } catch {}
+                }
+
+                pauseBtn.addEventListener("click", () => {
+                  if (state === "running") {
+                    showPauseMessage();
+                  } else if (state === "paused") {
+                    togglePause(false);
+                  }
+                });
+
+                maxBtn.addEventListener("click", async () => {
+                  try {
+                    if (!document.fullscreenElement) {
+                      await document.documentElement.requestFullscreen();
+                      maxBtn.textContent = "Exit Fullscreen";
+                    } else {
+                      await document.exitFullscreen();
+                      maxBtn.textContent = "Maximize";
+                    }
+                  } catch {
+                    maxBtn.textContent = "Maximize";
+                  }
+                });
+
+                pulseBtn.addEventListener("click", () => {
+                  activateMagnet("pulse");
+                });
+
+                megaBtn.addEventListener("click", () => {
+                  activateMagnet("mega");
+                });
+
+                fixedJoyBtn.addEventListener("click", () => {
+                  setJoystickMode("fixed");
+                });
+
+                floatingJoyBtn.addEventListener("click", () => {
+                  setJoystickMode("floating");
+                });
+
+                document.addEventListener("fullscreenchange", () => {
+                  maxBtn.textContent = document.fullscreenElement ? "Exit Fullscreen" : "Maximize";
+                  setTimeout(resize, 80);
+                });
+
+                msgButton.addEventListener("click", () => {
+                  ensureAudio();
+                  if (typeof msgButton._handler === "function") msgButton._handler();
+                });
+
+                window.addEventListener("keydown", (e) => {
+                  if (e.key === " " || e.key === "Escape") {
+                    e.preventDefault();
+                    if (state === "running") {
+                      showPauseMessage();
+                    } else if (state === "paused") {
+                      togglePause(false);
+                    }
+                  }
+
+                  const k = e.key.toLowerCase();
+                  if (k === "a" || k === "arrowleft") keys.left = true;
+                  if (k === "d" || k === "arrowright") keys.right = true;
+                  if (k === "w" || k === "arrowup") keys.up = true;
+                  if (k === "s" || k === "arrowdown") keys.down = true;
+                });
+
+                window.addEventListener("keyup", (e) => {
+                  const k = e.key.toLowerCase();
+                  if (k === "a" || k === "arrowleft") keys.left = false;
+                  if (k === "d" || k === "arrowright") keys.right = false;
+                  if (k === "w" || k === "arrowup") keys.up = false;
+                  if (k === "s" || k === "arrowdown") keys.down = false;
+                });
+
+                setJoystickMode(joystickMode);
+              }
+
+              function placeFloatingJoystick(clientX, clientY) {
+                const size = joystickEl.getBoundingClientRect().width || 120;
+                const margin = 12;
+                const left = clamp(clientX - size / 2, margin, window.innerWidth - size - margin);
+                const top = clamp(clientY - size / 2, margin, window.innerHeight - size - margin);
+                joystickEl.style.left = `${left}px`;
+                joystickEl.style.top = `${top}px`;
+                joystickEl.style.bottom = "auto";
+                joystickEl.style.opacity = "1";
+              }
+
+              function setJoystickMode(mode) {
+                joystickMode = mode === "floating" ? "floating" : "fixed";
+                safeStorageSet("holeHoarderJoystickMode", joystickMode);
+
+                fixedJoyBtn.classList.toggle("selected", joystickMode === "fixed");
+                floatingJoyBtn.classList.toggle("selected", joystickMode === "floating");
+
+                if (joystickMode === "fixed") {
+                  joystickEl.style.left = "";
+                  joystickEl.style.top = "";
+                  joystickEl.style.bottom = "";
+                  joystickEl.style.opacity = "1";
+                  flashTip("Fixed joystick: use the bottom-left control.");
+                } else {
+                  joystickEl.style.opacity = "0.72";
+                  flashTip("Floating joystick: touch the playfield and the stick appears under your thumb.");
+                }
+              }
+
+              function showPauseMessage() {
+                state = "paused";
+                pauseBtn.textContent = "Resume";
+                showMessage("Paused", "Choose a joystick style, then press Resume to continue.", "Resume", () => togglePause(false));
+                pauseOptions.style.display = "block";
+                updatePowerHud();
+              }
+
+              function updateJoystickFromEvent(e) {
+                const rect = joystickEl.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const max = rect.width * 0.34;
+                let dx = e.clientX - cx;
+                let dy = e.clientY - cy;
+                const len = Math.hypot(dx, dy);
+                if (len > max) {
+                  dx = dx / len * max;
+                  dy = dy / len * max;
+                }
+                joy.x = dx / max;
+                joy.y = dy / max;
+                stickEl.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+              }
+
+              function activateMagnet(kind) {
+                ensureAudio();
+                if (state !== "running") return;
+                if (kind === "pulse" && power.pulse <= 0) return;
+                if (kind === "mega" && power.mega <= 0) return;
+
+                if (kind === "pulse") {
+                  power.pulse--;
+                  power.active = {
+                    kind,
+                    time: 0,
+                    duration: 2.2,
+                    radius: 8.0,
+                    strength: 8.0,
+                    sizeBonus: 1.02
+                  };
+                  flashTip("Magnet Pulse: pulling nearby pieces into the hole.");
+                } else {
+                  power.mega--;
+                  power.active = {
+                    kind,
+                    time: 0,
+                    duration: 4.0,
+                    radius: 12.5,
+                    strength: 11.0,
+                    sizeBonus: 1.08
+                  };
+                  flashTip("Mega Magnet: wide pull field active.");
+                }
+                playSound("magnet");
+                updatePowerHud();
+              }
+
+              function togglePause(paused) {
+                if (paused) {
+                  state = "paused";
+                  pauseBtn.textContent = "Resume";
+                } else {
+                  hideMessage();
+                  state = "running";
+                  pauseBtn.textContent = "Pause";
+                  clock.getDelta();
+                }
+              }
+
+              function resize() {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                camera.aspect = w / h;
+                camera.fov = h < 560 ? 55 : 48;
+                camera.updateProjectionMatrix();
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_CAP));
+                renderer.setSize(w, h, false);
+              }
+
+              function resetGame() {
+                level = 1;
+                shield = 3;
+                swallowed = 0;
+                loadLevel(level);
+              }
+
+              function clearDynamic() {
+                for (const entry of objects) scene.remove(entry.mesh);
+                for (const p of particles) scene.remove(p.mesh);
+                for (const s of shockwaves) scene.remove(s.mesh);
+                objects = [];
+                bombs = [];
+                particles = [];
+                shockwaves = [];
+              }
+
+              function loadLevel(n) {
+                clearDynamic();
+                swallowed = 0;
+                levelCompleteTimer = 0;
+                shake = 0;
+                hole.radius = 0.68 + Math.min(n - 1, 4) * 0.04;
+                hole.targetRadius = hole.radius;
+                hole.pos.set(0, 0.03, 0);
+                hole.vel.set(0, 0, 0);
+                joy.x = joy.y = 0;
+                stickEl.style.transform = "translate(-50%, -50%)";
+                safeTotal = 0;
+
+                power.pulse = 3 + Math.floor(Math.max(0, n - 1) / 2);
+                power.mega = n >= 2 ? 1 : 0;
+                power.active = null;
+
+                if (n === 1) {
+                  buildStarterToyTown();
+                } else {
+                  buildStarterToyTown();
+                  addExtraLevelScatter(n);
+                }
+
+                const bombCount = n >= 3 ? Math.min(2 + Math.floor((n - 3) * 1.25), 8) : 0;
+                for (let i = 0; i < bombCount; i++) {
+                  const angle = (i / Math.max(1, bombCount)) * Math.PI * 2 + rand(-0.4, 0.4);
+                  const rad = rand(7, 15.2);
+                  createBomb(clamp(Math.cos(angle) * rad, -HALF + 2, HALF - 2), clamp(Math.sin(angle) * rad, -HALF + 2, HALF - 2));
+                }
+
+                configureGrowthStages(n);
+                updateHud();
+                updatePowerHud();
+                hideMessage();
+                state = "running";
+                pauseBtn.textContent = "Pause";
+
+                if (n === 1) {
+                  flashTip("Start tiny: coins and little nubs first. Grow into blocks, crates, and log buildings.");
+                } else if (n === 3) {
+                  flashTip("Level 3: flashing red bombs are live. Do not swallow them.");
+                } else {
+                  flashTip("Use magnets to pull nearby pieces, but big objects still need a bigger hole.");
+                }
+              }
+
+              function configureGrowthStages(n) {
+                growXP = 0;
+                sizeStage = 0;
+
+                const startRadius = 0.66 + Math.min(n - 1, 4) * 0.03;
+                const maxRadius = getMaxHoleRadiusForLevel(n);
+                const stageCount = n <= 2 ? 8 : 9;
+
+                growthRadii = [];
+                for (let i = 0; i < stageCount; i++) {
+                  const t = i / Math.max(1, stageCount - 1);
+                  growthRadii.push(THREE.MathUtils.lerp(startRadius, maxRadius, t));
+                }
+
+                const totalXp = Math.max(1, objects.reduce((sum, o) => {
+                  return sum + (!o.bomb ? (o.xp || o.mass || 1) : 0);
+                }, 0));
+
+                growthThresholds = [];
+                const maxStageXp = totalXp * 0.70;
+                for (let i = 1; i < stageCount; i++) {
+                  // More stages, and the final size arrives well before full clear.
+                  const fraction = i / Math.max(1, stageCount - 1);
+                  const eased = Math.pow(fraction, 1.03);
+                  growthThresholds.push(maxStageXp * eased);
+                }
+
+                hole.radius = growthRadii[0];
+                hole.targetRadius = growthRadii[0];
+                renderStageMarkers();
+              }
+
+              function getMaxHoleRadiusForLevel(n) {
+                if (n <= 1) return 1.95;
+                if (n === 2) return 2.12;
+                return 2.30 + Math.min(0.90, (n - 3) * 0.18);
+              }
+
+              function renderStageMarkers() {
+                stageMarkersEl.innerHTML = "";
+                const finalNeed = growthThresholds[growthThresholds.length - 1] || 1;
+                for (const need of growthThresholds) {
+                  const mark = document.createElement("div");
+                  mark.className = "stage-mark";
+                  mark.style.left = `${clamp((need / finalNeed) * 100, 0, 100)}%`;
+                  stageMarkersEl.appendChild(mark);
+                }
+              }
+
+              function awardGrowth(o) {
+                growXP += o.xp || o.mass || 1;
+                let grew = false;
+
+                while (sizeStage < growthThresholds.length && growXP >= growthThresholds[sizeStage]) {
+                  sizeStage++;
+                  grew = true;
+                }
+
+                if (growthRadii[sizeStage] !== undefined) {
+                  hole.targetRadius = growthRadii[sizeStage];
+                }
+
+                if (grew) {
+                  makeSwallowSpark(hole.pos.x, hole.pos.z);
+                  playSound("grow");
+                  flashTip(sizeStage >= growthRadii.length - 1
+                    ? "Max hole size for this level reached."
+                    : "Hole grew! Bigger pieces can fit now.");
+                }
+              }
+
+              function buildStarterToyTown() {
+                const clusters = [
+                  { x: -11.5, z: -9.5 },
+                  { x:  9.5, z: -9.0 },
+                  { x: -10.0, z:  8.2 },
+                  { x:  10.2, z:  8.8 },
+                  { x:  0.0, z: -12.5 },
+                  { x:  0.0, z:  11.0 }
+                ];
+
+                // Small starting snack trail around the spawn.
+                for (let i = 0; i < 44; i++) {
+                  const a = i * 0.62;
+                  const r = 1.7 + i * 0.045;
+                  createTinyPickup(Math.cos(a) * r, Math.sin(a) * r, i % 4 === 0 ? "tiny" : "coin");
+                }
+
+                // Dense piles of mixed sizes.
+                for (let c = 0; c < clusters.length; c++) {
+                  const center = clusters[c];
+                  createCoinMound(center.x + rand(-1.3, 1.3), center.z + rand(-1.3, 1.3), 13 + (c % 3) * 5);
+                  createBlockPile(center.x + rand(-1.7, 1.7), center.z + rand(-1.7, 1.7), 10 + c * 2);
+
+                  // At least four Lincoln Log-like buildings in the initial level.
+                  if (c < 4) {
+                    createLincolnLogBuilding(center.x + rand(-1.6, 1.6), center.z + rand(-1.6, 1.6), 3 + (c % 2), c * 0.45);
+                  }
+
+                  // A few late-size prizes inside the same first level.
+                  if (c % 2 === 0) {
+                    createLargeToyStack(center.x + rand(-2.2, 2.2), center.z + rand(-2.2, 2.2));
+                  }
+
+                  // Frequent tall towers: eat the small supports and the upper stack collapses.
+                  createTallBlockTower(center.x + rand(-2.4, 2.4), center.z + rand(-2.4, 2.4), 5 + (c % 4), c * 0.62);
+                }
+
+                // Some medium objects between clusters so the level has a growth curve, not isolated islands.
+                for (let i = 0; i < 36; i++) {
+                  const a = rand(0, Math.PI * 2);
+                  const r = rand(5.2, 14.8);
+                  const x = clamp(Math.cos(a) * r + rand(-1.2, 1.2), -HALF + 2, HALF - 2);
+                  const z = clamp(Math.sin(a) * r + rand(-1.2, 1.2), -HALF + 2, HALF - 2);
+                  if (Math.random() < 0.45) createMediumBlock(x, z);
+                  else createCrate(x, z, false);
+                }
+              }
+
+              function addExtraLevelScatter(n) {
+                const extra = Math.min(34 + n * 9, 90);
+                for (let i = 0; i < extra; i++) {
+                  const a = rand(0, Math.PI * 2);
+                  const r = rand(3, 16);
+                  const x = clamp(Math.cos(a) * r, -HALF + 2, HALF - 2);
+                  const z = clamp(Math.sin(a) * r, -HALF + 2, HALF - 2);
+                  const roll = Math.random();
+                  if (roll < 0.32) createTinyPickup(x, z, "coin");
+                  else if (roll < 0.58) createMediumBlock(x, z);
+                  else if (roll < 0.82) createCrate(x, z, Math.random() < 0.35);
+                  else createBigBlock(x, z);
+                }
+
+                if (n >= 2) {
+                  for (let i = 0; i < Math.min(2 + n, 6); i++) {
+                    const a = rand(0, Math.PI * 2);
+                    const r = rand(7, 15);
+                    createLincolnLogBuilding(Math.cos(a) * r, Math.sin(a) * r, 4, rand(0, Math.PI));
+                  }
+                  for (let i = 0; i < Math.min(3 + n, 7); i++) {
+                    const a = rand(0, Math.PI * 2);
+                    const r = rand(6, 16);
+                    createTallBlockTower(Math.cos(a) * r, Math.sin(a) * r, 6 + (i % 5), rand(0, Math.PI));
+                  }
+                }
+              }
+
+              function addObject(mesh, x, y, z, sizeReq, mass, kind, options = {}) {
+                mesh.position.set(x, y, z);
+                scene.add(mesh);
+                const entry = {
+                  mesh,
+                  sizeReq,
+                  mass,
+                  xp: Math.max(0.20, mass),
+                  kind: kind || "loot",
+                  bomb: false,
+                  state: "active",
+                  fallT: 0,
+                  start: new THREE.Vector3(),
+                  spin: new THREE.Vector3(rand(-4, 4), rand(-5, 5), rand(-4, 4)),
+                  tooBigPulse: 0,
+                  groundY: y,
+                  towerFalling: false,
+                  fallVel: 0,
+                  fallDrift: new THREE.Vector3()
+                };
+                Object.assign(entry, options);
+                objects.push(entry);
+                safeTotal++;
+                return entry;
+              }
+
+              function createTinyPickup(x, z, kind) {
+                if (kind === "tiny") {
+                  const mesh = new THREE.Mesh(geo.tinyCube, Math.random() < 0.5 ? mats.tiny : mats.blockC);
+                  mesh.rotation.set(rand(-0.1, 0.1), rand(0, Math.PI), rand(-0.1, 0.1));
+                  addObject(mesh, x, 0.16, z, 0.40, 0.34, "tiny");
+                } else {
+                  const mesh = new THREE.Mesh(geo.coin, mats.coin);
+                  mesh.position.y = 0.08;
+                  mesh.rotation.x = Math.PI / 2;
+                  mesh.rotation.z = rand(0, Math.PI);
+                  addObject(mesh, x, 0.08, z, 0.31, 0.25, "coin");
+                }
+              }
+
+              function createCoinMound(cx, zc, count) {
+                for (let i = 0; i < count; i++) {
+                  const a = rand(0, Math.PI * 2);
+                  const r = Math.pow(Math.random(), 0.68) * rand(0.2, 1.2);
+                  const stackLayer = Math.floor(i / 5);
+                  const x = clamp(cx + Math.cos(a) * r, -HALF + 2, HALF - 2);
+                  const z = clamp(zc + Math.sin(a) * r, -HALF + 2, HALF - 2);
+                  const mesh = new THREE.Mesh(geo.coin, mats.coin);
+                  mesh.rotation.x = Math.PI / 2;
+                  mesh.rotation.z = rand(0, Math.PI);
+                  addObject(mesh, x, 0.08 + stackLayer * 0.11, z, 0.31, 0.25, "coin");
+                }
+              }
+
+              function createBlockPile(cx, zc, count) {
+                for (let i = 0; i < count; i++) {
+                  const a = rand(0, Math.PI * 2);
+                  const r = Math.pow(Math.random(), 0.74) * 1.7;
+                  const x = clamp(cx + Math.cos(a) * r, -HALF + 2, HALF - 2);
+                  const z = clamp(zc + Math.sin(a) * r, -HALF + 2, HALF - 2);
+
+                  if (i < 5) createTinyPickup(x, z, Math.random() < 0.45 ? "tiny" : "coin");
+                  else if (Math.random() < 0.7) createMediumBlock(x, z);
+                  else createCrate(x, z, false);
+                }
+              }
+
+              function createMediumBlock(x, z) {
+                const roll = Math.random();
+                let mesh, req, mass, y;
+                if (roll < 0.5) {
+                  const mat = [mats.blockA, mats.blockB, mats.blockC][Math.floor(rand(0, 3))];
+                  mesh = new THREE.Mesh(geo.cube, mat);
+                  req = 0.69;
+                  mass = 0.95;
+                  y = 0.34;
+                } else if (roll < 0.82) {
+                  const mat = Math.random() < 0.5 ? mats.blockB : mats.crate;
+                  mesh = new THREE.Mesh(geo.brick, mat);
+                  req = 0.78;
+                  mass = 1.12;
+                  y = 0.26;
+                } else {
+                  mesh = new THREE.Mesh(geo.gem, mats.gem);
+                  req = 0.62;
+                  mass = 1.28;
+                  y = 0.44;
+                }
+                mesh.rotation.set(rand(-0.18, 0.18), rand(0, Math.PI), rand(-0.18, 0.18));
+                addObject(mesh, x, y, z, req, mass, "medium");
+              }
+
+              function createCrate(x, z, big) {
+                const mesh = new THREE.Mesh(big ? geo.bigCrate : geo.crate, mats.crate);
+                mesh.rotation.set(rand(-0.15, 0.15), rand(0, Math.PI), rand(-0.15, 0.15));
+                addObject(mesh, x, big ? 0.64 : 0.43, z, big ? 1.25 : 0.92, big ? 2.0 : 1.35, big ? "big-crate" : "crate");
+              }
+
+              function createBigBlock(x, z) {
+                const mat = Math.random() < 0.5 ? mats.blockA : mats.blockB;
+                const mesh = new THREE.Mesh(geo.bigCube, mat);
+                mesh.rotation.set(rand(-0.08, 0.08), rand(0, Math.PI), rand(-0.08, 0.08));
+                addObject(mesh, x, 0.56, z, 1.17, 1.95, "big-block");
+              }
+
+              function createLargeToyStack(cx, zc) {
+                createBigBlock(cx, zc);
+                createCrate(cx + rand(-0.75, 0.75), zc + rand(-0.75, 0.75), true);
+                for (let i = 0; i < 4; i++) {
+                  createMediumBlock(cx + rand(-1.1, 1.1), zc + rand(-1.1, 1.1));
+                }
+                for (let i = 0; i < 8; i++) {
+                  createTinyPickup(cx + rand(-1.2, 1.2), zc + rand(-1.2, 1.2), Math.random() < 0.45 ? "coin" : "tiny");
+                }
+              }
+
+              function createTallBlockTower(cx, zc, levels, rot) {
+                const id = towerSerial++;
+                const groupRot = rot || 0;
+                const cos = Math.cos(groupRot);
+                const sin = Math.sin(groupRot);
+
+                function transform(lx, lz) {
+                  return {
+                    x: clamp(cx + lx * cos - lz * sin, -HALF + 2, HALF - 2),
+                    z: clamp(zc + lx * sin + lz * cos, -HALF + 2, HALF - 2)
+                  };
+                }
+
+                const supportOffsets = [
+                  [-0.44, -0.44], [0.44, -0.44], [-0.44, 0.44], [0.44, 0.44]
+                ];
+                for (const [lx, lz] of supportOffsets) {
+                  const p = transform(lx, lz);
+                  const mesh = new THREE.Mesh(geo.supportBrick, Math.random() < 0.5 ? mats.tiny : mats.blockC);
+                  mesh.rotation.y = groupRot + rand(-0.08, 0.08);
+                  addObject(mesh, p.x, 0.13, p.z, 0.40, 0.34, "tiny", {
+                    towerId: id,
+                    isSupport: true,
+                    supportForTower: id,
+                    xp: 0.42
+                  });
+                }
+
+                for (let i = 0; i < levels; i++) {
+                  const p = transform(rand(-0.08, 0.08), rand(-0.08, 0.08));
+                  const mat = [mats.blockA, mats.blockB, mats.blockC, mats.crate][i % 4];
+                  const mesh = new THREE.Mesh(i % 5 === 4 ? geo.crate : geo.towerCube, mat);
+                  mesh.rotation.set(rand(-0.04, 0.04), groupRot + (i % 2) * 0.18 + rand(-0.08, 0.08), rand(-0.04, 0.04));
+                  addObject(mesh, p.x, 0.54 + i * 0.74, p.z, i < 3 ? 0.72 : 0.88, 1.05 + i * 0.04, "tower-block", {
+                    towerId: id,
+                    groundY: 0.38,
+                    xp: 1.25 + i * 0.06
+                  });
+                }
+              }
+
+              function checkTowerCollapse(towerId) {
+                if (!towerId) return;
+                const supportsLeft = objects.filter(o => o.state !== "gone" && o.isSupport && o.supportForTower === towerId).length;
+                if (supportsLeft > 2) return;
+                let collapsedAny = false;
+                for (const o of objects) {
+                  if (o.state !== "active" || o.isSupport || o.towerId !== towerId || o.towerFalling) continue;
+                  o.towerFalling = true;
+                  o.fallVel = rand(-1.0, 1.0);
+                  o.fallDrift.set(rand(-1.3, 1.3), 0, rand(-1.3, 1.3));
+                  o.spin.set(rand(-5, 5), rand(-7, 7), rand(-5, 5));
+                  collapsedAny = true;
+                }
+                if (collapsedAny) {
+                  playSound("tower");
+                  flashTip("Tower supports eaten — stack collapsing!");
+                }
+              }
+
+              function updateTowerFalling(o, dt) {
+                if (!o.towerFalling || o.state !== "active") return;
+                o.fallVel -= 9.5 * dt;
+                o.mesh.position.y += o.fallVel * dt;
+                o.mesh.position.x += o.fallDrift.x * dt;
+                o.mesh.position.z += o.fallDrift.z * dt;
+                o.mesh.rotation.x += o.spin.x * dt;
+                o.mesh.rotation.y += o.spin.y * dt;
+                o.mesh.rotation.z += o.spin.z * dt;
+                o.fallDrift.multiplyScalar(1 - Math.min(0.04, dt * 1.6));
+                if (o.mesh.position.y <= o.groundY) {
+                  o.mesh.position.y = o.groundY;
+                  if (Math.abs(o.fallVel) > 1.6) {
+                    o.fallVel *= -0.22;
+                    o.fallDrift.multiplyScalar(0.68);
+                  } else {
+                    o.fallVel = 0;
+                    o.towerFalling = false;
+                  }
+                }
+                o.mesh.position.x = clamp(o.mesh.position.x, -HALF + 1, HALF - 1);
+                o.mesh.position.z = clamp(o.mesh.position.z, -HALF + 1, HALF - 1);
+              }
+
+              function createLincolnLogBuilding(cx, zc, layers, rot) {
+                const groupRot = rot || 0;
+                const cos = Math.cos(groupRot);
+                const sin = Math.sin(groupRot);
+
+                function transform(lx, lz) {
+                  return {
+                    x: clamp(cx + lx * cos - lz * sin, -HALF + 2, HALF - 2),
+                    z: clamp(zc + lx * sin + lz * cos, -HALF + 2, HALF - 2)
+                  };
+                }
+
+                function addLog(lx, lz, y, axis, long) {
+                  const mesh = new THREE.Group();
+                  const body = new THREE.Mesh(long ? geo.logLong : geo.log, mats.log);
+                  if (axis === "x") body.rotation.z = Math.PI / 2;
+                  if (axis === "z") body.rotation.x = Math.PI / 2;
+                  mesh.add(body);
+
+                  // darker rounded caps so the pieces read like Lincoln Logs.
+                  const cap1 = new THREE.Mesh(geo.logEnd, mats.logDark);
+                  const cap2 = new THREE.Mesh(geo.logEnd, mats.logDark);
+                  const halfLen = long ? 1.175 : 0.875;
+                  if (axis === "x") {
+                    cap1.position.x = -halfLen;
+                    cap2.position.x = halfLen;
+                  } else {
+                    cap1.position.z = -halfLen;
+                    cap2.position.z = halfLen;
+                  }
+                  mesh.add(cap1, cap2);
+
+                  const p = transform(lx, lz);
+                  mesh.rotation.y = groupRot;
+                  addObject(mesh, p.x, y, p.z, long ? 1.03 : 0.86, long ? 1.5 : 1.15, "log");
+                }
+
+                for (let layer = 0; layer < layers; layer++) {
+                  const y = 0.17 + layer * 0.24;
+                  if (layer % 2 === 0) {
+                    addLog(0, -0.66, y, "x", true);
+                    addLog(0,  0.66, y, "x", true);
+                  } else {
+                    addLog(-0.66, 0, y, "z", true);
+                    addLog( 0.66, 0, y, "z", true);
+                  }
+                }
+
+                // Small roof cap that becomes a later-size target.
+                const roofA = new THREE.Mesh(geo.roof, mats.roof);
+                roofA.rotation.y = groupRot + 0.16;
+                const pA = transform(-0.2, 0);
+                addObject(roofA, pA.x, 0.18 + layers * 0.25, pA.z, 1.12, 1.8, "roof");
+
+                const roofB = new THREE.Mesh(geo.roof, mats.roof);
+                roofB.rotation.y = groupRot - 0.16;
+                const pB = transform(0.2, 0);
+                addObject(roofB, pB.x, 0.44 + layers * 0.25, pB.z, 1.12, 1.8, "roof");
+              }
+
+              function createBomb(x, z) {
+                const group = new THREE.Group();
+
+                const body = new THREE.Mesh(geo.bomb, mats.bomb.clone());
+                body.position.y = 0.5;
+                group.add(body);
+
+                const fuse = new THREE.Mesh(geo.fuse, mats.fuse);
+                fuse.position.set(0.22, 0.92, 0);
+                fuse.rotation.z = -0.58;
+                group.add(fuse);
+
+                const tip = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff0a0 }));
+                tip.position.set(0.35, 1.08, 0);
+                group.add(tip);
+
+                group.position.set(x, 0, z);
+                scene.add(group);
+
+                const entry = {
+                  mesh: group,
+                  body,
+                  tip,
+                  sizeReq: 0.72,
+                  mass: 3.2,
+                  kind: "bomb",
+                  bomb: true,
+                  state: "active",
+                  fallT: 0,
+                  start: new THREE.Vector3(),
+                  spin: new THREE.Vector3(rand(-5, 5), rand(-6, 6), rand(-5, 5)),
+                  flashSeed: rand(0, 100)
+                };
+                objects.push(entry);
+                bombs.push(entry);
+              }
+
+              function showMessage(title, body, button, handler) {
+                msgTitle.textContent = title;
+                msgBody.textContent = body;
+                msgButton.textContent = button;
+                msgButton._handler = handler;
+                pauseOptions.style.display = "none";
+                msg.style.display = "block";
+              }
+
+              function hideMessage() {
+                pauseOptions.style.display = "none";
+                msg.style.display = "none";
+              }
+
+              function flashTip(text) {
+                tipEl.textContent = text;
+                tipEl.style.opacity = "1";
+                clearTimeout(flashTip._t);
+                flashTip._t = setTimeout(() => {
+                  tipEl.style.opacity = "0.72";
+                }, 3500);
+              }
+
+              function updateHud() {
+                const hearts = "♥".repeat(Math.max(0, shield)) + "♡".repeat(Math.max(0, 3 - shield));
+                const stageText = growthRadii.length ? `${Math.min(sizeStage + 1, growthRadii.length)}/${growthRadii.length}` : "1/1";
+                statsEl.textContent = `Level ${level} · ${swallowed} / ${safeTotal} · Size ${stageText} · Shield ${hearts}`;
+                const finalNeed = growthThresholds[growthThresholds.length - 1] || 1;
+                const pct = clamp((growXP / finalNeed) * 100, 0, 100);
+                progressEl.style.width = `${pct}%`;
+              }
+
+              function updatePowerHud() {
+                pulseBtn.textContent = `Magnet Pulse ×${power.pulse}`;
+                megaBtn.textContent = `Mega Magnet ×${power.mega}`;
+                pulseBtn.disabled = power.pulse <= 0 || state !== "running";
+                megaBtn.disabled = power.mega <= 0 || state !== "running";
+                pulseBtn.classList.toggle("active", !!power.active && power.active.kind === "pulse");
+                megaBtn.classList.toggle("active", !!power.active && power.active.kind === "mega");
+              }
+
+              function animate() {
+                requestAnimationFrame(animate);
+                const dt = Math.min(clock.getDelta(), 0.035);
+
+                if (state === "running") {
+                  update(dt);
+                } else {
+                  updateBombFlash(clock.elapsedTime, 0);
+                  updatePowerHud();
+                }
+
+                renderer.render(scene, camera);
+              }
+
+              function update(dt) {
+                const t = clock.elapsedTime;
+
+                updateMovement(dt);
+                updatePower(dt);
+                updateHoleMeshes(t);
+                updateObjects(dt, t);
+                updateParticles(dt);
+                updateShockwaves(dt);
+                updateCamera(dt);
+
+                if (swallowed >= safeTotal && state === "running") {
+                  levelCompleteTimer += dt;
+                  if (levelCompleteTimer > 0.85) {
+                    level++;
+                    state = "levelComplete";
+                    updatePowerHud();
+                    showMessage(
+                      "Level Clear",
+                      level >= 3
+                        ? "Nice work. The next pile field has more loot and more bombs."
+                        : "The hole is getting stronger. The next level adds more stacks and bigger piles.",
+                      "Next Level",
+                      () => loadLevel(level)
+                    );
+                  }
+                }
+
+                updateHud();
+                updatePowerHud();
+              }
+
+              function updateMovement(dt) {
+                let ix = joy.x;
+                let iy = joy.y;
+
+                const kx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+                const ky = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
+                if (kx || ky) {
+                  const len = Math.hypot(kx, ky) || 1;
+                  ix = kx / len;
+                  iy = ky / len;
+                }
+
+                const dead = 0.12;
+                const mag = Math.hypot(ix, iy);
+                if (mag < dead) {
+                  ix = 0;
+                  iy = 0;
+                } else {
+                  const scaled = (mag - dead) / (1 - dead);
+                  ix = ix / mag * scaled;
+                  iy = iy / mag * scaled;
+                }
+
+                const maxSpeed = 5.8 + Math.min(3.2, Math.max(0, hole.radius - 0.75) * 1.45);
+                const desiredVX = ix * maxSpeed;
+                const desiredVZ = iy * maxSpeed;
+                const accel = 1 - Math.pow(0.006, dt);
+                hole.vel.x += (desiredVX - hole.vel.x) * accel;
+                hole.vel.z += (desiredVZ - hole.vel.z) * accel;
+
+                hole.pos.x += hole.vel.x * dt;
+                hole.pos.z += hole.vel.z * dt;
+
+                const border = HALF - hole.radius - 0.35;
+                if (hole.pos.x < -border || hole.pos.x > border) {
+                  hole.pos.x = clamp(hole.pos.x, -border, border);
+                  hole.vel.x *= -0.18;
+                }
+                if (hole.pos.z < -border || hole.pos.z > border) {
+                  hole.pos.z = clamp(hole.pos.z, -border, border);
+                  hole.vel.z *= -0.18;
+                }
+
+                hole.radius += (hole.targetRadius - hole.radius) * (1 - Math.pow(0.02, dt));
+              }
+
+              function updatePower(dt) {
+                if (power.active) {
+                  power.active.time += dt;
+                  if (power.active.time >= power.active.duration) {
+                    power.active = null;
+                  }
+                }
+              }
+
+              function updateHoleMeshes(t) {
+                holeMesh.position.copy(hole.pos);
+                holeRim.position.copy(hole.pos);
+                holeGlow.position.copy(hole.pos);
+                magnetRing.position.copy(hole.pos);
+
+                const pulse = 1 + Math.sin(t * 7) * 0.012;
+                holeMesh.scale.setScalar(hole.radius * pulse);
+                holeRim.scale.setScalar(hole.radius);
+                holeGlow.scale.setScalar(hole.radius * 1.5);
+
+                if (power.active) {
+                  const lifeLeft = 1 - power.active.time / power.active.duration;
+                  const ringPulse = 1 + Math.sin(t * 13) * 0.025;
+                  magnetRing.scale.setScalar(power.active.radius * ringPulse);
+                  magnetRing.material.opacity = 0.36 * lifeLeft + 0.08;
+                } else {
+                  magnetRing.material.opacity = 0;
+                }
+              }
+
+              function canFit(o) {
+                const bonus = power.active ? power.active.sizeBonus : 0.92;
+                return o.sizeReq <= hole.radius * bonus;
+              }
+
+              function updateObjects(dt, t) {
+                updateBombFlash(t, dt);
+
+                for (const o of objects) {
+                  if (o.state === "gone") continue;
+
+                  if (o.state === "active") {
+                    updateTowerFalling(o, dt);
+                    const dx = o.mesh.position.x - hole.pos.x;
+                    const dz = o.mesh.position.z - hole.pos.z;
+                    const dist = Math.hypot(dx, dz);
+                    const fits = canFit(o);
+
+                    let pullRange = hole.radius * 1.45;
+                    let pullStrength = 2.4;
+
+                    if (power.active) {
+                      pullRange = Math.max(pullRange, power.active.radius);
+                      pullStrength = power.active.strength;
+                    }
+
+                    if (dist < pullRange) {
+                      const fitFactor = fits ? 1.0 : (power.active && o.sizeReq < hole.radius * 1.22 ? 0.22 : 0.0);
+                      if (fitFactor > 0) {
+                        const pull01 = smoothstep(pullRange, 0.12, dist);
+                        const pull = pull01 * dt * pullStrength * fitFactor;
+                        o.mesh.position.x += (hole.pos.x - o.mesh.position.x) * pull;
+                        o.mesh.position.z += (hole.pos.z - o.mesh.position.z) * pull;
+                        o.mesh.rotation.x += dt * (1.2 + pull01 * 3.2);
+                        o.mesh.rotation.y += dt * (1.4 + pull01 * 2.2);
+                      } else if (dist < hole.radius * 1.04 && !o.bomb) {
+                        o.tooBigPulse = 0.25;
+                        o.mesh.rotation.y += Math.sin(t * 42) * dt * 0.8;
+                      }
+                    }
+
+                    if (o.tooBigPulse > 0) {
+                      o.tooBigPulse -= dt;
+                      const wobble = Math.sin(t * 34) * 0.01;
+                      o.mesh.position.y += wobble;
+                    }
+
+                    const swallowRadius = Math.max(0.25, hole.radius * 0.83);
+                    if (dist < swallowRadius && fits) {
+                      o.state = "falling";
+                      o.fallT = 0;
+                      o.start.copy(o.mesh.position);
+                      if (o.bomb) {
+                        flashTip("Bomb swallowed!");
+                      }
+                    }
+                  }
+
+                  if (o.state === "falling") {
+                    o.fallT += dt * (o.bomb ? 1.18 : 1.55);
+                    const k = clamp(o.fallT, 0, 1);
+                    const ease = 1 - Math.pow(1 - k, 3);
+
+                    o.mesh.position.x = THREE.MathUtils.lerp(o.start.x, hole.pos.x, ease);
+                    o.mesh.position.z = THREE.MathUtils.lerp(o.start.z, hole.pos.z, ease);
+                    o.mesh.position.y = THREE.MathUtils.lerp(o.start.y, -1.55, ease);
+                    o.mesh.rotation.x += o.spin.x * dt;
+                    o.mesh.rotation.y += o.spin.y * dt;
+                    o.mesh.rotation.z += o.spin.z * dt;
+
+                    const scale = Math.max(0.01, 1 - ease * 0.94);
+                    o.mesh.scale.setScalar(scale);
+
+                    if (o.bomb && k > 0.42) {
+                      o.state = "gone";
+                      scene.remove(o.mesh);
+                      explode(o.mesh.position.x, o.mesh.position.z);
+                      continue;
+                    }
+
+                    if (!o.bomb && k >= 1) {
+                      o.state = "gone";
+                      scene.remove(o.mesh);
+                      swallowed++;
+                      playSwallowSound(o);
+                      awardGrowth(o);
+                      if (o.isSupport) checkTowerCollapse(o.supportForTower);
+                      if (swallowed % 10 === 0) {
+                        makeSwallowSpark(hole.pos.x, hole.pos.z);
+                      }
+                    }
+                  }
+                }
+              }
+
+              function updateBombFlash(t, dt) {
+                for (const b of bombs) {
+                  if (b.state !== "active") continue;
+
+                  const blink = (Math.sin(t * 9 + b.flashSeed) + 1) / 2;
+                  b.body.material.emissive.setHex(blink > 0.55 ? 0xff0000 : 0x330000);
+                  b.body.material.color.setHex(blink > 0.7 ? 0xffefef : 0xff2525);
+                  b.tip.visible = blink > 0.5;
+                  b.mesh.rotation.y += dt * 0.7;
+                  b.mesh.position.y = Math.sin(t * 4 + b.flashSeed) * 0.035;
+                }
+              }
+
+              function makeSwallowSpark(x, z) {
+                for (let i = 0; i < 8; i++) {
+                  spawnParticle(x, 0.15, z, rand(-2, 2), rand(1.6, 3.8), rand(-2, 2), 0xffffff, rand(0.25, 0.45));
+                }
+              }
+
+              function explode(x, z) {
+                playSound("bomb");
+                shield--;
+                shake = 0.72;
+                hole.targetRadius = Math.max(0.68, hole.targetRadius - 0.22);
+                power.active = null;
+
+                for (let i = 0; i < 34; i++) {
+                  const a = rand(0, Math.PI * 2);
+                  const spd = rand(4, 11);
+                  const y = rand(2, 7);
+                  spawnParticle(x, 0.38, z, Math.cos(a) * spd, y, Math.sin(a) * spd, i % 3 === 0 ? 0xfff0a0 : 0xff3737, rand(0.45, 0.85));
+                }
+
+                const ring = new THREE.Mesh(
+                  new THREE.TorusGeometry(1, 0.07, 8, 64),
+                  new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.82 })
+                );
+                ring.position.set(x, 0.12, z);
+                ring.rotation.x = Math.PI / 2;
+                scene.add(ring);
+                shockwaves.push({ mesh: ring, age: 0, life: 0.55 });
+
+                for (const o of objects) {
+                  if (o.state !== "active" || o.bomb) continue;
+                  const dx = o.mesh.position.x - x;
+                  const dz = o.mesh.position.z - z;
+                  const d = Math.max(0.001, Math.hypot(dx, dz));
+                  if (d < 4.8) {
+                    const boom = (1 - d / 4.8) * 1.9;
+                    o.mesh.position.x += (dx / d) * boom;
+                    o.mesh.position.z += (dz / d) * boom;
+                    o.mesh.position.x = clamp(o.mesh.position.x, -HALF + 1, HALF - 1);
+                    o.mesh.position.z = clamp(o.mesh.position.z, -HALF + 1, HALF - 1);
+                  }
+                }
+
+                if (shield <= 0) {
+                  state = "gameOver";
+                  updatePowerHud();
+                  showMessage(
+                    "Game Over",
+                    "The hole swallowed too many bombs. Start over and dodge the flashing red ones.",
+                    "Restart",
+                    () => {
+                      hideMessage();
+                      resetGame();
+                    }
+                  );
+                } else {
+                  flashTip(`Boom! Shield hit. ${shield} shield ${shield === 1 ? "charge" : "charges"} left.`);
+                }
+              }
+
+              function spawnParticle(x, y, z, vx, vy, vz, color, life) {
+                const mat = new THREE.MeshBasicMaterial({
+                  color,
+                  transparent: true,
+                  opacity: 0.92,
+                  depthWrite: false
+                });
+                const mesh = new THREE.Mesh(geo.particle, mat);
+                mesh.position.set(x, y, z);
+                scene.add(mesh);
+                particles.push({
+                  mesh,
+                  vel: new THREE.Vector3(vx, vy, vz),
+                  age: 0,
+                  life
+                });
+              }
+
+              function updateParticles(dt) {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                  const p = particles[i];
+                  p.age += dt;
+                  p.vel.y -= 8.5 * dt;
+                  p.mesh.position.addScaledVector(p.vel, dt);
+                  p.mesh.scale.setScalar(Math.max(0.01, 1 - p.age / p.life));
+                  p.mesh.material.opacity = Math.max(0, 0.92 * (1 - p.age / p.life));
+                  if (p.age >= p.life || p.mesh.position.y < -0.3) {
+                    scene.remove(p.mesh);
+                    p.mesh.material.dispose();
+                    particles.splice(i, 1);
+                  }
+                }
+              }
+
+              function updateShockwaves(dt) {
+                for (let i = shockwaves.length - 1; i >= 0; i--) {
+                  const s = shockwaves[i];
+                  s.age += dt;
+                  const k = s.age / s.life;
+                  s.mesh.scale.setScalar(1 + k * 5.8);
+                  s.mesh.material.opacity = Math.max(0, 0.82 * (1 - k));
+                  if (k >= 1) {
+                    scene.remove(s.mesh);
+                    s.mesh.material.dispose();
+                    shockwaves.splice(i, 1);
+                  }
+                }
+              }
+
+              function updateCamera(dt) {
+                shake = Math.max(0, shake - dt * 1.6);
+                const mobile = window.innerWidth < 720;
+                const baseY = mobile ? 31 : 29;
+                const baseZ = mobile ? 31 : 29;
+                const lookAhead = new THREE.Vector3(hole.pos.x * 0.23, 0, hole.pos.z * 0.23);
+                const jitter = shake > 0 ? shake * 0.55 : 0;
+                const sx = rand(-jitter, jitter);
+                const sy = rand(-jitter, jitter);
+
+                camera.position.x += ((hole.pos.x * 0.18 + sx) - camera.position.x) * (1 - Math.pow(0.04, dt));
+                camera.position.y += ((baseY + sy) - camera.position.y) * (1 - Math.pow(0.04, dt));
+                camera.position.z += ((baseZ + hole.pos.z * 0.18 + sx) - camera.position.z) * (1 - Math.pow(0.04, dt));
+                camera.lookAt(lookAhead);
+              }
+
+              init();
+            })();
+      }
+
+      loadThree(0);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SUDDEN IMPACT — Pilebunker Test Rig</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Chakra+Petch:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0c0d12;height:100%;touch-action:none;}
+  #c{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;}
+  #hud{position:fixed;inset:0;pointer-events:none;font-family:'Chakra Petch',monospace;color:#d8cfb8;}
+  #title{position:absolute;top:14px;left:18px;line-height:1;}
+  #title h1{font-family:'Saira Stencil One',sans-serif;font-size:clamp(22px,5vw,42px);margin:0;color:#d8cfb8;letter-spacing:.04em;text-shadow:3px 3px 0 #a8262a;}
+  #title small{font-size:11px;letter-spacing:.35em;color:#8a8fa0;}
+  #state{position:absolute;top:16px;right:18px;text-align:right;font-size:12px;letter-spacing:.25em;color:#8a8fa0;}
+  #state b{display:block;font-size:18px;color:#d8cfb8;letter-spacing:.15em;}
+  #state b.hot{color:#ff5a3c;}
+  #fire{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);pointer-events:auto;
+    font-family:'Saira Stencil One',sans-serif;font-size:20px;letter-spacing:.2em;
+    color:#d8cfb8;background:#a8262a;border:none;padding:14px 46px;cursor:pointer;
+    clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+    box-shadow:0 4px 0 #5e1315;}
+  #fire:active{transform:translateX(-50%) translateY(3px);box-shadow:0 1px 0 #5e1315;}
+  #hint{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.2em;color:#565b6a;}
+  #px{position:fixed;bottom:26px;right:16px;pointer-events:auto;font-family:'Chakra Petch',monospace;font-size:10px;
+    letter-spacing:.15em;color:#8a8fa0;background:transparent;border:1px solid #3a3f47;padding:8px 10px;cursor:pointer;}
+  #vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);}
+  #charge{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);width:180px;height:8px;border:1px solid #3a3f47;}
+  #chargeFill{height:100%;width:0%;background:#ff5a3c;transition:width .05s linear;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vig"></div>
+<div id="hud">
+  <div id="title"><h1>SUDDEN&nbsp;IMPACT</h1><small>PILEBUNKER TEST RIG · UNIT-07</small></div>
+  <div id="state">MECHANISM<b id="stateTxt">IDLE</b></div>
+  <div id="charge"><div id="chargeFill"></div></div>
+</div>
+<button id="fire">FIRE</button>
+<div id="hint">SPACE · TAP · GAMEPAD Ⓐ/R2 — DRAG TO ORBIT</div>
+<button id="px">PSX: ON</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   SUDDEN IMPACT — Big O style pilebunker forearm
+   Chamfered low-poly build, ratchet windup, piston slam.
+   ============================================================ */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:false});
+let pixelated = true, resScale = 0.42;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0c0d12);
+scene.fog = new THREE.Fog(0x0c0d12, 14, 34);
+
+const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+const camTarget = new THREE.Vector3(0.9, 1.9, 0);
+let camYaw = -0.55, camPitch = 0.12, camDist = 9.5;
+const shake = {t:0, amp:0};
+
+function resize(){
+  const w = innerWidth, h = innerHeight;
+  const s = pixelated ? resScale : Math.min(devicePixelRatio,2)/1;
+  renderer.setPixelRatio(1);
+  renderer.setSize(Math.max(2,Math.floor(w*s)), Math.max(2,Math.floor(h*s)), false);
+  canvas.style.width = w+'px'; canvas.style.height = h+'px';
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+
+/* ---------- lights ---------- */
+scene.add(new THREE.HemisphereLight(0x8fa0c0, 0x1a1410, 0.55));
+const key = new THREE.DirectionalLight(0xfff0d8, 1.15);
+key.position.set(6, 9, 4); scene.add(key);
+const rim = new THREE.DirectionalLight(0x4a70ff, 0.65);
+rim.position.set(-7, 4, -6); scene.add(rim);
+const punchLight = new THREE.PointLight(0xffb070, 0, 14);
+punchLight.position.set(3.5, 2.0, 0); scene.add(punchLight);
+
+/* ---------- materials ---------- */
+function M(c, o={}){ return new THREE.MeshStandardMaterial(Object.assign({color:c, flatShading:true, roughness:.72, metalness:.18}, o)); }
+const matBlack = M(0x23262c);
+const matGun   = M(0x3a3f47);
+const matCream = M(0xd8cfb8, {roughness:.8, metalness:.05});
+const matRed   = M(0xa8262a, {roughness:.6});
+const matBrass = M(0xb08d3e, {roughness:.35, metalness:.75});
+const matChrome= M(0x9aa2ad, {roughness:.25, metalness:.9});
+const matDark  = M(0x15171c, {roughness:.9});
+const matGlow  = new THREE.MeshStandardMaterial({color:0x0a0a0a, emissive:0xff4a20, emissiveIntensity:0, flatShading:true});
+
+/* ---------- chamfered geometry helpers ---------- */
+function octShape(w, h, c){
+  c = Math.min(c, w/2 - 0.001, h/2 - 0.001);
+  const s = new THREE.Shape(), x = w/2, y = h/2;
+  s.moveTo(-x+c,-y); s.lineTo(x-c,-y); s.lineTo(x,-y+c); s.lineTo(x,y-c);
+  s.lineTo(x-c,y); s.lineTo(-x+c,y); s.lineTo(-x,y-c); s.lineTo(-x,-y+c);
+  s.closePath(); return s;
+}
+// Chamfered slab: width(x) × height(y) × depth(z), corner cut c
+function slab(w, h, d, c, mat){
+  const bev = Math.min(c*0.7, d*0.35);
+  const g = new THREE.ExtrudeGeometry(octShape(w, h, c), {depth: d - bev*2, bevelEnabled:true, bevelThickness:bev, bevelSize:bev, bevelSegments:1});
+  g.translate(0, 0, -(d - bev*2)/2);
+  g.computeVertexNormals();
+  return new THREE.Mesh(g, mat);
+}
+function box(w,h,d,mat){ return new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat); }
+function cyl(r1,r2,h,seg,mat){ return new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,seg), mat); }
+
+/* ============================================================
+   THE ARM — mounted on a test stand, punching toward +X
+   ============================================================ */
+const rig = new THREE.Group(); scene.add(rig);
+
+/* --- test stand --- */
+const stand = new THREE.Group(); rig.add(stand);
+const base = slab(3.2, 0.5, 3.2, 0.4, matDark); base.position.y = 0.25; stand.add(base);
+const column = slab(1.1, 2.6, 1.4, 0.18, matGun); column.position.y = 1.8; stand.add(column);
+const columnStripe = box(1.14, 0.22, 1.44, matRed); columnStripe.position.y = 2.6; stand.add(columnStripe);
+for(let i=0;i<4;i++){ // corner bolts on the base
+  const b = cyl(0.09,0.09,0.14,6,matChrome);
+  b.position.set(i<2?-1.25:1.25, 0.55, (i%2?-1.25:1.25)); stand.add(b);
+}
+
+/* --- arm root (kicks back on recoil, cocks up on windup) --- */
+const armRoot = new THREE.Group();
+armRoot.position.set(-0.2, 3.15, 0);
+rig.add(armRoot);
+
+/* shoulder block */
+const shoulder = slab(1.5, 1.5, 1.7, 0.34, matBlack); armRoot.add(shoulder);
+const shoulderCap = slab(1.0, 1.0, 0.5, 0.22, matCream); shoulderCap.position.z = 1.0; armRoot.add(shoulderCap);
+const shoulderVent = box(0.9, 0.16, 0.06, matDark);
+for(let i=0;i<3;i++){ const v = shoulderVent.clone(); v.position.set(0, 0.25 - i*0.28, 1.28); armRoot.add(v); }
+
+/* upper arm — short, angled down toward elbow */
+const upper = slab(1.6, 1.0, 1.0, 0.22, matGun);
+upper.position.set(0.95, -0.15, 0); upper.rotation.z = -0.18; armRoot.add(upper);
+
+/* elbow — cross-axis cylinder with hex caps */
+const elbowG = new THREE.Group(); elbowG.position.set(1.85, -0.35, 0); armRoot.add(elbowG);
+const elbow = cyl(0.5, 0.5, 1.5, 8, matBlack); elbow.rotation.x = Math.PI/2; elbowG.add(elbow);
+const capL = cyl(0.34, 0.34, 0.18, 6, matRed); capL.rotation.x = Math.PI/2; capL.position.z = 0.82; elbowG.add(capL);
+const capR = capL.clone(); capR.position.z = -0.82; elbowG.add(capR);
+
+/* ============================================================
+   FOREARM HOUSING — the pilebunker itself
+   ============================================================ */
+const forearm = new THREE.Group();
+forearm.position.set(1.85, -0.35, 0);
+armRoot.add(forearm);
+
+// main housing shell — big chamfered block, Big O black
+const housingLen = 3.3;
+const shell = slab(1.7, 1.7, housingLen, 0.4, matBlack);
+shell.rotation.y = Math.PI/2;               // extrude along X
+shell.position.x = 0.7 + housingLen/2;
+forearm.add(shell);
+
+// cream armor panels on top + sides (stepped plates)
+function panel(w,h,d,mat){ const p = slab(w,h,d,0.12,mat); p.rotation.y = Math.PI/2; return p; }
+const topPlate = panel(1.3, 0.22, 2.3, matCream); topPlate.position.set(1.95, 0.92, 0); forearm.add(topPlate);
+const topPlate2 = panel(0.9, 0.18, 1.1, matCream); topPlate2.position.set(1.45, 1.08, 0); forearm.add(topPlate2);
+const sidePlateL = panel(0.22, 1.1, 2.0, matCream); sidePlateL.position.set(2.05, 0.05, 0.92); forearm.add(sidePlateL);
+const sidePlateR = sidePlateL.clone(); sidePlateR.position.z = -0.92; forearm.add(sidePlateR);
+// red hazard stripes on the side plates
+const stripe = box(0.06, 0.9, 0.06, matRed);
+[[2.6,0.05,1.0],[2.6,0.05,-1.0],[1.5,0.05,1.0],[1.5,0.05,-1.0]].forEach(p=>{
+  const s = stripe.clone(); s.position.set(...p); s.rotation.x = 0.35; forearm.add(s);
+});
+
+// muzzle collar — the mouth the piston fires out of
+const collar = slab(1.35, 1.35, 0.55, 0.3, matGun);
+collar.rotation.y = Math.PI/2; collar.position.x = 0.7 + housingLen + 0.15; forearm.add(collar);
+const collarRing = cyl(0.62, 0.7, 0.28, 8, matRed);
+collarRing.rotation.z = Math.PI/2; collarRing.position.x = 0.7 + housingLen + 0.45; forearm.add(collarRing);
+
+/* --- rear breech + exhaust stacks --- */
+const breech = slab(1.3, 1.3, 0.7, 0.3, matGun);
+breech.rotation.y = Math.PI/2; breech.position.x = 0.45; forearm.add(breech);
+const stacks = [];
+for(let s=-1; s<=1; s+=2){
+  const st = cyl(0.16, 0.2, 0.75, 6, matDark);
+  st.position.set(0.55, 0.85, 0.45*s); st.rotation.x = 0.35*s;
+  forearm.add(st); stacks.push(st);
+}
+
+/* --- ratchet gear on the outer face --- */
+const gear = new THREE.Group(); gear.position.set(1.6, 0.1, 1.05); forearm.add(gear);
+const gearDisc = cyl(0.55, 0.55, 0.16, 10, matBrass); gearDisc.rotation.x = Math.PI/2; gear.add(gearDisc);
+for(let i=0;i<8;i++){
+  const tooth = box(0.16, 0.22, 0.14, matBrass);
+  const a = i/8 * Math.PI*2;
+  tooth.position.set(Math.cos(a)*0.6, Math.sin(a)*0.6, 0);
+  tooth.rotation.z = a; gear.add(tooth);
+}
+const gearHub = cyl(0.16, 0.16, 0.24, 6, matDark); gearHub.rotation.x = Math.PI/2; gear.add(gearHub);
+// small idler gear meshed above it
+const idler = new THREE.Group(); idler.position.set(2.35, 0.55, 1.05); forearm.add(idler);
+const idisc = cyl(0.3, 0.3, 0.14, 8, matChrome); idisc.rotation.x = Math.PI/2; idler.add(idisc);
+for(let i=0;i<6;i++){
+  const t = box(0.1, 0.14, 0.12, matChrome);
+  const a = i/6*Math.PI*2; t.position.set(Math.cos(a)*0.33, Math.sin(a)*0.33, 0); t.rotation.z = a; idler.add(t);
+}
+
+/* --- glow vents (charge indicator) --- */
+const vents = [];
+for(let i=0;i<3;i++){
+  const v = box(0.5, 0.1, 0.05, matGlow);
+  v.position.set(1.2 + i*0.55, -0.75, 0.88); forearm.add(v); vents.push(v);
+  const v2 = v.clone(); v2.position.z = -0.88; forearm.add(v2); vents.push(v2);
+}
+
+/* ============================================================
+   PISTON CARRIAGE — the part that slams
+   ============================================================ */
+const carriage = new THREE.Group(); forearm.add(carriage);
+
+// twin brass guide rods running back into the breech
+for(let s=-1; s<=1; s+=2){
+  const rod = cyl(0.09, 0.09, 2.6, 6, matBrass);
+  rod.rotation.z = Math.PI/2; rod.position.set(2.0, 0.45, 0.55*s);
+  carriage.add(rod);
+}
+// central chrome ram
+const ram = cyl(0.34, 0.34, 2.8, 8, matChrome);
+ram.rotation.z = Math.PI/2; ram.position.set(2.4, -0.05, 0); carriage.add(ram);
+// ram collar detail
+const ramCollar = cyl(0.42, 0.42, 0.3, 8, matBrass);
+ramCollar.rotation.z = Math.PI/2; ramCollar.position.set(3.3, -0.05, 0); carriage.add(ramCollar);
+
+/* --- THE FIST --- */
+const fist = new THREE.Group(); fist.position.set(4.35, -0.05, 0); carriage.add(fist);
+const fistCore = slab(1.15, 1.35, 1.5, 0.3, matBlack);
+fistCore.rotation.y = Math.PI/2; fist.add(fistCore);
+const fistFace = slab(0.95, 1.15, 0.35, 0.24, matGun);
+fistFace.rotation.y = Math.PI/2; fistFace.position.x = 0.7; fist.add(fistFace);
+// four chunky knuckle studs
+for(let iy=0; iy<2; iy++) for(let iz=0; iz<2; iz++){
+  const k = slab(0.34, 0.34, 0.35, 0.1, matCream);
+  k.rotation.y = Math.PI/2;
+  k.position.set(0.95, (iy?0.3:-0.3), (iz?0.32:-0.32));
+  fist.add(k);
+}
+// thumb ridge + wrist guard
+const thumb = slab(0.5, 0.3, 0.5, 0.1, matGun);
+thumb.rotation.y = Math.PI/2; thumb.position.set(0.25, -0.75, 0.35); thumb.rotation.z = 0.3; fist.add(thumb);
+const wristGuard = cyl(0.5, 0.58, 0.4, 8, matRed);
+wristGuard.rotation.z = Math.PI/2; wristGuard.position.set(-0.75, 0, 0); fist.add(wristGuard);
+
+/* ============================================================
+   BACKDROP — giant Big O gear silhouette + floor
+   ============================================================ */
+const bgMat = new THREE.MeshBasicMaterial({color:0x14161d});
+const bgGear = new THREE.Group(); bgGear.position.set(2, 5.5, -13); scene.add(bgGear);
+const bgRing = new THREE.Mesh(new THREE.RingGeometry(5.2, 7.4, 10), bgMat); bgGear.add(bgRing);
+for(let i=0;i<10;i++){
+  const t = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 2.4), bgMat);
+  const a = i/10*Math.PI*2;
+  t.position.set(Math.cos(a)*8.2, Math.sin(a)*8.2, 0); t.rotation.z = a; bgGear.add(t);
+}
+const bgGear2 = bgGear.clone(); bgGear2.scale.setScalar(0.5); bgGear2.position.set(-8, 3, -15); scene.add(bgGear2);
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({color:0x181a20, roughness:.95}));
+floor.rotation.x = -Math.PI/2; scene.add(floor);
+const grid = new THREE.GridHelper(60, 30, 0x2a2e38, 0x1e222b); grid.position.y = 0.01; scene.add(grid);
+// hazard ring painted where the fist lands
+const hazard = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.5, 8), new THREE.MeshBasicMaterial({color:0x5e2022, side:THREE.DoubleSide}));
+hazard.rotation.x = -Math.PI/2; hazard.position.set(6.2, 0.02, 0); scene.add(hazard);
+
+/* ============================================================
+   EFFECTS — flash, shards, steam, speed lines, impact star
+   ============================================================ */
+const fx = [];
+function spawnFX(mesh, life, update){
+  scene.add(mesh); fx.push({mesh, life, t:0, update});
+}
+const flashMat = new THREE.MeshBasicMaterial({color:0xfff2d0, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false});
+const flash = new THREE.Mesh(new THREE.PlaneGeometry(5,5), flashMat); scene.add(flash);
+
+function starShape(spikes, r1, r2){
+  const s = new THREE.Shape();
+  for(let i=0;i<spikes*2;i++){
+    const r = i%2 ? r1 : r2, a = i/(spikes*2)*Math.PI*2;
+    const x = Math.cos(a)*r, y = Math.sin(a)*r;
+    i===0 ? s.moveTo(x,y) : s.lineTo(x,y);
+  }
+  s.closePath(); return s;
+}
+const starGeo = new THREE.ExtrudeGeometry(starShape(8, 0.35, 1), {depth:0.05, bevelEnabled:false});
+
+function impactBurst(pos){
+  // white flash quad
+  flash.position.copy(pos); flashMat.opacity = 0.9;
+  // impact star
+  const star = new THREE.Mesh(starGeo, new THREE.MeshBasicMaterial({color:0xffd28a, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+  star.position.copy(pos); star.rotation.y = Math.PI/2;
+  spawnFX(star, 0.22, (m,k)=>{ m.mesh.scale.setScalar(0.4 + k*2.6); m.mesh.material.opacity = 1-k; m.mesh.rotation.x = k*0.8; });
+  // shards
+  for(let i=0;i<16;i++){
+    const sh = new THREE.Mesh(new THREE.TetrahedronGeometry(0.1 + Math.random()*0.14), M(Math.random()<0.4?0xffd28a:0x9aa2ad,{emissive:0x442200,emissiveIntensity:0.6}));
+    sh.position.copy(pos);
+    const a = Math.random()*Math.PI*2, sp = 4 + Math.random()*8;
+    const vel = new THREE.Vector3(1.5+Math.random()*3, Math.sin(a)*sp*0.5, Math.cos(a)*sp*0.5);
+    const rot = new THREE.Vector3(Math.random(),Math.random(),Math.random()).multiplyScalar(12);
+    spawnFX(sh, 0.5+Math.random()*0.3, (m,k,dt)=>{
+      vel.y -= 22*dt;
+      m.mesh.position.addScaledVector(vel, dt);
+      m.mesh.rotation.x += rot.x*dt; m.mesh.rotation.y += rot.y*dt;
+      m.mesh.scale.setScalar(Math.max(0.01, 1-k));
+    });
+  }
+  // speed lines streaking back along the punch
+  for(let i=0;i<8;i++){
+    const ln = new THREE.Mesh(new THREE.BoxGeometry(2.2+Math.random()*1.5, 0.03, 0.03),
+      new THREE.MeshBasicMaterial({color:0xfff2d0, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+    const a = Math.random()*Math.PI*2, r = 0.5+Math.random()*0.9;
+    ln.position.set(pos.x - 1 - Math.random()*1.5, pos.y + Math.sin(a)*r, pos.z + Math.cos(a)*r);
+    spawnFX(ln, 0.18, (m,k)=>{ m.mesh.material.opacity = (1-k)*0.8; m.mesh.position.x -= 14*(1/60); });
+  }
+}
+function steamPuff(worldPos, dir){
+  for(let i=0;i<4;i++){
+    const p = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14+Math.random()*0.1),
+      new THREE.MeshBasicMaterial({color:0xaab2c0, transparent:true, opacity:0.55, depthWrite:false}));
+    p.position.copy(worldPos);
+    const vel = dir.clone().multiplyScalar(2+Math.random()*2).add(new THREE.Vector3((Math.random()-0.5), Math.random()*1.5, (Math.random()-0.5)));
+    spawnFX(p, 0.7+Math.random()*0.4, (m,k,dt)=>{
+      m.mesh.position.addScaledVector(vel, dt); vel.multiplyScalar(1-2.2*dt);
+      m.mesh.scale.setScalar(1 + k*3); m.mesh.material.opacity = 0.55*(1-k);
+    });
+  }
+}
+
+/* ============================================================
+   PROCEDURAL AUDIO — ratchet clicks, hiss, slam
+   ============================================================ */
+let AC = null;
+function audio(){ if(!AC){ AC = new (window.AudioContext||window.webkitAudioContext)(); } if(AC.state==='suspended') AC.resume(); return AC; }
+function noiseBuf(ac, len){
+  const b = ac.createBuffer(1, ac.sampleRate*len, ac.sampleRate), d = b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  return b;
+}
+function sfxClick(){
+  const ac = audio(), t = ac.currentTime;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type='square'; o.frequency.setValueAtTime(1900, t); o.frequency.exponentialRampToValueAtTime(600, t+0.03);
+  g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.05);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.06);
+  const n = ac.createBufferSource(); n.buffer = noiseBuf(ac, 0.05);
+  const f = ac.createBiquadFilter(); f.type='highpass'; f.frequency.value = 3000;
+  const ng = ac.createGain(); ng.gain.setValueAtTime(0.1, t); ng.gain.exponentialRampToValueAtTime(0.001, t+0.04);
+  n.connect(f).connect(ng).connect(ac.destination); n.start(t);
+}
+function sfxHiss(dur){
+  const ac = audio(), t = ac.currentTime;
+  const n = ac.createBufferSource(); n.buffer = noiseBuf(ac, dur);
+  const f = ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value = 2400; f.Q.value = 0.8;
+  const g = ac.createGain(); g.gain.setValueAtTime(0.001, t);
+  g.gain.exponentialRampToValueAtTime(0.09, t+0.05); g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+  n.connect(f).connect(g).connect(ac.destination); n.start(t);
+}
+function sfxSlam(){
+  const ac = audio(), t = ac.currentTime;
+  // low body thud
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(34, t+0.28);
+  g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.4);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.45);
+  // metallic crack
+  const n = ac.createBufferSource(); n.buffer = noiseBuf(ac, 0.3);
+  const f = ac.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(5000,t); f.frequency.exponentialRampToValueAtTime(300, t+0.25);
+  const ng = ac.createGain(); ng.gain.setValueAtTime(0.4, t); ng.gain.exponentialRampToValueAtTime(0.001, t+0.32);
+  n.connect(f).connect(ng).connect(ac.destination); n.start(t);
+  // ring
+  const o2 = ac.createOscillator(), g2 = ac.createGain();
+  o2.type='triangle'; o2.frequency.setValueAtTime(870, t+0.01);
+  g2.gain.setValueAtTime(0.08, t+0.01); g2.gain.exponentialRampToValueAtTime(0.001, t+0.5);
+  o2.connect(g2).connect(ac.destination); o2.start(t+0.01); o2.stop(t+0.55);
+}
+
+/* ============================================================
+   STATE MACHINE
+   ============================================================ */
+const S = { IDLE:'IDLE', WINDUP:'WINDUP', LOCKED:'LOCKED', SLAM:'SLAM', RECOVER:'RECOVER' };
+let state = S.IDLE, stateT = 0;
+const MAX_RETRACT = 0.95, SLAM_EXT = 1.75;
+const WIND_STEPS = 4, STEP_DUR = 0.26, LOCK_DUR = 0.32, SLAM_DUR = 0.075, HOLD_DUR = 0.16, RECOVER_DUR = 0.85;
+let pistonX = 0, gearA = 0, recoil = 0, cock = 0, lastStep = -1, slammed = false, charge = 0;
+
+const stateTxt = document.getElementById('stateTxt');
+const chargeFill = document.getElementById('chargeFill');
+function setState(s){
+  state = s; stateT = 0;
+  stateTxt.textContent = s === S.WINDUP ? 'CHARGING' : s === S.SLAM ? 'IMPACT' : s;
+  stateTxt.className = (s===S.LOCKED || s===S.SLAM) ? 'hot' : '';
+}
+function fire(){
+  if(state !== S.IDLE) return;
+  audio();
+  lastStep = -1; slammed = false;
+  setState(S.WINDUP);
+  sfxHiss(0.5);
+}
+
+const easeOut = k => 1-Math.pow(1-k,3);
+const easeInOut = k => k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
+const easeBack = k => { const c=1.9; return 1 + (c+1)*Math.pow(k-1,3) + c*Math.pow(k-1,2); };
+
+function tickState(dt){
+  stateT += dt;
+  if(state === S.WINDUP){
+    const total = WIND_STEPS * STEP_DUR;
+    const step = Math.min(WIND_STEPS-1, Math.floor(stateT / STEP_DUR));
+    const inStep = (stateT - step*STEP_DUR) / STEP_DUR;
+    // each step: quick pull in first 40%, then hold — ratchet feel
+    const pull = Math.min(1, inStep/0.4);
+    const from = (step/WIND_STEPS) * MAX_RETRACT;
+    const to = ((step+1)/WIND_STEPS) * MAX_RETRACT;
+    pistonX = -(from + (to-from)*easeOut(pull));
+    gearA = -(step + easeOut(pull)) * (Math.PI/4);
+    cock = (stateT/total) * 0.09;
+    charge = stateT/total;
+    if(step !== lastStep){ lastStep = step; sfxClick(); shake.amp = Math.max(shake.amp, 0.015); }
+    if(stateT >= total){ setState(S.LOCKED); }
+  }
+  else if(state === S.LOCKED){
+    charge = 1;
+    pistonX = -MAX_RETRACT + Math.sin(stateT*90)*0.012;   // strain tremble
+    cock = 0.09 + Math.sin(stateT*70)*0.004;
+    if(stateT >= LOCK_DUR){ setState(S.SLAM); }
+  }
+  else if(state === S.SLAM){
+    const k = Math.min(1, stateT/SLAM_DUR);
+    pistonX = -MAX_RETRACT + (SLAM_EXT + MAX_RETRACT) * easeOut(k);
+    cock = 0.09 * (1-k);
+    if(k >= 1 && !slammed){
+      slammed = true;
+      sfxSlam();
+      recoil = 0.42;
+      shake.amp = 0.22; shake.t = 0;
+      punchLight.intensity = 6;
+      const tip = new THREE.Vector3();
+      fist.getWorldPosition(tip); tip.x += 1.1;
+      impactBurst(tip);
+      stacks.forEach(st=>{
+        const wp = new THREE.Vector3(); st.getWorldPosition(wp); wp.y += 0.4;
+        steamPuff(wp, new THREE.Vector3(0,1,0.3*Math.sign(st.position.z)));
+      });
+      sfxHiss(0.7);
+    }
+    if(stateT >= SLAM_DUR + HOLD_DUR){ setState(S.RECOVER); }
+  }
+  else if(state === S.RECOVER){
+    const k = Math.min(1, stateT/RECOVER_DUR);
+    pistonX = SLAM_EXT * (1 - easeInOut(k));
+    gearA = -(WIND_STEPS*(Math.PI/4)) * (1 - easeInOut(k));
+    charge = 1-k;
+    if(k >= 1){ pistonX = 0; gearA = 0; charge = 0; setState(S.IDLE); }
+  }
+  else {
+    // idle breathing
+    pistonX = Math.sin(performance.now()*0.0012)*0.015;
+    cock = 0;
+  }
+  // recoil spring
+  recoil += (0 - recoil) * Math.min(1, dt*7);
+  charge = Math.max(0, Math.min(1, charge));
+}
+
+/* ============================================================
+   INPUT — tap vs drag, keys, gamepad
+   ============================================================ */
+document.getElementById('fire').addEventListener('click', e=>{ e.stopPropagation(); fire(); });
+addEventListener('keydown', e=>{ if(e.code === 'Space'){ e.preventDefault(); fire(); } });
+
+let dragging = false, moved = 0, px0 = 0, py0 = 0;
+canvas.addEventListener('pointerdown', e=>{ dragging = true; moved = 0; px0 = e.clientX; py0 = e.clientY; });
+addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const dx = e.clientX - px0, dy = e.clientY - py0; px0 = e.clientX; py0 = e.clientY;
+  moved += Math.abs(dx)+Math.abs(dy);
+  camYaw -= dx*0.006; camPitch = Math.max(-0.1, Math.min(0.9, camPitch + dy*0.005));
+});
+addEventListener('pointerup', ()=>{ if(dragging && moved < 8) fire(); dragging = false; });
+
+let padWas = false;
+function pollPad(){
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for(const p of pads){
+    if(!p) continue;
+    const pressed = (p.buttons[0] && p.buttons[0].pressed) || (p.buttons[7] && p.buttons[7].pressed);
+    if(pressed && !padWas) fire();
+    padWas = pressed;
+    if(p.axes.length >= 2 && (Math.abs(p.axes[2]||0) > 0.2 || Math.abs(p.axes[3]||0) > 0.2)){
+      camYaw -= (p.axes[2]||0)*0.03; camPitch = Math.max(-0.1, Math.min(0.9, camPitch + (p.axes[3]||0)*0.02));
+    }
+    return;
+  }
+  padWas = false;
+}
+
+const pxBtn = document.getElementById('px');
+pxBtn.addEventListener('click', ()=>{ pixelated = !pixelated; pxBtn.textContent = 'PSX: ' + (pixelated?'ON':'OFF'); resize(); });
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+const clock = new THREE.Clock();
+function loop(){
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, clock.getDelta());
+  pollPad();
+  tickState(dt);
+
+  // apply pose
+  carriage.position.x = pistonX;
+  gear.rotation.z = gearA;
+  idler.rotation.z = -gearA * (0.55/0.3);
+  armRoot.position.x = -0.2 - recoil;
+  armRoot.rotation.z = cock + recoil*0.12;
+  // fist squash on full extension
+  const ext = Math.max(0, pistonX)/SLAM_EXT;
+  fist.scale.set(1 - ext*0.06, 1 + ext*0.04, 1 + ext*0.04);
+
+  // charge glow
+  const glowPulse = charge * (0.8 + Math.sin(performance.now()*0.02)*0.2*charge);
+  matGlow.emissiveIntensity = glowPulse * 2.4;
+  chargeFill.style.width = (charge*100).toFixed(0)+'%';
+  punchLight.intensity += (0 - punchLight.intensity)*Math.min(1, dt*8);
+
+  // fx
+  for(let i=fx.length-1;i>=0;i--){
+    const f = fx[i]; f.t += dt;
+    const k = f.t/f.life;
+    if(k >= 1){ scene.remove(f.mesh); if(f.mesh.geometry !== starGeo) f.mesh.geometry.dispose(); f.mesh.material.dispose(); fx.splice(i,1); continue; }
+    f.update(f, k, dt);
+  }
+  flashMat.opacity = Math.max(0, flashMat.opacity - dt*6);
+  flash.lookAt(camera.position);
+
+  // background gears crawl
+  bgGear.rotation.z += dt*0.03;
+  bgGear2.rotation.z -= dt*0.05;
+
+  // camera
+  shake.t += dt;
+  shake.amp = Math.max(0, shake.amp - dt*0.5);
+  const sx = (Math.sin(shake.t*61)+Math.sin(shake.t*97))*shake.amp;
+  const sy = (Math.sin(shake.t*73)+Math.sin(shake.t*53))*shake.amp;
+  const idleYaw = camYaw + Math.sin(performance.now()*0.0001)*0.02;
+  camera.position.set(
+    camTarget.x + Math.sin(idleYaw)*Math.cos(camPitch)*camDist,
+    camTarget.y + Math.sin(camPitch)*camDist,
+    camTarget.z + Math.cos(idleYaw)*Math.cos(camPitch)*camDist
+  );
+  camera.lookAt(camTarget.x + sx, camTarget.y + sy, camTarget.z);
+
+  renderer.render(scene, camera);
+}
+resize();
+loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FUSION LAB — Full Bestiary</title>
+<style>
+  :root{ --ink:#1a1430; --paper:#f2e9d8; --hot:#ff5a3c; --sun:#ffc93c; --teal:#2ec4b6; }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0e1626;font-family:"Avenir Next","Trebuchet MS",Verdana,sans-serif;}
+  canvas{display:block;}
+  #ui{position:fixed;inset:0;pointer-events:none;user-select:none;-webkit-user-select:none;}
+
+  #plateCard{position:absolute;top:12px;left:12px;background:var(--paper);border:3px solid var(--ink);border-radius:6px;
+    box-shadow:4px 4px 0 rgba(10,8,20,.55);padding:8px 14px 9px;max-width:min(420px,calc(100vw - 24px));}
+  #serial{font-size:10px;letter-spacing:.22em;font-weight:700;color:var(--hot);}
+  #mname{font-size:clamp(18px,4.4vw,28px);font-weight:800;color:var(--ink);line-height:1.02;text-transform:uppercase;}
+  #mtag{font-size:11px;color:#5a5170;font-style:italic;margin-top:2px;}
+
+  #recipe{position:absolute;left:12px;right:12px;top:calc(12px + 86px);display:flex;flex-direction:column;gap:5px;}
+  .rrow{display:flex;gap:5px;align-items:center;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;pointer-events:auto;}
+  .rrow::-webkit-scrollbar{display:none;}
+  .rlab{flex:0 0 auto;font-size:9px;font-weight:800;letter-spacing:.2em;color:#cfe0f2;background:rgba(20,18,40,.6);padding:3px 6px;border-radius:4px;}
+  .chip{flex:0 0 auto;pointer-events:auto;border:3px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);
+    font-family:inherit;font-weight:800;font-size:10px;letter-spacing:.06em;padding:6px 8px;box-shadow:2px 2px 0 rgba(10,8,20,.55);cursor:pointer;}
+  .chip.on{background:var(--teal);color:#fff;}
+  .chip:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(10,8,20,.55);}
+
+  #anims{position:absolute;left:0;right:0;bottom:calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:7px;flex-wrap:wrap;padding:0 8px;}
+  .abtn{pointer-events:auto;border:3px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);
+    font-family:inherit;font-weight:800;font-size:11px;letter-spacing:.05em;padding:9px 11px;box-shadow:3px 3px 0 rgba(10,8,20,.55);cursor:pointer;text-transform:uppercase;}
+  .abtn.on{background:var(--hot);color:#fff;}
+  .abtn .src{display:block;font-size:8px;letter-spacing:.16em;color:#8a7f9e;font-weight:700;}
+  .abtn.on .src{color:#ffd9ce;}
+  .abtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(10,8,20,.55);}
+
+  #hint{position:absolute;bottom:calc(70px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#9fb3cf;font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;}
+  #padDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#44506a;margin-right:5px;vertical-align:1px;}
+  #padDot.live{background:var(--teal);}
+</style>
+</head>
+<body>
+<div id="ui">
+  <div id="plateCard">
+    <div id="serial">FUSION 1·1</div>
+    <div id="mname">LION GOD</div>
+    <div id="mtag">pure strain</div>
+  </div>
+  <div id="recipe">
+    <div class="rrow"><span class="rlab">BODY</span><span id="bodyChips" style="display:flex;gap:5px;"></span></div>
+    <div class="rrow"><span class="rlab">HEAD</span><span id="headChips" style="display:flex;gap:5px;"></span></div>
+  </div>
+  <div id="hint"><span id="padDot"></span>pad: LB/RB body · dpad&#8597; head · A move · X/Y/LT/RT attacks · B idle</div>
+  <div id="anims"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   FUSION LAB v2 — full ten-creature bestiary
+   Recipe: first pick = BODY (chassis, gait, tail, palette slave)
+           second pick = HEAD (face, jaw, fx, PALETTE SOURCE)
+   The chassis is built FROM the head's palette, so every hybrid
+   reads as one animal. Anims are pure channel writers.
+   ============================================================ */
+
+// ---------- boot ----------
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+document.body.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+(function(){ const c=document.createElement('canvas');c.width=4;c.height=256;const g=c.getContext('2d');
+  const grd=g.createLinearGradient(0,0,0,256);
+  grd.addColorStop(0,'#7fd4e8');grd.addColorStop(.55,'#a8e4ee');grd.addColorStop(.551,'#cdeef2');grd.addColorStop(1,'#e9f6ef');
+  g.fillStyle=grd;g.fillRect(0,0,4,256);scene.background=new THREE.CanvasTexture(c);})();
+scene.fog=new THREE.Fog(0xcdeef2,34,90);
+const camera=new THREE.PerspectiveCamera(46,innerWidth/innerHeight,.1,300);
+scene.add(new THREE.HemisphereLight(0xdff3ff,0x8a7a5a,.75));
+const key=new THREE.DirectionalLight(0xfff2d8,1.05); key.position.set(9,16,7); key.castShadow=true;
+key.shadow.mapSize.set(1024,1024);
+key.shadow.camera.left=-16;key.shadow.camera.right=16;key.shadow.camera.top=16;key.shadow.camera.bottom=-16;key.shadow.camera.far=50;
+scene.add(key);
+const rim=new THREE.DirectionalLight(0x9fd8ff,.35); rim.position.set(-8,6,-10); scene.add(rim);
+let groundTex;
+(function(){ const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
+  g.fillStyle='#d8c08c';g.fillRect(0,0,256,256);g.fillStyle='#cbb27e';
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++)if((x+y)&1)g.fillRect(x*32,y*32,32,32);
+  g.strokeStyle='rgba(90,70,40,.35)';g.lineWidth=3;
+  for(let i=0;i<=8;i++){g.beginPath();g.moveTo(i*32,0);g.lineTo(i*32,256);g.stroke();g.beginPath();g.moveTo(0,i*32);g.lineTo(256,i*32);g.stroke();}
+  groundTex=new THREE.CanvasTexture(c);groundTex.wrapS=groundTex.wrapT=THREE.RepeatWrapping;groundTex.repeat.set(24,24);
+  const p=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({map:groundTex,roughness:1}));
+  p.rotation.x=-Math.PI/2;p.receiveShadow=true;scene.add(p);})();
+(function(){ const ring=new THREE.Mesh(new THREE.RingGeometry(7.6,8,64),new THREE.MeshBasicMaterial({color:0x8a5a3a,transparent:true,opacity:.35}));
+  ring.rotation.x=-Math.PI/2;ring.position.y=.02;scene.add(ring);})();
+
+// ---------- helpers ----------
+function M(col,opts){return new THREE.MeshStandardMaterial(Object.assign({color:col,flatShading:true,roughness:.85,metalness:.05},opts||{}));}
+function hash(n){return (Math.sin(n*127.1+311.7)*43758.5453)%1;}
+function crumple(geo,amt,seed){seed=seed||0;const p=geo.attributes.position;
+  for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+    p.setXYZ(i,x+hash(x*3.1+y*7.7+z*5.3+seed)*amt,y+hash(x*9.2+y*2.4+z*6.8+seed+9)*amt,z+hash(x*4.7+y*8.1+z*3.9+seed+17)*amt);}
+  geo.computeVertexNormals();return geo;}
+function box(w,h,d,col,amt,seed){const g=new THREE.BoxGeometry(w,h,d);if(amt)crumple(g,amt,seed);
+  const m=new THREE.Mesh(g,M(col));m.castShadow=true;return m;}
+function ball(r,col,amt,seed,ws,hs){const g=new THREE.SphereGeometry(r,ws||8,hs||6);if(amt)crumple(g,amt,seed);
+  const m=new THREE.Mesh(g,M(col));m.castShadow=true;return m;}
+function cone(r,h,col,seg,amt,seed){const g=new THREE.ConeGeometry(r,h,seg||6);if(amt)crumple(g,amt,seed);
+  const m=new THREE.Mesh(g,M(col));m.castShadow=true;return m;}
+function cyl(r1,r2,h,col,seg,amt,seed){const g=new THREE.CylinderGeometry(r1,r2,h,seg||7);if(amt)crumple(g,amt,seed);
+  const m=new THREE.Mesh(g,M(col));m.castShadow=true;return m;}
+function chain(lens,rads,col,seed){const root=new THREE.Group();let parent=root;const joints=[];
+  for(let i=0;i<lens.length;i++){const p=new THREE.Group();parent.add(p);if(i>0)p.position.y=-lens[i-1];
+    const seg=cyl(rads[i]*.8,rads[i],lens[i],col,6,rads[i]*.18,seed+i*13);seg.position.y=-lens[i]/2;p.add(seg);
+    joints.push(p);parent=p;}
+  const tip=new THREE.Group();tip.position.y=-lens[lens.length-1];parent.add(tip);
+  return {root,joints,tip};}
+function eye(r){const g=new THREE.Group();const w=ball(r,0xf6f3ea,0,0,8,6);w.material.roughness=.4;g.add(w);
+  const p=ball(r*.45,0x14121e,0,0,6,5);p.position.z=r*.72;g.add(p);return g;}
+function glowMat(col,emi,int){return new THREE.MeshStandardMaterial({color:col,emissive:emi,emissiveIntensity:int,flatShading:true});}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ez=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const ezo=t=>1-Math.pow(1-t,3);
+const ezi=t=>t*t*t;
+function asr(u,aEnd,sEnd){return {a:clamp(u/aEnd,0,1),s:clamp((u-aEnd)/(sEnd-aEnd),0,1),r:clamp((u-sEnd)/(1-sEnd),0,1)};}
+let trauma=0; function shake(v){trauma=Math.min(1,trauma+v);}
+
+/* ============================================================
+   THE CONTRACT v2 — semantic channels, zeroed each frame.
+   New since phase 1: wings.*, tool.* (Phoenix / Mother Courage
+   hardware), and scale factors (liftScale / strideScale) so a
+   Stilt Walker pounce leaps Stilt-sized and a croc pounce
+   stays croc-sized.
+   ============================================================ */
+function CH(){ return {
+  root:{ z:0, spin:0 },
+  body:{ lift:0, pitch:0, roll:0, yaw:0, shiver:0 },
+  head:{ yaw:0, pitch:0, roll:0, shiver:0 },
+  jaw:{ open:0 },
+  limbs:{ mv:0, spdMul:1, crouch:0, thrust:0, stabRaise:0, stabJab:0, splay:0 },
+  spine:{ coil:0, ring:0, spdMul:1 },
+  wings:{ spread:0, beat:0 },      // native on Phoenix; others translate
+  tool:{ reach:0, grip:0, stow:0 },// native on Mother Courage; others translate
+  fx:{ flare:0 },
+};}
+
+// Standard fallback view for legged chassis. Native hardware
+// opts out of the corresponding translation (opt.tool/opt.wings=false).
+function leggedView(ch,opt){
+  opt=opt||{};
+  const tf=opt.tool===false?0:1, wf=opt.wings===false?0:1;
+  return {
+    mv:ch.limbs.mv,
+    spdMul:ch.limbs.spdMul*ch.spine.spdMul,
+    crouch:clamp(ch.limbs.crouch+ch.spine.ring*.6+ch.tool.stow*.2*tf,0,1),
+    thrust:ch.limbs.thrust,
+    stabRaise:clamp(ch.limbs.stabRaise+ch.tool.reach*.7*tf+ch.wings.spread*.25*wf,0,1),
+    stabJab:clamp(ch.limbs.stabJab+ch.tool.grip*.6*tf,0,1),
+    splay:clamp(ch.limbs.splay+ch.wings.spread*.6*wf,0,1),
+    yawWind:ch.spine.coil*.6,
+    beat:ch.wings.beat*wf
+  };
+}
+// Shared torso pose from channels; chassis adds its own gait offsets after.
+function bodyPose(body,rest,ch,t,liftScale){
+  body.position.y=rest+ch.body.lift*liftScale;
+  body.rotation.x=ch.body.pitch;
+  body.rotation.z=ch.body.roll+Math.sin(t*31)*ch.body.shiver;
+  body.rotation.y=ch.body.yaw;
+}
+
+/* ============================================================
+   CHASSIS MODULES — built from the HEAD's palette (pal).
+   pal roles: a=primary hide, b=secondary, c=pale/bone,
+              d=dark accents, g=glow/hot accent
+   ============================================================ */
+
+function lionChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=2.5; group.add(body);
+  const chest=ball(1.35,pal.a,.12,3,9,7); chest.scale.set(1.05,1.05,1.25); chest.position.z=.6; body.add(chest);
+  const hind=ball(1.05,pal.b,.12,7,8,6); hind.scale.set(.95,.95,1.2); hind.position.set(0,-.1,-1.15); body.add(hind);
+  const socket=new THREE.Group(); socket.position.set(0,1.05,1.95); body.add(socket);
+  const legs=[];
+  [[-.85,1.35,0],[.85,1.35,0],[-.75,-1.35,1],[.75,-1.35,1]].forEach((cfg,i)=>{
+    const L=chain([1.15,1.05,.3],[.3-cfg[2]*.04,.2,.16],pal.b,i*37);
+    L.root.position.set(cfg[0],-.7-cfg[2]*.2,cfg[1]); L.rear=!!cfg[2];
+    const paw=box(.5,.22,.6,pal.c); paw.position.set(0,.08,.12); L.tip.add(paw);
+    L.phase=[0,.5,.75,.25][i]; body.add(L.root); legs.push(L);
+  });
+  const tail=chain([.9,.8,.5],[.12,.09,.14],pal.a,99);
+  tail.root.position.set(0,.5,-2); tail.root.rotation.x=2.2; body.add(tail.root);
+  return { group, body, socket, restY:2.5, headScale:1, liftScale:1, strideScale:1,
+    apply(ch,dt,t){
+      const F=leggedView(ch);
+      bodyPose(body,2.5,ch,t,this.liftScale);
+      body.position.y+=Math.sin(t*1.6)*.05+F.mv*Math.abs(Math.sin(t*6))*.14+F.beat*Math.sin(t*14)*.08;
+      body.rotation.x+=F.mv*Math.sin(t*12)*.02;
+      body.rotation.z+=F.mv*Math.sin(t*6)*.03;
+      body.rotation.y+=F.yawWind;
+      legs.forEach(L=>{
+        const ph=t*6*F.spdMul+L.phase*Math.PI*2;
+        const swing=F.mv*Math.sin(ph)*.6, lift=F.mv*Math.max(0,Math.cos(ph));
+        let hip=swing-lift*.4+(L.rear?.3:-.05);
+        let knee=(L.rear?-1:1)*(lift*.9+.15);
+        let ankle=(L.rear?1:-1)*(.15+lift*.4);
+        if(L.rear){ hip=lerp(hip,.9,F.crouch); knee=lerp(knee,-1.6,F.crouch);
+          hip=lerp(hip,-.9,F.thrust); knee=lerp(knee,.9,F.thrust); }
+        else { hip=lerp(hip,.5,F.crouch); knee=lerp(knee,1.2,F.crouch);
+          hip=lerp(hip,-1.3+F.stabJab*1.7,F.stabRaise);
+          knee=lerp(knee,.3+F.stabJab*.6,F.stabRaise); }
+        L.joints[0].rotation.x=hip; L.joints[1].rotation.x=knee; L.joints[2].rotation.x=ankle;
+        L.joints[0].rotation.z=(L.root.position.x>0?-1:1)*F.splay*.4;
+      });
+      tail.joints[0].rotation.x=2.2+Math.sin(t*2.4)*.15+F.mv*.2;
+      tail.joints[1].rotation.x=Math.sin(t*2.4-.7)*.25;
+      tail.joints[2].rotation.x=Math.sin(t*2.4-1.4)*.3;
+    }};
+}
+
+function spiderChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=2.3; group.add(body);
+  const thorax=ball(.9,pal.b,.1,4,8,6); thorax.scale.set(1.1,.8,1); body.add(thorax);
+  const abdomen=ball(1.4,pal.a,.16,9,9,7); abdomen.scale.set(1,.95,1.25); abdomen.position.set(0,.35,-1.7); body.add(abdomen);
+  const mark=ball(.6,pal.g,.08,2,7,5); mark.scale.set(.9,.5,1.1); mark.position.set(0,1.25,-1.7); body.add(mark);
+  const socket=new THREE.Group(); socket.position.set(0,.25,.95); body.add(socket);
+  const legs=[];
+  for(let i=0;i<4;i++)for(let s=-1;s<=1;s+=2){
+    const ang=s*(.45+i*.5);
+    const L=chain([1.5,1.7,1],[.14,.11,.07],pal.b,i*19+s);
+    L.root.position.set(Math.sin(ang)*.85,0,Math.cos(ang)*.85); L.root.rotation.y=ang;
+    L.baseSplay=1.15; L.phase=(i%2===0?0:.5)+(s>0?.25:0); L.front=(i===0);
+    body.add(L.root); legs.push(L);
+  }
+  const tassels=[];
+  for(let i=0;i<4;i++){ const tc=chain([.7,.6],[.07,.04],pal.a,i*5+90);
+    tc.root.position.set((i-1.5)*.4,-.5,-1.7); body.add(tc.root); tassels.push(tc); }
+  return { group, body, socket, restY:2.3, headScale:.85, liftScale:1, strideScale:1,
+    apply(ch,dt,t){
+      const F=leggedView(ch);
+      bodyPose(body,2.3,ch,t,this.liftScale);
+      body.position.y+=Math.sin(t*2.8)*.05+F.mv*Math.sin(t*13)*.06;
+      body.rotation.y+=F.yawWind;
+      abdomen.rotation.x=Math.sin(t*1.9)*.06+F.mv*.1-F.crouch*.5;
+      legs.forEach(L=>{
+        const ph=t*(2.4+F.mv*9)*F.spdMul+L.phase*Math.PI*2;
+        let splay=L.baseSplay+Math.sin(ph)*.06+F.mv*Math.sin(ph)*.2+F.splay*.3+F.crouch*.25;
+        let swing=F.mv*Math.cos(ph)*.4;
+        let knee=1.5+Math.sin(ph*1.1)*.08+F.mv*Math.max(0,Math.sin(ph))*.55+F.crouch*.8;
+        if(L.front){ splay=lerp(splay,-.4+F.stabJab*1.3,F.stabRaise); knee=lerp(knee,2.4-F.stabJab*1.8,F.stabRaise); }
+        else { splay=lerp(splay,1.6,F.thrust*.7); knee=lerp(knee,.8,F.thrust*.5); }
+        L.root.rotation.x=swing;
+        L.joints[0].rotation.z=-splay; L.joints[1].rotation.z=knee; L.joints[2].rotation.z=-.6;
+      });
+      tassels.forEach((tc,i)=>{ tc.joints[0].rotation.x=Math.sin(t*3+i*1.3)*.25*(1+F.mv); tc.joints[1].rotation.x=Math.sin(t*3.6+i)*.3; });
+    }};
+}
+
+function serpentChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=3; group.add(body);
+  const socket=new THREE.Group(); socket.position.set(0,0,.5); body.add(socket);
+  const segs=[]; let prev=body;
+  for(let i=0;i<9;i++){
+    const s=new THREE.Group(); s.position.z=(i===0? -0.7 : -(1.05-i*.04)); prev.add(s);
+    const r=.85-i*.075;
+    const m=ball(r,i%2?pal.a:pal.b,.08,i*7,8,6); m.scale.set(1,1,1.4); s.add(m);
+    if(i%2===0&&i<7)for(let side=-1;side<=1;side+=2){
+      const fin=box(1.1-i*.07,.06,.55,pal.c,.04,i+side*3);
+      fin.position.set(side*(r+.45),0,0); fin.rotation.z=side*.35; s.add(fin);
+    }
+    segs.push(s); prev=s;
+  }
+  const tailFin=cone(.5,1.2,pal.g,4); tailFin.rotation.x=-Math.PI/2; tailFin.position.z=-.8; prev.add(tailFin);
+  return { group, body, socket, restY:3, headScale:1.05, liftScale:1, strideScale:1,
+    apply(ch,dt,t){
+      const mv=ch.limbs.mv;
+      // legged/tool/wing language on a serpent:
+      const coil=clamp(ch.spine.coil+ch.limbs.crouch*.8+ch.tool.reach*.4,0,1);
+      const ring=clamp(ch.spine.ring+ch.wings.spread*.5,0,1);
+      const jabZ=(ch.limbs.stabJab+ch.tool.grip*.6)*1.2;
+      bodyPose(body,3,ch,t,this.liftScale);
+      body.position.y+=-ch.limbs.crouch*.5+Math.sin(t*1.3)*.25+mv*.5+ch.wings.beat*Math.sin(t*15)*.15;
+      body.position.z=jabZ;
+      body.rotation.z+=Math.sin(t*.9)*.06;
+      const waveAmp=(.12+mv*.3+ch.limbs.stabRaise*.1)*(1-ring*.7);
+      const waveSpd=(2+mv*4)*ch.spine.spdMul*ch.limbs.spdMul;
+      segs.forEach((s,i)=>{
+        const ph=t*waveSpd-i*.7;
+        s.rotation.y=Math.sin(ph)*waveAmp + coil*Math.sin(i*.9)*.55 + ring*.62;
+        s.rotation.x=Math.sin(ph*.7+i)*.04+ring*.03;
+        s.rotation.z=Math.sin(ph+i)*.05;
+      });
+    }};
+}
+
+function grabberChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=2.6; group.add(body);
+  const hull=ball(1.5,pal.b,.14,3,9,7); hull.scale.set(1,.8,1.35); body.add(hull);
+  const plates=ball(1.2,pal.a,.18,8,7,5); plates.scale.set(1.1,.55,1.2); plates.position.y=.55; body.add(plates);
+  const socket=new THREE.Group(); socket.position.set(0,.35,1.55); body.add(socket);
+  const arms=[];
+  for(let i=0;i<6;i++){
+    const ang=(i/6)*Math.PI*2+Math.PI/6;
+    const a=chain([1.7,1.5,1.2],[.24,.2,.14],pal.a,i*31);
+    a.root.position.set(Math.sin(ang)*1.15,-.2,Math.cos(ang)*1.15);
+    a.root.rotation.y=ang;
+    a.baseSplay=.85; a.phase=(i%2)*.5+i*.13; a.front=(i===0||i===5);
+    const claw=cone(.16,.5,pal.c,4); claw.rotation.x=Math.PI; a.tip.add(claw);
+    body.add(a.root); arms.push(a);
+  }
+  return { group, body, socket, restY:2.6, headScale:.9, liftScale:1, strideScale:1,
+    apply(ch,dt,t){
+      const F=leggedView(ch);
+      bodyPose(body,2.6,ch,t,this.liftScale);
+      body.position.y+=Math.sin(t*2.2)*.06+F.mv*Math.sin(t*11)*.1;
+      body.rotation.z+=Math.sin(t*1.4)*.03+F.mv*Math.sin(t*5.5)*.05;
+      body.rotation.y+=F.yawWind;
+      arms.forEach(a=>{
+        const ph=t*(2+F.mv*7)*F.spdMul+a.phase*Math.PI*2;
+        let splay=a.baseSplay+Math.sin(ph)*.1*(1-F.mv)+F.mv*Math.sin(ph)*.28+F.crouch*.35+F.splay*.25;
+        let swing=F.mv*Math.cos(ph)*.5;
+        let flex=.7+Math.sin(ph*1.3)*.12+F.mv*Math.max(0,Math.sin(ph))*.5+F.crouch*.6;
+        if(a.front){ // front pair speaks stab language: rear back then lash-close
+          splay=lerp(splay,1.5-F.stabJab*1.8,F.stabRaise);
+          flex=lerp(flex,.25+F.stabJab*1.4,F.stabRaise);
+          swing=lerp(swing,(a===arms[0]?-.5:.5)*F.stabJab,F.stabRaise);
+        } else { splay=lerp(splay,1.5,F.thrust*.6); flex=lerp(flex,.3,F.thrust*.5); }
+        a.root.rotation.x=swing;
+        a.joints[0].rotation.z=-splay;
+        a.joints[1].rotation.z=flex;
+        a.joints[2].rotation.z=flex*.8;
+      });
+    }};
+}
+
+function toothyChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=2.1; group.add(body);
+  const hull=box(2.2,1.5,3,pal.a,.1,2); body.add(hull);
+  const spine=box(1.4,.5,2.4,pal.c,.08,7); spine.position.y=.9; body.add(spine);
+  for(let s=-1;s<=1;s+=2){ const ex=cyl(.16,.2,.7,pal.d,6); ex.position.set(s*.7,1.2,-.8); ex.rotation.z=s*.3; body.add(ex); }
+  const socket=new THREE.Group(); socket.position.set(0,.75,1.7); body.add(socket);
+  const legs=[];
+  [[-.95,1.05],[.95,1.05],[-.95,-1.15],[.95,-1.15]].forEach((pos,i)=>{
+    const L=chain([1.15,1.15],[.3,.24],pal.b,i*17);
+    L.root.position.set(pos[0],-.6,pos[1]);
+    const foot=box(.6,.25,.8,pal.d); foot.position.set(0,.1,.12); L.tip.add(foot);
+    L.phase=(i===0||i===3)?0:.5; L.rear=pos[1]<0; body.add(L.root); legs.push(L);
+  });
+  const tail=chain([.9,.8],[.2,.12],pal.a,77);
+  tail.root.position.set(0,.2,-1.5); tail.root.rotation.x=1.9; body.add(tail.root);
+  return { group, body, socket, restY:2.1, headScale:1.1, liftScale:1, strideScale:1,
+    apply(ch,dt,t){
+      const F=leggedView(ch);
+      bodyPose(body,2.1,ch,t,this.liftScale);
+      body.position.y+=Math.sin(t*1.8)*.04+F.mv*Math.abs(Math.sin(t*7))*.16;
+      body.rotation.z+=F.mv*Math.sin(t*7)*.045;
+      body.rotation.y+=F.yawWind;
+      legs.forEach(L=>{
+        const ph=t*7*F.spdMul+L.phase*Math.PI*2;
+        const swing=F.mv*Math.sin(ph)*.55, lift=F.mv*Math.max(0,Math.cos(ph));
+        let hip=swing-lift*.35, knee=lift;
+        if(L.rear){ hip=lerp(hip,.7,F.crouch); knee=lerp(knee,1.2,F.crouch);
+          hip=lerp(hip,-.7,F.thrust); knee=lerp(knee,.2,F.thrust); }
+        else { hip=lerp(hip,.4,F.crouch); knee=lerp(knee,.9,F.crouch);
+          hip=lerp(hip,-1.1+F.stabJab*1.5,F.stabRaise); knee=lerp(knee,.3+F.stabJab*.5,F.stabRaise); }
+        L.joints[0].rotation.x=hip; L.joints[1].rotation.x=knee;
+        L.tip.rotation.x=-hip-knee*.5;
+        L.joints[0].rotation.z=(L.root.position.x>0?-1:1)*F.splay*.35;
+      });
+      tail.joints[0].rotation.x=1.9+Math.sin(t*3+1)*.15+F.mv*.3;
+      tail.joints[1].rotation.x=Math.sin(t*3)*.25;
+    }};
+}
+
+function courageChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=2.5; group.add(body);
+  const hull=box(3,2.2,4.4,pal.a,.16,11); body.add(hull);
+  const hopper=cyl(1.5,2,1.4,pal.b,8,.12,3); hopper.position.set(0,1.6,-.6); body.add(hopper);
+  const rimr=cyl(1.7,1.5,.4,pal.c,8); rimr.position.set(0,2.35,-.6); body.add(rimr);
+  const stacks=[];
+  for(let i=0;i<3;i++){ const s=cyl(.22,.3,1.5+i*.3,pal.d,6); s.position.set(-1+i*.9,2.2,1.2); body.add(s); stacks.push(s); }
+  const socket=new THREE.Group(); socket.position.set(0,1.15,2.3); body.add(socket);
+  const legs=[];
+  for(let i=0;i<5;i++)for(let s=-1;s<=1;s+=2){
+    const L=chain([.9,.9],[.2,.16],pal.d,i*7+s);
+    L.root.position.set(s*1.6,-1,1.6-i*.8); L.root.rotation.z=s*.5;
+    L.phase=i*.2+(s>0?.5:0); body.add(L.root); legs.push(L);
+  }
+  // native crane hardware
+  const crane=new THREE.Group(); crane.position.set(.9,1.4,1.9); body.add(crane);
+  const boom=box(.4,.4,2.6,pal.c,.06,5); boom.position.z=1.3; crane.add(boom);
+  const fore=new THREE.Group(); fore.position.z=2.6; crane.add(fore);
+  const fboom=box(.32,.32,2,pal.a,.06,6); fboom.position.z=1; fore.add(fboom);
+  const wrist=new THREE.Group(); wrist.position.z=2; fore.add(wrist);
+  const clawA=box(.5,.12,.9,pal.c); clawA.position.set(0,-.25,.35); wrist.add(clawA);
+  const clawB=box(.5,.12,.9,pal.c); clawB.position.set(0,-.25,.35); wrist.add(clawB);
+  return { group, body, socket, restY:2.5, headScale:1.25, liftScale:1.1, strideScale:.5,
+    apply(ch,dt,t){
+      const F=leggedView(ch,{tool:false});
+      bodyPose(body,2.5,ch,t,this.liftScale);
+      body.position.y+=Math.sin(t*1.1)*.05+F.mv*Math.sin(t*5)*.05;
+      body.rotation.x+=Math.sin(t*.8)*.012+F.mv*Math.sin(t*2.6)*.02-F.crouch*.08;
+      body.rotation.y+=F.yawWind;
+      legs.forEach(L=>{
+        const ph=t*(1.3+F.mv*3.6)*F.spdMul+L.phase*Math.PI*2;
+        L.joints[0].rotation.x=(.15+F.mv*.4)*Math.sin(ph)-F.crouch*.3;
+        L.joints[1].rotation.x=.5+(F.mv*.6)*Math.max(0,Math.cos(ph))+F.crouch*.7;
+      });
+      stacks.forEach((s,i)=>{ s.scale.y=1+Math.sin(t*2+i)*.02+ch.fx.flare*Math.max(0,Math.sin(t*24+i*2))*.5; });
+      // crane consumes tool.* natively; also speaks stab language
+      const reach=clamp(ch.tool.reach+ch.limbs.stabRaise*.8,0,1);
+      const grip=clamp(ch.tool.grip+ch.limbs.stabJab*.9,0,1);
+      const stow=ch.tool.stow;
+      let cX=.55+Math.sin(t*.6)*.05, fX=-.9, cY=0, open=.5;
+      cX=lerp(cX,1.5,ezo(reach)); fX=lerp(fX,-.25,ezo(reach)); open=lerp(open,.9,reach);
+      open=lerp(open,.06,grip);
+      cX=lerp(cX,-.5,stow); fX=lerp(fX,-1.7,stow); cY=lerp(cY,-1.6,stow);
+      crane.rotation.x=cX; crane.rotation.y=cY; fore.rotation.x=fX;
+      clawA.rotation.x=open; clawB.rotation.x=-open+Math.PI;
+    }};
+}
+
+function stiltChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=7.2; group.add(body);
+  const gondola=box(2.6,1.6,3.4,pal.a,.14,4); body.add(gondola);
+  const keel=box(1.6,1,4.4,pal.b,.1,8); keel.position.y=-.9; body.add(keel);
+  const antenna=cyl(.05,.05,2.2,pal.d,4); antenna.position.set(.8,1.8,-1); body.add(antenna);
+  for(let s=-1;s<=1;s+=2){ const fin=box(.15,1.2,2,pal.b,.08,s+20); fin.position.set(s*1.4,.4,-.6); fin.rotation.z=s*.25; body.add(fin); }
+  const socket=new THREE.Group(); socket.position.set(0,.55,2); body.add(socket);
+  const legs=[];
+  [[-1.1,1.3],[1.1,1.3],[-1.1,-1.3],[1.1,-1.3]].forEach((pos,i)=>{
+    const L=chain([3.4,3.2],[.26,.2],pal.b,i*23);
+    L.root.position.set(pos[0],-1.2,pos[1]);
+    L.root.rotation.z=(pos[0]>0?-1:1)*-.18;
+    const foot=cone(.55,.5,pal.d,5); foot.position.y=.2; L.tip.add(foot);
+    L.phase=[0,.5,.75,.25][i]; L.rear=pos[1]<0; L.stomper=(i===1);
+    body.add(L.root); legs.push(L);
+  });
+  return { group, body, socket, restY:7.2, headScale:.95, liftScale:2.2, strideScale:1.6,
+    apply(ch,dt,t){
+      const F=leggedView(ch);
+      bodyPose(body,7.2,ch,t,this.liftScale);
+      body.position.y+=-F.crouch*2.6+Math.sin(t*.9)*.08+F.mv*Math.sin(t*3.4)*.22;
+      body.rotation.x+=Math.sin(t*.6)*.015+F.mv*.04+F.crouch*.08;
+      body.rotation.z+=F.mv*Math.sin(t*1.7)*.05-F.stabRaise*.1;
+      body.rotation.y+=F.yawWind;
+      legs.forEach(L=>{
+        const ph=t*3.4*F.spdMul+L.phase*Math.PI*2;
+        const swing=F.mv*Math.sin(ph)*.42, lift=F.mv*Math.max(0,Math.cos(ph));
+        let hip=swing-lift*.5, knee=lift*1.1+.12;
+        hip-=F.crouch*.5; knee+=F.crouch*1.5;
+        if(L.rear){ hip=lerp(hip,-.5,F.thrust*.7); knee=lerp(knee,.1,F.thrust*.6); }
+        if(L.stomper){ hip=lerp(hip,-1.05+F.stabJab*1.2,F.stabRaise); knee=lerp(knee,1.9-F.stabJab*1.85,F.stabRaise); }
+        L.joints[0].rotation.x=hip; L.joints[1].rotation.x=knee;
+      });
+    }};
+}
+
+function antelopeChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=2; group.add(body);
+  const torso=ball(1.1,pal.a,.12,5,9,7); torso.scale.set(.9,1,1.7); body.add(torso);
+  for(let i=0;i<5;i++){ const rb=new THREE.Mesh(new THREE.TorusGeometry(.95-i*.04,.07,5,10,Math.PI),M(pal.c));
+    rb.position.set(0,.1,.7-i*.4); rb.rotation.z=Math.PI; rb.castShadow=true; body.add(rb); }
+  const haunch=ball(.95,pal.b,.14,9,8,6); haunch.scale.set(1.1,1.1,1.2); haunch.position.set(0,.05,-1.1); body.add(haunch);
+  const socket=new THREE.Group(); socket.position.set(0,1.25,1.9); body.add(socket);
+  const nseg=cyl(.3,.42,1.3,pal.a,7,.06,2); nseg.rotation.x=.9; nseg.position.set(0,.85,1.7); body.add(nseg);
+  const legs=[];
+  [[-.55,1.2,0],[.55,1.2,0],[-.6,-1.3,1],[.6,-1.3,1]].forEach((cfg,i)=>{
+    const L=chain([1.1,1.1,.35],[.16,.12,.08],pal.b,i*41);
+    L.root.position.set(cfg[0],-.5,cfg[1]); L.rear=!!cfg[2];
+    L.phase=[0,.5,.55,.05][i]; body.add(L.root); legs.push(L);
+  });
+  const tail=chain([.6,.5],[.08,.04],pal.a,88); tail.root.position.set(0,.4,-1.9); tail.root.rotation.x=2.4; body.add(tail.root);
+  return { group, body, socket, restY:2, headScale:.9, liftScale:1, strideScale:1.2,
+    apply(ch,dt,t){
+      const F=leggedView(ch);
+      const gallop=Math.sin(t*10*F.spdMul);
+      bodyPose(body,2,ch,t,this.liftScale);
+      body.position.y+=Math.sin(t*2.4)*.05+F.mv*Math.abs(gallop)*.3;
+      body.rotation.x+=F.mv*gallop*.12;
+      body.rotation.y+=F.yawWind;
+      legs.forEach(L=>{
+        const ph=t*10*F.spdMul+L.phase*Math.PI*2;
+        const swing=F.mv*Math.sin(ph)*(L.rear?.8:.7), lift=F.mv*Math.max(0,Math.cos(ph))*1.1;
+        let hip=swing-lift*.4+(L.rear?.25:-.1);
+        let knee=(L.rear?-1:1)*(lift*.9+.15);
+        if(L.rear){ hip=lerp(hip,.8,F.crouch); knee=lerp(knee,-1.5,F.crouch);
+          hip=lerp(hip,-.8,F.thrust); knee=lerp(knee,.8,F.thrust); }
+        else { hip=lerp(hip,.4,F.crouch); knee=lerp(knee,1.1,F.crouch);
+          hip=lerp(hip,-1.4+F.stabJab*1.6,F.stabRaise); knee=lerp(knee,1.3-F.stabJab*.8,F.stabRaise); }
+        L.joints[0].rotation.x=hip; L.joints[1].rotation.x=knee;
+        L.joints[2].rotation.x=(L.rear?1:-1)*lift*.5;
+      });
+      tail.joints[0].rotation.x=2.4+Math.sin(t*6)*.2*(.4+F.mv);
+    }};
+}
+
+function phoenixChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=2.6; group.add(body);
+  const torso=ball(1.2,pal.a,.12,3,9,7); torso.scale.set(.95,1.25,1.05); body.add(torso);
+  const chest=ball(.9,pal.c,.1,6,8,6); chest.scale.set(.8,1,.7); chest.position.set(0,-.1,.55); body.add(chest);
+  const socket=new THREE.Group(); socket.position.set(0,1.55,.75); body.add(socket);
+  function wing(side){
+    const sh=new THREE.Group(); sh.position.set(side*.9,.7,.1); body.add(sh);
+    const arm=box(1.6,.3,.5,pal.b,.06,side*3+30); arm.position.x=side*.8; sh.add(arm);
+    const fo=new THREE.Group(); fo.position.x=side*1.6; sh.add(fo);
+    const fore=box(1.8,.24,.42,pal.a,.06,side*5+40); fore.position.x=side*.9; fo.add(fore);
+    const feathers=[];
+    for(let i=0;i<6;i++){
+      const piv=new THREE.Group(); piv.position.set(side*(.5+i*.24),0,-.05); fo.add(piv);
+      const f=box(1.9-i*.12,.08,.5,i%2?pal.g:pal.c,.05,i*3+side*7);
+      f.position.set(side*(1.9-i*.12)/2,0,0); piv.add(f);
+      piv.rotation.y=side*(-.15-i*.14);
+      feathers.push({piv,base:side*(-.15-i*.14),i});
+    }
+    return {sh,fo,feathers,side};
+  }
+  const wings=[wing(1),wing(-1)];
+  const legs=[];
+  for(let s=-1;s<=1;s+=2){
+    const L=chain([.9,.9],[.2,.15],pal.d,s*61);
+    L.root.position.set(s*.5,-1.2,.1);
+    for(let i=0;i<3;i++){ const c=cone(.08,.5,pal.d,4); c.rotation.x=Math.PI-((i-1)*.4); c.position.set((i-1)*.16,.1,.12); L.tip.add(c); }
+    body.add(L.root); legs.push(L);
+  }
+  const plumes=[];
+  for(let i=0;i<3;i++){ const piv=new THREE.Group(); piv.position.set(0,.4,-.9); piv.rotation.x=.5; piv.rotation.y=(i-1)*.3;
+    const p=box(.22,.06,2.2,i===1?pal.g:pal.c,.05,i*11+70); p.position.z=-1.1; piv.add(p); body.add(piv); plumes.push(piv); }
+  return { group, body, socket, restY:2.6, headScale:.8, liftScale:1.1, strideScale:1.1,
+    apply(ch,dt,t){
+      // native wings: consume wings.* directly
+      const F=leggedView(ch,{wings:false});
+      const mv=F.mv;
+      const flap=Math.sin(t*(3+mv*4)*F.spdMul);
+      const hover=mv*1.9;
+      bodyPose(body,2.6,ch,t,this.liftScale);
+      body.position.y+=hover+Math.sin(t*2)*.1+mv*flap*.22-F.crouch*.8;
+      body.rotation.x+=mv*.18;
+      body.rotation.y+=F.yawWind;
+      const spread=ch.wings.spread, beat=ch.wings.beat;
+      // thrust = wing snap burst
+      let shoulder=.15+flap*(.25+mv*.55+beat*.5)+F.thrust*.8;
+      let foreW=-.35-flap*(.15+mv*.35);
+      shoulder=lerp(shoulder,.75,spread); foreW=lerp(foreW,.25,spread);
+      shoulder-=F.crouch*.35; // mantle when crouching
+      wings.forEach(w=>{
+        w.sh.rotation.z=w.side*shoulder;
+        w.fo.rotation.z=w.side*foreW;
+        w.feathers.forEach(f=>{ f.piv.rotation.y=f.base*(1+spread*.9)-w.side*spread*.12*f.i; });
+      });
+      legs.forEach((L,i)=>{
+        let hip=.3+mv*.5+Math.sin(t*2+i)*.05, knee=.4+mv*.6;
+        hip=lerp(hip,.9,F.crouch); knee=lerp(knee,1.3,F.crouch);
+        hip=lerp(hip,-1.1+F.stabJab*1.4,F.stabRaise); knee=lerp(knee,.1+F.stabJab*.4,F.stabRaise);
+        L.joints[0].rotation.x=hip; L.joints[1].rotation.x=knee;
+      });
+      plumes.forEach((p,i)=>{ p.rotation.x=.5+Math.sin(t*2+i)*.08+mv*.25+spread*.6; p.rotation.y=(i-1)*(.3+spread*.5); });
+    }};
+}
+
+function crocChassis(pal){
+  const group=new THREE.Group();
+  const body=new THREE.Group(); body.position.y=1.15; group.add(body);
+  const torso=box(2,1.1,3.4,pal.a,.14,3); body.add(torso);
+  const belly=box(1.7,.5,3.2,pal.c,.08,5); belly.position.y=-.5; body.add(belly);
+  for(let i=0;i<5;i++)for(let s=-1;s<=1;s+=2){
+    const sc=cone(.22,.42,pal.d,4); sc.position.set(s*.45,.72,1.2-i*.62); body.add(sc); }
+  const socket=new THREE.Group(); socket.position.set(0,.35,1.95); body.add(socket);
+  const legs=[];
+  [[-1.05,1.1],[1.05,1.1],[-1.05,-1.2],[1.05,-1.2]].forEach((pos,i)=>{
+    const L=chain([.8,.7],[.24,.18],pal.b,i*29);
+    L.root.position.set(pos[0],-.3,pos[1]);
+    L.root.rotation.z=(pos[0]>0?-1:1)*-.9;
+    const foot=box(.55,.18,.6,pal.d); foot.position.set(0,.05,.1); L.tip.add(foot);
+    L.phase=(i===0||i===3)?0:.5; L.side=pos[0]>0?1:-1; L.front=pos[1]>0;
+    body.add(L.root); legs.push(L);
+  });
+  const tail=chain([1.2,1.1,1],[.4,.3,.18],pal.a,66);
+  tail.root.position.set(0,.1,-1.7); tail.root.rotation.x=Math.PI/2+.08; body.add(tail.root);
+  const tailFin=cone(.3,.9,pal.d,4); tailFin.rotation.x=Math.PI; tail.tip.add(tailFin);
+  return { group, body, socket, restY:1.15, headScale:1.05, liftScale:.8, strideScale:.8,
+    apply(ch,dt,t){
+      const F=leggedView(ch);
+      bodyPose(body,1.15,ch,t,this.liftScale);
+      body.position.y+=Math.sin(t*1.5)*.03+F.mv*Math.abs(Math.sin(t*5))*.06;
+      body.rotation.y+=F.mv*Math.sin(t*5)*.08+F.yawWind;
+      legs.forEach(L=>{
+        const ph=t*5*F.spdMul+L.phase*Math.PI*2;
+        L.root.rotation.x=F.mv*Math.sin(ph)*.55;
+        let splay=L.side*-.9-F.mv*Math.max(0,Math.cos(ph))*.3*L.side;
+        let knee=L.side*(.8+F.mv*Math.max(0,Math.cos(ph))*.5);
+        // crouch = tuck for the roll; stab = front-leg slap
+        splay=lerp(splay,L.side*-.2,F.crouch); knee=lerp(knee,L.side*.3,F.crouch);
+        if(L.front){ splay=lerp(splay,L.side*(-.2+F.stabJab*-.9),F.stabRaise); knee=lerp(knee,L.side*(1.4-F.stabJab*1.1),F.stabRaise); }
+        else { splay=lerp(splay,L.side*-1.3,F.thrust*.6); }
+        L.joints[0].rotation.z=splay; L.joints[1].rotation.z=knee;
+      });
+      tail.joints[0].rotation.z=Math.sin(t*2.2)*.18*(.5+F.mv);
+      tail.joints[1].rotation.z=Math.sin(t*2.2-.8)*.24*(.5+F.mv);
+      tail.joints[2].rotation.z=Math.sin(t*2.2-1.6)*.3*(.5+F.mv);
+    }};
+}
+
+/* ============================================================
+   HEAD MODULES — face, jaw hardware, flare hardware.
+   Heads keep native colors; they are the palette SOURCE.
+   ============================================================ */
+
+function lionHead(){
+  const group=new THREE.Group();
+  const skull=ball(.72,0xc9a25a,.08,12,8,6); skull.scale.set(1,.95,1.05); group.add(skull);
+  const mask=box(.95,.85,.3,0xf2d98a,.05,13); mask.position.set(0,.05,.55); group.add(mask);
+  for(let s=-1;s<=1;s+=2){ const e=eye(.13); e.position.set(s*.26,.14,.72); group.add(e); }
+  const muzzle=box(.5,.32,.4,0xe8c25c,.04,14); muzzle.position.set(0,-.2,.72); group.add(muzzle);
+  const jaw=new THREE.Group(); jaw.position.set(0,-.36,.45); group.add(jaw);
+  const jm=box(.44,.18,.5,0xb8905a,.04,15); jm.position.z=.25; jaw.add(jm);
+  for(let s=-1;s<=1;s+=2){ const fg=cone(.06,.26,0xf2ead6,4); fg.rotation.x=Math.PI; fg.position.set(s*.17,-.28,.85); group.add(fg); }
+  const mane=new THREE.Group(); mane.position.set(0,.1,-.05); group.add(mane);
+  const spikes=[];
+  for(let i=0;i<12;i++){ const a=(i/12)*Math.PI*2;
+    const sp=cone(.26,1.1,i%3?0x4a3020:0x2e2838,5,.06,i*3);
+    sp.position.set(Math.cos(a)*.85,Math.sin(a)*.85,-.15); sp.rotation.z=-a-Math.PI; mane.add(sp); spikes.push(sp); }
+  const halo=new THREE.Mesh(new THREE.TorusGeometry(1.15,.06,6,24),glowMat(0xffc93c,0xcc8a1e,.6));
+  halo.position.z=-.3; mane.add(halo);
+  return { group, nominal:1, apply(ch,t){
+    jaw.rotation.x=.08+Math.sin(t*2.2)*.03+ch.jaw.open;
+    mane.rotation.z=Math.sin(t*.4)*.05;
+    const f=ch.fx.flare;
+    spikes.forEach((sp,i)=>{ sp.scale.setScalar(1+f*.35+(f>0?Math.sin(t*20+i)*.06*f:0)); });
+    halo.material.emissiveIntensity=.6+f*2+Math.sin(t*2)*.1;
+    halo.scale.setScalar(1+f*.2);
+  }};
+}
+
+function spiderHead(){
+  const group=new THREE.Group();
+  const face=ball(.6,0x2e2838,.09,21,8,6); face.scale.set(1.1,.85,.9); group.add(face);
+  for(let i=0;i<6;i++){ const e=eye(.09+(i<2?.06:0)); const a=(i/6)*Math.PI-Math.PI/2;
+    e.position.set(Math.sin(a)*.45,(i<2?.22:.05)+hash(i)*.08,.48+Math.cos(a)*.1); group.add(e); }
+  const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.14),glowMat(0xff5a3c,0xaa2a10,.5));
+  gem.position.set(0,.42,.3); group.add(gem);
+  const fangs=[];
+  for(let s=-1;s<=1;s+=2){ const piv=new THREE.Group(); piv.position.set(s*.2,-.3,.5); group.add(piv);
+    const f=cone(.1,.5,0xd8c2a0,4); f.rotation.x=Math.PI; f.position.y=-.2; piv.add(f); fangs.push({piv,s}); }
+  return { group, nominal:.8, apply(ch,t){
+    const o=.1+Math.sin(t*2.6)*.04+ch.jaw.open;
+    fangs.forEach(f=>{ f.piv.rotation.z=f.s*o*.7; f.piv.rotation.x=-o*.3; });
+    const fl=ch.fx.flare;
+    gem.material.emissiveIntensity=.5+fl*2.5; gem.scale.setScalar(1+fl*.6); gem.rotation.y=t*(1+fl*8);
+  }};
+}
+
+function sunHead(){
+  const group=new THREE.Group();
+  const cowl=ball(1,0x2a2436,.12,4,9,7); cowl.scale.set(1.15,1.15,.8); group.add(cowl);
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(.72,.72,.18,20),glowMat(0xffc93c,0xff8a2a,.9));
+  disc.rotation.x=Math.PI/2; disc.position.z=.55; group.add(disc);
+  const pupil=ball(.2,0x14121e,0,0,8,6); pupil.position.z=.72; group.add(pupil);
+  const corona=[];
+  for(let i=0;i<10;i++){ const a=(i/10)*Math.PI*2;
+    const sp=cone(.1,.55,0xff5a3c,4); sp.position.set(Math.cos(a)*1.05,Math.sin(a)*1.05,.4);
+    sp.rotation.z=-a-Math.PI; group.add(sp); corona.push(sp); }
+  const maw=new THREE.Group(); maw.position.set(0,-.6,.4); group.add(maw);
+  const jawB=box(.9,.2,.8,0x1e1a2a,.05,6); jawB.position.z=.3; maw.add(jawB);
+  for(let i=0;i<4;i++){ const th=cone(.06,.2,0xf2ead6,4); th.position.set((i-1.5)*.2,.13,.55); maw.add(th); }
+  return { group, nominal:1.05, apply(ch,t){
+    maw.rotation.x=.08+Math.sin(t*2)*.04+ch.jaw.open;
+    const f=ch.fx.flare;
+    disc.material.emissiveIntensity=.9+f*2.4+Math.sin(t*6)*.15;
+    disc.scale.setScalar(1+f*.25);
+    corona.forEach((sp,i)=>{ sp.scale.y=1+f*1.6+Math.sin(t*8+i)*.12; });
+  }};
+}
+
+function grabberHead(){
+  const group=new THREE.Group();
+  const dome=ball(.6,0x4a3d5c,.1,3,8,6); dome.scale.set(1.05,.85,1); group.add(dome);
+  const snout=cone(.45,.9,0x3a3048,6,.07,4); snout.rotation.x=Math.PI/2; snout.position.z=.6; group.add(snout);
+  for(let i=0;i<3;i++){ const e=eye(.15); e.position.set((i-1)*.32,.3,.5); group.add(e); }
+  const bar=new THREE.Mesh(new THREE.BoxGeometry(.85,.1,.12),glowMat(0xc88aff,0x7a3ad8,.5));
+  bar.position.set(0,.48,.42); group.add(bar);
+  const mandibles=[];
+  for(let s=-1;s<=1;s+=2){ const piv=new THREE.Group(); piv.position.set(s*.3,-.2,.55); group.add(piv);
+    const m=cone(.12,.7,0xd8c2a0,4,.03,s*5); m.rotation.z=s*1.9; m.position.set(s*.2,-.1,.15); piv.add(m); mandibles.push({piv,s}); }
+  return { group, nominal:.9, apply(ch,t){
+    const o=.12+Math.sin(t*2.4)*.05+ch.jaw.open;
+    mandibles.forEach(m=>{ m.piv.rotation.y=m.s*o*.8; });
+    const f=ch.fx.flare;
+    bar.material.emissiveIntensity=.5+f*2.6; bar.scale.x=1+f*.3;
+  }};
+}
+
+function toothyHead(){
+  const group=new THREE.Group();
+  const skull=box(1.5,1,1.1,0xa8442f,.09,4); skull.position.set(0,.2,.2); group.add(skull);
+  const lamps=[];
+  for(let s=-1;s<=1;s+=2){ const lamp=new THREE.Mesh(new THREE.SphereGeometry(.15,7,5),glowMat(0xffd88a,0xff7a2a,.6));
+    lamp.position.set(s*.5,.5,.75); group.add(lamp); lamps.push(lamp); }
+  const upper=new THREE.Group(); upper.position.set(0,0,.5); group.add(upper);
+  const uj=box(1.3,.45,1.5,0x8a3a2e,.06,5); uj.position.set(0,.1,.75); upper.add(uj);
+  const lower=new THREE.Group(); lower.position.set(0,-.25,.4); group.add(lower);
+  const lj=box(1.2,.4,1.6,0x6e2c22,.06,6); lj.position.set(0,-.1,.8); lower.add(lj);
+  for(let i=0;i<5;i++){
+    const tu=cone(.09,.32,0xf2ead6,4); tu.rotation.x=Math.PI; tu.position.set((i-2)*.26,-.14,1.45); upper.add(tu);
+    const tl=cone(.09,.32,0xf2ead6,4); tl.position.set((i-2)*.26,.14,1.5); lower.add(tl);
+  }
+  return { group, nominal:1.3, apply(ch,t){
+    const o=.12+Math.sin(t*2.6)*.05+ch.jaw.open;
+    upper.rotation.x=-o*.55; lower.rotation.x=o;
+    const f=ch.fx.flare;
+    lamps.forEach(l=>{ l.material.emissiveIntensity=.6+f*2.4; });
+  }};
+}
+
+function courageHead(){
+  const group=new THREE.Group();
+  const cab=box(1.5,1,1,0x525a48,.08,9); group.add(cab);
+  const lamp=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),glowMat(0xd8ffb0,0x6fae2e,.7));
+  lamp.position.set(0,.12,.62); group.add(lamp);
+  const cage=box(1.2,.2,.2,0x3a4034); cage.position.set(0,.5,.5); group.add(cage);
+  const hatch=new THREE.Group(); hatch.position.set(0,-.5,.45); group.add(hatch);
+  const plate=box(1.1,.5,.14,0x6a705c,.05,3); plate.position.y=-.25; hatch.add(plate);
+  for(let i=0;i<4;i++){ const th=cone(.07,.2,0xd8c2a0,4); th.position.set((i-1.5)*.26,-.02,.1); hatch.add(th); }
+  return { group, nominal:1.2, apply(ch,t){
+    hatch.rotation.x=.05+Math.sin(t*1.4)*.02+ch.jaw.open*.9; // maintenance maw
+    const f=ch.fx.flare;
+    lamp.material.emissiveIntensity=.7+f*2.6+Math.sin(t*3)*.1;
+    lamp.scale.setScalar(1+f*.4);
+  }};
+}
+
+function stiltHead(){
+  const group=new THREE.Group();
+  const upperV=new THREE.Group(); group.add(upperV);
+  const sHeadU=box(1.1,.42,1,0x5a687e,.08,6); sHeadU.position.y=.21; upperV.add(sHeadU);
+  const lowerV=new THREE.Group(); group.add(lowerV);
+  const sHeadL=box(1.05,.38,.95,0x39424f,.08,7); sHeadL.position.y=-.2; lowerV.add(sHeadL);
+  const irisEye=new THREE.Mesh(new THREE.SphereGeometry(.24,9,7),glowMat(0xbfeaff,0x2e9ad8,.6));
+  irisEye.position.set(0,0,.55); group.add(irisEye);
+  const antenna=cyl(.04,.04,1.4,0x2a3038,4); antenna.position.set(.35,.9,-.2); group.add(antenna);
+  const tipLight=new THREE.Mesh(new THREE.SphereGeometry(.08,6,5),glowMat(0x6fd8ff,0x2e9ad8,.8));
+  tipLight.position.set(.35,1.62,-.2); group.add(tipLight);
+  return { group, nominal:1, apply(ch,t){
+    const o=ch.jaw.open*.4; // visor splits
+    upperV.rotation.x=-o; lowerV.rotation.x=o;
+    const f=ch.fx.flare;
+    irisEye.material.emissiveIntensity=.6+f*2.4;
+    tipLight.material.emissiveIntensity=.8+f*3+Math.sin(t*5)*.2;
+  }};
+}
+
+function antelopeHead(){
+  const group=new THREE.Group();
+  const skull=box(.8,.7,1.4,0xe8dcc4,.1,12); skull.position.z=.35; group.add(skull);
+  const maw=new THREE.Group(); maw.position.set(0,-.28,.2); group.add(maw);
+  const jawB=box(.6,.25,1.2,0xc8b89a,.08,13); jawB.position.z=.5; maw.add(jawB);
+  for(let i=0;i<4;i++){ const th=cone(.06,.22,0xf2ead6,4); th.position.set((i-1.5)*.16,.16,1); maw.add(th); }
+  const eyes=[];
+  for(let s=-1;s<=1;s+=2){
+    const socketPit=ball(.16,0x2a2020,0,0,6,5); socketPit.position.set(s*.34,.18,.85); group.add(socketPit);
+    const gl=new THREE.Mesh(new THREE.SphereGeometry(.09,6,5),glowMat(0xffb08a,0xd84a1e,.4));
+    gl.position.set(s*.34,.18,.92); group.add(gl); eyes.push(gl);
+    const horn=chain([.7,.6],[.11,.06],0x6e5a44,s*9);
+    horn.root.position.set(s*.3,.4,0); horn.root.rotation.x=-2.4; horn.root.rotation.z=s*.5;
+    horn.joints[1].rotation.x=-.8; group.add(horn.root);
+  }
+  return { group, nominal:1.05, apply(ch,t){
+    maw.rotation.x=.1+Math.sin(t*3)*.04+ch.jaw.open;
+    const f=ch.fx.flare;
+    eyes.forEach(e=>{ e.material.emissiveIntensity=.4+f*2.8; });
+  }};
+}
+
+function phoenixHead(){
+  const group=new THREE.Group();
+  const skull=ball(.42,0xe8c25c,.06,7,8,6); group.add(skull);
+  const beakU=cone(.18,.85,0xb85c2e,5,.04,8); beakU.rotation.x=-Math.PI/2; beakU.position.set(0,.02,.55); group.add(beakU);
+  const beakLow=new THREE.Group(); beakLow.position.set(0,-.12,.2); group.add(beakLow);
+  const bl=cone(.13,.7,0x9e4a24,5,.04,9); bl.rotation.x=-Math.PI/2; bl.position.z=.35; beakLow.add(bl);
+  const crest=cone(.16,.8,0xff5a3c,4,.03,7); crest.rotation.x=2.6; crest.position.set(0,.3,-.25); group.add(crest);
+  const crestGlow=new THREE.Mesh(new THREE.ConeGeometry(.08,.5,4),glowMat(0xffc93c,0xff6a1e,.7));
+  crestGlow.rotation.x=2.6; crestGlow.position.set(0,.42,-.32); group.add(crestGlow);
+  for(let s=-1;s<=1;s+=2){ const e=eye(.12); e.position.set(s*.26,.08,.3); e.rotation.y=s*.6; group.add(e); }
+  return { group, nominal:.85, apply(ch,t){
+    beakLow.rotation.x=.06+Math.sin(t*2.4)*.03+ch.jaw.open*.8;
+    const f=ch.fx.flare;
+    crestGlow.material.emissiveIntensity=.7+f*2.8;
+    crest.scale.setScalar(1+f*.4); crestGlow.scale.setScalar(1+f*.5);
+  }};
+}
+
+function crocHead(){
+  const group=new THREE.Group();
+  const skull=box(1.3,.8,1,0x9e2b2b,.1,8); skull.position.z=.3; group.add(skull);
+  const eyesG=[];
+  for(let s=-1;s<=1;s+=2){ const e=eye(.14); e.position.set(s*.4,.5,.5); group.add(e);
+    const gl=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),glowMat(0xff8a5c,0xd82a10,.3));
+    gl.position.set(s*.4,.5,.63); group.add(gl); eyesG.push(gl); }
+  const upper=new THREE.Group(); upper.position.set(0,.1,.75); group.add(upper);
+  const us=box(.9,.35,1.9,0x8a2424,.06,9); us.position.z=.95; upper.add(us);
+  const lower=new THREE.Group(); lower.position.set(0,-.18,.7); group.add(lower);
+  const ls=box(.82,.3,1.9,0x6e1e1e,.06,10); ls.position.z=.95; lower.add(ls);
+  for(let i=0;i<6;i++)for(let s=-1;s<=1;s+=2){
+    const tu=cone(.06,.22,0xf2ead6,4); tu.rotation.x=Math.PI; tu.position.set(s*.36,-.14,.5+i*.28); upper.add(tu);
+    const tl=cone(.06,.22,0xf2ead6,4); tl.position.set(s*.3,.12,.6+i*.26); lower.add(tl); }
+  return { group, nominal:1.25, apply(ch,t){
+    const o=.06+Math.sin(t*1.8)*.03+ch.jaw.open;
+    upper.rotation.x=-o*.5; lower.rotation.x=o;
+    const f=ch.fx.flare;
+    eyesG.forEach(e=>{ e.material.emissiveIntensity=.3+f*2.6; });
+  }};
+}
+
+/* ============================================================
+   ANIMATION LIBRARY — 20 channel writers, zero mesh access
+   ============================================================ */
+const ANIMS={
+  LION_POUNCE:{label:'POUNCE',src:'LION GOD',dur:1.5,drive(ch,u,t){
+    const p=asr(u,.34,.62);
+    const crouch=ezi(p.a)*(p.s>0?0:1);
+    ch.limbs.crouch=crouch;
+    ch.limbs.thrust=(p.s>0? Math.sin(clamp(p.s*2,0,1)*Math.PI):0);
+    ch.body.lift=-crouch*1.2+(p.s>0? Math.sin(p.s*Math.PI)*2.4:0);
+    ch.body.pitch=-crouch*.2+(p.s>0?(Math.sin(p.s*Math.PI)*.35-p.s*.3):0)*(1-p.r);
+    ch.root.z=(p.s>0? ezo(p.s)*4.6:0)*(1-ez(p.r));
+    if(p.s>=1&&p.r<.08) shake(.5);
+  }},
+  LION_ROAR:{label:'ROAR',src:'LION GOD',dur:1.8,drive(ch,u,t){
+    const p=asr(u,.35,.72);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ezo(p.a);
+    ch.head.pitch=ezi(p.a)*.3*(p.s>0?0:1)+(p.s>0? -.45*c:0);
+    ch.jaw.open=1.15*(p.s>0?c:0);
+    ch.fx.flare=c; ch.body.shiver=.012*(p.s>0?c:0); ch.body.lift=c*.3;
+    if(p.s>.02&&p.s<.1) shake(.4);
+  }},
+  SPID_STAB:{label:'LEG STAB',src:'SPIDICULES',dur:1.5,drive(ch,u,t){
+    const p=asr(u,.3,.7);
+    ch.limbs.stabRaise=ezo(p.a)*(p.r>0?1-ez(p.r):1);
+    const jab=p.s>0? Math.abs(Math.sin(p.s*Math.PI*2)):0;
+    ch.limbs.stabJab=ezi(jab);
+    ch.body.pitch=-ch.limbs.stabRaise*.08;
+    if((p.s>.22&&p.s<.28)||(p.s>.72&&p.s<.78)) shake(.22);
+  }},
+  SPID_SPIN:{label:'SILK SPIN',src:'SPIDICULES',dur:1.9,drive(ch,u,t){
+    const p=asr(u,.25,.8);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ezo(p.a);
+    ch.root.spin=(p.r>0? 1:(p.s>0? ez(p.s):0))*Math.PI*4;
+    ch.body.lift=c*.35; ch.limbs.crouch=c*.3; ch.body.pitch=-c*.15;
+    if(p.s>.05&&p.s<.12) shake(.12);
+  }},
+  SUN_DART:{label:'DART LUNGE',src:'SUNSTALKER',dur:1.4,drive(ch,u,t){
+    const p=asr(u,.32,.6);
+    ch.spine.coil=ezo(p.a)*(1-(p.s>0?ezi(p.s):0));
+    ch.root.z=(p.s>0? ezo(p.s)*5:0)*(1-ez(p.r));
+    ch.jaw.open=((p.s>0? ezo(clamp(p.s*2,0,1)):p.a*.4)*(1-p.r));
+    ch.limbs.spdMul=1+(p.s>0&&p.r<=0?1.8:0);
+    if(p.s>.55&&p.s<.65) shake(.3);
+  }},
+  SUN_FLARE:{label:'SUN FLARE',src:'SUNSTALKER',dur:2.2,drive(ch,u,t){
+    const p=asr(u,.4,.78);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ez(p.a);
+    ch.fx.flare=c; ch.spine.ring=c; ch.body.lift=c*.25;
+    if(c>0&&c<.06&&p.a>=1) shake(.1);
+  }},
+  GRAB_SNATCH:{label:'SNATCH',src:'GRABBER',dur:1.4,drive(ch,u,t){
+    const p=asr(u,.32,.58);
+    ch.limbs.stabRaise=ezo(p.a)*(p.r>0?1-ez(p.r):1);
+    ch.limbs.stabJab=(p.s>0? ezo(p.s):0)*(p.r>0?1-ez(p.r):1);
+    ch.jaw.open=.5*ch.limbs.stabJab;
+    ch.root.z=(p.s>0? ezo(p.s)*.8:0)*(1-ez(p.r));
+    ch.body.pitch=(p.s>0? .12*ezo(p.s):-.08*p.a)*(1-p.r);
+    if(p.s>.1&&p.s<.2) shake(.2);
+  }},
+  GRAB_POUNCE:{label:'PREY POUNCE',src:'GRABBER',dur:1.3,drive(ch,u,t){
+    const p=asr(u,.35,.6);
+    const crouch=ezi(p.a)*(p.s>0?0:1);
+    ch.limbs.crouch=crouch;
+    ch.limbs.thrust=(p.s>0? Math.sin(clamp(p.s*1.6,0,1)*Math.PI):0);
+    ch.body.lift=-crouch*1.1+(p.s>0? Math.sin(p.s*Math.PI)*1.9:0);
+    ch.body.pitch=-crouch*.25+(p.s>0? Math.sin(p.s*Math.PI)*.4:0)*(1-p.r);
+    ch.root.z=(p.s>0? ezo(p.s)*3.4:0)*(1-ez(p.r));
+    ch.limbs.spdMul=1+(p.s>0?1:0);
+    if(p.r>0&&p.r<.12) shake(.35);
+  }},
+  TOOTHY_CHOMP:{label:'CHOMP',src:'TOOTHY MECH',dur:1.4,drive(ch,u,t){
+    const p=asr(u,.4,.55);
+    ch.jaw.open=lerp(0,1.05,ezo(p.a))*(p.s>0?1-ezi(p.s):1)+(p.r>0? .12*ez(p.r):0);
+    ch.head.pitch=-ezo(p.a)*.3*(1-p.s)+(p.s>0? .25*ezo(p.s):0)*(1-p.r);
+    ch.body.pitch=-ezo(p.a)*.06*(1-p.s);
+    if(p.s>=1&&p.r<.1) shake(.3);
+  }},
+  TOOTHY_THRASH:{label:'THRASH LUNGE',src:'TOOTHY MECH',dur:1.6,drive(ch,u,t){
+    const p=asr(u,.3,.7);
+    ch.root.z=lerp(0,4,ezo(p.s))*(1-ez(p.r));
+    ch.body.yaw=(p.s>0? Math.sin(p.s*Math.PI*4)*.3:0)*(1-p.r);
+    ch.head.yaw=(p.s>0? Math.sin(p.s*Math.PI*5)*.5:0)*(1-p.r);
+    ch.jaw.open=lerp(0,.8,ezo(p.a))*(1-ez(p.r)*.9);
+    ch.body.lift=-ezi(p.a)*.4*(1-p.s);
+    ch.limbs.crouch=ezi(p.a)*.4*(p.s>0?0:1);
+    ch.limbs.spdMul=1+(p.s>0&&p.r<=0?1.5:0);
+    if(p.s>.05&&p.s<.15) shake(.15);
+  }},
+  MC_HARVEST:{label:'HARVEST',src:'MOTHER COURAGE',dur:2.4,drive(ch,u,t){
+    const p=asr(u,.3,.62);
+    ch.tool.reach=ezo(p.a)*(p.s>0?1-ez(p.s):1);
+    ch.tool.grip=(p.s>0? ezo(clamp(p.s*2.5,0,1)):0)*(p.r>0?1-ezo(clamp(p.r*2,0,1)):1);
+    ch.tool.stow=(p.s>0? ez(p.s):0)*(p.r>0?1-ez(p.r):1);
+    ch.jaw.open=ch.tool.grip*.4;  // maw works the catch
+    ch.body.pitch=ch.tool.reach*.06;
+    if(p.r>0&&p.r<.1) shake(.08);
+  }},
+  MC_SHUDDER:{label:'VENT SHUDDER',src:'MOTHER COURAGE',dur:1.8,drive(ch,u,t){
+    const p=asr(u,.25,.75);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ezo(p.a);
+    ch.body.shiver=.05*c*(p.s>0?1:0);
+    ch.fx.flare=c*(p.s>0? .6+Math.max(0,Math.sin(u*24))*.4:0);
+    ch.body.lift=c*.1;
+    if(p.s>.1&&p.s<.2) shake(.2);
+  }},
+  STILT_STOMP:{label:'STOMP',src:'STILT WALKER',dur:1.6,drive(ch,u,t){
+    const p=asr(u,.4,.62);
+    ch.limbs.stabRaise=ezo(p.a)*(p.r>0?1-ez(p.r):1);
+    ch.limbs.stabJab=(p.s>0? ezi(p.s):0)*(p.r>0?1-ez(p.r):1);
+    ch.body.roll=-ezo(p.a)*.1*(1-p.s);
+    if(p.s>=1&&p.r<.08) shake(.55);
+  }},
+  STILT_SCAN:{label:'CROUCH SCAN',src:'STILT WALKER',dur:2.2,drive(ch,u,t){
+    const p=asr(u,.3,.7);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ezo(p.a);
+    ch.limbs.crouch=c;
+    ch.head.yaw=Math.sin(u*14)*.9*c;
+    ch.body.pitch=c*.06;
+    ch.fx.flare=c*.5;
+  }},
+  ANT_CHARGE:{label:'CHARGE',src:'SCREAMING ANTELOPE',dur:1.5,drive(ch,u,t){
+    const p=asr(u,.28,.68);
+    ch.body.pitch=ezo(p.a)*.18*(1-p.s);
+    ch.root.z=lerp(0,5.5,ezi(clamp((p.s)*1.2,0,1)))*(1-ez(p.r));
+    ch.head.pitch=(p.s>0? -.6*ezo(clamp(p.s*2,0,1)):0)*(1-p.r);
+    ch.jaw.open=.3*(p.s>0?1:0)*(1-p.r);
+    ch.limbs.mv=Math.max(ch.limbs.mv,(p.s>0&&p.r<=0)?1:0);
+    ch.limbs.spdMul=1+(p.s>0&&p.r<=0?2.2:0);
+    if(p.s>.85&&p.s<.95) shake(.4);
+  }},
+  ANT_SCREAM:{label:'SCREAM',src:'SCREAMING ANTELOPE',dur:1.9,drive(ch,u,t){
+    const p=asr(u,.3,.75);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ezo(p.a);
+    ch.body.pitch=-c*.5; ch.body.lift=c*.7;
+    ch.head.pitch=-c*.45; ch.jaw.open=1.2*c;
+    ch.head.shiver=(p.s>0? .09:0)*(1-p.r);
+    ch.limbs.stabRaise=c*.6;
+    ch.fx.flare=c*.7;
+    if(p.s>.05&&p.s<.15) shake(.25);
+  }},
+  PHX_DIVE:{label:'TALON DIVE',src:'PHOENIX',dur:1.6,drive(ch,u,t){
+    const p=asr(u,.35,.6);
+    ch.body.lift=ezo(p.a)*2.4*(1-(p.s>0?1:0))+(p.s>0? lerp(2.4,-1,ezi(p.s)):0)*(1-(p.r>0?ez(p.r):0));
+    ch.body.pitch=ezo(p.a)*.5*(1-p.r)*(p.s>0?1-p.s*.5:1);
+    ch.limbs.stabRaise=clamp(p.a*1.2,0,1)*(p.r>0?1-ez(p.r):1);
+    ch.limbs.stabJab=(p.s>0? ezi(p.s):0)*(p.r>0?1-ez(p.r):1);
+    ch.wings.spread=ezo(p.a)*.6*(p.s>0?1-p.s:1)+(p.r>0? ez(p.r)*.3:0);
+    ch.wings.beat=(p.r>0? (1-p.r)*1:0);
+    ch.root.z=(p.s>0? ezo(p.s)*1.6:0)*(1-ez(p.r));
+    if(p.s>=1&&p.r<.08) shake(.45);
+  }},
+  PHX_FLARE:{label:'WING FLARE',src:'PHOENIX',dur:2.4,drive(ch,u,t){
+    const p=asr(u,.45,.8);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ez(p.a);
+    ch.wings.spread=c; ch.body.lift=c*.5; ch.fx.flare=c*.7;
+    ch.head.pitch=-c*.2;
+    if(p.a>.9&&p.s<.1&&p.r<=0) shake(.1);
+  }},
+  CROC_SNAP:{label:'SNAP BITE',src:'CRIMSON CROC',dur:1.5,drive(ch,u,t){
+    const p=asr(u,.5,.58);
+    ch.jaw.open=lerp(0,.95,ez(p.a))*(p.s>0?1-ezi(p.s):1)+(p.r>0? .06*ez(p.r):0);
+    ch.head.pitch=-ez(p.a)*.15*(1-p.s)+(p.s>0? .18*ezo(p.s):0)*(1-p.r);
+    ch.root.z=(p.s>0? ezo(p.s)*1.4:0)*(1-ez(p.r));
+    if(p.s>=1&&p.r<.06) shake(.35);
+  }},
+  CROC_ROLL:{label:'DEATH ROLL',src:'CRIMSON CROC',dur:1.9,drive(ch,u,t){
+    const p=asr(u,.22,.82);
+    const c=p.s>0?(p.r>0?1-ez(p.r):1):ezo(p.a);
+    ch.jaw.open=.7*ezo(p.a)*(1-ez(p.r));
+    ch.body.roll=(p.s>0? ez(p.s):0)*Math.PI*4;   // ends at 4π ≡ upright
+    ch.body.lift=(p.s>0? Math.sin(clamp(p.s,0,1)*Math.PI)*.3:0);
+    ch.limbs.crouch=c;
+    if(p.s>.05&&p.s<.15) shake(.3);
+    if(p.s>.5&&p.s<.55) shake(.2);
+  }},
+};
+
+/* ============================================================
+   CREATURE DEFS — pal is the head's palette, applied to any
+   chassis it rides. Hybrid name = HEAD.pre + '-' + BODY.post
+   ============================================================ */
+const DEFS=[
+  {id:'lion',chip:'LIO',name:'LION GOD',       pre:'LION',  post:'GOD',    moveLabel:'PROWL',   speed:6,  camY:2.6,camD:16, chassis:lionChassis,    headBuild:lionHead,    anims:['LION_POUNCE','LION_ROAR'],   pal:{a:0xc9a25a,b:0xb8905a,c:0xe8c25c,d:0x4a3020,g:0xffc93c}},
+  {id:'spid',chip:'SPI',name:'SPIDICULES',     pre:'SPIDI', post:'CULES',  moveLabel:'SKITTER', speed:7,  camY:2.2,camD:15, chassis:spiderChassis,  headBuild:spiderHead,  anims:['SPID_STAB','SPID_SPIN'],     pal:{a:0x453a54,b:0x2e2838,c:0xd8c2a0,d:0x1e1a2a,g:0xff5a3c}},
+  {id:'sun', chip:'SUN',name:'SUNSTALKER',     pre:'SUN',   post:'STALKER',moveLabel:'GLIDE',   speed:5.5,camY:3,  camD:18, chassis:serpentChassis, headBuild:sunHead,     anims:['SUN_DART','SUN_FLARE'],      pal:{a:0x352c48,b:0x2a2436,c:0xffc93c,d:0x1e1a2a,g:0xff5a3c}},
+  {id:'grab',chip:'GRB',name:'GRABBER',        pre:'GRAB',  post:'GRASP',  moveLabel:'SCUTTLE', speed:6.5,camY:2.4,camD:15, chassis:grabberChassis, headBuild:grabberHead, anims:['GRAB_SNATCH','GRAB_POUNCE'], pal:{a:0x5c4a72,b:0x4a3d5c,c:0xd8c2a0,d:0x3a3048,g:0xc88aff}},
+  {id:'tooth',chip:'TTH',name:'TOOTHY MECH',   pre:'TOOTH', post:'MAW',    moveLabel:'HEAVY TROT',speed:5,camY:2.2,camD:15, chassis:toothyChassis,  headBuild:toothyHead,  anims:['TOOTHY_CHOMP','TOOTHY_THRASH'],pal:{a:0x8a3a2e,b:0x5a4a58,c:0xd8c2a0,d:0x3a3040,g:0xff7a2a}},
+  {id:'mc',  chip:'MOC',name:'MOTHER COURAGE', pre:'MOTHER',post:'COURAGE',moveLabel:'TRUNDLE', speed:2.2,camY:3.2,camD:19, chassis:courageChassis, headBuild:courageHead, anims:['MC_HARVEST','MC_SHUDDER'],   pal:{a:0x6a705c,b:0x525a48,c:0x8a8a72,d:0x3a4034,g:0x9fd45c}},
+  {id:'stilt',chip:'STL',name:'STILT WALKER',  pre:'STILT', post:'WALKER', moveLabel:'STRIDE',  speed:3.4,camY:4.6,camD:24, chassis:stiltChassis,   headBuild:stiltHead,   anims:['STILT_STOMP','STILT_SCAN'],  pal:{a:0x4a5568,b:0x39424f,c:0x5a687e,d:0x2a3038,g:0x6fd8ff}},
+  {id:'ant', chip:'ANT',name:'SCREAMING ANTELOPE',pre:'SCREAM',post:'PRONG',moveLabel:'GALLOP', speed:8.5,camY:2,  camD:13, chassis:antelopeChassis,headBuild:antelopeHead,anims:['ANT_CHARGE','ANT_SCREAM'],   pal:{a:0xb8a284,b:0xa08a6c,c:0xe8dcc4,d:0x6e5a44,g:0xff8a5c}},
+  {id:'phx', chip:'PHX',name:'PHOENIX',        pre:'PYRE',  post:'WING',   moveLabel:'ASCEND',  speed:4,  camY:3.4,camD:19, chassis:phoenixChassis, headBuild:phoenixHead, anims:['PHX_DIVE','PHX_FLARE'],      pal:{a:0xd8b04a,b:0xc89838,c:0xf2d98a,d:0xb85c2e,g:0xff5a3c}},
+  {id:'croc',chip:'CRC',name:'CRIMSON CROCODILE',pre:'CROC',post:'JAWS',   moveLabel:'SPRAWL',  speed:4,  camY:1.6,camD:15, chassis:crocChassis,    headBuild:crocHead,    anims:['CROC_SNAP','CROC_ROLL'],     pal:{a:0x9e2b2b,b:0x8a2424,c:0xe8d8a8,d:0x6e1e1e,g:0xff4a2a}},
+];
+
+function assemble(bodyDef,headDef){
+  const chassis=bodyDef.chassis(headDef.pal);   // <- body wears the head's colors
+  const head=headDef.headBuild();
+  head.group.scale.setScalar(chassis.headScale/head.nominal);
+  chassis.socket.add(head.group);
+  const seen={},animKeys=[];
+  bodyDef.anims.concat(headDef.anims).forEach(k=>{ if(!seen[k]){seen[k]=1;animKeys.push(k);} });
+  return {group:chassis.group, chassis, head, animKeys, bodyDef, headDef};
+}
+
+/* ============================================================
+   STATE / UI / GAMEPAD / LOOP
+   ============================================================ */
+const S={mode:'idle', timer:0, dur:0, moveBlend:0, anim:null};
+function setIdle(){ S.mode='idle'; S.anim=null; syncButtons(); }
+function toggleMove(){ S.mode=(S.mode==='move')?'idle':'move'; S.anim=null; syncButtons(); }
+function fire(key){ const a=ANIMS[key]; S.mode='attack'; S.anim=a; S.timer=0; S.dur=a.dur; syncButtons(); }
+
+let bodyIdx=0, headIdx=0, rig=null;
+const N=DEFS.length;
+const nameEl=document.getElementById('mname'), tagEl=document.getElementById('mtag'), serialEl=document.getElementById('serial');
+const animsEl=document.getElementById('anims');
+
+function buildChips(){
+  [['bodyChips',i=>{bodyIdx=i;spawn();}],['headChips',i=>{headIdx=i;spawn();}]].forEach(([elId,set])=>{
+    const holder=document.getElementById(elId); holder.innerHTML='';
+    DEFS.forEach((d,i)=>{ const c=document.createElement('button'); c.className='chip'; c.textContent=d.chip;
+      c.addEventListener('click',()=>set(i)); holder.appendChild(c); });
+  });
+}
+function syncChips(){
+  [['bodyChips',bodyIdx],['headChips',headIdx]].forEach(([elId,on])=>{
+    [...document.getElementById(elId).children].forEach((c,i)=>c.classList.toggle('on',i===on));
+  });
+}
+function buildButtons(){
+  animsEl.innerHTML='';
+  const mk=(label,sub,fn,id)=>{ const b=document.createElement('button'); b.className='abtn'; b.dataset.id=id;
+    b.innerHTML=label+(sub?'<span class="src">'+sub+'</span>':'');
+    b.addEventListener('click',fn); animsEl.appendChild(b); };
+  mk('IDLE','',setIdle,'idle');
+  mk(rig.bodyDef.moveLabel,rig.bodyDef.chip,toggleMove,'move');
+  rig.animKeys.forEach(k=>{ const a=ANIMS[k]; mk(a.label,a.src,()=>fire(k),k); });
+}
+function syncButtons(){
+  document.querySelectorAll('.abtn').forEach(b=>{
+    const id=b.dataset.id;
+    b.classList.toggle('on',(id===S.mode)||(S.anim&&ANIMS[id]===S.anim));
+  });
+}
+function spawn(){
+  if(rig) scene.remove(rig.group);
+  const bd=DEFS[bodyIdx], hd=DEFS[headIdx];
+  rig=assemble(bd,hd);
+  scene.add(rig.group);
+  const pure=(bd===hd);
+  nameEl.textContent=pure? bd.name : hd.pre+'-'+bd.post;
+  tagEl.textContent=pure? 'pure strain' : hd.name+' head · '+bd.name+' body';
+  serialEl.textContent='FUSION '+(bodyIdx+1)+'\u00b7'+(headIdx+1);
+  cam.tDist=bd.camD; cam.focusY=bd.camY;
+  S.mode='idle'; S.anim=null; S.moveBlend=0;
+  buildButtons(); syncButtons(); syncChips();
+}
+
+addEventListener('keydown',e=>{
+  if(e.key==='q'){bodyIdx=(bodyIdx+N-1)%N;spawn();}
+  if(e.key==='e'){bodyIdx=(bodyIdx+1)%N;spawn();}
+  if(e.key==='a'){headIdx=(headIdx+N-1)%N;spawn();}
+  if(e.key==='d'){headIdx=(headIdx+1)%N;spawn();}
+  if(e.key==='1')setIdle();
+  if(e.key==='2')toggleMove();
+  const n=parseInt(e.key,10);
+  if(n>=3&&n<=6&&rig.animKeys[n-3])fire(rig.animKeys[n-3]);
+});
+
+const padPrev={};
+const padDot=document.getElementById('padDot');
+function pollPad(dt){
+  const pads=navigator.getGamepads?navigator.getGamepads():[];
+  let pad=null; for(const p of pads) if(p&&p.connected){pad=p;break;}
+  padDot.classList.toggle('live',!!pad);
+  if(!pad) return;
+  const press=i=>{const now=pad.buttons[i]&&pad.buttons[i].pressed;const was=padPrev[i];padPrev[i]=now;return now&&!was;};
+  if(press(4)){bodyIdx=(bodyIdx+N-1)%N;spawn();}
+  if(press(5)){bodyIdx=(bodyIdx+1)%N;spawn();}
+  if(press(12)){headIdx=(headIdx+N-1)%N;spawn();}
+  if(press(13)){headIdx=(headIdx+1)%N;spawn();}
+  if(press(0))toggleMove();
+  if(press(1))setIdle();
+  if(press(2)&&rig.animKeys[0])fire(rig.animKeys[0]);
+  if(press(3)&&rig.animKeys[1])fire(rig.animKeys[1]);
+  if(press(6)&&rig.animKeys[2])fire(rig.animKeys[2]);
+  if(press(7)&&rig.animKeys[3])fire(rig.animKeys[3]);
+  const rx=pad.axes[2]||0, ry=pad.axes[3]||0;
+  if(Math.abs(rx)>.15)cam.tYaw-=rx*dt*2.2;
+  if(Math.abs(ry)>.15)cam.tPitch=clamp(cam.tPitch+ry*dt*1.6,.08,1.15);
+}
+
+const cam={yaw:.65,pitch:.42,dist:16,tYaw:.65,tPitch:.42,tDist:16,focusY:2.6};
+let dragging=false,lx=0,ly=0,pinch0=0,dist0=0;
+const el=renderer.domElement;
+el.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;});
+addEventListener('pointerup',()=>dragging=false);
+addEventListener('pointermove',e=>{ if(!dragging)return;
+  cam.tYaw-=(e.clientX-lx)*.006; cam.tPitch=clamp(cam.tPitch+(e.clientY-ly)*.004,.08,1.15);
+  lx=e.clientX;ly=e.clientY; });
+el.addEventListener('touchstart',e=>{ if(e.touches.length===2){
+  pinch0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);dist0=cam.tDist;}},{passive:true});
+el.addEventListener('touchmove',e=>{ if(e.touches.length===2){
+  const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  cam.tDist=clamp(dist0*pinch0/d,6,44);dragging=false;}},{passive:true});
+el.addEventListener('wheel',e=>{cam.tDist=clamp(cam.tDist+e.deltaY*.02,6,44);},{passive:true});
+
+const clock=new THREE.Clock();
+buildChips(); spawn();
+function loop(){
+  requestAnimationFrame(loop);
+  const dt=Math.min(clock.getDelta(),.05);
+  const t=clock.elapsedTime;
+  pollPad(dt);
+
+  const ch=CH();
+  S.moveBlend=lerp(S.moveBlend, S.mode==='move'?1:0, 1-Math.pow(.002,dt));
+  ch.limbs.mv=S.moveBlend;
+
+  let u=0;
+  if(S.mode==='attack'&&S.anim){
+    S.timer+=dt; u=clamp(S.timer/S.dur,0,1);
+    S.anim.drive(ch,u,t);
+    if(S.timer>=S.dur) setIdle();
+  }
+
+  if(rig){
+    rig.group.position.z=lerp(rig.group.position.z,ch.root.z*rig.chassis.strideScale,1-Math.pow(1e-12,dt));
+    rig.group.rotation.y=ch.root.spin;
+    rig.chassis.socket.rotation.x=ch.head.pitch+Math.sin(t*1.4)*.04;
+    rig.chassis.socket.rotation.y=ch.head.yaw+Math.sin(t*.6)*.15*(1-S.moveBlend);
+    rig.chassis.socket.rotation.z=ch.head.roll+Math.sin(t*29)*ch.head.shiver;
+    rig.chassis.apply(ch,dt,t);
+    rig.head.apply(ch,t);
+    groundTex.offset.y-=rig.bodyDef.speed*S.moveBlend*dt*(24/200);
+  }
+
+  cam.yaw=lerp(cam.yaw,cam.tYaw,1-Math.pow(.001,dt));
+  cam.pitch=lerp(cam.pitch,cam.tPitch,1-Math.pow(.001,dt));
+  cam.dist=lerp(cam.dist,cam.tDist,1-Math.pow(.001,dt));
+  trauma=Math.max(0,trauma-dt*1.6);
+  const sh=trauma*trauma;
+  const sx=(hash(t*57.3)-.5)*sh*.7, sy=(hash(t*91.7+3)-.5)*sh*.7;
+  camera.position.set(
+    Math.sin(cam.yaw)*Math.cos(cam.pitch)*cam.dist+sx,
+    cam.focusY+Math.sin(cam.pitch)*cam.dist+sy,
+    Math.cos(cam.yaw)*Math.cos(cam.pitch)*cam.dist);
+  camera.lookAt(sx,cam.focusY+sy,0);
+  camera.rotation.z+=(hash(t*77.1+9)-.5)*sh*.15;
+  renderer.render(scene,camera);
+}
+loop();
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>
