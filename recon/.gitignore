@@ -1,0 +1,22 @@
+node_modules/
+package.json
+package-lock.json
+app/bundle.js
+harness/bundle.js
+renders/sweep/
+renders/sweep2/
+renders/gizmocheck/
+
+# Extracted PBR maps (~25 MB). Derived artifacts, and deliberately NOT wired into the cel
+# path -- see referencePbr.hardLimit in the spec. The inputs (matcrops/) are committed, so
+# these regenerate with:
+#   for m in <material-id>; do python3 $FORGE/stage1_intake/extract_pbr_evidence.py \
+#     recon/matcrops/$m.png --out-dir recon/pbr/$m --material-id $m --target-threshold 0.7; done
+pbr/
+
+# Derived from reference.jpg by prepare_reference.py -- regenerate, don't commit:
+#   python3 recon/prepare_reference.py
+ref.png
+ref_clean.png
+crops/
+matcrops/

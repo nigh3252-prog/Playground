@@ -1,0 +1,595 @@
+{
+  "model": "manta-delta-star-freighter",
+  "parts": [
+    {
+      "name": "root",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 60
+    },
+    {
+      "name": "forward-wing",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 60
+    },
+    {
+      "name": "wing-leading-spar",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "aft-tail-blade",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 44
+    },
+    {
+      "name": "ventral-keel-fin",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 16
+    },
+    {
+      "name": "dorsal-mast-fin",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 20
+    },
+    {
+      "name": "mast-inner-machinery",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-coolant-strip",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-terminal-block",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-pivot-boss-port",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "mast-pivot-boss-stbd",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "mast-spar-leading",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 20
+    },
+    {
+      "name": "mast-spar-trailing",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 18
+    },
+    {
+      "name": "pod-cradle",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 1728
+    },
+    {
+      "name": "pod-cradle",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-cradle",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 4608
+    },
+    {
+      "name": "stern-bay-housing",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 1728
+    },
+    {
+      "name": "stern-bay-housing",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 1728
+    },
+    {
+      "name": "canopy-blister",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4992
+    },
+    {
+      "name": "bow-fairing",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1584
+    },
+    {
+      "name": "hull-flank-rail-stbd",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "hull-flank-rail-port",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-01",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-02",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-03",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-04",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-05",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-06",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-07",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "deck-plate-08",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "tail-spine-rail",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "mid-stabilizer-fin",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 12
+    },
+    {
+      "name": "mast-base-housing",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 20
+    },
+    {
+      "name": "mast-base-vent-port-1",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-vent-port-2",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-vent-port-3",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-vent-port-4",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-vent-stbd-1",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-vent-stbd-2",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-vent-stbd-3",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-vent-stbd-4",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "mast-base-diamond-hatch",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 12
+    },
+    {
+      "name": "mast-base-housing",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "bladder-pod-01",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-strap-01a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "pod-strap-01b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "bladder-pod-02",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-strap-02a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "pod-strap-02b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "bladder-pod-03",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-strap-03a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "pod-strap-03b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "bladder-pod-04",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-strap-04a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "pod-strap-04b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "bladder-pod-05",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-strap-05a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "pod-strap-05b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "bladder-pod-06",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-strap-06a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "pod-strap-06b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "bladder-pod-07",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "pod-strap-07a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "pod-strap-07b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "manifold-spine",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "manifold-seg-red",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "manifold-seg-blue",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "manifold-collar-a",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "manifold-collar-b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "manifold-round-port",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "radiator-vane-01",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-02",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-03",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-04",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-05",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-06",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-07",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-08",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-09",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "radiator-vane-10",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "bay-blue-trim",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "nozzle-ring-red",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 8
+    },
+    {
+      "name": "nozzle-ring-blue",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 8
+    },
+    {
+      "name": "nozzle-throat-orange",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 8
+    },
+    {
+      "name": "nozzle-core",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 8
+    },
+    {
+      "name": "hull-antenna-nub-1",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "hull-antenna-nub-2",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "hull-antenna-nub-3",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "hull-antenna-nub-4",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "hull-antenna-nub-5",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "hull-antenna-nub-6",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1632
+    },
+    {
+      "name": "blue-bar-decal",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1152
+    },
+    {
+      "name": "tail-hardpoint-1",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "tail-hardpoint-2",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "tail-hardpoint-3",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "tail-hardpoint-4",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "tail-hardpoint-5",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 1728
+    },
+    {
+      "name": "root",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 1728
+    }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 93
+}

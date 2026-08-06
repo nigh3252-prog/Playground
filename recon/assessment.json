@@ -1,0 +1,659 @@
+{
+  "targetName": "Manta Delta Star Freighter",
+  "sourceImage": "/home/user/Playground/recon/ref.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "spacecraft (wide delta/manta-planform starship, side elevation)",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "hard-surface geometric, chiselled planar facets",
+        "flattened swept-delta planform with a long tapering tail blade",
+        "one organic exception: bulging ventral bladder pods"
+      ],
+      "structureKind": [
+        "plated monocoque hull spine",
+        "thin lofted wing blades (fore) and tail blade (aft)",
+        "slung ventral payload cluster on pylons",
+        "pivoting dorsal mast fin",
+        "recessed stern drive bay"
+      ],
+      "motionPotential": [
+        "dorsal mast fin folds aft about a lateral axis (twin gold pivot bosses observed)",
+        "ventral pod cluster is strap-mounted and reads as jettisonable/detachable",
+        "stern louvre vanes read as a rotatable radiator array"
+      ],
+      "materialFamilies": [
+        "matte painted composite hull (cream)",
+        "satin painted bladder pods (saturated yellow)",
+        "bare cool-grey machined metal fittings",
+        "flat accent enamels (blue / red / gold)"
+      ],
+      "notes": "OBSERVED: the reference is a digital ink-and-flat-fill illustration (cel/toon), not a photograph. Hard near-black contour lines bound both the outer silhouette and interior part boundaries; colour regions are flat with 2-3 discrete value steps and no continuous specular falloff. INFERENCE: matching this reference therefore means matching a stylised rendering mode (toon ramp + inverted-hull outline), not PBR realism. A physically-lit PBR render would score poorly against this reference no matter how correct the geometry is."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 7,
+        "componentCount": 7,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 7,
+        "materialLayerCount": 6,
+        "localDetailDensity": 7,
+        "occlusionRisk": 8,
+        "actionReadinessNeed": 6
+      },
+      "estimatedCounts": {
+        "macroComponents": 7,
+        "mesoComponents": 26,
+        "microFeatureGroups": 9,
+        "materialLayers": 6,
+        "repetitionSystems": 5
+      },
+      "reasoning": [
+        "7 macro assemblies: forward wing, ventral keel fin, hull spine, dorsal mast fin, ventral pod cluster, stern drive bay, aft tail blade.",
+        "5 real repetition systems: dorsal deck plates (~8), stern louvre vanes (~10 in chevron), bladder pods (6-8), pod banding straps (~2 per pod), mast-base louvre vents (2 banks).",
+        "occlusionRisk 8 is the dominant risk: this is a single near-side elevation. Planform (top-down wing chord and sweep) is NOT observable and must be inferred.",
+        "actionReadinessNeed 6: the mast pivot bosses and pod straps are drawn as real mechanisms, so the hierarchy must expose those pivots rather than welding everything into one mesh."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Complex, not ultra-complex: component count and repetition density are high, but the form is planar-dominant and the palette is a limited 6-colour flat scheme with no patterned finish requiring projection. Three levels are required because the mast fin and pod cluster each have real sub-assemblies (machinery box, ladder rack, pivot bosses; pods, straps, manifold) that a two-level tree would collapse into slabs."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      {
+        "id": "planform-unknown",
+        "question": "Top-down planform is not observable from this single side elevation. Wing chord, sweep angle and hull width are inferred, not measured.",
+        "impact": "high",
+        "resolution": "assume-and-label",
+        "assumption": "Wing chord ~28% of span; leading edge swept forward ~18deg on the forward wing, aft blade swept back ~12deg; hull spine width ~9% of span."
+      },
+      {
+        "id": "starboard-hidden",
+        "question": "Only the port flank is visible.",
+        "impact": "medium",
+        "resolution": "mirror",
+        "assumption": "Bilateral symmetry about the fore-aft vertical plane."
+      },
+      {
+        "id": "pod-count",
+        "question": "6 bladder pods are clearly legible; 1-2 more may be occluded.",
+        "impact": "medium",
+        "resolution": "assume-and-label",
+        "assumption": "7 pods per side bank."
+      },
+      {
+        "id": "bow-dome-function",
+        "question": "The small dark dome at the bow is either a crewed canopy or a sensor blister.",
+        "impact": "low",
+        "resolution": "assume-and-label",
+        "assumption": "Model as a tinted sensor/canopy blister; geometry is identical either way."
+      },
+      {
+        "id": "nozzle-multiplicity",
+        "question": "One triangular nozzle is visible at the stern bay apex; a mirrored starboard nozzle is plausible but not observable.",
+        "impact": "low",
+        "resolution": "mirror",
+        "assumption": "One nozzle per side."
+      },
+      {
+        "id": "absolute-scale",
+        "question": "No human or known object in frame.",
+        "impact": "low",
+        "resolution": "assume-and-label",
+        "assumption": "Model in normalised units, span = 10.0."
+      },
+      {
+        "id": "hull-underside",
+        "question": "The hull underside between the pods is occluded by the pod cluster.",
+        "impact": "low",
+        "resolution": "assume-and-label",
+        "assumption": "Flat plated ventral deck continuing the flank facet."
+      }
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "d01",
+          "kind": "contour",
+          "description": "ink contour outline on outer silhouette and interior part boundaries",
+          "region": [
+            0.05,
+            0.05,
+            0.95,
+            0.95
+          ],
+          "affects": "global",
+          "scale": "macro",
+          "evidenceRef": "recon/crops/bow.png",
+          "confidence": 0.97,
+          "mapsTo": "component.localFeatures:outline-shell"
+        },
+        {
+          "id": "d02",
+          "kind": "linework",
+          "description": "engraved dark panel-line network across dorsal deck and wing skins",
+          "region": [
+            0.1,
+            0.4,
+            0.95,
+            0.6
+          ],
+          "affects": "hull-skin",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/wingtip.png",
+          "confidence": 0.93,
+          "mapsTo": "material.localOverrides:panel-line-seams"
+        },
+        {
+          "id": "d03",
+          "kind": "stain",
+          "description": "irregular yellow weathering/discolour patches on cream hull plating",
+          "region": [
+            0.15,
+            0.42,
+            0.75,
+            0.58
+          ],
+          "affects": "hull-skin",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/midfin.png",
+          "confidence": 0.88,
+          "mapsTo": "material.localOverrides:hull-yellow-staining"
+        },
+        {
+          "id": "d04",
+          "kind": "fastener",
+          "description": "rivet/fastener dot rows along wing spar and hull flank rails",
+          "region": [
+            0.12,
+            0.46,
+            0.55,
+            0.56
+          ],
+          "affects": "wing-spar",
+          "scale": "micro",
+          "evidenceRef": "recon/crops/bow.png",
+          "confidence": 0.82,
+          "mapsTo": "component.localFeatures:spar-rivet-rows"
+        },
+        {
+          "id": "d05",
+          "kind": "seam",
+          "description": "raised chordwise plate ridges dividing the dorsal deck into ~8 panels",
+          "region": [
+            0.3,
+            0.4,
+            0.85,
+            0.52
+          ],
+          "affects": "dorsal-deck",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/stern.png",
+          "confidence": 0.91,
+          "mapsTo": "component.localFeatures:deck-plate-ridges"
+        },
+        {
+          "id": "d06",
+          "kind": "gloss",
+          "description": "painted white slash highlights on the bladder pod crowns",
+          "region": [
+            0.34,
+            0.55,
+            0.58,
+            0.68
+          ],
+          "affects": "pod-bladders",
+          "scale": "micro",
+          "evidenceRef": "recon/crops/belly.png",
+          "confidence": 0.86,
+          "mapsTo": "material.localOverrides:pod-slash-highlights"
+        },
+        {
+          "id": "d07",
+          "kind": "fastener",
+          "description": "steel banding straps wrapping each bladder pod (~2 per pod)",
+          "region": [
+            0.32,
+            0.54,
+            0.6,
+            0.7
+          ],
+          "affects": "pod-bladders",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/belly.png",
+          "confidence": 0.94,
+          "mapsTo": "component.localFeatures:pod-banding-straps"
+        },
+        {
+          "id": "d08",
+          "kind": "linework",
+          "description": "blue rectangular decal with yellow bar stencil on mid dorsal hull",
+          "region": [
+            0.64,
+            0.44,
+            0.69,
+            0.48
+          ],
+          "affects": "hull-skin",
+          "scale": "micro",
+          "evidenceRef": "recon/crops/midfin.png",
+          "confidence": 0.9,
+          "mapsTo": "material.localOverrides:blue-bar-decal"
+        },
+        {
+          "id": "d09",
+          "kind": "bevel",
+          "description": "chamfered leading edges on both wing blades and the mast fin",
+          "region": [
+            0.1,
+            0.05,
+            0.98,
+            0.6
+          ],
+          "affects": "wing-blades",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/wingtip.png",
+          "confidence": 0.85,
+          "mapsTo": "component.localFeatures:leading-edge-chamfer"
+        },
+        {
+          "id": "d10",
+          "kind": "linework",
+          "description": "chevron louvre vane array in the stern drive bay (~10 vanes)",
+          "region": [
+            0.7,
+            0.48,
+            0.8,
+            0.58
+          ],
+          "affects": "stern-bay",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/stern.png",
+          "confidence": 0.95,
+          "mapsTo": "component.localFeatures:radiator-vane-array"
+        },
+        {
+          "id": "d11",
+          "kind": "linework",
+          "description": "concentric red/blue/orange banding on the triangular stern nozzle",
+          "region": [
+            0.755,
+            0.495,
+            0.8,
+            0.545
+          ],
+          "affects": "stern-nozzle",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/stern.png",
+          "confidence": 0.96,
+          "mapsTo": "material.localOverrides:nozzle-concentric-bands"
+        },
+        {
+          "id": "d12",
+          "kind": "fastener",
+          "description": "twin gold pivot bosses at the dorsal mast fin root",
+          "region": [
+            0.4,
+            0.33,
+            0.44,
+            0.37
+          ],
+          "affects": "mast-fin",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/dorsalfin.png",
+          "confidence": 0.95,
+          "mapsTo": "component.localFeatures:mast-pivot-bosses"
+        },
+        {
+          "id": "d13",
+          "kind": "linework",
+          "description": "exposed inner machinery: grey box, yellow ladder-rung rack, teal coolant strip and red terminal block inside the mast fin shell",
+          "region": [
+            0.405,
+            0.13,
+            0.435,
+            0.34
+          ],
+          "affects": "mast-fin",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/dorsalfin.png",
+          "confidence": 0.92,
+          "mapsTo": "component.localFeatures:mast-inner-machinery"
+        },
+        {
+          "id": "d14",
+          "kind": "linework",
+          "description": "yellow louvre vent banks flanking the mast base housing",
+          "region": [
+            0.38,
+            0.36,
+            0.46,
+            0.4
+          ],
+          "affects": "mast-base",
+          "scale": "micro",
+          "evidenceRef": "recon/crops/dorsalfin.png",
+          "confidence": 0.88,
+          "mapsTo": "component.localFeatures:mast-base-vents"
+        },
+        {
+          "id": "d15",
+          "kind": "seam",
+          "description": "diamond-shaped hatch panel on the faceted mast base housing",
+          "region": [
+            0.395,
+            0.355,
+            0.43,
+            0.395
+          ],
+          "affects": "mast-base",
+          "scale": "micro",
+          "evidenceRef": "recon/crops/dorsalfin.png",
+          "confidence": 0.87,
+          "mapsTo": "component.localFeatures:mast-base-diamond-hatch"
+        },
+        {
+          "id": "d16",
+          "kind": "linework",
+          "description": "plumbing manifold above the pods: red segment, blue collars, white segment",
+          "region": [
+            0.44,
+            0.47,
+            0.56,
+            0.53
+          ],
+          "affects": "pod-manifold",
+          "scale": "meso",
+          "evidenceRef": "recon/crops/belly.png",
+          "confidence": 0.9,
+          "mapsTo": "component.localFeatures:manifold-collar-bands"
+        },
+        {
+          "id": "d17",
+          "kind": "gloss",
+          "description": "circular port with red interior and blue rim set among the pods",
+          "region": [
+            0.455,
+            0.53,
+            0.49,
+            0.6
+          ],
+          "affects": "pod-manifold",
+          "scale": "micro",
+          "evidenceRef": "recon/crops/belly.png",
+          "confidence": 0.89,
+          "mapsTo": "component.localFeatures:manifold-round-port"
+        },
+        {
+          "id": "d18",
+          "kind": "stain",
+          "description": "speckle/dirt dot scatter across the cream dorsal plating",
+          "region": [
+            0.2,
+            0.42,
+            0.8,
+            0.56
+          ],
+          "affects": "hull-skin",
+          "scale": "micro",
+          "evidenceRef": "recon/crops/midfin.png",
+          "confidence": 0.8,
+          "mapsTo": "material.localOverrides:hull-speckle"
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/home/user/Playground/recon/ref.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "Silhouette from the reference camera reads as the same vehicle: wide forward wing, thick mid spine, long tapering tail blade, tall dorsal mast fin, slung ventral pod cluster.",
+      "Rendering mode is cel/toon with an ink contour outline - matching the reference's medium, not a PBR interpretation of it.",
+      "All 5 repetition systems present as real instanced/array geometry, not painted texture.",
+      "Mast fin pivots about its bosses and the pod cluster detaches - action-ready hierarchy.",
+      "Every model part is individually clickable and the model explodes along part axes.",
+      "Per-region confidence reported for the planform, which the single view cannot show."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 7,
+      "mesoComponents": 20,
+      "microFeatureGroups": 8,
+      "materialLayers": 6,
+      "repetitionSystems": 5,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Manta planform and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Span:height ratio holds at ~5.5:1 in the reference view.",
+          "Forward wing sweeps forward; aft tail blade sweeps back and tapers to a point.",
+          "Hull spine is thickest at the pod-cluster station, not at mid-span."
+        ],
+        "evidenceRefs": [
+          "recon/ref.png"
+        ],
+        "failureModes": [
+          "Symmetric lens shape with equal fore/aft extents - the reference is asymmetric fore-aft.",
+          "Tail blade too thick, losing the stingray taper."
+        ]
+      },
+      {
+        "id": "dorsal-mast-fin",
+        "name": "Folding dorsal mast fin",
+        "required": true,
+        "qualityCriteria": [
+          "Tall tapered blade, height ~= 0.9x hull-spine local chord.",
+          "Outer white shell leaves part to expose grey machinery, yellow ladder rack, teal strip.",
+          "Twin gold pivot bosses present at the root, on a lateral axis."
+        ],
+        "evidenceRefs": [
+          "recon/crops/dorsalfin.png"
+        ],
+        "failureModes": [
+          "Solid white fin with no exposed interior - loses the identity feature.",
+          "Fin modelled as a flat plane with no thickness."
+        ]
+      },
+      {
+        "id": "ventral-pod-cluster",
+        "name": "Slung yellow bladder pod cluster",
+        "required": true,
+        "qualityCriteria": [
+          "6-8 bulging capsule pods, visibly soft/inflated against the hard hull.",
+          "Steel banding straps wrap each pod.",
+          "Plumbing manifold with red/blue/white segments runs above the pods."
+        ],
+        "evidenceRefs": [
+          "recon/crops/belly.png"
+        ],
+        "failureModes": [
+          "Pods modelled as rigid cylinders - the bulge is the identity feature.",
+          "Pods flush with the hull instead of slung below on pylons."
+        ]
+      },
+      {
+        "id": "stern-drive-bay",
+        "name": "Chevron radiator bay and banded nozzle",
+        "required": true,
+        "qualityCriteria": [
+          "~10 yellow louvre vanes in a chevron/herringbone array inside a recessed bay.",
+          "Triangular nozzle with concentric red -> blue -> orange -> dark-core bands.",
+          "Blue trim strip along the upper bay edge."
+        ],
+        "evidenceRefs": [
+          "recon/crops/stern.png"
+        ],
+        "failureModes": [
+          "Round nozzle instead of triangular.",
+          "Vanes painted on a flat surface instead of real recessed geometry."
+        ]
+      },
+      {
+        "id": "cel-render-style",
+        "name": "Ink-contour cel-shaded rendering",
+        "required": true,
+        "qualityCriteria": [
+          "Near-black contour on the outer silhouette and interior part boundaries.",
+          "Flat colour fills with 2-3 discrete value steps, no continuous specular falloff.",
+          "Limited palette: cream #f8f4d9, yellow #e9b708, warm grey #7e776d, blue #3153b4, red #971809, gold #947204."
+        ],
+        "evidenceRefs": [
+          "recon/crops/bow.png",
+          "recon/crops/stern.png"
+        ],
+        "failureModes": [
+          "Smooth PBR shading with environment reflections - wrong medium.",
+          "Outline missing on interior boundaries, present only on the silhouette."
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "Overlay render silhouette on the reference at the solved camera; wing tips and tail tip must land within 5% of span.",
+      "Palette check: sampled render colours must match the 6 reference hexes within dE00 < 12.",
+      "Count check: deck plates >= 7, vanes >= 9, pods >= 6, straps >= 10 in the render.",
+      "Outline presence: contour visible on interior part boundaries, not only the silhouette."
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Manta Delta Star Freighter delta wing spacecraft hull plating cylindrical fuel bladder tank cluster strap radiator louver vane exhaust nozzle cel shaded toon outline flat color illustration",
+    "index": {
+      "status": "rebuilt",
+      "reason": "missing",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.uv-strategy",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Geometry And Topology",
+        "key_path": null,
+        "score": 6.598195160406,
+        "snippets": [
+          "UV strategy can use generated procedural coordinates, cylindrical projection, triplanar-like mapping, or atlas-ready unwrapped regions."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Geometry And Topology",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 5.623390210193,
+        "snippets": [
+          "Distinction between human-viewable color data (needs gamma/sRGB) and mathematical data maps (must stay linear/uncorrected). Ph\u00e2n bi\u1ec7t gi\u1eefa d\u1eef li\u1ec7u m\u00e0u \u0111\u1ec3 ng\u01b0\u1eddi xem (c\u1ea7n gamma/sRGB) v\u00e0 c\u00e1c b\u1ea3n \u0111\u1ed3 d\u1eef li\u1ec7u to\u00e1n h\u1ecdc (ph\u1ea3i gi\u1eef tuy\u1ebfn t\u00ednh/kh\u00f4ng hi\u1ec7u ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-srgb-linear-color-space-assignment",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[12]",
+        "score": 5.044057823746,
+        "snippets": [
+          "The mandatory Three.js r152+ rule for tagging each texture as human-viewable color vs. mathematical data before assigning it to a material slot. Quy t\u1eafc b\u1eaft bu\u1ed9c t\u1eeb Three.js r152+ \u0111\u1ec3 g\u00e1n nh\u00e3n m\u1ed7i texture l\u00e0 m\u00e0u \u0111\u1ec3 ng\u01b0\u1eddi xem hay d\u1eef li\u1ec7u to\u00e1n h\u1ecdc ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[12]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}
