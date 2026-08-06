@@ -38,7 +38,7 @@ cd recon && node verify_app.mjs      # load it in Chromium, exercise controls, s
 | Reference admission | **pass** — single connected subject, 28% frame coverage |
 | Strict-quality spec validation | **pass** |
 | Multi-angle (degenerate view) | **pass** — ratios 0.39 / 1.61 / 0.49 vs a 0.15 collapse threshold |
-| Part coverage (structure) | **pass** — 92 specified, 98 built, 0 errors, 0 unnamed meshes |
+| Part coverage (structure) | **pass** — 99 specified, 105 built, 0 errors, 0 unnamed meshes |
 | Tier 1 scale delta | **pass** — 0.052 (threshold 0.08) |
 | Tier 1 aspect delta | **fail** — 0.059 (threshold 0.05) |
 | Tier 1 silhouette IoU | **fail** — 0.713 (threshold 0.85) |
@@ -69,12 +69,13 @@ ventral line is held near -0.20 there and the tubes carry the mass below it.
 
 ## Honest limits
 
-- **The reference is not a consistent perspective projection.** Matching its silhouette aspect
-  needs a 16° camera pitch, but at 16° a wing of half-span 2.7 projects its far edge to Y=0.94
-  while the drawing puts the dorsal surface at Y=0.56. Satisfying both needs half-span 1.31,
-  and the measured span sweep shows narrower spans score *worse* overall (1.8 → IoU 0.597 vs
-  2.7 → 0.631). The drawing shows more deck than a real camera can at that aspect. IoU
-  ~0.72–0.75 is the ceiling for a physically consistent camera.
+- **The IoU ceiling argument has been retired.** An earlier version of this file argued that
+  the reference could not be matched because a half-span-2.7 wing must project above where the
+  drawing puts the dorsal surface. That argument was built on the delta wings, which turned out
+  not to exist. With a slender traced hull the constraint dissolves, and the remaining IoU gap
+  (0.713) is ordinary unmodelled detail — the stern bay, the deck plate overhangs, the bow jaw —
+  not a geometric impossibility. Do not cite the old ceiling as a limit; it was a rationalisation
+  of a wrong model.
 - **Lateral width is still inferred.** The side profile is now traced, but a single side
   elevation cannot show how wide the body is. The top view remains an informed guess.
 - **Starboard flank is mirrored** from port; there is no starboard evidence.
