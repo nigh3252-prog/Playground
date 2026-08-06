@@ -5,31 +5,25 @@
       "name": "root",
       "kind": "part",
       "module": "macro",
-      "triangles": 60
+      "triangles": 96
     },
     {
-      "name": "forward-wing",
+      "name": "bow-plane-port",
       "kind": "part",
       "module": "macro",
-      "triangles": 60
+      "triangles": 12
     },
     {
-      "name": "wing-leading-spar",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "aft-tail-blade",
+      "name": "bow-plane-stbd",
       "kind": "part",
       "module": "macro",
-      "triangles": 44
+      "triangles": 12
     },
     {
       "name": "ventral-keel-fin",
       "kind": "part",
       "module": "macro",
-      "triangles": 16
+      "triangles": 20
     },
     {
       "name": "dorsal-mast-fin",
@@ -80,22 +74,10 @@
       "triangles": 18
     },
     {
-      "name": "pod-cradle",
+      "name": "visceral-cavity",
       "kind": "part",
       "module": "macro",
       "triangles": 1728
-    },
-    {
-      "name": "pod-cradle",
-      "kind": "part",
-      "module": "macro",
-      "triangles": 4160
-    },
-    {
-      "name": "pod-cradle",
-      "kind": "part",
-      "module": "macro",
-      "triangles": 4608
     },
     {
       "name": "stern-bay-housing",
@@ -182,6 +164,12 @@
       "triangles": 1728
     },
     {
+      "name": "wing-leading-spar",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
       "name": "tail-spine-rail",
       "kind": "part",
       "module": "meso",
@@ -260,127 +248,169 @@
       "triangles": 1728
     },
     {
-      "name": "bladder-pod-01",
+      "name": "visceral-bundle-01",
       "kind": "part",
       "module": "meso",
-      "triangles": 4160
+      "triangles": 2016
     },
     {
-      "name": "pod-strap-01a",
+      "name": "viscera-band-01a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "pod-strap-01b",
+      "name": "viscera-band-01b",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "bladder-pod-02",
+      "name": "viscera-band-01c",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "visceral-bundle-02",
       "kind": "part",
       "module": "meso",
-      "triangles": 4160
+      "triangles": 2016
     },
     {
-      "name": "pod-strap-02a",
+      "name": "viscera-band-02a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "pod-strap-02b",
+      "name": "viscera-band-02b",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "bladder-pod-03",
+      "name": "viscera-band-02c",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "visceral-bundle-03",
       "kind": "part",
       "module": "meso",
-      "triangles": 4160
+      "triangles": 2016
     },
     {
-      "name": "pod-strap-03a",
+      "name": "viscera-band-03a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "pod-strap-03b",
+      "name": "viscera-band-03b",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "bladder-pod-04",
+      "name": "viscera-band-03c",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "visceral-bundle-04",
       "kind": "part",
       "module": "meso",
-      "triangles": 4160
+      "triangles": 2016
     },
     {
-      "name": "pod-strap-04a",
+      "name": "viscera-band-04a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "pod-strap-04b",
+      "name": "viscera-band-04b",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "bladder-pod-05",
+      "name": "viscera-band-04c",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "visceral-bundle-05",
       "kind": "part",
       "module": "meso",
-      "triangles": 4160
+      "triangles": 2016
     },
     {
-      "name": "pod-strap-05a",
+      "name": "viscera-band-05a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "pod-strap-05b",
+      "name": "viscera-band-05b",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "bladder-pod-06",
+      "name": "viscera-band-05c",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "visceral-bundle-06",
       "kind": "part",
       "module": "meso",
-      "triangles": 4160
+      "triangles": 2016
     },
     {
-      "name": "pod-strap-06a",
+      "name": "viscera-band-06a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "pod-strap-06b",
+      "name": "viscera-band-06b",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "bladder-pod-07",
+      "name": "viscera-band-06c",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "visceral-bundle-07",
       "kind": "part",
       "module": "meso",
-      "triangles": 4160
+      "triangles": 2016
     },
     {
-      "name": "pod-strap-07a",
+      "name": "viscera-band-07a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "pod-strap-07b",
+      "name": "viscera-band-07b",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 4608
+    },
+    {
+      "name": "viscera-band-07c",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
@@ -588,8 +618,20 @@
       "kind": "part",
       "module": "macro",
       "triangles": 1728
+    },
+    {
+      "name": "root",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 192
+    },
+    {
+      "name": "root",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 4608
     }
   ],
   "unnamedMeshes": 0,
-  "integralMeshes": 93
+  "integralMeshes": 100
 }

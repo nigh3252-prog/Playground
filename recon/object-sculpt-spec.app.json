@@ -776,9 +776,9 @@
       "mustPass": true,
       "componentRefs": [
         "root",
-        "forward-wing",
-        "aft-tail-blade",
-        "pod-cradle",
+        "root",
+        "root",
+        "visceral-cavity",
         "dorsal-mast-fin"
       ],
       "evidenceRefs": [
@@ -798,8 +798,8 @@
       "mustPass": true,
       "componentRefs": [
         "root",
-        "forward-wing",
-        "aft-tail-blade"
+        "root",
+        "root"
       ],
       "evidenceRefs": [
         "full-object"
@@ -828,7 +828,7 @@
     },
     {
       "id": "ventral-pod-cluster",
-      "name": "Slung bladder pod cluster",
+      "name": "Visceral tube bundle",
       "tier": "critical",
       "passIds": [
         "structural-pass",
@@ -838,9 +838,9 @@
       "minimumScore": 0.8,
       "mustPass": true,
       "componentRefs": [
-        "pod-cradle",
-        "bladder-pod-01",
-        "pod-strap-01a"
+        "visceral-cavity",
+        "visceral-bundle-01",
+        "viscera-band-01a"
       ],
       "evidenceRefs": [
         "belly-zone"
@@ -1030,12 +1030,12 @@
     "Flat plated ventral deck continuing the flank facet."
   ],
   "coordinateFrame": {
-    "front": "-X is the bow (canopy blister and forward-swept wing end)",
+    "front": "-X is the bow (snout, canopy blister, ventral chin)",
     "up": "+Y is dorsal (mast fin direction); +Z is starboard",
     "scaleReference": "normalised: 10.0 units bow-tip to tail-tip; 1 unit = 343 px in the reference"
   },
   "silhouette": {
-    "boundingShape": "flattened forward-swept delta with a long tapering aft tail blade",
+    "boundingShape": "slender blade/fish body tapering to points fore and aft; NO delta planform",
     "aspectRatios": [
       {
         "name": "length:height(incl. mast fin)",
@@ -1047,27 +1047,27 @@
       },
       {
         "name": "length:span",
-        "value": 1.79,
-        "confidence": 0.35,
-        "note": "span is INFERRED"
+        "value": 8.7,
+        "confidence": 0.5,
+        "note": "slender body; span still INFERRED"
       }
     ],
     "symmetry": "bilateral about the XY (fore-aft vertical) plane",
     "dominantCurves": [
-      "forward-swept leading edge, root LE X=-3.6 to tip LE X=-4.6 at |Z|=2.7 (tip chord 2.0)",
-      "aft trailing taper converging to a needle point at X=+5.0",
-      "convex bulge chain of the ventral bladder pods"
+      "traced dorsal deck line falling from Y=0.52 at the snout to Y=0.02 at the tail tip",
+      "grey ventral chin descending to Y=-1.05 near X=-2.2",
+      "folded, self-crossing tube runs filling the belly cavity"
     ],
     "negativeSpaces": [
       "recessed stern drive bay between hull spine and tail blade",
-      "gap between pod cluster underside and the hull ventral deck",
+      "open belly cavity the tube runs spill out of",
       "notch between mast fin outer shell leaves exposing inner machinery"
     ],
     "landmarks": [
       {
         "id": "bow-tip",
         "position": [
-          -4.6,
+          -4.91,
           0.3,
           0.0
         ]
@@ -1091,8 +1091,8 @@
       {
         "id": "keel-apex",
         "position": [
-          -3.86,
-          -0.82,
+          -1.92,
+          -1.02,
           0.0
         ]
       },
@@ -1133,8 +1133,8 @@
         "units": "normalized"
       },
       "observations": [
-        "forward-swept wing top skin",
-        "ventral keel fin",
+        "slender snout with plated deck",
+        "long grey ventral chin",
         "canopy blister",
         "spar rivet rows"
       ],
@@ -1169,8 +1169,8 @@
         "units": "normalized"
       },
       "observations": [
-        "7 bulging bladder pods",
-        "steel banding straps",
+        "packed mass of folded, self-crossing tubes reading as intestines",
+        "steel cinch bands",
         "plumbing manifold with red/blue/white segments",
         "circular red-and-blue port"
       ],
@@ -1197,7 +1197,7 @@
   "componentTree": [
     {
       "id": "root",
-      "name": "Hull spine",
+      "name": "Hull body",
       "level": "macro",
       "role": "body",
       "logicalParent": null,
@@ -1205,7 +1205,7 @@
       "confidence": 0.82,
       "primitive": "extrude",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Continuous plated monocoque read as one lofted solid, not a box: the reference shows a single unbroken dorsal deck line from bow fairing to stern bay with no step.",
+      "topologyRationale": "Continuous plated monocoque, slender and blade-like - a fish body, not an aircraft. Profile TRACED from the reference silhouette rather than inferred. There is NO delta planform: the wide bright planes in the reference are this narrow body's own overlapping armour plating seen at a shallow angle, not wings extending laterally.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -1219,71 +1219,107 @@
         "profile2D": {
           "points": [
             [
-              -3.3,
-              0.09
-            ],
-            [
-              -2.6,
-              0.23
-            ],
-            [
-              -1.8,
-              0.29
-            ],
-            [
-              -0.8,
+              -4.91,
               0.3
             ],
             [
-              0.3,
-              0.27
+              -4.48,
+              0.47
             ],
             [
-              1.4,
-              0.2
+              -3.6,
+              0.52
             ],
             [
-              2.5,
-              0.11
+              -2.73,
+              0.47
             ],
             [
-              3.3,
-              0.04
+              -1.85,
+              0.5
             ],
             [
-              3.3,
+              -0.98,
+              0.52
+            ],
+            [
+              -0.1,
+              0.48
+            ],
+            [
+              0.77,
+              0.42
+            ],
+            [
+              1.65,
+              0.36
+            ],
+            [
+              2.52,
+              0.3
+            ],
+            [
+              3.4,
+              0.21
+            ],
+            [
+              4.27,
+              0.09
+            ],
+            [
+              4.71,
+              0.02
+            ],
+            [
+              4.71,
               -0.02
             ],
             [
-              2.5,
-              -0.09
+              4.27,
+              -0.08
             ],
             [
-              1.4,
-              -0.16
+              3.4,
+              -0.19
             ],
             [
-              0.3,
-              -0.15
+              2.52,
+              -0.3
             ],
             [
-              -0.8,
-              -0.1
+              1.65,
+              -0.34
             ],
             [
-              -1.8,
-              -0.05
+              0.77,
+              -0.22
             ],
             [
-              -2.6,
-              0.0
+              -0.1,
+              -0.18
             ],
             [
-              -3.3,
-              0.03
+              -0.98,
+              -0.18
+            ],
+            [
+              -1.85,
+              -0.2
+            ],
+            [
+              -2.73,
+              -0.24
+            ],
+            [
+              -3.6,
+              -0.18
+            ],
+            [
+              -4.48,
+              -0.02
             ]
           ],
-          "depth": 0.95
+          "depth": 0.86
         }
       },
       "parent": null,
@@ -1299,7 +1335,7 @@
         "position": [
           0,
           0,
-          -0.475
+          -0.43
         ],
         "rotation": [
           0,
@@ -1370,6 +1406,19 @@
           "detailRefs": [
             "d01"
           ]
+        },
+        {
+          "id": "tail-needle-taper",
+          "kind": "bevel",
+          "description": "trailing taper converging to a needle point; chamfer collapses to zero at the tip",
+          "edgeTreatment": {
+            "type": "chamfer",
+            "bevelRadius": 0.02,
+            "segments": 2
+          },
+          "detailRefs": [
+            "d09"
+          ]
         }
       ],
       "surfaceDetail": {
@@ -1419,16 +1468,16 @@
       }
     },
     {
-      "id": "forward-wing",
-      "name": "Forward-swept wing plate",
+      "id": "bow-plane-port",
+      "name": "Bow plane (port)",
       "level": "macro",
-      "role": "wing",
+      "role": "fin",
       "logicalParent": "root",
-      "importance": 0.95,
-      "confidence": 0.45,
+      "importance": 0.6,
+      "confidence": 0.5,
       "primitive": "extrude",
       "topologyClass": "conforming-shell",
-      "topologyRationale": "Thin lofted sheet, not a solid: the reference shows a knife-thin leading edge and a single continuous top skin. PLANFORM IS INFERRED - the single elevation cannot show chord.",
+      "topologyRationale": "Slim plane hugging the hull flank. Sized as a FIN, not a wing panel: the wide forward-swept delta this replaces was fabricated from a misreading of the single side elevation, and the reference has no laterally-extending wings at all.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -1442,87 +1491,39 @@
         "profile2D": {
           "points": [
             [
-              -3.6,
-              0.0
-            ],
-            [
-              -3.95,
-              0.899
-            ],
-            [
-              -4.3,
-              1.801
-            ],
-            [
-              -4.6,
-              2.7
-            ],
-            [
-              -2.6,
-              2.7
-            ],
-            [
-              -1.3,
-              1.85
-            ],
-            [
-              -0.2,
-              1.05
-            ],
-            [
-              0.7,
+              -4.34,
               0.3
             ],
             [
-              0.7,
-              0.0
+              -3.0,
+              0.26
             ],
             [
-              0.7,
-              -0.3
+              -3.26,
+              -0.16
             ],
             [
-              -0.2,
-              -1.05
-            ],
-            [
-              -1.3,
-              -1.85
-            ],
-            [
-              -2.6,
-              -2.7
-            ],
-            [
-              -4.6,
-              -2.7
-            ],
-            [
-              -4.3,
-              -1.801
-            ],
-            [
-              -3.95,
-              -0.899
+              -4.18,
+              -0.12
             ]
           ],
-          "depth": 0.16
+          "depth": 0.22
         }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/forward-wing-mount",
+        "parentSocket": "root/bow-plane-port-mount",
         "structuralParent": "root",
         "localStart": [
           0,
-          0.2,
-          0.475
+          0,
+          -0.305
         ],
         "localEnd": [
           0,
-          0.2,
-          0.475
+          0,
+          -0.305
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -1537,16 +1538,16 @@
         "height": 1.0,
         "depth": 1.0,
         "units": "relative",
-        "confidence": 0.45
+        "confidence": 0.5
       },
       "transform": {
         "position": [
           0,
-          0.2,
-          0.475
+          0,
+          -0.30500000000000005
         ],
         "rotation": [
-          -1.5707963267948966,
+          0,
           0,
           0
         ],
@@ -1581,9 +1582,9 @@
           "breakable": false
         }
       },
-      "material": "hull-cream",
+      "material": "hull-grey",
       "materialLayers": [
-        "hull-cream"
+        "hull-grey"
       ],
       "deformations": [],
       "joints": [],
@@ -1622,41 +1623,41 @@
       ],
       "fidelityTier": "blockout",
       "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
-        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
-        "materialClass": "plastic",
-        "materialClassConfidence": 0.72,
+        "dominantAlbedo": "rgba(126, 119, 109, 1.0)",
+        "secondaryAlbedo": "rgba(154, 146, 136, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.68,
         "colorGradient": {
           "type": "linear",
           "stops": [
             {
               "position": 0.0,
-              "color": "rgba(248, 244, 217, 1.0)"
+              "color": "rgba(126, 119, 109, 1.0)"
             },
             {
               "position": 1.0,
-              "color": "rgba(252, 247, 225, 1.0)"
+              "color": "rgba(154, 146, 136, 1.0)"
             }
           ],
           "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
         },
         "evidenceRefs": [
-          "full-object"
+          "bow-zone"
         ],
         "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
       }
     },
     {
-      "id": "aft-tail-blade",
-      "name": "Aft tail blade",
+      "id": "bow-plane-stbd",
+      "name": "Bow plane (starboard)",
       "level": "macro",
-      "role": "wing",
+      "role": "fin",
       "logicalParent": "root",
-      "importance": 0.9,
+      "importance": 0.6,
       "confidence": 0.45,
       "primitive": "extrude",
       "topologyClass": "conforming-shell",
-      "topologyRationale": "Thin lofted sheet converging to a needle tip; the taper is the stingray-tail identity cue.",
+      "topologyRationale": "Mirror of the port bow plane; starboard carries no independent evidence in this view.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -1670,78 +1671,46 @@
         "profile2D": {
           "points": [
             [
-              0.4,
-              0.45
+              -4.34,
+              0.3
             ],
             [
-              1.6,
-              1.3
+              -3.0,
+              0.26
             ],
             [
-              2.6,
-              1.18
+              -3.26,
+              -0.16
             ],
             [
-              3.5,
-              0.88
-            ],
-            [
-              4.3,
-              0.5
-            ],
-            [
-              5.0,
-              0.04
-            ],
-            [
-              5.0,
-              -0.04
-            ],
-            [
-              4.3,
-              -0.5
-            ],
-            [
-              3.5,
-              -0.88
-            ],
-            [
-              2.6,
-              -1.18
-            ],
-            [
-              1.6,
-              -1.3
-            ],
-            [
-              0.4,
-              -0.45
+              -4.18,
+              -0.12
             ]
           ],
-          "depth": 0.13
+          "depth": 0.22
         }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/aft-tail-blade-mount",
+        "parentSocket": "root/bow-plane-stbd-mount",
         "structuralParent": "root",
         "localStart": [
           0,
-          -0.015,
-          0.475
+          0,
+          1.035
         ],
         "localEnd": [
           0,
-          -0.015,
-          0.475
+          0,
+          1.035
         ],
         "contactType": "overlap",
         "overlap": 0.04,
         "gapTolerance": 0.004,
         "contactGeometry": "face-region (zero-length span: not a strut)",
         "evidenceRefs": [
-          "full-object"
+          "bow-zone"
         ]
       },
       "dimensions": {
@@ -1754,11 +1723,11 @@
       "transform": {
         "position": [
           0,
-          -0.015,
-          0.475
+          0,
+          1.0350000000000001
         ],
         "rotation": [
-          -1.5707963267948966,
+          0,
           0,
           0
         ],
@@ -1793,28 +1762,14 @@
           "breakable": false
         }
       },
-      "material": "hull-cream",
+      "material": "hull-grey",
       "materialLayers": [
-        "hull-cream"
+        "hull-grey"
       ],
       "deformations": [],
       "joints": [],
       "seams": [],
-      "localFeatures": [
-        {
-          "id": "tail-needle-taper",
-          "kind": "bevel",
-          "description": "trailing taper converging to a needle point; chamfer collapses to zero at the tip",
-          "edgeTreatment": {
-            "type": "chamfer",
-            "bevelRadius": 0.02,
-            "segments": 2
-          },
-          "detailRefs": [
-            "d09"
-          ]
-        }
-      ],
+      "localFeatures": [],
       "surfaceDetail": {
         "macroRoughness": 0.1,
         "microRoughness": 0.05,
@@ -1826,40 +1781,38 @@
         "notes": "Cel target: relief is carried by real geometry, not maps."
       },
       "evidenceRefs": [
-        "full-object"
+        "bow-zone"
       ],
-      "details": [
-        "d09"
-      ],
+      "details": [],
       "fidelityTier": "blockout",
       "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
-        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
-        "materialClass": "plastic",
-        "materialClassConfidence": 0.72,
+        "dominantAlbedo": "rgba(126, 119, 109, 1.0)",
+        "secondaryAlbedo": "rgba(154, 146, 136, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.68,
         "colorGradient": {
           "type": "linear",
           "stops": [
             {
               "position": 0.0,
-              "color": "rgba(248, 244, 217, 1.0)"
+              "color": "rgba(126, 119, 109, 1.0)"
             },
             {
               "position": 1.0,
-              "color": "rgba(252, 247, 225, 1.0)"
+              "color": "rgba(154, 146, 136, 1.0)"
             }
           ],
           "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
         },
         "evidenceRefs": [
-          "full-object"
+          "bow-zone"
         ],
         "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
       }
     },
     {
       "id": "ventral-keel-fin",
-      "name": "Ventral keel fin",
+      "name": "Ventral keel / chin",
       "level": "macro",
       "role": "fin",
       "logicalParent": "root",
@@ -1867,7 +1820,7 @@
       "confidence": 0.7,
       "primitive": "extrude",
       "topologyClass": "conforming-shell",
-      "topologyRationale": "Planar keel blade hanging below the bow; reads as a sheet with thickness, not a solid wedge.",
+      "topologyRationale": "The reference's long grey jaw under the bow, reaching Y=-1.05. Traced, not estimated; the previous pass had it as a small triangle.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -1881,27 +1834,31 @@
         "profile2D": {
           "points": [
             [
-              -4.35,
-              0.12
+              -4.62,
+              0.02
             ],
             [
-              -3.3,
-              0.05
+              -2.28,
+              -0.3
             ],
             [
-              -3.2,
-              -0.35
+              -1.92,
+              -1.02
             ],
             [
-              -3.86,
-              -0.82
+              -2.66,
+              -1.06
             ],
             [
-              -4.45,
-              -0.35
+              -3.58,
+              -0.62
+            ],
+            [
+              -4.56,
+              -0.24
             ]
           ],
-          "depth": 0.28
+          "depth": 0.42
         }
       },
       "parent": "root",
@@ -1912,12 +1869,12 @@
         "localStart": [
           0,
           0,
-          0.335
+          0.265
         ],
         "localEnd": [
           0,
           0,
-          0.335
+          0.265
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -1938,7 +1895,7 @@
         "position": [
           0,
           0,
-          0.33499999999999996
+          0.265
         ],
         "rotation": [
           0,
@@ -2586,8 +2543,8 @@
       }
     },
     {
-      "id": "pod-cradle",
-      "name": "Ventral pod cradle",
+      "id": "visceral-cavity",
+      "name": "Visceral cavity shell",
       "level": "macro",
       "role": "structure",
       "logicalParent": "root",
@@ -2595,7 +2552,7 @@
       "confidence": 0.7,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Boxed cradle shelf spanning Y +0.05..-0.65. The reference shows a dark structural mass ABOVE the pods with the pods bulging clear below it, so the cradle must not enclose them - at full envelope height it hid the entire pod cluster.",
+      "topologyRationale": "Open bay the tubing spills out of - a shallow shelf, not an enclosure. The tubes must hang clear below it as they do in the reference.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -2610,16 +2567,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/pod-cradle-mount",
+        "parentSocket": "root/visceral-cavity-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.1,
-          -0.3,
+          -0.8,
+          -0.26,
           0.475
         ],
         "localEnd": [
-          -1.1,
-          -0.3,
+          -0.8,
+          -0.26,
           0.475
         ],
         "contactType": "overlap",
@@ -2631,16 +2588,16 @@
         ]
       },
       "dimensions": {
-        "width": 3.65,
-        "height": 0.7,
-        "depth": 0.92,
+        "width": 3.7,
+        "height": 0.24,
+        "depth": 0.8,
         "units": "relative",
         "confidence": 0.7
       },
       "transform": {
         "position": [
-          -1.1,
-          -0.3,
+          -0.8,
+          -0.26,
           0.475
         ],
         "rotation": [
@@ -2685,9 +2642,9 @@
         {
           "id": "pod-banding-straps",
           "kind": "fastener",
-          "description": "two steel banding straps per pod, 14 total, wrapping the capsule minor axis",
-          "count": 14,
-          "distribution": "per-parent-pair",
+          "description": "three steel bands per tube run, 21 total, cinching the viscera",
+          "count": 21,
+          "distribution": "along-spine",
           "headShape": "band",
           "detailRefs": [
             "d07"
@@ -3198,13 +3155,13 @@
         "structuralParent": "root",
         "localStart": [
           -0.3,
-          0.14,
-          1.025
+          0.17,
+          0.945
         ],
         "localEnd": [
           -0.3,
-          0.14,
-          1.025
+          0.17,
+          0.945
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -3215,17 +3172,17 @@
         ]
       },
       "dimensions": {
-        "width": 5.6,
-        "height": 0.1,
-        "depth": 0.09,
+        "width": 8.6,
+        "height": 0.09,
+        "depth": 0.08,
         "units": "relative",
         "confidence": 0.7
       },
       "transform": {
         "position": [
           -0.3,
-          0.14,
-          1.025
+          0.17,
+          0.945
         ],
         "rotation": [
           0,
@@ -3337,13 +3294,13 @@
         "structuralParent": "root",
         "localStart": [
           -0.3,
-          0.14,
-          -0.075
+          0.17,
+          0.005
         ],
         "localEnd": [
           -0.3,
-          0.14,
-          -0.075
+          0.17,
+          0.005
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -3354,17 +3311,17 @@
         ]
       },
       "dimensions": {
-        "width": 5.6,
-        "height": 0.1,
-        "depth": 0.09,
+        "width": 8.6,
+        "height": 0.09,
+        "depth": 0.08,
         "units": "relative",
         "confidence": 0.7
       },
       "transform": {
         "position": [
           -0.3,
-          0.14,
-          -0.07500000000000007
+          0.17,
+          0.0050000000000000044
         ],
         "rotation": [
           0,
@@ -3495,7 +3452,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.7224999999999999,
+        "depth": 0.62,
         "units": "relative",
         "confidence": 0.7
       },
@@ -3634,7 +3591,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.7585,
+        "depth": 0.7063999999999999,
         "units": "relative",
         "confidence": 0.7
       },
@@ -3773,7 +3730,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.7945,
+        "depth": 0.7928,
         "units": "relative",
         "confidence": 0.7
       },
@@ -3912,7 +3869,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.8305,
+        "depth": 0.8792,
         "units": "relative",
         "confidence": 0.7
       },
@@ -4051,7 +4008,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.8535,
+        "depth": 0.9344,
         "units": "relative",
         "confidence": 0.7
       },
@@ -4190,7 +4147,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.8175,
+        "depth": 0.848,
         "units": "relative",
         "confidence": 0.7
       },
@@ -4329,7 +4286,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.7815,
+        "depth": 0.7615999999999999,
         "units": "relative",
         "confidence": 0.7
       },
@@ -4468,7 +4425,7 @@
       "dimensions": {
         "width": 0.66,
         "height": 0.035,
-        "depth": 0.7454999999999999,
+        "depth": 0.6752,
         "units": "relative",
         "confidence": 0.7
       },
@@ -4561,15 +4518,15 @@
     },
     {
       "id": "wing-leading-spar",
-      "name": "Forward wing leading spar",
+      "name": "Bow plane spar",
       "level": "meso",
       "role": "structure",
-      "logicalParent": "forward-wing",
+      "logicalParent": "root",
       "importance": 0.6,
       "confidence": 0.7,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Straight spar box along the leading edge.",
+      "topologyRationale": "Straight spar box across the bow plane roots.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -4581,20 +4538,20 @@
         "uvStrategy": "generated procedural coordinates",
         "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
       },
-      "parent": "forward-wing",
+      "parent": "root",
       "attachment": {
-        "parentId": "forward-wing",
-        "parentSocket": "forward-wing/wing-leading-spar-mount",
-        "structuralParent": "forward-wing",
+        "parentId": "root",
+        "parentSocket": "root/wing-leading-spar-mount",
+        "structuralParent": "root",
         "localStart": [
-          0,
-          0,
-          0
+          -3.66,
+          0.1,
+          0.475
         ],
         "localEnd": [
-          0,
-          0,
-          0
+          -3.66,
+          0.1,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -4605,17 +4562,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.09,
-        "height": 0.09,
-        "depth": 1.0,
+        "width": 1.45,
+        "height": 0.08,
+        "depth": 1.32,
         "units": "relative",
         "confidence": 0.55
       },
       "transform": {
         "position": [
-          0,
-          0,
-          0
+          -3.66,
+          0.1,
+          0.475
         ],
         "rotation": [
           0,
@@ -4732,12 +4689,12 @@
         "structuralParent": "root",
         "localStart": [
           2.9,
-          0.03,
+          0.02,
           0.475
         ],
         "localEnd": [
           2.9,
-          0.03,
+          0.02,
           0.475
         ],
         "contactType": "overlap",
@@ -4750,15 +4707,15 @@
       },
       "dimensions": {
         "width": 4.1,
-        "height": 0.07,
-        "depth": 0.22,
+        "height": 0.06,
+        "depth": 0.18,
         "units": "relative",
         "confidence": 0.65
       },
       "transform": {
         "position": [
           2.9,
-          0.03,
+          0.02,
           0.475
         ],
         "rotation": [
@@ -5893,16 +5850,16 @@
       }
     },
     {
-      "id": "bladder-pod-01",
-      "name": "Bladder pod 1",
+      "id": "visceral-bundle-01",
+      "name": "Visceral tube run 1",
       "level": "meso",
       "role": "payload",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "root",
       "importance": 0.85,
-      "confidence": 0.75,
-      "primitive": "capsule",
+      "confidence": 0.7,
+      "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against the hard hull is the single strongest identity cue in the reference.",
+      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -5912,22 +5869,99 @@
         },
         "deformationStack": [],
         "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "tubePath": {
+          "points": [
+            [
+              -2.45,
+              -0.6,
+              0.22
+            ],
+            [
+              -2.192,
+              -0.5,
+              0.263
+            ],
+            [
+              -1.935,
+              -0.418,
+              0.303
+            ],
+            [
+              -1.677,
+              -0.369,
+              0.334
+            ],
+            [
+              -1.419,
+              -0.363,
+              0.353
+            ],
+            [
+              -1.162,
+              -0.4,
+              0.36
+            ],
+            [
+              -0.904,
+              -0.473,
+              0.353
+            ],
+            [
+              -0.646,
+              -0.57,
+              0.333
+            ],
+            [
+              -0.388,
+              -0.672,
+              0.301
+            ],
+            [
+              -0.131,
+              -0.761,
+              0.262
+            ],
+            [
+              0.127,
+              -0.821,
+              0.218
+            ],
+            [
+              0.385,
+              -0.84,
+              0.175
+            ],
+            [
+              0.642,
+              -0.815,
+              0.136
+            ],
+            [
+              0.9,
+              -0.752,
+              0.105
+            ]
+          ],
+          "radius": 0.3,
+          "radialSegments": 12,
+          "closed": false
+        }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/bladder-pod-01-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/visceral-bundle-01-mount",
+        "structuralParent": "root",
         "localStart": [
-          -2.4,
-          -0.85,
-          0.815
+          0,
+          0,
+          0.475
         ],
         "localEnd": [
-          -2.4,
-          -0.85,
-          0.815
+          0,
+          0,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -5938,22 +5972,22 @@
         ]
       },
       "dimensions": {
-        "width": 0.86,
-        "height": 0.8,
-        "depth": 0.86,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
         "units": "relative",
-        "confidence": 0.75
+        "confidence": 0.7
       },
       "transform": {
         "position": [
-          -2.4,
-          -0.85,
-          0.815
+          0,
+          0,
+          0.475
         ],
         "rotation": [
           0,
           0,
-          1.5707963267948966
+          0
         ]
       },
       "actionProfile": {
@@ -5973,10 +6007,10 @@
         },
         "sockets": [
           {
-            "id": "pod-mount-01",
+            "id": "viscera-mount-01",
             "localPosition": [
               0,
-              0.3,
+              0,
               0
             ],
             "localRotation": [
@@ -5988,12 +6022,12 @@
         ],
         "collider": {
           "type": "capsule",
-          "fit": "tight"
+          "fit": "loose"
         },
         "constraints": [],
         "destruction": {
           "breakable": true,
-          "group": "payload-pods"
+          "group": "viscera"
         }
       },
       "material": "pod-yellow",
@@ -6048,16 +6082,16 @@
       }
     },
     {
-      "id": "pod-strap-01a",
-      "name": "Pod strap 1a",
+      "id": "viscera-band-01a",
+      "name": "Viscera band 1a",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6073,17 +6107,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-01a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-01a-mount",
+        "structuralParent": "root",
         "localStart": [
-          -2.68,
-          -0.85,
-          0.815
+          -1.677,
+          -0.369,
+          0.809
         ],
         "localEnd": [
-          -2.68,
-          -0.85,
-          0.815
+          -1.677,
+          -0.369,
+          0.809
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6094,17 +6128,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.696,
+        "height": 0.696,
+        "depth": 0.696,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -2.6799999999999997,
-          -0.85,
-          0.815
+          -1.677,
+          -0.369,
+          0.8089999999999999
         ],
         "rotation": [
           0,
@@ -6188,16 +6222,16 @@
       }
     },
     {
-      "id": "pod-strap-01b",
-      "name": "Pod strap 1b",
+      "id": "viscera-band-01b",
+      "name": "Viscera band 1b",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6213,17 +6247,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-01b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-01b-mount",
+        "structuralParent": "root",
         "localStart": [
-          -2.12,
-          -0.85,
-          0.815
+          -0.646,
+          -0.57,
+          0.808
         ],
         "localEnd": [
-          -2.12,
-          -0.85,
-          0.815
+          -0.646,
+          -0.57,
+          0.808
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6234,17 +6268,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.696,
+        "height": 0.696,
+        "depth": 0.696,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -2.12,
-          -0.85,
-          0.815
+          -0.646,
+          -0.57,
+          0.808
         ],
         "rotation": [
           0,
@@ -6328,16 +6362,156 @@
       }
     },
     {
-      "id": "bladder-pod-02",
-      "name": "Bladder pod 2",
+      "id": "viscera-band-01c",
+      "name": "Viscera band 1c",
+      "level": "micro",
+      "role": "detail",
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "torusTubeRatio": 0.16
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/viscera-band-01c-mount",
+        "structuralParent": "root",
+        "localStart": [
+          0.385,
+          -0.84,
+          0.65
+        ],
+        "localEnd": [
+          0.385,
+          -0.84,
+          0.65
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "belly-zone"
+        ]
+      },
+      "dimensions": {
+        "width": 0.696,
+        "height": 0.696,
+        "depth": 0.696,
+        "units": "relative",
+        "confidence": 0.65
+      },
+      "transform": {
+        "position": [
+          0.385,
+          -0.84,
+          0.6499999999999999
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5707963267948966
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "machine-grey",
+      "materialLayers": [
+        "machine-grey"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "belly-zone"
+      ],
+      "details": [
+        "d07"
+      ],
+      "fidelityTier": "surface",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
+        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(83, 90, 96, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(109, 117, 124, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "mast-zone"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "visceral-bundle-02",
+      "name": "Visceral tube run 2",
       "level": "meso",
       "role": "payload",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "root",
       "importance": 0.85,
-      "confidence": 0.75,
-      "primitive": "capsule",
+      "confidence": 0.7,
+      "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against the hard hull is the single strongest identity cue in the reference.",
+      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6347,22 +6521,99 @@
         },
         "deformationStack": [],
         "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "tubePath": {
+          "points": [
+            [
+              -2.3,
+              -0.584,
+              0.222
+            ],
+            [
+              -2.065,
+              -0.56,
+              0.199
+            ],
+            [
+              -1.831,
+              -0.577,
+              0.162
+            ],
+            [
+              -1.596,
+              -0.63,
+              0.114
+            ],
+            [
+              -1.362,
+              -0.711,
+              0.062
+            ],
+            [
+              -1.127,
+              -0.805,
+              0.009
+            ],
+            [
+              -0.892,
+              -0.894,
+              -0.039
+            ],
+            [
+              -0.658,
+              -0.962,
+              -0.077
+            ],
+            [
+              -0.423,
+              -0.997,
+              -0.101
+            ],
+            [
+              -0.728,
+              -0.992,
+              -0.11
+            ],
+            [
+              -1.068,
+              -0.949,
+              -0.102
+            ],
+            [
+              -1.407,
+              -0.875,
+              -0.078
+            ],
+            [
+              -1.747,
+              -0.783,
+              -0.04
+            ],
+            [
+              -2.087,
+              -0.691,
+              0.008
+            ]
+          ],
+          "radius": 0.32,
+          "radialSegments": 12,
+          "closed": false
+        }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/bladder-pod-02-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/visceral-bundle-02-mount",
+        "structuralParent": "root",
         "localStart": [
-          -1.55,
-          -0.89,
-          0.785
+          0,
+          0,
+          0.475
         ],
         "localEnd": [
-          -1.55,
-          -0.89,
-          0.785
+          0,
+          0,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6373,22 +6624,22 @@
         ]
       },
       "dimensions": {
-        "width": 0.86,
-        "height": 0.8,
-        "depth": 0.86,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
         "units": "relative",
-        "confidence": 0.75
+        "confidence": 0.7
       },
       "transform": {
         "position": [
-          -1.55,
-          -0.89,
-          0.7849999999999999
+          0,
+          0,
+          0.475
         ],
         "rotation": [
           0,
           0,
-          1.5707963267948966
+          0
         ]
       },
       "actionProfile": {
@@ -6408,10 +6659,10 @@
         },
         "sockets": [
           {
-            "id": "pod-mount-02",
+            "id": "viscera-mount-02",
             "localPosition": [
               0,
-              0.3,
+              0,
               0
             ],
             "localRotation": [
@@ -6423,12 +6674,12 @@
         ],
         "collider": {
           "type": "capsule",
-          "fit": "tight"
+          "fit": "loose"
         },
         "constraints": [],
         "destruction": {
           "breakable": true,
-          "group": "payload-pods"
+          "group": "viscera"
         }
       },
       "material": "pod-yellow",
@@ -6483,16 +6734,16 @@
       }
     },
     {
-      "id": "pod-strap-02a",
-      "name": "Pod strap 2a",
+      "id": "viscera-band-02a",
+      "name": "Viscera band 2a",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6508,17 +6759,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-02a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-02a-mount",
+        "structuralParent": "root",
         "localStart": [
-          -1.83,
-          -0.89,
-          0.785
+          -1.596,
+          -0.63,
+          0.589
         ],
         "localEnd": [
-          -1.83,
-          -0.89,
-          0.785
+          -1.596,
+          -0.63,
+          0.589
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6529,17 +6780,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.7424,
+        "height": 0.7424,
+        "depth": 0.7424,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -1.83,
-          -0.89,
-          0.7849999999999999
+          -1.596,
+          -0.63,
+          0.589
         ],
         "rotation": [
           0,
@@ -6623,16 +6874,16 @@
       }
     },
     {
-      "id": "pod-strap-02b",
-      "name": "Pod strap 2b",
+      "id": "viscera-band-02b",
+      "name": "Viscera band 2b",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6648,17 +6899,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-02b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-02b-mount",
+        "structuralParent": "root",
         "localStart": [
-          -1.27,
-          -0.89,
-          0.785
+          -0.658,
+          -0.962,
+          0.398
         ],
         "localEnd": [
-          -1.27,
-          -0.89,
-          0.785
+          -0.658,
+          -0.962,
+          0.398
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6669,17 +6920,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.7424,
+        "height": 0.7424,
+        "depth": 0.7424,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -1.27,
-          -0.89,
-          0.7849999999999999
+          -0.658,
+          -0.962,
+          0.39799999999999996
         ],
         "rotation": [
           0,
@@ -6763,16 +7014,156 @@
       }
     },
     {
-      "id": "bladder-pod-03",
-      "name": "Bladder pod 3",
+      "id": "viscera-band-02c",
+      "name": "Viscera band 2c",
+      "level": "micro",
+      "role": "detail",
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "torusTubeRatio": 0.16
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/viscera-band-02c-mount",
+        "structuralParent": "root",
+        "localStart": [
+          -1.407,
+          -0.875,
+          0.397
+        ],
+        "localEnd": [
+          -1.407,
+          -0.875,
+          0.397
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "belly-zone"
+        ]
+      },
+      "dimensions": {
+        "width": 0.7424,
+        "height": 0.7424,
+        "depth": 0.7424,
+        "units": "relative",
+        "confidence": 0.65
+      },
+      "transform": {
+        "position": [
+          -1.407,
+          -0.875,
+          0.39699999999999996
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5707963267948966
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "machine-grey",
+      "materialLayers": [
+        "machine-grey"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "belly-zone"
+      ],
+      "details": [
+        "d07"
+      ],
+      "fidelityTier": "surface",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
+        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(83, 90, 96, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(109, 117, 124, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "mast-zone"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "visceral-bundle-03",
+      "name": "Visceral tube run 3",
       "level": "meso",
       "role": "payload",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "root",
       "importance": 0.85,
-      "confidence": 0.75,
-      "primitive": "capsule",
+      "confidence": 0.7,
+      "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against the hard hull is the single strongest identity cue in the reference.",
+      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6782,22 +7173,99 @@
         },
         "deformationStack": [],
         "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "tubePath": {
+          "points": [
+            [
+              -2.5,
+              -0.466,
+              -0.244
+            ],
+            [
+              -2.242,
+              -0.556,
+              -0.273
+            ],
+            [
+              -1.985,
+              -0.665,
+              -0.288
+            ],
+            [
+              -1.727,
+              -0.773,
+              -0.288
+            ],
+            [
+              -1.469,
+              -0.861,
+              -0.274
+            ],
+            [
+              -1.212,
+              -0.911,
+              -0.247
+            ],
+            [
+              -0.954,
+              -0.916,
+              -0.209
+            ],
+            [
+              -0.696,
+              -0.874,
+              -0.165
+            ],
+            [
+              -0.438,
+              -0.793,
+              -0.118
+            ],
+            [
+              -0.181,
+              -0.688,
+              -0.073
+            ],
+            [
+              0.077,
+              -0.577,
+              -0.034
+            ],
+            [
+              0.335,
+              -0.482,
+              -0.007
+            ],
+            [
+              0.592,
+              -0.419,
+              0.008
+            ],
+            [
+              0.85,
+              -0.4,
+              0.008
+            ]
+          ],
+          "radius": 0.29,
+          "radialSegments": 12,
+          "closed": false
+        }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/bladder-pod-03-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/visceral-bundle-03-mount",
+        "structuralParent": "root",
         "localStart": [
-          -0.68,
-          -0.87,
-          0.755
+          0,
+          0,
+          0.475
         ],
         "localEnd": [
-          -0.68,
-          -0.87,
-          0.755
+          0,
+          0,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6808,22 +7276,22 @@
         ]
       },
       "dimensions": {
-        "width": 0.86,
-        "height": 0.8,
-        "depth": 0.86,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
         "units": "relative",
-        "confidence": 0.75
+        "confidence": 0.7
       },
       "transform": {
         "position": [
-          -0.68,
-          -0.87,
-          0.755
+          0,
+          0,
+          0.475
         ],
         "rotation": [
           0,
           0,
-          1.5707963267948966
+          0
         ]
       },
       "actionProfile": {
@@ -6843,10 +7311,10 @@
         },
         "sockets": [
           {
-            "id": "pod-mount-03",
+            "id": "viscera-mount-03",
             "localPosition": [
               0,
-              0.3,
+              0,
               0
             ],
             "localRotation": [
@@ -6858,12 +7326,12 @@
         ],
         "collider": {
           "type": "capsule",
-          "fit": "tight"
+          "fit": "loose"
         },
         "constraints": [],
         "destruction": {
           "breakable": true,
-          "group": "payload-pods"
+          "group": "viscera"
         }
       },
       "material": "pod-yellow",
@@ -6918,16 +7386,16 @@
       }
     },
     {
-      "id": "pod-strap-03a",
-      "name": "Pod strap 3a",
+      "id": "viscera-band-03a",
+      "name": "Viscera band 3a",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6943,17 +7411,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-03a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-03a-mount",
+        "structuralParent": "root",
         "localStart": [
-          -0.96,
-          -0.87,
-          0.755
+          -1.727,
+          -0.773,
+          0.187
         ],
         "localEnd": [
-          -0.96,
-          -0.87,
-          0.755
+          -1.727,
+          -0.773,
+          0.187
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6964,17 +7432,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.6728,
+        "height": 0.6728,
+        "depth": 0.6728,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -0.9600000000000001,
-          -0.87,
-          0.755
+          -1.727,
+          -0.773,
+          0.187
         ],
         "rotation": [
           0,
@@ -7058,16 +7526,16 @@
       }
     },
     {
-      "id": "pod-strap-03b",
-      "name": "Pod strap 3b",
+      "id": "viscera-band-03b",
+      "name": "Viscera band 3b",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7083,17 +7551,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-03b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-03b-mount",
+        "structuralParent": "root",
         "localStart": [
-          -0.4,
-          -0.87,
-          0.755
+          -0.696,
+          -0.874,
+          0.31
         ],
         "localEnd": [
-          -0.4,
-          -0.87,
-          0.755
+          -0.696,
+          -0.874,
+          0.31
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7104,17 +7572,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.6728,
+        "height": 0.6728,
+        "depth": 0.6728,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -0.4,
-          -0.87,
-          0.755
+          -0.696,
+          -0.874,
+          0.30999999999999994
         ],
         "rotation": [
           0,
@@ -7198,16 +7666,156 @@
       }
     },
     {
-      "id": "bladder-pod-04",
-      "name": "Bladder pod 4",
+      "id": "viscera-band-03c",
+      "name": "Viscera band 3c",
+      "level": "micro",
+      "role": "detail",
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "torusTubeRatio": 0.16
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/viscera-band-03c-mount",
+        "structuralParent": "root",
+        "localStart": [
+          0.335,
+          -0.482,
+          0.468
+        ],
+        "localEnd": [
+          0.335,
+          -0.482,
+          0.468
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "belly-zone"
+        ]
+      },
+      "dimensions": {
+        "width": 0.6728,
+        "height": 0.6728,
+        "depth": 0.6728,
+        "units": "relative",
+        "confidence": 0.65
+      },
+      "transform": {
+        "position": [
+          0.335,
+          -0.482,
+          0.46799999999999997
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5707963267948966
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "machine-grey",
+      "materialLayers": [
+        "machine-grey"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "belly-zone"
+      ],
+      "details": [
+        "d07"
+      ],
+      "fidelityTier": "surface",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
+        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(83, 90, 96, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(109, 117, 124, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "mast-zone"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "visceral-bundle-04",
+      "name": "Visceral tube run 4",
       "level": "meso",
       "role": "payload",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "root",
       "importance": 0.85,
-      "confidence": 0.75,
-      "primitive": "capsule",
+      "confidence": 0.7,
+      "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against the hard hull is the single strongest identity cue in the reference.",
+      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7217,22 +7825,99 @@
         },
         "deformationStack": [],
         "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "tubePath": {
+          "points": [
+            [
+              -2.2,
+              -0.871,
+              -0.303
+            ],
+            [
+              -1.981,
+              -0.947,
+              -0.264
+            ],
+            [
+              -1.762,
+              -1.0,
+              -0.223
+            ],
+            [
+              -1.542,
+              -1.02,
+              -0.184
+            ],
+            [
+              -1.323,
+              -1.003,
+              -0.151
+            ],
+            [
+              -1.104,
+              -0.953,
+              -0.126
+            ],
+            [
+              -0.885,
+              -0.879,
+              -0.112
+            ],
+            [
+              -0.665,
+              -0.794,
+              -0.111
+            ],
+            [
+              -0.446,
+              -0.713,
+              -0.123
+            ],
+            [
+              -0.227,
+              -0.652,
+              -0.146
+            ],
+            [
+              -0.567,
+              -0.622,
+              -0.179
+            ],
+            [
+              -0.969,
+              -0.628,
+              -0.217
+            ],
+            [
+              -1.371,
+              -0.669,
+              -0.258
+            ],
+            [
+              -1.773,
+              -0.738,
+              -0.297
+            ]
+          ],
+          "radius": 0.31,
+          "radialSegments": 12,
+          "closed": false
+        }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/bladder-pod-04-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/visceral-bundle-04-mount",
+        "structuralParent": "root",
         "localStart": [
-          0.15,
-          -0.79,
-          0.725
+          0,
+          0,
+          0.475
         ],
         "localEnd": [
-          0.15,
-          -0.79,
-          0.725
+          0,
+          0,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7243,22 +7928,22 @@
         ]
       },
       "dimensions": {
-        "width": 0.86,
-        "height": 0.8,
-        "depth": 0.86,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
         "units": "relative",
-        "confidence": 0.75
+        "confidence": 0.7
       },
       "transform": {
         "position": [
-          0.15,
-          -0.79,
-          0.725
+          0,
+          0,
+          0.475
         ],
         "rotation": [
           0,
           0,
-          1.5707963267948966
+          0
         ]
       },
       "actionProfile": {
@@ -7278,10 +7963,10 @@
         },
         "sockets": [
           {
-            "id": "pod-mount-04",
+            "id": "viscera-mount-04",
             "localPosition": [
               0,
-              0.3,
+              0,
               0
             ],
             "localRotation": [
@@ -7293,12 +7978,12 @@
         ],
         "collider": {
           "type": "capsule",
-          "fit": "tight"
+          "fit": "loose"
         },
         "constraints": [],
         "destruction": {
           "breakable": true,
-          "group": "payload-pods"
+          "group": "viscera"
         }
       },
       "material": "pod-yellow",
@@ -7353,16 +8038,16 @@
       }
     },
     {
-      "id": "pod-strap-04a",
-      "name": "Pod strap 4a",
+      "id": "viscera-band-04a",
+      "name": "Viscera band 4a",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7378,17 +8063,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-04a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-04a-mount",
+        "structuralParent": "root",
         "localStart": [
-          -0.13,
-          -0.79,
-          0.725
+          -1.542,
+          -1.02,
+          0.291
         ],
         "localEnd": [
-          -0.13,
-          -0.79,
-          0.725
+          -1.542,
+          -1.02,
+          0.291
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7399,17 +8084,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.7192,
+        "height": 0.7192,
+        "depth": 0.7192,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -0.13000000000000003,
-          -0.79,
-          0.725
+          -1.542,
+          -1.02,
+          0.291
         ],
         "rotation": [
           0,
@@ -7493,16 +8178,16 @@
       }
     },
     {
-      "id": "pod-strap-04b",
-      "name": "Pod strap 4b",
+      "id": "viscera-band-04b",
+      "name": "Viscera band 4b",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7518,17 +8203,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-04b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-04b-mount",
+        "structuralParent": "root",
         "localStart": [
-          0.43,
-          -0.79,
-          0.725
+          -0.665,
+          -0.794,
+          0.364
         ],
         "localEnd": [
-          0.43,
-          -0.79,
-          0.725
+          -0.665,
+          -0.794,
+          0.364
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7539,17 +8224,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.7192,
+        "height": 0.7192,
+        "depth": 0.7192,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          0.43000000000000005,
-          -0.79,
-          0.725
+          -0.665,
+          -0.794,
+          0.364
         ],
         "rotation": [
           0,
@@ -7633,16 +8318,156 @@
       }
     },
     {
-      "id": "bladder-pod-05",
-      "name": "Bladder pod 5",
+      "id": "viscera-band-04c",
+      "name": "Viscera band 4c",
+      "level": "micro",
+      "role": "detail",
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "torusTubeRatio": 0.16
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/viscera-band-04c-mount",
+        "structuralParent": "root",
+        "localStart": [
+          -0.969,
+          -0.628,
+          0.258
+        ],
+        "localEnd": [
+          -0.969,
+          -0.628,
+          0.258
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "belly-zone"
+        ]
+      },
+      "dimensions": {
+        "width": 0.7192,
+        "height": 0.7192,
+        "depth": 0.7192,
+        "units": "relative",
+        "confidence": 0.65
+      },
+      "transform": {
+        "position": [
+          -0.969,
+          -0.628,
+          0.258
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5707963267948966
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "machine-grey",
+      "materialLayers": [
+        "machine-grey"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "belly-zone"
+      ],
+      "details": [
+        "d07"
+      ],
+      "fidelityTier": "surface",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
+        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(83, 90, 96, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(109, 117, 124, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "mast-zone"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "visceral-bundle-05",
+      "name": "Visceral tube run 5",
       "level": "meso",
       "role": "payload",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "root",
       "importance": 0.85,
-      "confidence": 0.75,
-      "primitive": "capsule",
+      "confidence": 0.7,
+      "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against the hard hull is the single strongest identity cue in the reference.",
+      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7652,22 +8477,99 @@
         },
         "deformationStack": [],
         "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "tubePath": {
+          "points": [
+            [
+              -2.4,
+              -0.769,
+              0.19
+            ],
+            [
+              -2.154,
+              -0.758,
+              0.183
+            ],
+            [
+              -1.908,
+              -0.708,
+              0.157
+            ],
+            [
+              -1.662,
+              -0.628,
+              0.116
+            ],
+            [
+              -1.415,
+              -0.531,
+              0.064
+            ],
+            [
+              -1.169,
+              -0.436,
+              0.005
+            ],
+            [
+              -0.923,
+              -0.36,
+              -0.054
+            ],
+            [
+              -0.677,
+              -0.317,
+              -0.108
+            ],
+            [
+              -0.431,
+              -0.314,
+              -0.151
+            ],
+            [
+              -0.185,
+              -0.353,
+              -0.179
+            ],
+            [
+              0.062,
+              -0.426,
+              -0.19
+            ],
+            [
+              0.308,
+              -0.52,
+              -0.182
+            ],
+            [
+              0.554,
+              -0.618,
+              -0.156
+            ],
+            [
+              0.8,
+              -0.701,
+              -0.114
+            ]
+          ],
+          "radius": 0.27,
+          "radialSegments": 12,
+          "closed": false
+        }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/bladder-pod-05-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/visceral-bundle-05-mount",
+        "structuralParent": "root",
         "localStart": [
-          -2.0,
-          -0.72,
-          0.195
+          0,
+          0,
+          0.475
         ],
         "localEnd": [
-          -2.0,
-          -0.72,
-          0.195
+          0,
+          0,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7678,22 +8580,22 @@
         ]
       },
       "dimensions": {
-        "width": 0.86,
-        "height": 0.8,
-        "depth": 0.86,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
         "units": "relative",
-        "confidence": 0.75
+        "confidence": 0.7
       },
       "transform": {
         "position": [
-          -2.0,
-          -0.72,
-          0.19499999999999995
+          0,
+          0,
+          0.475
         ],
         "rotation": [
           0,
           0,
-          1.5707963267948966
+          0
         ]
       },
       "actionProfile": {
@@ -7713,10 +8615,10 @@
         },
         "sockets": [
           {
-            "id": "pod-mount-05",
+            "id": "viscera-mount-05",
             "localPosition": [
               0,
-              0.3,
+              0,
               0
             ],
             "localRotation": [
@@ -7728,12 +8630,12 @@
         ],
         "collider": {
           "type": "capsule",
-          "fit": "tight"
+          "fit": "loose"
         },
         "constraints": [],
         "destruction": {
           "breakable": true,
-          "group": "payload-pods"
+          "group": "viscera"
         }
       },
       "material": "pod-yellow",
@@ -7788,16 +8690,16 @@
       }
     },
     {
-      "id": "pod-strap-05a",
-      "name": "Pod strap 5a",
+      "id": "viscera-band-05a",
+      "name": "Viscera band 5a",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7813,17 +8715,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-05a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-05a-mount",
+        "structuralParent": "root",
         "localStart": [
-          -2.28,
-          -0.72,
-          0.195
+          -1.662,
+          -0.628,
+          0.591
         ],
         "localEnd": [
-          -2.28,
-          -0.72,
-          0.195
+          -1.662,
+          -0.628,
+          0.591
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7834,17 +8736,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.6264,
+        "height": 0.6264,
+        "depth": 0.6264,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -2.2800000000000002,
-          -0.72,
-          0.19499999999999995
+          -1.662,
+          -0.628,
+          0.591
         ],
         "rotation": [
           0,
@@ -7928,16 +8830,16 @@
       }
     },
     {
-      "id": "pod-strap-05b",
-      "name": "Pod strap 5b",
+      "id": "viscera-band-05b",
+      "name": "Viscera band 5b",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7953,17 +8855,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-05b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-05b-mount",
+        "structuralParent": "root",
         "localStart": [
-          -1.72,
-          -0.72,
-          0.195
+          -0.677,
+          -0.317,
+          0.367
         ],
         "localEnd": [
-          -1.72,
-          -0.72,
-          0.195
+          -0.677,
+          -0.317,
+          0.367
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7974,17 +8876,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.6264,
+        "height": 0.6264,
+        "depth": 0.6264,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -1.72,
-          -0.72,
-          0.19499999999999995
+          -0.677,
+          -0.317,
+          0.367
         ],
         "rotation": [
           0,
@@ -8068,16 +8970,156 @@
       }
     },
     {
-      "id": "bladder-pod-06",
-      "name": "Bladder pod 6",
+      "id": "viscera-band-05c",
+      "name": "Viscera band 5c",
+      "level": "micro",
+      "role": "detail",
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "torusTubeRatio": 0.16
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/viscera-band-05c-mount",
+        "structuralParent": "root",
+        "localStart": [
+          0.308,
+          -0.52,
+          0.293
+        ],
+        "localEnd": [
+          0.308,
+          -0.52,
+          0.293
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "belly-zone"
+        ]
+      },
+      "dimensions": {
+        "width": 0.6264,
+        "height": 0.6264,
+        "depth": 0.6264,
+        "units": "relative",
+        "confidence": 0.65
+      },
+      "transform": {
+        "position": [
+          0.308,
+          -0.52,
+          0.293
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5707963267948966
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "machine-grey",
+      "materialLayers": [
+        "machine-grey"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "belly-zone"
+      ],
+      "details": [
+        "d07"
+      ],
+      "fidelityTier": "surface",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
+        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(83, 90, 96, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(109, 117, 124, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "mast-zone"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "visceral-bundle-06",
+      "name": "Visceral tube run 6",
       "level": "meso",
       "role": "payload",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "root",
       "importance": 0.85,
-      "confidence": 0.75,
-      "primitive": "capsule",
+      "confidence": 0.7,
+      "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against the hard hull is the single strongest identity cue in the reference.",
+      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -8087,22 +9129,99 @@
         },
         "deformationStack": [],
         "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "tubePath": {
+          "points": [
+            [
+              -2.1,
+              -0.945,
+              0.141
+            ],
+            [
+              -1.896,
+              -0.869,
+              0.098
+            ],
+            [
+              -1.692,
+              -0.788,
+              0.063
+            ],
+            [
+              -1.488,
+              -0.716,
+              0.04
+            ],
+            [
+              -1.285,
+              -0.667,
+              0.03
+            ],
+            [
+              -1.081,
+              -0.65,
+              0.035
+            ],
+            [
+              -0.877,
+              -0.667,
+              0.055
+            ],
+            [
+              -0.673,
+              -0.716,
+              0.087
+            ],
+            [
+              -0.686,
+              -0.788,
+              0.128
+            ],
+            [
+              -0.953,
+              -0.869,
+              0.174
+            ],
+            [
+              -1.22,
+              -0.945,
+              0.221
+            ],
+            [
+              -1.487,
+              -1.001,
+              0.264
+            ],
+            [
+              -1.754,
+              -1.028,
+              0.298
+            ],
+            [
+              -2.021,
+              -1.021,
+              0.321
+            ]
+          ],
+          "radius": 0.28,
+          "radialSegments": 12,
+          "closed": false
+        }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/bladder-pod-06-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/visceral-bundle-06-mount",
+        "structuralParent": "root",
         "localStart": [
-          -1.13,
-          -0.76,
-          0.175
+          0,
+          0,
+          0.475
         ],
         "localEnd": [
-          -1.13,
-          -0.76,
-          0.175
+          0,
+          0,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8113,22 +9232,22 @@
         ]
       },
       "dimensions": {
-        "width": 0.86,
-        "height": 0.8,
-        "depth": 0.86,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
         "units": "relative",
-        "confidence": 0.75
+        "confidence": 0.7
       },
       "transform": {
         "position": [
-          -1.13,
-          -0.76,
-          0.175
+          0,
+          0,
+          0.475
         ],
         "rotation": [
           0,
           0,
-          1.5707963267948966
+          0
         ]
       },
       "actionProfile": {
@@ -8148,10 +9267,10 @@
         },
         "sockets": [
           {
-            "id": "pod-mount-06",
+            "id": "viscera-mount-06",
             "localPosition": [
               0,
-              0.3,
+              0,
               0
             ],
             "localRotation": [
@@ -8163,12 +9282,12 @@
         ],
         "collider": {
           "type": "capsule",
-          "fit": "tight"
+          "fit": "loose"
         },
         "constraints": [],
         "destruction": {
           "breakable": true,
-          "group": "payload-pods"
+          "group": "viscera"
         }
       },
       "material": "pod-yellow",
@@ -8223,16 +9342,16 @@
       }
     },
     {
-      "id": "pod-strap-06a",
-      "name": "Pod strap 6a",
+      "id": "viscera-band-06a",
+      "name": "Viscera band 6a",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -8248,17 +9367,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-06a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-06a-mount",
+        "structuralParent": "root",
         "localStart": [
-          -1.41,
-          -0.76,
-          0.175
+          -1.488,
+          -0.716,
+          0.515
         ],
         "localEnd": [
-          -1.41,
-          -0.76,
-          0.175
+          -1.488,
+          -0.716,
+          0.515
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8269,17 +9388,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.6496000000000001,
+        "height": 0.6496000000000001,
+        "depth": 0.6496000000000001,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -1.41,
-          -0.76,
-          0.175
+          -1.488,
+          -0.716,
+          0.515
         ],
         "rotation": [
           0,
@@ -8363,16 +9482,16 @@
       }
     },
     {
-      "id": "pod-strap-06b",
-      "name": "Pod strap 6b",
+      "id": "viscera-band-06b",
+      "name": "Viscera band 6b",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -8388,17 +9507,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-06b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-06b-mount",
+        "structuralParent": "root",
         "localStart": [
-          -0.85,
-          -0.76,
-          0.175
+          -0.673,
+          -0.716,
+          0.562
         ],
         "localEnd": [
-          -0.85,
-          -0.76,
-          0.175
+          -0.673,
+          -0.716,
+          0.562
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8409,17 +9528,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.6496000000000001,
+        "height": 0.6496000000000001,
+        "depth": 0.6496000000000001,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -0.8499999999999999,
-          -0.76,
-          0.175
+          -0.673,
+          -0.716,
+          0.5619999999999999
         ],
         "rotation": [
           0,
@@ -8503,16 +9622,156 @@
       }
     },
     {
-      "id": "bladder-pod-07",
-      "name": "Bladder pod 7",
+      "id": "viscera-band-06c",
+      "name": "Viscera band 6c",
+      "level": "micro",
+      "role": "detail",
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "torusTubeRatio": 0.16
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/viscera-band-06c-mount",
+        "structuralParent": "root",
+        "localStart": [
+          -1.487,
+          -1.001,
+          0.739
+        ],
+        "localEnd": [
+          -1.487,
+          -1.001,
+          0.739
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "belly-zone"
+        ]
+      },
+      "dimensions": {
+        "width": 0.6496000000000001,
+        "height": 0.6496000000000001,
+        "depth": 0.6496000000000001,
+        "units": "relative",
+        "confidence": 0.65
+      },
+      "transform": {
+        "position": [
+          -1.487,
+          -1.001,
+          0.739
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5707963267948966
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "machine-grey",
+      "materialLayers": [
+        "machine-grey"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "belly-zone"
+      ],
+      "details": [
+        "d07"
+      ],
+      "fidelityTier": "surface",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
+        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(83, 90, 96, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(109, 117, 124, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "mast-zone"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "visceral-bundle-07",
+      "name": "Visceral tube run 7",
       "level": "meso",
       "role": "payload",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "root",
       "importance": 0.85,
-      "confidence": 0.75,
-      "primitive": "capsule",
+      "confidence": 0.7,
+      "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against the hard hull is the single strongest identity cue in the reference.",
+      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -8522,22 +9781,99 @@
         },
         "deformationStack": [],
         "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "tubePath": {
+          "points": [
+            [
+              -1.85,
+              -0.364,
+              0.354
+            ],
+            [
+              -1.638,
+              -0.314,
+              0.367
+            ],
+            [
+              -1.427,
+              -0.291,
+              0.37
+            ],
+            [
+              -1.215,
+              -0.299,
+              0.362
+            ],
+            [
+              -1.004,
+              -0.336,
+              0.343
+            ],
+            [
+              -0.792,
+              -0.396,
+              0.317
+            ],
+            [
+              -0.581,
+              -0.467,
+              0.285
+            ],
+            [
+              -0.369,
+              -0.538,
+              0.251
+            ],
+            [
+              -0.158,
+              -0.594,
+              0.217
+            ],
+            [
+              0.054,
+              -0.625,
+              0.188
+            ],
+            [
+              0.265,
+              -0.627,
+              0.166
+            ],
+            [
+              0.477,
+              -0.598,
+              0.153
+            ],
+            [
+              0.688,
+              -0.544,
+              0.15
+            ],
+            [
+              0.9,
+              -0.474,
+              0.159
+            ]
+          ],
+          "radius": 0.25,
+          "radialSegments": 12,
+          "closed": false
+        }
       },
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/bladder-pod-07-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/visceral-bundle-07-mount",
+        "structuralParent": "root",
         "localStart": [
-          -0.28,
-          -0.72,
-          0.195
+          0,
+          0,
+          0.475
         ],
         "localEnd": [
-          -0.28,
-          -0.72,
-          0.195
+          0,
+          0,
+          0.475
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8548,22 +9884,22 @@
         ]
       },
       "dimensions": {
-        "width": 0.86,
-        "height": 0.8,
-        "depth": 0.86,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
         "units": "relative",
-        "confidence": 0.75
+        "confidence": 0.7
       },
       "transform": {
         "position": [
-          -0.28,
-          -0.72,
-          0.19499999999999995
+          0,
+          0,
+          0.475
         ],
         "rotation": [
           0,
           0,
-          1.5707963267948966
+          0
         ]
       },
       "actionProfile": {
@@ -8583,10 +9919,10 @@
         },
         "sockets": [
           {
-            "id": "pod-mount-07",
+            "id": "viscera-mount-07",
             "localPosition": [
               0,
-              0.3,
+              0,
               0
             ],
             "localRotation": [
@@ -8598,12 +9934,12 @@
         ],
         "collider": {
           "type": "capsule",
-          "fit": "tight"
+          "fit": "loose"
         },
         "constraints": [],
         "destruction": {
           "breakable": true,
-          "group": "payload-pods"
+          "group": "viscera"
         }
       },
       "material": "pod-yellow",
@@ -8658,16 +9994,16 @@
       }
     },
     {
-      "id": "pod-strap-07a",
-      "name": "Pod strap 7a",
+      "id": "viscera-band-07a",
+      "name": "Viscera band 7a",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -8683,17 +10019,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-07a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-07a-mount",
+        "structuralParent": "root",
         "localStart": [
-          -0.56,
-          -0.72,
-          0.195
+          -1.215,
+          -0.299,
+          0.837
         ],
         "localEnd": [
-          -0.56,
-          -0.72,
-          0.195
+          -1.215,
+          -0.299,
+          0.837
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8704,17 +10040,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.58,
+        "height": 0.58,
+        "depth": 0.58,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          -0.56,
-          -0.72,
-          0.19499999999999995
+          -1.215,
+          -0.299,
+          0.837
         ],
         "rotation": [
           0,
@@ -8798,16 +10134,16 @@
       }
     },
     {
-      "id": "pod-strap-07b",
-      "name": "Pod strap 7b",
+      "id": "viscera-band-07b",
+      "name": "Viscera band 7b",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
-      "importance": 0.4,
-      "confidence": 0.72,
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
       "primitive": "torus",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Ring strap wrapping the pod - a torus is the exact topology.",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -8823,17 +10159,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/pod-strap-07b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "root/viscera-band-07b-mount",
+        "structuralParent": "root",
         "localStart": [
-          0.0,
-          -0.72,
-          0.195
+          -0.369,
+          -0.538,
+          0.726
         ],
         "localEnd": [
-          0.0,
-          -0.72,
-          0.195
+          -0.369,
+          -0.538,
+          0.726
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8844,17 +10180,157 @@
         ]
       },
       "dimensions": {
-        "width": 0.68,
-        "height": 0.68,
-        "depth": 0.68,
+        "width": 0.58,
+        "height": 0.58,
+        "depth": 0.58,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.65
       },
       "transform": {
         "position": [
-          0.0,
-          -0.72,
-          0.19499999999999995
+          -0.369,
+          -0.538,
+          0.726
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5707963267948966
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "machine-grey",
+      "materialLayers": [
+        "machine-grey"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "belly-zone"
+      ],
+      "details": [
+        "d07"
+      ],
+      "fidelityTier": "surface",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
+        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(83, 90, 96, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(109, 117, 124, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "mast-zone"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "viscera-band-07c",
+      "name": "Viscera band 7c",
+      "level": "micro",
+      "role": "detail",
+      "logicalParent": "root",
+      "importance": 0.35,
+      "confidence": 0.68,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
+        "torusTubeRatio": 0.16
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/viscera-band-07c-mount",
+        "structuralParent": "root",
+        "localStart": [
+          0.477,
+          -0.598,
+          0.628
+        ],
+        "localEnd": [
+          0.477,
+          -0.598,
+          0.628
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "belly-zone"
+        ]
+      },
+      "dimensions": {
+        "width": 0.58,
+        "height": 0.58,
+        "depth": 0.58,
+        "units": "relative",
+        "confidence": 0.65
+      },
+      "transform": {
+        "position": [
+          0.477,
+          -0.598,
+          0.628
         ],
         "rotation": [
           0,
@@ -8942,7 +10418,7 @@
       "name": "Plumbing manifold spine",
       "level": "meso",
       "role": "detail",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "visceral-cavity",
       "importance": 0.6,
       "confidence": 0.8,
       "primitive": "cylinder",
@@ -8962,17 +10438,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/manifold-spine-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "visceral-cavity/manifold-spine-mount",
+        "structuralParent": "visceral-cavity",
         "localStart": [
-          -1.05,
-          -0.12,
-          0.425
+          -0.9,
+          -0.04,
+          0.315
         ],
         "localEnd": [
-          -1.05,
-          -0.12,
-          0.425
+          -0.9,
+          -0.04,
+          0.315
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8991,9 +10467,9 @@
       },
       "transform": {
         "position": [
-          -1.05,
-          -0.12,
-          0.425
+          -0.9,
+          -0.04,
+          0.31499999999999995
         ],
         "rotation": [
           0,
@@ -9090,7 +10566,7 @@
       "name": "Manifold Seg Red",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "visceral-cavity",
       "importance": 0.35,
       "confidence": 0.75,
       "primitive": "cylinder",
@@ -9110,17 +10586,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/manifold-seg-red-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "visceral-cavity/manifold-seg-red-mount",
+        "structuralParent": "visceral-cavity",
         "localStart": [
           -0.95,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "localEnd": [
           -0.95,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9140,8 +10616,8 @@
       "transform": {
         "position": [
           -0.95,
-          -0.12,
-          0.425
+          -0.04,
+          0.31499999999999995
         ],
         "rotation": [
           0,
@@ -9229,7 +10705,7 @@
       "name": "Manifold Seg Blue",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "visceral-cavity",
       "importance": 0.35,
       "confidence": 0.75,
       "primitive": "cylinder",
@@ -9249,17 +10725,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/manifold-seg-blue-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "visceral-cavity/manifold-seg-blue-mount",
+        "structuralParent": "visceral-cavity",
         "localStart": [
           0.62,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "localEnd": [
           0.62,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9279,8 +10755,8 @@
       "transform": {
         "position": [
           0.62,
-          -0.12,
-          0.425
+          -0.04,
+          0.31499999999999995
         ],
         "rotation": [
           0,
@@ -9368,7 +10844,7 @@
       "name": "Manifold Collar A",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "visceral-cavity",
       "importance": 0.35,
       "confidence": 0.75,
       "primitive": "cylinder",
@@ -9388,17 +10864,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/manifold-collar-a-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "visceral-cavity/manifold-collar-a-mount",
+        "structuralParent": "visceral-cavity",
         "localStart": [
           -0.3,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "localEnd": [
           -0.3,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9418,8 +10894,8 @@
       "transform": {
         "position": [
           -0.3,
-          -0.12,
-          0.425
+          -0.04,
+          0.31499999999999995
         ],
         "rotation": [
           0,
@@ -9507,7 +10983,7 @@
       "name": "Manifold Collar B",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "visceral-cavity",
       "importance": 0.35,
       "confidence": 0.75,
       "primitive": "cylinder",
@@ -9527,17 +11003,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/manifold-collar-b-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "visceral-cavity/manifold-collar-b-mount",
+        "structuralParent": "visceral-cavity",
         "localStart": [
           0.2,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "localEnd": [
           0.2,
-          -0.12,
-          0.425
+          -0.04,
+          0.315
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9557,8 +11033,8 @@
       "transform": {
         "position": [
           0.2,
-          -0.12,
-          0.425
+          -0.04,
+          0.31499999999999995
         ],
         "rotation": [
           0,
@@ -9646,7 +11122,7 @@
       "name": "Manifold round port",
       "level": "micro",
       "role": "detail",
-      "logicalParent": "pod-cradle",
+      "logicalParent": "visceral-cavity",
       "importance": 0.4,
       "confidence": 0.7,
       "primitive": "cylinder",
@@ -9666,17 +11142,17 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "pod-cradle/manifold-round-port-mount",
-        "structuralParent": "pod-cradle",
+        "parentSocket": "visceral-cavity/manifold-round-port-mount",
+        "structuralParent": "visceral-cavity",
         "localStart": [
-          -0.48,
-          -0.38,
-          1.025
+          -0.4,
+          -0.34,
+          0.935
         ],
         "localEnd": [
-          -0.48,
-          -0.38,
-          1.025
+          -0.4,
+          -0.34,
+          0.935
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9695,9 +11171,9 @@
       },
       "transform": {
         "position": [
-          -0.48,
-          -0.38,
-          1.025
+          -0.4,
+          -0.34,
+          0.935
         ],
         "rotation": [
           1.5707963267948966,
@@ -16398,67 +17874,67 @@
       "note": "Linear array. The stock emitter is radial-only, so this system is realised as explicitly placed components carrying the placement data above."
     },
     {
-      "id": "bladder-pods",
+      "id": "visceral-tube-runs",
       "level": "meso",
-      "parent": "pod-cradle",
-      "primitive": "capsule",
+      "parent": "root",
+      "primitive": "tube",
       "material": "pod-yellow",
       "count": 7,
       "instanceScale": [
-        0.86,
-        0.8,
-        0.86
+        1,
+        1,
+        1
       ],
       "placement": {
-        "mode": "staggered-rows",
+        "mode": "serpentine-spines",
         "axis": [
           1,
           0,
           0
         ],
-        "rows": 2,
         "start": [
-          -2.45,
-          -0.66,
-          0.34
+          -2.6,
+          -0.96,
+          -0.26
         ],
         "end": [
-          0.12,
-          -0.5,
-          -0.3
+          0.95,
+          -0.42,
+          0.32
         ],
         "radius": 0.0
       },
-      "realisedBy": "bladder-pod-01..07",
-      "note": "Two staggered rows; row 2 is partly occluded in the reference."
+      "realisedBy": "visceral-bundle-01..07",
+      "note": "Seven folded tube spines; three fold back on themselves so the bundle reads as viscera."
     },
     {
-      "id": "pod-banding-straps",
+      "id": "viscera-bands",
       "level": "micro",
-      "parent": "pod-cradle",
+      "parent": "root",
       "primitive": "torus",
       "material": "machine-grey",
-      "count": 14,
+      "count": 21,
       "instanceScale": [
-        0.68,
-        0.68,
-        0.68
+        0.5,
+        0.5,
+        0.5
       ],
       "placement": {
-        "mode": "per-parent-pair",
+        "mode": "along-spine",
         "axis": [
           1,
           0,
           0
         ],
         "offsets": [
-          -0.28,
-          0.28
+          0.26,
+          0.58,
+          0.86
         ],
         "radius": 0.0
       },
-      "realisedBy": "pod-strap-01a..07b",
-      "note": "Two straps per pod, wrapping the capsule minor axis."
+      "realisedBy": "viscera-band-01a..07c",
+      "note": "Three bands per tube run, at fractions of arc length."
     },
     {
       "id": "radiator-vanes",
@@ -16737,6 +18213,46 @@
       "cameraView": "reference-match",
       "notes": "",
       "aiVisionNotes": ""
+    },
+    {
+      "timestamp": "2026-08-06T03:06:19.532870+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.78,
+        "componentStructure": 0.86,
+        "formDetail": 0.76,
+        "materialSurface": 0.82,
+        "lightingCamera": 0.8
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.78,
+          "verdict": "below-threshold",
+          "notes": "Silhouette IoU 0.723 against the star-free reference (0.198 at first render). Aspect delta 0.047 and scale delta 0.055 now PASS their Tier 1 thresholds (0.05/0.08); IoU does not (0.85). The residual is dominated by one thing, and it is not a fixable modelling error: the reference is not a consistent perspective projection. Matching its silhouette aspect requires a 16-degree camera pitch (solved by sweep), but at 16 degrees a wing of half-span 2.7 projects its far edge to Y=0.94 while the drawing puts the dorsal surface at Y=0.56 there. Satisfying that needs half-span 1.31 - and the measured span sweep shows narrower wings score WORSE overall (1.8 -> IoU 0.597 vs 2.7 -> 0.631), because they lose more overlap at the bow and tips than they gain above the wing root. The drawing shows more of the deck than any real camera at that aspect can. Remaining genuine geometry deltas, in size order: reference carries ventral mass under the stern bay that the model lacks; the model's bow wing tip sits low and short of the reference's; the tail blade is slightly oversized."
+        },
+        {
+          "id": "dorsal-mast-fin",
+          "score": 0.82,
+          "verdict": "pass",
+          "notes": "Reads as the reference's mechanism: tapered blade on measured proportions, open machinery face between leading and trailing spars, twin gold pivot bosses at the root, base housing with vents. Pivots on its hinge in the shipped viewer through the spec's -84..0 degree constraint. The exposed internals are present but read small at the review camera distance."
+        },
+        {
+          "id": "ventral-pod-cluster",
+          "score": 0.84,
+          "verdict": "pass",
+          "notes": "Strongest matched subsystem. Seven capsule pods in two staggered rows with 14 banding straps and the plumbing manifold, slung below the cradle shelf, bulging to the reference's measured ventral line. The soft-against-hard read that makes the reference recognisable is present, and the pods detach on the jettison control. Colour matches the sampled #e9b708 / #ae8100 pair."
+        }
+      ],
+      "referenceScreenshot": "/home/user/Playground/recon/ref.png",
+      "renderScreenshot": "/home/user/Playground/recon/renders/form/reference-match.png",
+      "comparisonImage": "/home/user/Playground/recon/renders/form/cmp.png",
+      "cameraView": "reference-match",
+      "notes": "",
+      "aiVisionNotes": ""
     }
   ],
   "reviewHistory": [
@@ -16857,6 +18373,55 @@
         "notes": "",
         "aiVisionNotes": ""
       }
+    },
+    {
+      "timestamp": "2026-08-06T03:06:19.532870+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.78,
+        "componentStructure": 0.86,
+        "formDetail": 0.76,
+        "materialSurface": 0.82,
+        "lightingCamera": 0.8
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.78,
+          "verdict": "below-threshold",
+          "notes": "Silhouette IoU 0.723 against the star-free reference (0.198 at first render). Aspect delta 0.047 and scale delta 0.055 now PASS their Tier 1 thresholds (0.05/0.08); IoU does not (0.85). The residual is dominated by one thing, and it is not a fixable modelling error: the reference is not a consistent perspective projection. Matching its silhouette aspect requires a 16-degree camera pitch (solved by sweep), but at 16 degrees a wing of half-span 2.7 projects its far edge to Y=0.94 while the drawing puts the dorsal surface at Y=0.56 there. Satisfying that needs half-span 1.31 - and the measured span sweep shows narrower wings score WORSE overall (1.8 -> IoU 0.597 vs 2.7 -> 0.631), because they lose more overlap at the bow and tips than they gain above the wing root. The drawing shows more of the deck than any real camera at that aspect can. Remaining genuine geometry deltas, in size order: reference carries ventral mass under the stern bay that the model lacks; the model's bow wing tip sits low and short of the reference's; the tail blade is slightly oversized."
+        },
+        {
+          "id": "dorsal-mast-fin",
+          "score": 0.82,
+          "verdict": "pass",
+          "notes": "Reads as the reference's mechanism: tapered blade on measured proportions, open machinery face between leading and trailing spars, twin gold pivot bosses at the root, base housing with vents. Pivots on its hinge in the shipped viewer through the spec's -84..0 degree constraint. The exposed internals are present but read small at the review camera distance."
+        },
+        {
+          "id": "ventral-pod-cluster",
+          "score": 0.84,
+          "verdict": "pass",
+          "notes": "Strongest matched subsystem. Seven capsule pods in two staggered rows with 14 banding straps and the plumbing manifold, slung below the cradle shelf, bulging to the reference's measured ventral line. The soft-against-hard read that makes the reference recognisable is present, and the pods detach on the jettison control. Colour matches the sampled #e9b708 / #ae8100 pair."
+        }
+      ],
+      "action": "stop",
+      "summary": "Form-refinement built out to all 91 specified components (98 meshes) and the cel/ink material system applied, which is the reference's actual medium. Tier 1: IoU 0.723, aspect 0.047 PASS, scale 0.055 PASS, symmetry 0.081. Multi-angle gate PASSES (no degenerate view, ratios 0.39/1.61/0.49). Part-coverage gate PASSES: 92 specified, 98 built, 0 errors, 0 warnings, 0 unnamed meshes. Stopping rather than continuing because the critical overall-silhouette feature scores 0.78 against its 0.80 bar, and the evidence says the gap is a property of the reference, not a modelling defect: the drawing is not a consistent perspective projection. Its silhouette aspect demands a 16-degree pitch, but at that pitch the wing's far edge must project to Y=0.94 while the drawing places the dorsal surface at 0.56 - satisfying both needs half-span 1.31, and the measured span sweep shows narrower spans score worse overall. Escalating to request-input: the practical options are (a) accept 0.72-0.75 as the ceiling for a physically consistent camera, (b) supply a second view so the planform stops being inferred, or (c) accept a deliberately non-physical camera that matches the drawing's cheat.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "visualEvidence": {
+        "referenceScreenshot": "/home/user/Playground/recon/ref.png",
+        "renderScreenshot": "/home/user/Playground/recon/renders/form/reference-match.png",
+        "comparisonImage": "/home/user/Playground/recon/renders/form/cmp.png",
+        "cameraView": "reference-match",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
     }
   ],
   "lodPlan": [
@@ -16939,8 +18504,8 @@
       ]
     },
     {
-      "id": "pod-jettison",
-      "component": "bladder-pod-01",
+      "id": "viscera-jettison",
+      "component": "visceral-bundle-01",
       "channel": "position",
       "note": "detaches along -Y"
     },
@@ -16956,15 +18521,15 @@
   ],
   "destructionAnchors": [
     {
-      "id": "payload-pods",
+      "id": "viscera",
       "components": [
-        "bladder-pod-01",
-        "bladder-pod-02",
-        "bladder-pod-03",
-        "bladder-pod-04",
-        "bladder-pod-05",
-        "bladder-pod-06",
-        "bladder-pod-07"
+        "visceral-bundle-01",
+        "visceral-bundle-02",
+        "visceral-bundle-03",
+        "visceral-bundle-04",
+        "visceral-bundle-05",
+        "visceral-bundle-06",
+        "visceral-bundle-07"
       ],
       "breakable": true
     }
@@ -20576,6 +22141,399 @@
       ],
       "renderHash": "f550485f567457bc",
       "passId": "structural-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7234,
+        "aspectRatioDelta": 0.0471,
+        "scaleDelta": 0.055,
+        "bilateralSymmetryError": 0.081,
+        "colorDelta": {
+          "checked": 93,
+          "maxDeltaE": 69.37,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.62
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 39.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 0.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 32.81
+            },
+            {
+              "componentId": null,
+              "deltaE": 32.81
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.79
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 0.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.37
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 0.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.37
+            },
+            {
+              "componentId": null,
+              "deltaE": 0.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.37
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.37
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.06
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.723 is below threshold 0.85"
+      ],
+      "renderHash": "22a854144e7f8c98",
+      "passId": "form-refinement"
     }
   ]
 }

@@ -7,12 +7,6 @@ Image->object mapping used throughout:  X = (x_img - 2185)/343 ,  Y = (1030 - y_
 """
 import json, math, pathlib, copy, os
 
-# The planform (span, wing height) is the spec's flagged high-impact unknown: a pure beam
-# elevation cannot show it. At the solved 16-degree review pitch the wing's top surface DOES
-# project into the silhouette, so span becomes measurable against the reference. These are
-# swept by recon/planform_sweep.sh and the winning values written back as the defaults.
-SPAN  = float(os.environ.get("MANTA_SPAN", "2.70"))   # forward-wing half-span
-WINGY = float(os.environ.get("MANTA_WINGY", "0.20"))  # forward-wing plane height
 
 RAD = math.pi / 180.0
 P = pathlib.Path("recon/object-sculpt-spec.json")
@@ -41,7 +35,7 @@ a["complexity"]["scores"] = {  # rubric is 0-3, not 0-10
 }
 
 spec["coordinateFrame"] = {
-    "front": "-X is the bow (canopy blister and forward-swept wing end)",
+    "front": "-X is the bow (snout, canopy blister, ventral chin)",
     "up": "+Y is dorsal (mast fin direction); +Z is starboard",
     "scaleReference": "normalised: 10.0 units bow-tip to tail-tip; 1 unit = 343 px in the reference",
 }
@@ -56,28 +50,28 @@ spec["referenceCamera"] = {
              "INFERRED from silhouette extents, not solved - refine against the comparison sheet."),
 }
 spec["silhouette"] = {
-    "boundingShape": "flattened forward-swept delta with a long tapering aft tail blade",
+    "boundingShape": "slender blade/fish body tapering to points fore and aft; NO delta planform",
     "aspectRatios": [
         {"name": "length:height(incl. mast fin)", "value": 2.7},
         {"name": "length:hull-thickness", "value": 14.1},
-        {"name": "length:span", "value": 1.79, "confidence": 0.35, "note": "span is INFERRED"},
+        {"name": "length:span", "value": 8.7, "confidence": 0.5, "note": "slender body; span still INFERRED"},
     ],
     "symmetry": "bilateral about the XY (fore-aft vertical) plane",
     "dominantCurves": [
-        "forward-swept leading edge, root LE X=-3.6 to tip LE X=-4.6 at |Z|=2.7 (tip chord 2.0)",
-        "aft trailing taper converging to a needle point at X=+5.0",
-        "convex bulge chain of the ventral bladder pods",
+        "traced dorsal deck line falling from Y=0.52 at the snout to Y=0.02 at the tail tip",
+        "grey ventral chin descending to Y=-1.05 near X=-2.2",
+        "folded, self-crossing tube runs filling the belly cavity",
     ],
     "negativeSpaces": [
         "recessed stern drive bay between hull spine and tail blade",
-        "gap between pod cluster underside and the hull ventral deck",
+        "open belly cavity the tube runs spill out of",
         "notch between mast fin outer shell leaves exposing inner machinery",
     ],
     "landmarks": [
-        {"id": "bow-tip", "position": [-4.60, 0.30, 0.0]},
+        {"id": "bow-tip", "position": [-4.91, 0.30, 0.0]},
         {"id": "mast-tip", "position": [-1.72, 2.52, 0.0]},
         {"id": "tail-tip", "position": [5.00, 0.02, 0.0]},
-        {"id": "keel-apex", "position": [-3.86, -0.82, 0.0]},
+        {"id": "keel-apex", "position": [-1.92, -1.02, 0.0]},
         {"id": "nozzle-apex", "position": [2.90, -0.06, 0.0]},
     ],
 }
@@ -85,11 +79,11 @@ spec["viewEvidence"] = [
     {"id": "full-object", "view": "primary", "imageRegion": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "units": "normalized"},
      "observations": ["single port-beam elevation of the whole vehicle on a black field"], "confidence": 0.95},
     {"id": "bow-zone", "view": "detail", "imageRegion": {"x": 0.095, "y": 0.380, "width": 0.243, "height": 0.285, "units": "normalized"},
-     "observations": ["forward-swept wing top skin", "ventral keel fin", "canopy blister", "spar rivet rows"], "confidence": 0.88},
+     "observations": ["slender snout with plated deck", "long grey ventral chin", "canopy blister", "spar rivet rows"], "confidence": 0.88},
     {"id": "mast-zone", "view": "detail", "imageRegion": {"x": 0.355, "y": 0.060, "width": 0.135, "height": 0.390, "units": "normalized"},
      "observations": ["tapered mast fin", "exposed grey machinery, yellow ladder rack, teal strip, red block", "twin gold pivot bosses", "faceted base housing with diamond hatch"], "confidence": 0.92},
     {"id": "belly-zone", "view": "detail", "imageRegion": {"x": 0.295, "y": 0.440, "width": 0.325, "height": 0.295, "units": "normalized"},
-     "observations": ["7 bulging bladder pods", "steel banding straps", "plumbing manifold with red/blue/white segments", "circular red-and-blue port"], "confidence": 0.90},
+     "observations": ["packed mass of folded, self-crossing tubes reading as intestines", "steel cinch bands", "plumbing manifold with red/blue/white segments", "circular red-and-blue port"], "confidence": 0.90},
     {"id": "stern-zone", "view": "detail", "imageRegion": {"x": 0.655, "y": 0.440, "width": 0.195, "height": 0.200, "units": "normalized"},
      "observations": ["chevron louvre vane array", "triangular concentric nozzle", "blue bay trim"], "confidence": 0.93},
 ]
@@ -210,7 +204,7 @@ def _recipe(material):
     }
 
 ROOT_Z = -0.475          # root node offset: the hull extrude runs z 0..0.95 in its own space
-SCALED_PARENTS = {"pod-cradle", "stern-bay-housing", "manifold-spine"}
+SCALED_PARENTS = {"visceral-cavity", "stern-bay-housing", "manifold-spine"}
 
 def comp(cid, name, level, role, primitive, parent, pos, *, rot=(0,0,0), dims=None,
          scale=None, material="hull-cream", topo="assembled-solid", why="",
@@ -292,45 +286,48 @@ def ex(points, depth):
 # Hull thickness measured off the reference: deck y~880px, ventral line y~1000px at the pod
 # station => 120px = 0.35 units. The first pass authored it at 0.72 and read as an aircraft
 # fuselage rather than the reference's flat plated spine.
-HULL = [(-3.30,0.09),(-2.60,0.23),(-1.80,0.29),(-0.80,0.30),(0.30,0.27),(1.40,0.20),(2.50,0.11),(3.30,0.04),
-        (3.30,-0.02),(2.50,-0.09),(1.40,-0.16),(0.30,-0.15),(-0.80,-0.10),(-1.80,-0.05),(-2.60,0.00),(-3.30,0.03)]
-comp("root", "Hull spine", "macro", "body", "extrude", None, (0,0,-0.475),
-     desc=ex(HULL, 0.95), topo="assembled-solid", imp=1.0, conf=0.82,
-     why=("Continuous plated monocoque read as one lofted solid, not a box: the reference shows a "
-          "single unbroken dorsal deck line from bow fairing to stern bay with no step."),
+HULL = [(-4.91, 0.30), (-4.48, 0.47), (-3.60, 0.52), (-2.73, 0.47), (-1.85, 0.50),
+        (-0.98, 0.52), (-0.10, 0.48), (0.77, 0.42), (1.65, 0.36), (2.52, 0.30),
+        (3.40, 0.21), (4.27, 0.09), (4.71, 0.02),
+        (4.71, -0.02), (4.27, -0.08), (3.40, -0.19), (2.52, -0.30), (1.65, -0.34),
+        (0.77, -0.22), (-0.10, -0.18), (-0.98, -0.18), (-1.85, -0.20), (-2.73, -0.24),
+        (-3.60, -0.18), (-4.48, -0.02)]
+# NOTE the ventral line above is the HULL's, not the traced silhouette's. Through the belly
+# (X -2.7..+0.8) the traced bottom runs near -1.1, but that is the VISCERA hanging below, not
+# the hull. Taking the trace literally there made the body a fat slab and left the tubes with
+# nothing to hang from.
+comp("root", "Hull body", "macro", "body", "extrude", None, (0,0,-0.43),
+     desc=ex(HULL, 0.86), topo="assembled-solid", imp=1.0, conf=0.82,
+     why=("Continuous plated monocoque, slender and blade-like - a fish body, not an aircraft. "
+          "Profile TRACED from the reference silhouette rather than inferred. There is NO delta "
+          "planform: the wide bright planes in the reference are this narrow body's own "
+          "overlapping armour plating seen at a shallow angle, not wings extending laterally."),
      feats=[{"id":"deck-plate-ridges","kind":"seam","description":"raised chordwise plate ridges dividing the deck into 8 panels","detailRefs":["d05"]},
             {"id":"spar-rivet-rows","kind":"fastener","description":"fastener dot rows along the flank rails","detailRefs":["d04"]}],
      ev=("full-object","bow-zone"), det=("d02","d03","d05","d18"), tier="blockout")
 
-# Forward-swept delta. The first pass placed the leading and trailing edges on almost the
-# same curve, giving the wing no chord at all - it rendered as two thin slivers. Root chord
-# now runs X=-3.60..+0.70; tip chord X=-4.60..-2.60 at |Z|=2.70, so the tip sits FORWARD of
-# the root (forward sweep) while still carrying real area.
-# Forward-swept delta; half-span parameterised (see SPAN above).
-FWING = [(-3.60, 0.00),
-         (-3.95, 0.333*SPAN), (-4.30, 0.667*SPAN), (-4.60, SPAN),
-         (-2.60, SPAN), (-1.30, 0.685*SPAN), (-0.20, 0.389*SPAN), (0.70, 0.111*SPAN),
-         (0.70, 0.00),
-         (0.70, -0.111*SPAN), (-0.20, -0.389*SPAN), (-1.30, -0.685*SPAN), (-2.60, -SPAN),
-         (-4.60, -SPAN), (-4.30, -0.667*SPAN), (-3.95, -0.333*SPAN)]
-comp("forward-wing", "Forward-swept wing plate", "macro", "wing", "extrude", "root", (0,WINGY,0),
-     rot=(-90*RAD,0,0), desc=ex(FWING, 0.16), topo="conforming-shell", imp=0.95, conf=0.45,
-     why=("Thin lofted sheet, not a solid: the reference shows a knife-thin leading edge and a "
-          "single continuous top skin. PLANFORM IS INFERRED - the single elevation cannot show chord."),
+# The forward-swept delta wing and the broad aft tail blade that used to be defined here are
+# GONE. Both were fabricated from a misreading of the single side elevation. What the reference
+# actually has at the bow is a slim plane hugging the flank.
+BOW_FIN = [(-4.34, 0.30), (-3.00, 0.26), (-3.26, -0.16), (-4.18, -0.12)]
+comp("bow-plane-port", "Bow plane (port)", "macro", "fin", "extrude", "root", (0,0,-0.78),
+     desc=ex(BOW_FIN, 0.22), topo="conforming-shell", material="hull-grey", imp=0.6, conf=0.50,
+     why=("Slim plane hugging the hull flank. Sized as a FIN, not a wing panel: the wide "
+          "forward-swept delta this replaces was fabricated from a misreading of the single "
+          "side elevation, and the reference has no laterally-extending wings at all."),
      feats=[{"id":"leading-edge-chamfer","kind":"bevel","description":"chamfered leading edge","edgeTreatment":{"type":"chamfer","bevelRadius":0.03,"segments":2},"detailRefs":["d09"]}],
      ev=("bow-zone",), det=("d09","d04"), tier="blockout")
+comp("bow-plane-stbd", "Bow plane (starboard)", "macro", "fin", "extrude", "root", (0,0,0.56),
+     desc=ex(BOW_FIN, 0.22), topo="conforming-shell", material="hull-grey", imp=0.6, conf=0.45,
+     why="Mirror of the port bow plane; starboard carries no independent evidence in this view.",
+     ev=("bow-zone",), tier="blockout")
 
-TWING = [(0.40,0.45),(1.60,1.30),(2.60,1.18),(3.50,0.88),(4.30,0.50),(5.00,0.04),
-         (5.00,-0.04),(4.30,-0.50),(3.50,-0.88),(2.60,-1.18),(1.60,-1.30),(0.40,-0.45)]
-comp("aft-tail-blade", "Aft tail blade", "macro", "wing", "extrude", "root", (0,-0.015,0),
-     rot=(-90*RAD,0,0), desc=ex(TWING, 0.13), topo="conforming-shell", imp=0.90, conf=0.45,
-     why="Thin lofted sheet converging to a needle tip; the taper is the stingray-tail identity cue.",
-     ev=("full-object",), det=("d09",), tier="blockout")
-
-KEEL = [(-4.35,0.12),(-3.30,0.05),(-3.20,-0.35),(-3.86,-0.82),(-4.45,-0.35)]
-comp("ventral-keel-fin", "Ventral keel fin", "macro", "fin", "extrude", "root", (0,0,-0.14),
-     desc=ex(KEEL, 0.28), topo="conforming-shell", material="hull-grey", imp=0.7, conf=0.7,
-     why="Planar keel blade hanging below the bow; reads as a sheet with thickness, not a solid wedge.",
+# Traced: the grey ventral chin/jaw descends from the snout to Y=-1.05 near X=-2.2.
+KEEL = [(-4.62,0.02),(-2.28,-0.30),(-1.92,-1.02),(-2.66,-1.06),(-3.58,-0.62),(-4.56,-0.24)]
+comp("ventral-keel-fin", "Ventral keel / chin", "macro", "fin", "extrude", "root", (0,0,-0.21),
+     desc=ex(KEEL, 0.42), topo="conforming-shell", material="hull-grey", imp=0.7, conf=0.7,
+     why=("The reference's long grey jaw under the bow, reaching Y=-1.05. Traced, not estimated; "
+          "the previous pass had it as a small triangle."),
      ev=("bow-zone",), tier="blockout")
 
 # Measured off recon/crops/dorsalfin.png: base X -1.63..-1.09 (0.54 wide) at Y 0.88 sitting on
@@ -362,12 +359,11 @@ for sid, prof in (("mast-spar-leading", MAST_LE), ("mast-spar-trailing", MAST_TE
          why="Edge spar of the mast shell; carries the outer skin around the open machinery face.",
          ev=("mast-zone",), det=("d13",), tier="structural")
 
-comp("pod-cradle", "Ventral pod cradle", "macro", "structure", "box", "root", (-1.10,-0.30,0),
-     dims={"width":3.65,"height":0.70,"depth":0.92,"units":"relative","confidence":0.7},
+comp("visceral-cavity", "Visceral cavity shell", "macro", "structure", "box", "root", (-0.80,-0.26,0),
+     dims={"width":3.70,"height":0.24,"depth":0.80,"units":"relative","confidence":0.7},
      material="hull-grey", topo="assembled-solid", imp=0.8, conf=0.7,
-     why=("Boxed cradle shelf spanning Y +0.05..-0.65. The reference shows a dark structural "
-          "mass ABOVE the pods with the pods bulging clear below it, so the cradle must not "
-          "enclose them - at full envelope height it hid the entire pod cluster."),
+     why=("Open bay the tubing spills out of - a shallow shelf, not an enclosure. The tubes "
+          "must hang clear below it as they do in the reference."),
      ev=("belly-zone",), tier="blockout")
 
 comp("stern-bay-housing", "Stern drive bay housing", "macro", "structure", "box", "root", (2.05,-0.09,-0.52),
@@ -386,10 +382,10 @@ comp("canopy-blister", "Canopy / sensor blister", "meso", "detail", "ellipsoid",
 comp("bow-fairing", "Bow nose fairing", "meso", "detail", "cone", "root", (-3.52,0.10,0),
      rot=(0,0,90*RAD), dims={"width":0.34,"height":0.55,"depth":0.42,"units":"relative","confidence":0.6},
      topo="assembled-solid", why="Tapered nose cap closing the hull spine forward.", ev=("bow-zone",))
-for i, xz in enumerate([0.55, -0.55]):
+for i, xz in enumerate([0.47, -0.47]):
     side = "stbd" if xz > 0 else "port"
     comp(f"hull-flank-rail-{side}", f"Hull flank rail ({side})", "meso", "structure", "box", "root",
-         (-0.30, 0.14, xz), dims={"width":5.6,"height":0.10,"depth":0.09,"units":"relative","confidence":0.7},
+         (-0.30, 0.17, xz), dims={"width":8.6,"height":0.09,"depth":0.08,"units":"relative","confidence":0.7},
          material="hull-grey", topo="assembled-solid",
          why="Straight extruded rail catching the reference's continuous dark flank line.",
          ev=("full-object",), det=("d04",))
@@ -398,16 +394,16 @@ for i in range(8):
     x = -2.75 + i * 0.72
     comp(f"deck-plate-{i+1:02d}", f"Dorsal deck plate {i+1}", "meso", "panel", "box", "root",
          (x, 0.455 - abs(x) * 0.018, 0.0),
-         dims={"width":0.66,"height":0.035,"depth":0.86 - abs(x)*0.05,"units":"relative","confidence":0.7},
+         dims={"width":0.66,"height":0.035,"depth":max(0.26, 0.95 - abs(x)*0.12),"units":"relative","confidence":0.7},
          topo="assembled-solid", imp=0.45, conf=0.72,
          why="Flat plate panel; the reference deck is divided by raised chordwise ridges.",
          ev=("full-object",), det=("d05",), tier="structural")
-comp("wing-leading-spar", "Forward wing leading spar", "meso", "structure", "box", "forward-wing", (0,0,0),
-     dims={"width":0.09,"height":0.09,"depth":1.0,"units":"relative","confidence":0.55},
+comp("wing-leading-spar", "Bow plane spar", "meso", "structure", "box", "root", (-3.66,0.10,0),
+     dims={"width":1.45,"height":0.08,"depth":1.32,"units":"relative","confidence":0.55},
      material="hull-grey", topo="assembled-solid", scale=[1,1,1],
-     why="Straight spar box along the leading edge.", ev=("bow-zone",), det=("d04",), tier="structural")
-comp("tail-spine-rail", "Tail spine rail", "meso", "structure", "box", "root", (2.90,0.03,0),
-     dims={"width":4.1,"height":0.07,"depth":0.22,"units":"relative","confidence":0.65},
+     why="Straight spar box across the bow plane roots.", ev=("bow-zone",), det=("d04",), tier="structural")
+comp("tail-spine-rail", "Tail spine rail", "meso", "structure", "box", "root", (2.90,0.02,0),
+     dims={"width":4.1,"height":0.06,"depth":0.18,"units":"relative","confidence":0.65},
      material="hull-grey", topo="assembled-solid",
      why="Continuous dark rail along the tail blade centreline in the reference.",
      ev=("full-object",), tier="structural")
@@ -448,49 +444,80 @@ comp("mast-base-housing", "Mast base housing", "meso", "structure", "extrude", "
 # pod cluster
 # World-space pod centres. Radius 0.30, so a centre at Y -0.84 puts the bulge bottom at
 # -1.14, matching the reference's lowest ventral line (image y=1420).
-POD_ROWS = [
-    # outboard row - the bulges that define the ventral silhouette, protruding 0.50 below
-    # the cradle shelf so they read as slung payload rather than an enclosed bay
-    (-2.40,-0.85,0.34), (-1.55,-0.89,0.31), (-0.68,-0.87,0.28), (0.15,-0.79,0.25),
-    # inboard row, partly occluded in the reference
-    (-2.00,-0.72,-0.28), (-1.13,-0.76,-0.30), (-0.28,-0.72,-0.28),
+# ------------------------------------------------------------------- viscera
+# The reference's underside is NOT a rack of tidy pods. It is a packed mass of soft tubing that
+# loops, folds back on itself and crosses over - it reads as intestines spilling from an open
+# belly, cinched at intervals by steel bands, with the hard plumbing running above it. The
+# previous pass modelled seven neat capsules in two rows, which gets the character exactly
+# backwards: the identity cue here is organic disorder set against the hard hull.
+def _coil(phase, x0, x1, y0, z0, amp_y, amp_z, n=14, fold=None):
+    """Serpentine tube spine. `fold` turns the run back on itself part-way through, which is
+    what makes the bundle read as viscera rather than as a row of parallel hoses."""
+    pts = []
+    for k in range(n):
+        u = k / (n - 1)
+        x = x0 + (x1 - x0) * u
+        if fold is not None and u > fold:
+            v = (u - fold) / (1.0 - fold)
+            x = x0 + (x1 - x0) * fold - (x1 - x0) * 0.55 * v
+        pts.append([round(x, 3),
+                    round(y0 + amp_y * math.sin(phase + u * 5.6), 3),
+                    round(z0 + amp_z * math.sin(phase * 1.7 + u * 4.1), 3)])
+    return pts
+
+COILS = [
+    # phase   x0     x1     y0     z0    ampY  ampZ  radius fold
+    (0.0,  -2.45,  0.90, -0.60,  0.22, 0.24, 0.14, 0.30, None),
+    (1.1,  -2.30,  0.75, -0.78,  0.06, 0.22, 0.17, 0.32, 0.62),
+    (2.3,  -2.50,  0.85, -0.66, -0.14, 0.26, 0.15, 0.29, None),
+    (3.4,  -2.20,  0.65, -0.82, -0.24, 0.20, 0.13, 0.31, 0.70),
+    (4.6,  -2.40,  0.80, -0.54,  0.00, 0.23, 0.19, 0.27, None),
+    (5.7,  -2.10,  0.55, -0.84,  0.18, 0.19, 0.15, 0.28, 0.58),
+    (0.6,  -1.85,  0.90, -0.46,  0.26, 0.17, 0.11, 0.25, None),
 ]
-for i,(px,py,pz) in enumerate(POD_ROWS):
-    comp(f"bladder-pod-{i+1:02d}", f"Bladder pod {i+1}", "meso", "payload", "capsule", "pod-cradle",
-         (px, py, pz), rot=(0,0,90*RAD),
-         dims={"width":0.86,"height":0.80,"depth":0.86,"units":"relative","confidence":0.75},
-         material="pod-yellow", topo="continuous-sculpt", imp=0.85, conf=0.75,
-         why=("Continuous organic bulge - a capsule, NOT a cylinder. The soft inflated read against "
-              "the hard hull is the single strongest identity cue in the reference."),
+for _i, (_ph, _x0, _x1, _y0, _z0, _ay, _az, _r, _fold) in enumerate(COILS):
+    _pts = _coil(_ph, _x0, _x1, _y0, _z0, _ay, _az, fold=_fold)
+    comp(f"visceral-bundle-{_i+1:02d}", f"Visceral tube run {_i+1}", "meso", "payload", "tube",
+         "root", (0, 0, 0),
+         desc={"tubePath": {"points": _pts, "radius": _r, "radialSegments": 12, "closed": False}},
+         topo="continuous-sculpt", material="pod-yellow", imp=0.85, conf=0.70,
+         why=("Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold "
+              "back on itself, and that fold is precisely what makes the reference's underside "
+              "read as viscera instead of as cargo tanks."),
          ev=("belly-zone",), det=("d06","d07"), tier="structural",
          action={"animationRole":"detachable","pivot":{"mode":"local-origin","offset":[0,0,0]},
                  "transformChannels":{"translate":True,"rotate":True,"scale":False},
-                 "sockets":[{"id":f"pod-mount-{i+1:02d}","localPosition":[0,0.3,0],"localRotation":[0,0,0]}],
-                 "collider":{"type":"capsule","fit":"tight"},"constraints":[],
-                 "destruction":{"breakable":True,"group":"payload-pods"}})
-    for s,(sx) in enumerate((-0.28, 0.28)):
-        comp(f"pod-strap-{i+1:02d}{'ab'[s]}", f"Pod strap {i+1}{'ab'[s]}", "micro", "detail", "torus",
-             "pod-cradle", (px + sx, py, pz), rot=(0,0,90*RAD),
-             dims={"width":0.68,"height":0.68,"depth":0.68,"units":"relative","confidence":0.7},
+                 "sockets":[{"id":f"viscera-mount-{_i+1:02d}","localPosition":[0,0,0],"localRotation":[0,0,0]}],
+                 "collider":{"type":"capsule","fit":"loose"},"constraints":[],
+                 "destruction":{"breakable":True,"group":"viscera"}})
+    for _b, _u in enumerate((0.26, 0.58, 0.86)):
+        _pt = _pts[int(_u * (len(_pts) - 1))]
+        comp(f"viscera-band-{_i+1:02d}{'abc'[_b]}", f"Viscera band {_i+1}{'abc'[_b]}", "micro",
+             "detail", "torus", "root", (_pt[0], _pt[1], _pt[2]), rot=(0, 0, 90*RAD),
+             # Sized just proud of the tube it wraps. At 2.6x radius these read as wheels bolted
+             # to the underside rather than as bands cinching a hose.
+             dims={"width":_r*2.32,"height":_r*2.32,"depth":_r*2.32,"units":"relative","confidence":0.65},
              desc={"torusTubeRatio":0.16}, material="machine-grey", topo="assembled-solid",
-             imp=0.4, conf=0.72, why="Ring strap wrapping the pod - a torus is the exact topology.",
+             imp=0.35, conf=0.68,
+             why="Steel band cinching the tube run - a torus is the exact topology.",
              ev=("belly-zone",), det=("d07",), tier="surface")
-comp("manifold-spine", "Plumbing manifold spine", "meso", "detail", "cylinder", "pod-cradle",
-     (-1.05,-0.12,-0.05), rot=(0,0,90*RAD),
+
+comp("manifold-spine", "Plumbing manifold spine", "meso", "detail", "cylinder", "visceral-cavity",
+     (-0.90,-0.04,-0.16), rot=(0,0,90*RAD),
      dims={"width":0.17,"height":3.10,"depth":0.17,"units":"relative","confidence":0.8},
      material="hull-cream", topo="assembled-solid", imp=0.6, conf=0.8,
      why="Straight pipe run above the pods.", ev=("belly-zone",), det=("d16",), tier="structural")
 for cid,cx,cmat in (("manifold-seg-red",-0.95,"accent-red"),("manifold-seg-blue",0.62,"accent-blue"),
                     ("manifold-collar-a",-0.30,"machine-grey"),("manifold-collar-b",0.20,"machine-grey")):
     w = 0.62 if "seg" in cid else 0.16
-    comp(cid, cid.replace("-"," ").title(), "micro", "detail", "cylinder", "pod-cradle",
-         (cx, -0.12, -0.05), rot=(0,0,90*RAD),
+    comp(cid, cid.replace("-"," ").title(), "micro", "detail", "cylinder", "visceral-cavity",
+         (cx, -0.04, -0.16), rot=(0,0,90*RAD),
          dims={"width":0.20,"height":w,"depth":0.20,"units":"relative","confidence":0.75},
          material=cmat, topo="assembled-solid", imp=0.35, conf=0.75,
          why="Banded collar / coloured pipe segment on the manifold run.",
          ev=("belly-zone",), det=("d16",), tier="surface")
-comp("manifold-round-port", "Manifold round port", "micro", "detail", "cylinder", "pod-cradle",
-     (-0.48,-0.38,0.55), rot=(90*RAD,0,0),
+comp("manifold-round-port", "Manifold round port", "micro", "detail", "cylinder", "visceral-cavity",
+     (-0.40,-0.34,0.46), rot=(90*RAD,0,0),
      dims={"width":0.40,"height":0.14,"depth":0.40,"units":"relative","confidence":0.7},
      material="accent-red", topo="assembled-solid", imp=0.4, conf=0.7,
      why="Circular port with a red interior and blue rim.", ev=("belly-zone",), det=("d17",), tier="surface")
@@ -563,14 +590,14 @@ spec["repetitionSystems"] = [
      "realisedBy":"deck-plate-01..08",
      "note":"Linear array. The stock emitter is radial-only, so this system is realised as explicitly "
             "placed components carrying the placement data above."},
-    {"id":"bladder-pods","level":"meso","parent":"pod-cradle","primitive":"capsule","material":"pod-yellow",
-     "count":7,"instanceScale":[0.86,0.80,0.86],
-     "placement":{"mode":"staggered-rows","axis":[1,0,0],"rows":2,"start":[-2.45,-0.66,0.34],"end":[0.12,-0.50,-0.30],"radius":0.0},
-     "realisedBy":"bladder-pod-01..07","note":"Two staggered rows; row 2 is partly occluded in the reference."},
-    {"id":"pod-banding-straps","level":"micro","parent":"pod-cradle","primitive":"torus","material":"machine-grey",
-     "count":14,"instanceScale":[0.68,0.68,0.68],
-     "placement":{"mode":"per-parent-pair","axis":[1,0,0],"offsets":[-0.28,0.28],"radius":0.0},
-     "realisedBy":"pod-strap-01a..07b","note":"Two straps per pod, wrapping the capsule minor axis."},
+    {"id":"visceral-tube-runs","level":"meso","parent":"root","primitive":"tube","material":"pod-yellow",
+     "count":7,"instanceScale":[1,1,1],
+     "placement":{"mode":"serpentine-spines","axis":[1,0,0],"start":[-2.60,-0.96,-0.26],"end":[0.95,-0.42,0.32],"radius":0.0},
+     "realisedBy":"visceral-bundle-01..07","note":"Seven folded tube spines; three fold back on themselves so the bundle reads as viscera."},
+    {"id":"viscera-bands","level":"micro","parent":"root","primitive":"torus","material":"machine-grey",
+     "count":21,"instanceScale":[0.5,0.5,0.5],
+     "placement":{"mode":"along-spine","axis":[1,0,0],"offsets":[0.26,0.58,0.86],"radius":0.0},
+     "realisedBy":"viscera-band-01a..07c","note":"Three bands per tube run, at fractions of arc length."},
     {"id":"radiator-vanes","level":"meso","parent":"stern-bay-housing","primitive":"box","material":"vane-yellow",
      "count":10,"instanceScale":[0.07,0.17,0.78],
      "placement":{"mode":"mirrored-linear-banks","axis":[1,0,0],"banks":2,"bankZ":[0.42,-0.42],
@@ -605,21 +632,21 @@ spec["qualityTargets"] = {
 spec["featureReviewTargets"] = [
     {"id":"macro-silhouette","name":"Macro mass distribution and proportions","tier":"critical",
      "passIds":["blockout"],"minimumScore":0.8,"mustPass":True,
-     "componentRefs":["root","forward-wing","aft-tail-blade","pod-cradle","dorsal-mast-fin"],
+     "componentRefs":["root","root","root","visceral-cavity","dorsal-mast-fin"],
      "evidenceRefs":["full-object"],
      "criteria":"Judged on macro mass only: are all major assemblies present, attached, in the right "
                 "place and the right size relative to each other. Fine outline is out of scope here - "
                 "it is owned by overall-silhouette from form-refinement onward."},
     {"id":"overall-silhouette","name":"Full detailed outline and proportions","tier":"critical",
      "passIds":["form-refinement","surface-pass"],"minimumScore":0.8,"mustPass":True,
-     "componentRefs":["root","forward-wing","aft-tail-blade"],"evidenceRefs":["full-object"],
+     "componentRefs":["root","root","root"],"evidenceRefs":["full-object"],
      "criteria":"Judged on the complete outline once meso and micro components exist."},
     {"id":"dorsal-mast-fin","name":"Folding dorsal mast fin","tier":"critical",
      "passIds":["structural-pass","form-refinement","material-pass"],"minimumScore":0.8,"mustPass":True,
      "componentRefs":["dorsal-mast-fin","mast-inner-machinery","mast-pivot-boss-port"],"evidenceRefs":["mast-zone"]},
-    {"id":"ventral-pod-cluster","name":"Slung bladder pod cluster","tier":"critical",
+    {"id":"ventral-pod-cluster","name":"Visceral tube bundle","tier":"critical",
      "passIds":["structural-pass","form-refinement","material-pass"],"minimumScore":0.8,"mustPass":True,
-     "componentRefs":["pod-cradle","bladder-pod-01","pod-strap-01a"],"evidenceRefs":["belly-zone"]},
+     "componentRefs":["visceral-cavity","visceral-bundle-01","viscera-band-01a"],"evidenceRefs":["belly-zone"]},
     {"id":"stern-drive-bay","name":"Chevron radiator bay and banded nozzle","tier":"critical",
      "passIds":["structural-pass","material-pass","surface-pass"],"minimumScore":0.8,"mustPass":True,
      "componentRefs":["stern-bay-housing","radiator-vane-01","nozzle-ring-red"],"evidenceRefs":["stern-zone"]},
@@ -679,22 +706,29 @@ spec["lightingFromPhoto"] = [
 ]
 spec["animationAnchors"] = [
     {"id":"mast-fold","component":"dorsal-mast-fin","channel":"rotation.z","rangeDeg":[-84,0]},
-    {"id":"pod-jettison","component":"bladder-pod-01","channel":"position","note":"detaches along -Y"},
+    {"id":"viscera-jettison","component":"visceral-bundle-01","channel":"position","note":"detaches along -Y"},
     {"id":"vane-pitch","component":"radiator-vane-01","channel":"rotation.y","rangeDeg":[0,40]},
 ]
 spec["destructionAnchors"] = [
-    {"id":"payload-pods","components":[f"bladder-pod-{i+1:02d}" for i in range(7)],"breakable":True},
+    {"id":"viscera","components":[f"visceral-bundle-{i+1:02d}" for i in range(7)],"breakable":True},
 ]
 
 # ------------------------------------------- localFeatures for detail binding
 EXTRA_FEATURES = {
+    # Both of these live on the hull body. They were separate dict entries keyed "root" and
+    # "aft-tail-blade"; when the tail blade was deleted and its key rewritten to "root", the
+    # duplicate key silently dropped the outline feature and broke the d01 detail binding.
     "root": [{"id": "outline-shell", "kind": "contour",
               "description": "inverted-hull ink contour carried on the outer silhouette AND every "
                              "interior part boundary, matching the reference's drawn line",
-              "outlineWidth": 0.012, "outlineColor": "#1a1410", "detailRefs": ["d01"]}],
-    "pod-cradle": [{"id": "pod-banding-straps", "kind": "fastener",
-                    "description": "two steel banding straps per pod, 14 total, wrapping the capsule minor axis",
-                    "count": 14, "distribution": "per-parent-pair", "headShape": "band", "detailRefs": ["d07"]}],
+              "outlineWidth": 0.012, "outlineColor": "#1a1410", "detailRefs": ["d01"]},
+             {"id": "tail-needle-taper", "kind": "bevel",
+              "description": "trailing taper converging to a needle point; chamfer collapses to zero at the tip",
+              "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.02, "segments": 2},
+              "detailRefs": ["d09"]}],
+    "visceral-cavity": [{"id": "pod-banding-straps", "kind": "fastener",
+                    "description": "three steel bands per tube run, 21 total, cinching the viscera",
+                    "count": 21, "distribution": "along-spine", "headShape": "band", "detailRefs": ["d07"]}],
     "stern-bay-housing": [{"id": "radiator-vane-array", "kind": "linework",
                            "description": "chevron louvre vane array, two mirrored banks of 5 slanted slats",
                            "technique": "engraved-groove", "count": 10, "detailRefs": ["d10"]}],
@@ -713,9 +747,6 @@ EXTRA_FEATURES = {
     "canopy-blister": [{"id": "canopy-slash-highlight", "kind": "gloss",
                         "description": "hard painted white slash on the glazing, drawn not simulated",
                         "roughness": 0.08, "detailRefs": ["d01"]}],
-    "aft-tail-blade": [{"id": "tail-needle-taper", "kind": "bevel",
-                        "description": "trailing taper converging to a needle point; chamfer collapses to zero at the tip",
-                        "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.02, "segments": 2}, "detailRefs": ["d09"]}],
 }
 _by_id = {c["id"]: c for c in COMPS}
 for cid, feats in EXTRA_FEATURES.items():
