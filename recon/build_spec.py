@@ -60,7 +60,7 @@ spec["silhouette"] = {
     "dominantCurves": [
         "traced dorsal deck line falling from Y=0.52 at the snout to Y=0.02 at the tail tip",
         "grey ventral chin descending to Y=-1.05 near X=-2.2",
-        "folded, self-crossing tube runs filling the belly cavity",
+        "tube runs folded into vertical down-hanging lobes filling the belly cavity",
     ],
     "negativeSpaces": [
         "recessed stern drive bay between hull spine and tail blade",
@@ -83,7 +83,7 @@ spec["viewEvidence"] = [
     {"id": "mast-zone", "view": "detail", "imageRegion": {"x": 0.355, "y": 0.060, "width": 0.135, "height": 0.390, "units": "normalized"},
      "observations": ["tapered mast fin", "exposed grey machinery, yellow ladder rack, teal strip, red block", "twin gold pivot bosses", "faceted base housing with diamond hatch"], "confidence": 0.92},
     {"id": "belly-zone", "view": "detail", "imageRegion": {"x": 0.295, "y": 0.440, "width": 0.325, "height": 0.295, "units": "normalized"},
-     "observations": ["packed mass of folded, self-crossing tubes reading as intestines", "steel cinch bands", "plumbing manifold with red/blue/white segments", "circular red-and-blue port"], "confidence": 0.90},
+     "observations": ["packed mass of tubes folded into vertical down-hanging lobes, reading as intestines", "steel cinch bands", "plumbing manifold with red/blue/white segments", "circular red-and-blue port"], "confidence": 0.90},
     {"id": "stern-zone", "view": "detail", "imageRegion": {"x": 0.655, "y": 0.440, "width": 0.195, "height": 0.200, "units": "normalized"},
      "observations": ["chevron louvre vane array", "triangular concentric nozzle", "blue bay trim"], "confidence": 0.93},
 ]
@@ -302,7 +302,7 @@ comp("root", "Hull body", "macro", "body", "extrude", None, (0,0,-0.43),
           "Profile TRACED from the reference silhouette rather than inferred. There is NO delta "
           "planform: the wide bright planes in the reference are this narrow body's own "
           "overlapping armour plating seen at a shallow angle, not wings extending laterally."),
-     feats=[{"id":"deck-plate-ridges","kind":"seam","description":"raised chordwise plate ridges dividing the deck into 8 panels","detailRefs":["d05"]},
+     feats=[{"id":"deck-plate-ridges","kind":"seam","description":"15 transverse plate seams dividing the hull into bands along its length","detailRefs":["d05"]},
             {"id":"spar-rivet-rows","kind":"fastener","description":"fastener dot rows along the flank rails","detailRefs":["d04"]}],
      ev=("full-object","bow-zone"), det=("d02","d03","d05","d18"), tier="blockout")
 
@@ -385,19 +385,45 @@ comp("bow-fairing", "Bow nose fairing", "meso", "detail", "cone", "root", (-3.52
 for i, xz in enumerate([0.47, -0.47]):
     side = "stbd" if xz > 0 else "port"
     comp(f"hull-flank-rail-{side}", f"Hull flank rail ({side})", "meso", "structure", "box", "root",
-         (-0.30, 0.17, xz), dims={"width":8.6,"height":0.09,"depth":0.08,"units":"relative","confidence":0.7},
+         (-0.30, 0.17, xz), dims={"width":8.6,"height":0.045,"depth":0.05,"units":"relative","confidence":0.7},
          material="hull-grey", topo="assembled-solid",
-         why="Straight extruded rail catching the reference's continuous dark flank line.",
+         why=("The one genuinely fore-aft line in the reference. Kept thin so it does not "
+              "compete with the transverse banding, which is the dominant rhythm."),
          ev=("full-object",), det=("d04",))
-# dorsal deck plates (repetition system 1, realised as explicit placed components)
-for i in range(8):
-    x = -2.75 + i * 0.72
-    comp(f"deck-plate-{i+1:02d}", f"Dorsal deck plate {i+1}", "meso", "panel", "box", "root",
-         (x, 0.455 - abs(x) * 0.018, 0.0),
-         dims={"width":0.66,"height":0.035,"depth":max(0.26, 0.95 - abs(x)*0.12),"units":"relative","confidence":0.7},
-         topo="assembled-solid", imp=0.45, conf=0.72,
-         why="Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+# Armour banding. The reference's plate seams run TRANSVERSELY - near-vertical lines crossing
+# the hull that divide it into bands along its length, with each plate stepping over the next.
+# The previous pass laid flat plates along the deck and relied on a texture grid, which read as
+# horizontal striping: the exact opposite rhythm.
+def _hull_span_at(x):
+    """Top and bottom of the traced HULL profile at station x."""
+    half = len(HULL) // 2
+    top, bot = HULL[:half + 1], HULL[half + 1:][::-1]
+    def _interp(chain):
+        pts = sorted(chain)
+        if x <= pts[0][0]: return pts[0][1]
+        if x >= pts[-1][0]: return pts[-1][1]
+        for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+            if xa <= x <= xb:
+                t = 0.0 if xb == xa else (x - xa) / (xb - xa)
+                return ya + (yb - ya) * t
+        return pts[-1][1]
+    return _interp(top), _interp(bot)
+
+BAND_X = [-4.35, -3.85, -3.35, -2.85, -2.35, -1.15, -0.60, -0.05,
+          0.50, 1.05, 1.95, 2.45, 2.95, 3.45, 3.95]
+for _i, _bx in enumerate(BAND_X):
+    _t, _b = _hull_span_at(_bx)
+    _h = max(0.09, (_t - _b) * 0.90)   # stop short of the deck line: a seam, not a rib
+    comp(f"armour-band-{_i+1:02d}", f"Armour band {_i+1}", "meso", "panel", "box", "root",
+         (_bx, (_t + _b) / 2.0, 0.0),
+         dims={"width":0.055,"height":round(_h, 3),"depth":0.885,"units":"relative","confidence":0.72},
+         topo="assembled-solid", imp=0.45, conf=0.75,
+         why=("Transverse plate seam across the hull section - the reference's dominant surface "
+              "rhythm. Real geometry rather than texture so the direction holds from every "
+              "angle, but kept barely proud of the flank and short of the deck line: at full "
+              "section height and 0.085 thick these read as scaffolding ribs, not plating."),
          ev=("full-object",), det=("d05",), tier="structural")
+
 comp("wing-leading-spar", "Bow plane spar", "meso", "structure", "box", "root", (-3.66,0.10,0),
      dims={"width":1.45,"height":0.08,"depth":1.32,"units":"relative","confidence":0.55},
      material="hull-grey", topo="assembled-solid", scale=[1,1,1],
@@ -450,47 +476,48 @@ comp("mast-base-housing", "Mast base housing", "meso", "structure", "extrude", "
 # belly, cinched at intervals by steel bands, with the hard plumbing running above it. The
 # previous pass modelled seven neat capsules in two rows, which gets the character exactly
 # backwards: the identity cue here is organic disorder set against the hard hull.
-def _coil(phase, x0, x1, y0, z0, amp_y, amp_z, n=14, fold=None):
-    """Serpentine tube spine. `fold` turns the run back on itself part-way through, which is
-    what makes the bundle read as viscera rather than as a row of parallel hoses."""
+def _gut(phase, x0, x1, y_top, z0, lobes, depth, z_amp, n=44):
+    """A tube folded into VERTICAL lobes: it plunges, turns at the bottom, climbs back, then
+    advances a little and repeats. The reference's underside is a row of down-pointing lobes
+    with deep notches between them, so the dominant axis of motion is up-down, NOT along the
+    hull. An earlier version undulated gently while travelling fore-aft, which read as flat
+    horizontal ribbons instead of packed viscera."""
     pts = []
     for k in range(n):
         u = k / (n - 1)
         x = x0 + (x1 - x0) * u
-        if fold is not None and u > fold:
-            v = (u - fold) / (1.0 - fold)
-            x = x0 + (x1 - x0) * fold - (x1 - x0) * 0.55 * v
-        pts.append([round(x, 3),
-                    round(y0 + amp_y * math.sin(phase + u * 5.6), 3),
-                    round(z0 + amp_z * math.sin(phase * 1.7 + u * 4.1), 3)])
+        # 1-cos gives a lobe that hangs DOWN from the cavity mouth and returns to it
+        y = y_top - depth * (1.0 - math.cos(u * 2.0 * math.pi * lobes + phase)) * 0.5
+        z = z0 + z_amp * math.sin(u * 2.0 * math.pi * lobes * 0.5 + phase * 1.3)
+        pts.append([round(x, 3), round(y, 3), round(z, 3)])
     return pts
 
-COILS = [
-    # phase   x0     x1     y0     z0    ampY  ampZ  radius fold
-    (0.0,  -2.45,  0.90, -0.60,  0.22, 0.24, 0.14, 0.30, None),
-    (1.1,  -2.30,  0.75, -0.78,  0.06, 0.22, 0.17, 0.32, 0.62),
-    (2.3,  -2.50,  0.85, -0.66, -0.14, 0.26, 0.15, 0.29, None),
-    (3.4,  -2.20,  0.65, -0.82, -0.24, 0.20, 0.13, 0.31, 0.70),
-    (4.6,  -2.40,  0.80, -0.54,  0.00, 0.23, 0.19, 0.27, None),
-    (5.7,  -2.10,  0.55, -0.84,  0.18, 0.19, 0.15, 0.28, 0.58),
-    (0.6,  -1.85,  0.90, -0.46,  0.26, 0.17, 0.11, 0.25, None),
+GUTS = [
+    # phase  x0     x1    y_top   z0    lobes depth z_amp radius
+    (0.00, -2.45,  0.30, -0.18,  0.18, 1.8, 0.84, 0.09, 0.30),
+    (2.40, -1.55,  0.85, -0.20,  0.00, 1.6, 0.70, 0.11, 0.32),
+    (4.10, -2.55, -0.20, -0.16, -0.18, 1.4, 0.92, 0.08, 0.29),
+    (1.05, -0.95,  0.80, -0.22, -0.24, 1.3, 0.62, 0.12, 0.31),
+    (5.30, -2.20,  0.55, -0.17,  0.28, 2.3, 0.78, 0.10, 0.26),
+    (3.15, -1.90,  0.10, -0.24,  0.10, 1.2, 0.58, 0.09, 0.27),
 ]
-for _i, (_ph, _x0, _x1, _y0, _z0, _ay, _az, _r, _fold) in enumerate(COILS):
-    _pts = _coil(_ph, _x0, _x1, _y0, _z0, _ay, _az, fold=_fold)
+for _i, (_ph, _x0, _x1, _yt, _z0, _lobes, _depth, _zamp, _r) in enumerate(GUTS):
+    _pts = _gut(_ph, _x0, _x1, _yt, _z0, _lobes, _depth, _zamp)
     comp(f"visceral-bundle-{_i+1:02d}", f"Visceral tube run {_i+1}", "meso", "payload", "tube",
          "root", (0, 0, 0),
          desc={"tubePath": {"points": _pts, "radius": _r, "radialSegments": 12, "closed": False}},
          topo="continuous-sculpt", material="pod-yellow", imp=0.85, conf=0.70,
-         why=("Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold "
-              "back on itself, and that fold is precisely what makes the reference's underside "
-              "read as viscera instead of as cargo tanks."),
+         why=("Soft tube folded into vertical lobes. The reference's underside is a row of "
+              "down-pointing lobes with deep notches between them - the tube plunges, turns at "
+              "the bottom and climbs back before advancing. A capsule cannot do that, and a "
+              "gently undulating fore-aft run reads as a flat ribbon, not as packed viscera."),
          ev=("belly-zone",), det=("d06","d07"), tier="structural",
          action={"animationRole":"detachable","pivot":{"mode":"local-origin","offset":[0,0,0]},
                  "transformChannels":{"translate":True,"rotate":True,"scale":False},
                  "sockets":[{"id":f"viscera-mount-{_i+1:02d}","localPosition":[0,0,0],"localRotation":[0,0,0]}],
                  "collider":{"type":"capsule","fit":"loose"},"constraints":[],
                  "destruction":{"breakable":True,"group":"viscera"}})
-    for _b, _u in enumerate((0.26, 0.58, 0.86)):
+    for _b, _u in enumerate((0.14, 0.44, 0.74)):
         _pt = _pts[int(_u * (len(_pts) - 1))]
         comp(f"viscera-band-{_i+1:02d}{'abc'[_b]}", f"Viscera band {_i+1}{'abc'[_b]}", "micro",
              "detail", "torus", "root", (_pt[0], _pt[1], _pt[2]), rot=(0, 0, 90*RAD),
@@ -584,20 +611,21 @@ spec["componentTree"] = COMPS
 
 # ------------------------------------------------------- repetition systems
 spec["repetitionSystems"] = [
-    {"id":"dorsal-deck-plates","level":"meso","parent":"root","primitive":"box","material":"hull-cream",
-     "count":8,"instanceScale":[0.66,0.035,0.86],
-     "placement":{"mode":"linear","axis":[1,0,0],"start":[-2.75,0.455,0.0],"end":[2.29,0.365,0.0],"radius":0.0},
-     "realisedBy":"deck-plate-01..08",
-     "note":"Linear array. The stock emitter is radial-only, so this system is realised as explicitly "
-            "placed components carrying the placement data above."},
+    {"id":"transverse-armour-bands","level":"meso","parent":"root","primitive":"box","material":"hull-cream",
+     "count":15,"instanceScale":[0.055,1.0,0.885],
+     "placement":{"mode":"linear-transverse","axis":[1,0,0],"start":[-4.35,0.0,0.0],"end":[3.95,0.0,0.0],"radius":0.0,
+                  "heightRule":"spans the traced hull section at each station"},
+     "realisedBy":"armour-band-01..15",
+     "note":"Transverse seams, not fore-aft strips: the reference divides the hull into bands "
+            "ALONG its length. Realised as explicitly placed components because the stock emitter is radial-only."},
     {"id":"visceral-tube-runs","level":"meso","parent":"root","primitive":"tube","material":"pod-yellow",
-     "count":7,"instanceScale":[1,1,1],
-     "placement":{"mode":"serpentine-spines","axis":[1,0,0],"start":[-2.60,-0.96,-0.26],"end":[0.95,-0.42,0.32],"radius":0.0},
-     "realisedBy":"visceral-bundle-01..07","note":"Seven folded tube spines; three fold back on themselves so the bundle reads as viscera."},
+     "count":6,"instanceScale":[1,1,1],
+     "placement":{"mode":"vertical-lobes","axis":[0,1,0],"lobesPerRun":[1.2,2.3],"lobeDepth":[0.58,0.92],"start":[-2.55,-0.24,-0.26],"end":[0.85,-0.16,0.30],"radius":0.0},
+     "realisedBy":"visceral-bundle-01..06","note":"Six tube spines folded into 1.2-2.3 VERTICAL lobes each, deliberately unequal in count, depth and span so the bundle does not read as a regular coiled spring."},
     {"id":"viscera-bands","level":"micro","parent":"root","primitive":"torus","material":"machine-grey",
-     "count":21,"instanceScale":[0.5,0.5,0.5],
+     "count":18,"instanceScale":[0.5,0.5,0.5],
      "placement":{"mode":"along-spine","axis":[1,0,0],"offsets":[0.26,0.58,0.86],"radius":0.0},
-     "realisedBy":"viscera-band-01a..07c","note":"Three bands per tube run, at fractions of arc length."},
+     "realisedBy":"viscera-band-01a..06c","note":"Three bands per tube run, at fractions of arc length."},
     {"id":"radiator-vanes","level":"meso","parent":"stern-bay-housing","primitive":"box","material":"vane-yellow",
      "count":10,"instanceScale":[0.07,0.17,0.78],
      "placement":{"mode":"mirrored-linear-banks","axis":[1,0,0],"banks":2,"bankZ":[0.42,-0.42],
@@ -710,7 +738,7 @@ spec["animationAnchors"] = [
     {"id":"vane-pitch","component":"radiator-vane-01","channel":"rotation.y","rangeDeg":[0,40]},
 ]
 spec["destructionAnchors"] = [
-    {"id":"viscera","components":[f"visceral-bundle-{i+1:02d}" for i in range(7)],"breakable":True},
+    {"id":"viscera","components":[f"visceral-bundle-{i+1:02d}" for i in range(6)],"breakable":True},
 ]
 
 # ------------------------------------------- localFeatures for detail binding
@@ -727,8 +755,8 @@ EXTRA_FEATURES = {
               "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.02, "segments": 2},
               "detailRefs": ["d09"]}],
     "visceral-cavity": [{"id": "pod-banding-straps", "kind": "fastener",
-                    "description": "three steel bands per tube run, 21 total, cinching the viscera",
-                    "count": 21, "distribution": "along-spine", "headShape": "band", "detailRefs": ["d07"]}],
+                    "description": "three steel bands per tube run, 18 total, cinching the viscera",
+                    "count": 18, "distribution": "along-spine", "headShape": "band", "detailRefs": ["d07"]}],
     "stern-bay-housing": [{"id": "radiator-vane-array", "kind": "linework",
                            "description": "chevron louvre vane array, two mirrored banks of 5 slanted slats",
                            "technique": "engraved-groove", "count": 10, "detailRefs": ["d10"]}],

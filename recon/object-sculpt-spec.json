@@ -1056,7 +1056,7 @@
     "dominantCurves": [
       "traced dorsal deck line falling from Y=0.52 at the snout to Y=0.02 at the tail tip",
       "grey ventral chin descending to Y=-1.05 near X=-2.2",
-      "folded, self-crossing tube runs filling the belly cavity"
+      "tube runs folded into vertical down-hanging lobes filling the belly cavity"
     ],
     "negativeSpaces": [
       "recessed stern drive bay between hull spine and tail blade",
@@ -1169,7 +1169,7 @@
         "units": "normalized"
       },
       "observations": [
-        "packed mass of folded, self-crossing tubes reading as intestines",
+        "packed mass of tubes folded into vertical down-hanging lobes, reading as intestines",
         "steel cinch bands",
         "plumbing manifold with red/blue/white segments",
         "circular red-and-blue port"
@@ -1384,7 +1384,7 @@
         {
           "id": "deck-plate-ridges",
           "kind": "seam",
-          "description": "raised chordwise plate ridges dividing the deck into 8 panels",
+          "description": "15 transverse plate seams dividing the hull into bands along its length",
           "detailRefs": [
             "d05"
           ]
@@ -2642,8 +2642,8 @@
         {
           "id": "pod-banding-straps",
           "kind": "fastener",
-          "description": "three steel bands per tube run, 21 total, cinching the viscera",
-          "count": 21,
+          "description": "three steel bands per tube run, 18 total, cinching the viscera",
+          "count": 18,
           "distribution": "along-spine",
           "headShape": "band",
           "detailRefs": [
@@ -3136,7 +3136,7 @@
       "confidence": 0.7,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Straight extruded rail catching the reference's continuous dark flank line.",
+      "topologyRationale": "The one genuinely fore-aft line in the reference. Kept thin so it does not compete with the transverse banding, which is the dominant rhythm.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -3173,8 +3173,8 @@
       },
       "dimensions": {
         "width": 8.6,
-        "height": 0.09,
-        "depth": 0.08,
+        "height": 0.045,
+        "depth": 0.05,
         "units": "relative",
         "confidence": 0.7
       },
@@ -3275,7 +3275,7 @@
       "confidence": 0.7,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Straight extruded rail catching the reference's continuous dark flank line.",
+      "topologyRationale": "The one genuinely fore-aft line in the reference. Kept thin so it does not compete with the transverse banding, which is the dominant rhythm.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -3312,8 +3312,8 @@
       },
       "dimensions": {
         "width": 8.6,
-        "height": 0.09,
-        "depth": 0.08,
+        "height": 0.045,
+        "depth": 0.05,
         "units": "relative",
         "confidence": 0.7
       },
@@ -3405,16 +3405,16 @@
       }
     },
     {
-      "id": "deck-plate-01",
-      "name": "Dorsal deck plate 1",
+      "id": "armour-band-01",
+      "name": "Armour band 1",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -3429,16 +3429,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-01-mount",
+        "parentSocket": "root/armour-band-01-mount",
         "structuralParent": "root",
         "localStart": [
-          -2.75,
-          0.406,
+          -4.35,
+          0.217,
           0.475
         ],
         "localEnd": [
-          -2.75,
-          0.406,
+          -4.35,
+          0.217,
           0.475
         ],
         "contactType": "overlap",
@@ -3450,16 +3450,16 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.62,
+        "width": 0.055,
+        "height": 0.469,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          -2.75,
-          0.4055,
+          -4.35,
+          0.21687499999999996,
           0.475
         ],
         "rotation": [
@@ -3544,16 +3544,16 @@
       }
     },
     {
-      "id": "deck-plate-02",
-      "name": "Dorsal deck plate 2",
+      "id": "armour-band-02",
+      "name": "Armour band 2",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -3568,16 +3568,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-02-mount",
+        "parentSocket": "root/armour-band-02-mount",
         "structuralParent": "root",
         "localStart": [
-          -2.03,
-          0.418,
+          -3.85,
+          0.186,
           0.475
         ],
         "localEnd": [
-          -2.03,
-          0.418,
+          -3.85,
+          0.186,
           0.475
         ],
         "contactType": "overlap",
@@ -3589,16 +3589,16 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.7063999999999999,
+        "width": 0.055,
+        "height": 0.576,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          -2.0300000000000002,
-          0.41846,
+          -3.85,
+          0.185625,
           0.475
         ],
         "rotation": [
@@ -3683,16 +3683,16 @@
       }
     },
     {
-      "id": "deck-plate-03",
-      "name": "Dorsal deck plate 3",
+      "id": "armour-band-03",
+      "name": "Armour band 3",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -3707,16 +3707,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-03-mount",
+        "parentSocket": "root/armour-band-03-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.31,
-          0.431,
+          -3.35,
+          0.154,
           0.475
         ],
         "localEnd": [
-          -1.31,
-          0.431,
+          -3.35,
+          0.154,
           0.475
         ],
         "contactType": "overlap",
@@ -3728,16 +3728,16 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.7928,
+        "width": 0.055,
+        "height": 0.633,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          -1.31,
-          0.43142,
+          -3.35,
+          0.1541954022988506,
           0.475
         ],
         "rotation": [
@@ -3822,16 +3822,16 @@
       }
     },
     {
-      "id": "deck-plate-04",
-      "name": "Dorsal deck plate 4",
+      "id": "armour-band-04",
+      "name": "Armour band 4",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -3846,16 +3846,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-04-mount",
+        "parentSocket": "root/armour-band-04-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.59,
-          0.444,
+          -2.85,
+          0.123,
           0.475
         ],
         "localEnd": [
-          -0.59,
-          0.444,
+          -2.85,
+          0.123,
           0.475
         ],
         "contactType": "overlap",
@@ -3867,16 +3867,16 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.8792,
+        "width": 0.055,
+        "height": 0.638,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          -0.5899999999999999,
-          0.44438,
+          -2.85,
+          0.12258620689655172,
           0.475
         ],
         "rotation": [
@@ -3961,16 +3961,16 @@
       }
     },
     {
-      "id": "deck-plate-05",
-      "name": "Dorsal deck plate 5",
+      "id": "armour-band-05",
+      "name": "Armour band 5",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -3985,16 +3985,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-05-mount",
+        "parentSocket": "root/armour-band-05-mount",
         "structuralParent": "root",
         "localStart": [
+          -2.35,
           0.13,
-          0.453,
           0.475
         ],
         "localEnd": [
+          -2.35,
           0.13,
-          0.453,
           0.475
         ],
         "contactType": "overlap",
@@ -4006,16 +4006,16 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.9344,
+        "width": 0.055,
+        "height": 0.635,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          0.1299999999999999,
-          0.45266,
+          -2.35,
+          0.13011363636363635,
           0.475
         ],
         "rotation": [
@@ -4100,16 +4100,16 @@
       }
     },
     {
-      "id": "deck-plate-06",
-      "name": "Dorsal deck plate 6",
+      "id": "armour-band-06",
+      "name": "Armour band 6",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -4124,16 +4124,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-06-mount",
+        "parentSocket": "root/armour-band-06-mount",
         "structuralParent": "root",
         "localStart": [
-          0.85,
-          0.44,
+          -1.15,
+          0.166,
           0.475
         ],
         "localEnd": [
-          0.85,
-          0.44,
+          -1.15,
+          0.166,
           0.475
         ],
         "contactType": "overlap",
@@ -4145,16 +4145,16 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.848,
+        "width": 0.055,
+        "height": 0.63,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          0.8499999999999996,
-          0.43970000000000004,
+          -1.15,
+          0.16609195402298854,
           0.475
         ],
         "rotation": [
@@ -4239,16 +4239,16 @@
       }
     },
     {
-      "id": "deck-plate-07",
-      "name": "Dorsal deck plate 7",
+      "id": "armour-band-07",
+      "name": "Armour band 7",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -4263,16 +4263,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-07-mount",
+        "parentSocket": "root/armour-band-07-mount",
         "structuralParent": "root",
         "localStart": [
-          1.57,
-          0.427,
+          -0.6,
+          0.161,
           0.475
         ],
         "localEnd": [
-          1.57,
-          0.427,
+          -0.6,
+          0.161,
           0.475
         ],
         "contactType": "overlap",
@@ -4284,16 +4284,16 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.7615999999999999,
+        "width": 0.055,
+        "height": 0.614,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          1.5700000000000003,
-          0.42674,
+          -0.6,
+          0.16136363636363635,
           0.475
         ],
         "rotation": [
@@ -4378,16 +4378,16 @@
       }
     },
     {
-      "id": "deck-plate-08",
-      "name": "Dorsal deck plate 8",
+      "id": "armour-band-08",
+      "name": "Armour band 8",
       "level": "meso",
       "role": "panel",
       "logicalParent": "root",
       "importance": 0.45,
-      "confidence": 0.72,
+      "confidence": 0.75,
       "primitive": "box",
       "topologyClass": "assembled-solid",
-      "topologyRationale": "Flat plate panel; the reference deck is divided by raised chordwise ridges.",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -4402,16 +4402,16 @@
       "parent": "root",
       "attachment": {
         "parentId": "root",
-        "parentSocket": "root/deck-plate-08-mount",
+        "parentSocket": "root/armour-band-08-mount",
         "structuralParent": "root",
         "localStart": [
-          2.29,
-          0.414,
+          -0.05,
+          0.147,
           0.475
         ],
         "localEnd": [
-          2.29,
-          0.414,
+          -0.05,
+          0.147,
           0.475
         ],
         "contactType": "overlap",
@@ -4423,16 +4423,989 @@
         ]
       },
       "dimensions": {
-        "width": 0.66,
-        "height": 0.035,
-        "depth": 0.6752,
+        "width": 0.055,
+        "height": 0.593,
+        "depth": 0.885,
         "units": "relative",
-        "confidence": 0.7
+        "confidence": 0.72
       },
       "transform": {
         "position": [
-          2.29,
-          0.41378000000000004,
+          -0.05,
+          0.1471264367816092,
+          0.475
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "hull-cream",
+      "materialLayers": [
+        "hull-cream"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [
+        "d05"
+      ],
+      "fidelityTier": "structural",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
+        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.72,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(248, 244, 217, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(252, 247, 225, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "armour-band-09",
+      "name": "Armour band 9",
+      "level": "meso",
+      "role": "panel",
+      "logicalParent": "root",
+      "importance": 0.45,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/armour-band-09-mount",
+        "structuralParent": "root",
+        "localStart": [
+          0.5,
+          0.116,
+          0.475
+        ],
+        "localEnd": [
+          0.5,
+          0.116,
+          0.475
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "width": 0.055,
+        "height": 0.582,
+        "depth": 0.885,
+        "units": "relative",
+        "confidence": 0.72
+      },
+      "transform": {
+        "position": [
+          0.5,
+          0.11551724137931035,
+          0.475
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "hull-cream",
+      "materialLayers": [
+        "hull-cream"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [
+        "d05"
+      ],
+      "fidelityTier": "structural",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
+        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.72,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(248, 244, 217, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(252, 247, 225, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "armour-band-10",
+      "name": "Armour band 10",
+      "level": "meso",
+      "role": "panel",
+      "logicalParent": "root",
+      "importance": 0.45,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/armour-band-10-mount",
+        "structuralParent": "root",
+        "localStart": [
+          1.05,
+          0.071,
+          0.475
+        ],
+        "localEnd": [
+          1.05,
+          0.071,
+          0.475
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "width": 0.055,
+        "height": 0.593,
+        "depth": 0.885,
+        "units": "relative",
+        "confidence": 0.72
+      },
+      "transform": {
+        "position": [
+          1.05,
+          0.07136363636363635,
+          0.475
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "hull-cream",
+      "materialLayers": [
+        "hull-cream"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [
+        "d05"
+      ],
+      "fidelityTier": "structural",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
+        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.72,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(248, 244, 217, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(252, 247, 225, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "armour-band-11",
+      "name": "Armour band 11",
+      "level": "meso",
+      "role": "panel",
+      "logicalParent": "root",
+      "importance": 0.45,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/armour-band-11-mount",
+        "structuralParent": "root",
+        "localStart": [
+          1.95,
+          0.007,
+          0.475
+        ],
+        "localEnd": [
+          1.95,
+          0.007,
+          0.475
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "width": 0.055,
+        "height": 0.599,
+        "depth": 0.885,
+        "units": "relative",
+        "confidence": 0.72
+      },
+      "transform": {
+        "position": [
+          1.95,
+          0.0065517241379310365,
+          0.475
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "hull-cream",
+      "materialLayers": [
+        "hull-cream"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [
+        "d05"
+      ],
+      "fidelityTier": "structural",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
+        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.72,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(248, 244, 217, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(252, 247, 225, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "armour-band-12",
+      "name": "Armour band 12",
+      "level": "meso",
+      "role": "panel",
+      "logicalParent": "root",
+      "importance": 0.45,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/armour-band-12-mount",
+        "structuralParent": "root",
+        "localStart": [
+          2.45,
+          0.001,
+          0.475
+        ],
+        "localEnd": [
+          2.45,
+          0.001,
+          0.475
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "width": 0.055,
+        "height": 0.547,
+        "depth": 0.885,
+        "units": "relative",
+        "confidence": 0.72
+      },
+      "transform": {
+        "position": [
+          2.45,
+          0.0008045977011494343,
+          0.475
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "hull-cream",
+      "materialLayers": [
+        "hull-cream"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [
+        "d05"
+      ],
+      "fidelityTier": "structural",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
+        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.72,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(248, 244, 217, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(252, 247, 225, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "armour-band-13",
+      "name": "Armour band 13",
+      "level": "meso",
+      "role": "panel",
+      "logicalParent": "root",
+      "importance": 0.45,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/armour-band-13-mount",
+        "structuralParent": "root",
+        "localStart": [
+          2.95,
+          0.005,
+          0.475
+        ],
+        "localEnd": [
+          2.95,
+          0.005,
+          0.475
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "width": 0.055,
+        "height": 0.452,
+        "depth": 0.885,
+        "units": "relative",
+        "confidence": 0.72
+      },
+      "transform": {
+        "position": [
+          2.95,
+          0.004886363636363633,
+          0.475
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "hull-cream",
+      "materialLayers": [
+        "hull-cream"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [
+        "d05"
+      ],
+      "fidelityTier": "structural",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
+        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.72,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(248, 244, 217, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(252, 247, 225, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "armour-band-14",
+      "name": "Armour band 14",
+      "level": "meso",
+      "role": "panel",
+      "logicalParent": "root",
+      "importance": 0.45,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/armour-band-14-mount",
+        "structuralParent": "root",
+        "localStart": [
+          3.45,
+          0.01,
+          0.475
+        ],
+        "localEnd": [
+          3.45,
+          0.01,
+          0.475
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "width": 0.055,
+        "height": 0.348,
+        "depth": 0.885,
+        "units": "relative",
+        "confidence": 0.72
+      },
+      "transform": {
+        "position": [
+          3.45,
+          0.00971264367816091,
+          0.475
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "local-origin",
+          "offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "fit": "tight"
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "material": "hull-cream",
+      "materialLayers": [
+        "hull-cream"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.1,
+        "microRoughness": 0.05,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "cavity-seams",
+        "edgeWearPattern": "",
+        "notes": "Cel target: relief is carried by real geometry, not maps."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [
+        "d05"
+      ],
+      "fidelityTier": "structural",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(248, 244, 217, 1.0)",
+        "secondaryAlbedo": "rgba(252, 247, 225, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.72,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(248, 244, 217, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(252, 247, 225, 1.0)"
+            }
+          ],
+          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
+        },
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
+      }
+    },
+    {
+      "id": "armour-band-15",
+      "name": "Armour band 15",
+      "level": "meso",
+      "role": "panel",
+      "logicalParent": "root",
+      "importance": 0.45,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Transverse plate seam across the hull section - the reference's dominant surface rhythm. Real geometry rather than texture so the direction holds from every angle, but kept barely proud of the flank and short of the deck line: at full section height and 0.085 thick these read as scaffolding ribs, not plating.",
+      "geometryDescriptor": {
+        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.012,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "root/armour-band-15-mount",
+        "structuralParent": "root",
+        "localStart": [
+          3.95,
+          0.007,
+          0.475
+        ],
+        "localEnd": [
+          3.95,
+          0.007,
+          0.475
+        ],
+        "contactType": "overlap",
+        "overlap": 0.04,
+        "gapTolerance": 0.004,
+        "contactGeometry": "face-region (zero-length span: not a strut)",
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "width": 0.055,
+        "height": 0.229,
+        "depth": 0.885,
+        "units": "relative",
+        "confidence": 0.72
+      },
+      "transform": {
+        "position": [
+          3.95,
+          0.006839080459770108,
           0.475
         ],
         "rotation": [
@@ -5859,7 +6832,7 @@
       "confidence": 0.7,
       "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
+      "topologyRationale": "Soft tube folded into vertical lobes. The reference's underside is a row of down-pointing lobes with deep notches between them - the tube plunges, turns at the bottom and climbs back before advancing. A capsule cannot do that, and a gently undulating fore-aft run reads as a flat ribbon, not as packed viscera.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -5874,73 +6847,223 @@
           "points": [
             [
               -2.45,
-              -0.6,
-              0.22
+              -0.18,
+              0.18
             ],
             [
-              -2.192,
-              -0.5,
+              -2.386,
+              -0.194,
+              0.192
+            ],
+            [
+              -2.322,
+              -0.237,
+              0.203
+            ],
+            [
+              -2.258,
+              -0.304,
+              0.215
+            ],
+            [
+              -2.194,
+              -0.392,
+              0.225
+            ],
+            [
+              -2.13,
+              -0.494,
+              0.235
+            ],
+            [
+              -2.066,
+              -0.603,
+              0.244
+            ],
+            [
+              -2.002,
+              -0.712,
+              0.252
+            ],
+            [
+              -1.938,
+              -0.814,
+              0.258
+            ],
+            [
+              -1.874,
+              -0.9,
               0.263
             ],
             [
-              -1.935,
-              -0.418,
-              0.303
+              -1.81,
+              -0.966,
+              0.267
             ],
             [
-              -1.677,
-              -0.369,
-              0.334
+              -1.747,
+              -1.007,
+              0.269
             ],
             [
-              -1.419,
-              -0.363,
-              0.353
+              -1.683,
+              -1.02,
+              0.27
             ],
             [
-              -1.162,
-              -0.4,
-              0.36
+              -1.619,
+              -1.004,
+              0.269
             ],
             [
-              -0.904,
-              -0.473,
-              0.353
+              -1.555,
+              -0.96,
+              0.267
             ],
             [
-              -0.646,
-              -0.57,
-              0.333
+              -1.491,
+              -0.892,
+              0.263
             ],
             [
-              -0.388,
-              -0.672,
-              0.301
+              -1.427,
+              -0.803,
+              0.258
             ],
             [
-              -0.131,
-              -0.761,
-              0.262
+              -1.363,
+              -0.7,
+              0.251
             ],
             [
-              0.127,
-              -0.821,
-              0.218
+              -1.299,
+              -0.591,
+              0.243
             ],
             [
-              0.385,
-              -0.84,
-              0.175
+              -1.235,
+              -0.482,
+              0.234
             ],
             [
-              0.642,
-              -0.815,
-              0.136
+              -1.171,
+              -0.381,
+              0.224
             ],
             [
-              0.9,
-              -0.752,
-              0.105
+              -1.107,
+              -0.296,
+              0.213
+            ],
+            [
+              -1.043,
+              -0.231,
+              0.202
+            ],
+            [
+              -0.979,
+              -0.191,
+              0.19
+            ],
+            [
+              -0.915,
+              -0.18,
+              0.179
+            ],
+            [
+              -0.851,
+              -0.198,
+              0.167
+            ],
+            [
+              -0.787,
+              -0.243,
+              0.155
+            ],
+            [
+              -0.723,
+              -0.313,
+              0.144
+            ],
+            [
+              -0.659,
+              -0.403,
+              0.134
+            ],
+            [
+              -0.595,
+              -0.506,
+              0.124
+            ],
+            [
+              -0.531,
+              -0.615,
+              0.115
+            ],
+            [
+              -0.467,
+              -0.724,
+              0.108
+            ],
+            [
+              -0.403,
+              -0.824,
+              0.101
+            ],
+            [
+              -0.34,
+              -0.909,
+              0.096
+            ],
+            [
+              -0.276,
+              -0.972,
+              0.093
+            ],
+            [
+              -0.212,
+              -1.01,
+              0.091
+            ],
+            [
+              -0.148,
+              -1.02,
+              0.09
+            ],
+            [
+              -0.084,
+              -1.0,
+              0.091
+            ],
+            [
+              -0.02,
+              -0.954,
+              0.094
+            ],
+            [
+              0.044,
+              -0.883,
+              0.098
+            ],
+            [
+              0.108,
+              -0.792,
+              0.103
+            ],
+            [
+              0.172,
+              -0.688,
+              0.11
+            ],
+            [
+              0.236,
+              -0.579,
+              0.118
+            ],
+            [
+              0.3,
+              -0.47,
+              0.127
             ]
           ],
           "radius": 0.3,
@@ -6110,14 +7233,14 @@
         "parentSocket": "root/viscera-band-01a-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.677,
-          -0.369,
-          0.809
+          -2.066,
+          -0.603,
+          0.719
         ],
         "localEnd": [
-          -1.677,
-          -0.369,
-          0.809
+          -2.066,
+          -0.603,
+          0.719
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6136,9 +7259,9 @@
       },
       "transform": {
         "position": [
-          -1.677,
-          -0.369,
-          0.8089999999999999
+          -2.066,
+          -0.603,
+          0.719
         ],
         "rotation": [
           0,
@@ -6250,14 +7373,14 @@
         "parentSocket": "root/viscera-band-01b-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.646,
-          -0.57,
-          0.808
+          -1.299,
+          -0.591,
+          0.718
         ],
         "localEnd": [
-          -0.646,
-          -0.57,
-          0.808
+          -1.299,
+          -0.591,
+          0.718
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6276,9 +7399,9 @@
       },
       "transform": {
         "position": [
-          -0.646,
-          -0.57,
-          0.808
+          -1.299,
+          -0.591,
+          0.718
         ],
         "rotation": [
           0,
@@ -6390,14 +7513,14 @@
         "parentSocket": "root/viscera-band-01c-mount",
         "structuralParent": "root",
         "localStart": [
-          0.385,
-          -0.84,
-          0.65
+          -0.467,
+          -0.724,
+          0.583
         ],
         "localEnd": [
-          0.385,
-          -0.84,
-          0.65
+          -0.467,
+          -0.724,
+          0.583
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6416,9 +7539,9 @@
       },
       "transform": {
         "position": [
-          0.385,
-          -0.84,
-          0.6499999999999999
+          -0.467,
+          -0.724,
+          0.583
         ],
         "rotation": [
           0,
@@ -6511,7 +7634,7 @@
       "confidence": 0.7,
       "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
+      "topologyRationale": "Soft tube folded into vertical lobes. The reference's underside is a row of down-pointing lobes with deep notches between them - the tube plunges, turns at the bottom and climbs back before advancing. A capsule cannot do that, and a gently undulating fore-aft run reads as a flat ribbon, not as packed viscera.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -6525,74 +7648,224 @@
         "tubePath": {
           "points": [
             [
-              -2.3,
-              -0.584,
-              0.222
+              -1.55,
+              -0.808,
+              0.002
             ],
             [
-              -2.065,
-              -0.56,
-              0.199
+              -1.494,
+              -0.856,
+              -0.01
             ],
             [
-              -1.831,
-              -0.577,
-              0.162
+              -1.438,
+              -0.887,
+              -0.023
             ],
             [
-              -1.596,
-              -0.63,
-              0.114
+              -1.383,
+              -0.9,
+              -0.036
             ],
             [
-              -1.362,
-              -0.711,
-              0.062
+              -1.327,
+              -0.893,
+              -0.047
             ],
             [
-              -1.127,
-              -0.805,
-              0.009
+              -1.271,
+              -0.869,
+              -0.059
             ],
             [
-              -0.892,
-              -0.894,
-              -0.039
+              -1.215,
+              -0.826,
+              -0.069
             ],
             [
-              -0.658,
-              -0.962,
-              -0.077
+              -1.159,
+              -0.769,
+              -0.079
             ],
             [
-              -0.423,
-              -0.997,
-              -0.101
+              -1.103,
+              -0.7,
+              -0.087
             ],
             [
-              -0.728,
+              -1.048,
+              -0.622,
+              -0.094
+            ],
+            [
               -0.992,
+              -0.541,
+              -0.1
+            ],
+            [
+              -0.936,
+              -0.46,
+              -0.105
+            ],
+            [
+              -0.88,
+              -0.384,
+              -0.108
+            ],
+            [
+              -0.824,
+              -0.317,
               -0.11
             ],
             [
-              -1.068,
-              -0.949,
+              -0.769,
+              -0.263,
+              -0.11
+            ],
+            [
+              -0.713,
+              -0.224,
+              -0.109
+            ],
+            [
+              -0.657,
+              -0.204,
+              -0.106
+            ],
+            [
+              -0.601,
+              -0.201,
               -0.102
             ],
             [
-              -1.407,
-              -0.875,
-              -0.078
+              -0.545,
+              -0.218,
+              -0.096
             ],
             [
-              -1.747,
-              -0.783,
-              -0.04
+              -0.49,
+              -0.253,
+              -0.089
             ],
             [
-              -2.087,
-              -0.691,
-              0.008
+              -0.434,
+              -0.304,
+              -0.081
+            ],
+            [
+              -0.378,
+              -0.369,
+              -0.072
+            ],
+            [
+              -0.322,
+              -0.443,
+              -0.061
+            ],
+            [
+              -0.266,
+              -0.523,
+              -0.05
+            ],
+            [
+              -0.21,
+              -0.605,
+              -0.039
+            ],
+            [
+              -0.155,
+              -0.683,
+              -0.026
+            ],
+            [
+              -0.099,
+              -0.755,
+              -0.014
+            ],
+            [
+              -0.043,
+              -0.815,
+              -0.001
+            ],
+            [
+              0.013,
+              -0.861,
+              0.012
+            ],
+            [
+              0.069,
+              -0.89,
+              0.025
+            ],
+            [
+              0.124,
+              -0.9,
+              0.037
+            ],
+            [
+              0.18,
+              -0.891,
+              0.049
+            ],
+            [
+              0.236,
+              -0.864,
+              0.06
+            ],
+            [
+              0.292,
+              -0.82,
+              0.07
+            ],
+            [
+              0.348,
+              -0.761,
+              0.08
+            ],
+            [
+              0.403,
+              -0.69,
+              0.088
+            ],
+            [
+              0.459,
+              -0.612,
+              0.095
+            ],
+            [
+              0.515,
+              -0.531,
+              0.101
+            ],
+            [
+              0.571,
+              -0.45,
+              0.105
+            ],
+            [
+              0.627,
+              -0.375,
+              0.108
+            ],
+            [
+              0.683,
+              -0.31,
+              0.11
+            ],
+            [
+              0.738,
+              -0.257,
+              0.11
+            ],
+            [
+              0.794,
+              -0.221,
+              0.108
+            ],
+            [
+              0.85,
+              -0.202,
+              0.105
             ]
           ],
           "radius": 0.32,
@@ -6762,14 +8035,14 @@
         "parentSocket": "root/viscera-band-02a-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.596,
-          -0.63,
-          0.589
+          -1.215,
+          -0.826,
+          0.406
         ],
         "localEnd": [
-          -1.596,
-          -0.63,
-          0.589
+          -1.215,
+          -0.826,
+          0.406
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6788,9 +8061,9 @@
       },
       "transform": {
         "position": [
-          -1.596,
-          -0.63,
-          0.589
+          -1.215,
+          -0.826,
+          0.40599999999999997
         ],
         "rotation": [
           0,
@@ -6902,14 +8175,14 @@
         "parentSocket": "root/viscera-band-02b-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.658,
-          -0.962,
-          0.398
+          -0.545,
+          -0.218,
+          0.379
         ],
         "localEnd": [
-          -0.658,
-          -0.962,
-          0.398
+          -0.545,
+          -0.218,
+          0.379
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -6928,9 +8201,9 @@
       },
       "transform": {
         "position": [
-          -0.658,
-          -0.962,
-          0.39799999999999996
+          -0.545,
+          -0.218,
+          0.379
         ],
         "rotation": [
           0,
@@ -7042,14 +8315,14 @@
         "parentSocket": "root/viscera-band-02c-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.407,
-          -0.875,
-          0.397
+          0.18,
+          -0.891,
+          0.524
         ],
         "localEnd": [
-          -1.407,
-          -0.875,
-          0.397
+          0.18,
+          -0.891,
+          0.524
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7068,9 +8341,9 @@
       },
       "transform": {
         "position": [
-          -1.407,
-          -0.875,
-          0.39699999999999996
+          0.18,
+          -0.891,
+          0.524
         ],
         "rotation": [
           0,
@@ -7163,7 +8436,7 @@
       "confidence": 0.7,
       "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
+      "topologyRationale": "Soft tube folded into vertical lobes. The reference's underside is a row of down-pointing lobes with deep notches between them - the tube plunges, turns at the bottom and climbs back before advancing. A capsule cannot do that, and a gently undulating fore-aft run reads as a flat ribbon, not as packed viscera.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7177,74 +8450,224 @@
         "tubePath": {
           "points": [
             [
-              -2.5,
-              -0.466,
-              -0.244
+              -2.55,
+              -0.884,
+              -0.245
             ],
             [
-              -2.242,
-              -0.556,
-              -0.273
+              -2.495,
+              -0.802,
+              -0.24
             ],
             [
-              -1.985,
-              -0.665,
-              -0.288
+              -2.441,
+              -0.713,
+              -0.234
             ],
             [
-              -1.727,
-              -0.773,
-              -0.288
+              -2.386,
+              -0.619,
+              -0.228
             ],
             [
-              -1.469,
-              -0.861,
-              -0.274
+              -2.331,
+              -0.526,
+              -0.221
             ],
             [
-              -1.212,
-              -0.911,
-              -0.247
+              -2.277,
+              -0.436,
+              -0.214
             ],
             [
-              -0.954,
-              -0.916,
-              -0.209
+              -2.222,
+              -0.355,
+              -0.207
             ],
             [
-              -0.696,
-              -0.874,
-              -0.165
+              -2.167,
+              -0.284,
+              -0.199
             ],
             [
-              -0.438,
-              -0.793,
+              -2.113,
+              -0.227,
+              -0.191
+            ],
+            [
+              -2.058,
+              -0.187,
+              -0.183
+            ],
+            [
+              -2.003,
+              -0.164,
+              -0.174
+            ],
+            [
+              -1.949,
+              -0.161,
+              -0.166
+            ],
+            [
+              -1.894,
+              -0.177,
+              -0.158
+            ],
+            [
+              -1.84,
+              -0.211,
+              -0.151
+            ],
+            [
+              -1.785,
+              -0.263,
+              -0.143
+            ],
+            [
+              -1.73,
+              -0.329,
+              -0.136
+            ],
+            [
+              -1.676,
+              -0.407,
+              -0.129
+            ],
+            [
+              -1.621,
+              -0.495,
+              -0.123
+            ],
+            [
+              -1.566,
+              -0.587,
               -0.118
             ],
             [
-              -0.181,
-              -0.688,
-              -0.073
+              -1.512,
+              -0.681,
+              -0.113
             ],
             [
-              0.077,
-              -0.577,
-              -0.034
+              -1.457,
+              -0.772,
+              -0.109
             ],
             [
-              0.335,
-              -0.482,
-              -0.007
+              -1.402,
+              -0.857,
+              -0.106
             ],
             [
-              0.592,
+              -1.348,
+              -0.932,
+              -0.103
+            ],
+            [
+              -1.293,
+              -0.994,
+              -0.101
+            ],
+            [
+              -1.238,
+              -1.041,
+              -0.1
+            ],
+            [
+              -1.184,
+              -1.07,
+              -0.1
+            ],
+            [
+              -1.129,
+              -1.08,
+              -0.101
+            ],
+            [
+              -1.074,
+              -1.071,
+              -0.102
+            ],
+            [
+              -1.02,
+              -1.043,
+              -0.105
+            ],
+            [
+              -0.965,
+              -0.998,
+              -0.108
+            ],
+            [
+              -0.91,
+              -0.936,
+              -0.112
+            ],
+            [
+              -0.856,
+              -0.862,
+              -0.116
+            ],
+            [
+              -0.801,
+              -0.777,
+              -0.121
+            ],
+            [
+              -0.747,
+              -0.686,
+              -0.127
+            ],
+            [
+              -0.692,
+              -0.593,
+              -0.134
+            ],
+            [
+              -0.637,
+              -0.5,
+              -0.141
+            ],
+            [
+              -0.583,
+              -0.412,
+              -0.148
+            ],
+            [
+              -0.528,
+              -0.333,
+              -0.156
+            ],
+            [
+              -0.473,
+              -0.266,
+              -0.163
+            ],
+            [
               -0.419,
-              0.008
+              -0.214,
+              -0.172
             ],
             [
-              0.85,
-              -0.4,
-              0.008
+              -0.364,
+              -0.178,
+              -0.18
+            ],
+            [
+              -0.309,
+              -0.161,
+              -0.188
+            ],
+            [
+              -0.255,
+              -0.164,
+              -0.196
+            ],
+            [
+              -0.2,
+              -0.185,
+              -0.204
             ]
           ],
           "radius": 0.29,
@@ -7414,14 +8837,14 @@
         "parentSocket": "root/viscera-band-03a-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.727,
-          -0.773,
-          0.187
+          -2.222,
+          -0.355,
+          0.268
         ],
         "localEnd": [
-          -1.727,
-          -0.773,
-          0.187
+          -2.222,
+          -0.355,
+          0.268
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7440,9 +8863,9 @@
       },
       "transform": {
         "position": [
-          -1.727,
-          -0.773,
-          0.187
+          -2.222,
+          -0.355,
+          0.268
         ],
         "rotation": [
           0,
@@ -7554,14 +8977,14 @@
         "parentSocket": "root/viscera-band-03b-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.696,
-          -0.874,
-          0.31
+          -1.566,
+          -0.587,
+          0.357
         ],
         "localEnd": [
-          -0.696,
-          -0.874,
-          0.31
+          -1.566,
+          -0.587,
+          0.357
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7580,9 +9003,9 @@
       },
       "transform": {
         "position": [
-          -0.696,
-          -0.874,
-          0.30999999999999994
+          -1.566,
+          -0.587,
+          0.357
         ],
         "rotation": [
           0,
@@ -7694,14 +9117,14 @@
         "parentSocket": "root/viscera-band-03c-mount",
         "structuralParent": "root",
         "localStart": [
-          0.335,
-          -0.482,
-          0.468
+          -0.856,
+          -0.862,
+          0.359
         ],
         "localEnd": [
-          0.335,
-          -0.482,
-          0.468
+          -0.856,
+          -0.862,
+          0.359
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -7720,9 +9143,9 @@
       },
       "transform": {
         "position": [
-          0.335,
-          -0.482,
-          0.46799999999999997
+          -0.856,
+          -0.862,
+          0.359
         ],
         "rotation": [
           0,
@@ -7815,7 +9238,7 @@
       "confidence": 0.7,
       "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
+      "topologyRationale": "Soft tube folded into vertical lobes. The reference's underside is a row of down-pointing lobes with deep notches between them - the tube plunges, turns at the bottom and climbs back before advancing. A capsule cannot do that, and a gently undulating fore-aft run reads as a flat ribbon, not as packed viscera.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -7829,74 +9252,224 @@
         "tubePath": {
           "points": [
             [
-              -2.2,
-              -0.871,
-              -0.303
-            ],
-            [
-              -1.981,
-              -0.947,
-              -0.264
-            ],
-            [
-              -1.762,
-              -1.0,
-              -0.223
-            ],
-            [
-              -1.542,
-              -1.02,
-              -0.184
-            ],
-            [
-              -1.323,
-              -1.003,
-              -0.151
-            ],
-            [
-              -1.104,
-              -0.953,
-              -0.126
-            ],
-            [
-              -0.885,
-              -0.879,
-              -0.112
-            ],
-            [
-              -0.665,
-              -0.794,
-              -0.111
-            ],
-            [
-              -0.446,
-              -0.713,
+              -0.95,
+              -0.376,
               -0.123
             ],
             [
-              -0.227,
-              -0.652,
-              -0.146
+              -0.909,
+              -0.429,
+              -0.121
             ],
             [
-              -0.567,
-              -0.622,
-              -0.179
+              -0.869,
+              -0.486,
+              -0.12
             ],
             [
-              -0.969,
-              -0.628,
-              -0.217
+              -0.828,
+              -0.545,
+              -0.12
             ],
             [
-              -1.371,
-              -0.669,
-              -0.258
+              -0.787,
+              -0.603,
+              -0.122
             ],
             [
-              -1.773,
-              -0.738,
-              -0.297
+              -0.747,
+              -0.659,
+              -0.124
+            ],
+            [
+              -0.706,
+              -0.71,
+              -0.128
+            ],
+            [
+              -0.665,
+              -0.754,
+              -0.132
+            ],
+            [
+              -0.624,
+              -0.791,
+              -0.138
+            ],
+            [
+              -0.584,
+              -0.818,
+              -0.144
+            ],
+            [
+              -0.543,
+              -0.834,
+              -0.152
+            ],
+            [
+              -0.502,
+              -0.84,
+              -0.16
+            ],
+            [
+              -0.462,
+              -0.835,
+              -0.169
+            ],
+            [
+              -0.421,
+              -0.818,
+              -0.178
+            ],
+            [
+              -0.38,
+              -0.791,
+              -0.188
+            ],
+            [
+              -0.34,
+              -0.755,
+              -0.199
+            ],
+            [
+              -0.299,
+              -0.711,
+              -0.21
+            ],
+            [
+              -0.258,
+              -0.66,
+              -0.221
+            ],
+            [
+              -0.217,
+              -0.605,
+              -0.232
+            ],
+            [
+              -0.177,
+              -0.546,
+              -0.243
+            ],
+            [
+              -0.136,
+              -0.488,
+              -0.255
+            ],
+            [
+              -0.095,
+              -0.431,
+              -0.266
+            ],
+            [
+              -0.055,
+              -0.377,
+              -0.277
+            ],
+            [
+              -0.014,
+              -0.329,
+              -0.288
+            ],
+            [
+              0.027,
+              -0.288,
+              -0.298
+            ],
+            [
+              0.067,
+              -0.256,
+              -0.308
+            ],
+            [
+              0.108,
+              -0.233,
+              -0.317
+            ],
+            [
+              0.149,
+              -0.222,
+              -0.325
+            ],
+            [
+              0.19,
+              -0.221,
+              -0.333
+            ],
+            [
+              0.23,
+              -0.232,
+              -0.34
+            ],
+            [
+              0.271,
+              -0.253,
+              -0.345
+            ],
+            [
+              0.312,
+              -0.284,
+              -0.35
+            ],
+            [
+              0.352,
+              -0.324,
+              -0.354
+            ],
+            [
+              0.393,
+              -0.372,
+              -0.357
+            ],
+            [
+              0.434,
+              -0.425,
+              -0.359
+            ],
+            [
+              0.474,
+              -0.482,
+              -0.36
+            ],
+            [
+              0.515,
+              -0.541,
+              -0.36
+            ],
+            [
+              0.556,
+              -0.599,
+              -0.358
+            ],
+            [
+              0.597,
+              -0.655,
+              -0.356
+            ],
+            [
+              0.637,
+              -0.706,
+              -0.352
+            ],
+            [
+              0.678,
+              -0.751,
+              -0.348
+            ],
+            [
+              0.719,
+              -0.788,
+              -0.343
+            ],
+            [
+              0.759,
+              -0.816,
+              -0.336
+            ],
+            [
+              0.8,
+              -0.833,
+              -0.329
             ]
           ],
           "radius": 0.31,
@@ -8066,14 +9639,14 @@
         "parentSocket": "root/viscera-band-04a-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.542,
-          -1.02,
-          0.291
+          -0.706,
+          -0.71,
+          0.347
         ],
         "localEnd": [
-          -1.542,
-          -1.02,
-          0.291
+          -0.706,
+          -0.71,
+          0.347
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8092,9 +9665,9 @@
       },
       "transform": {
         "position": [
-          -1.542,
-          -1.02,
-          0.291
+          -0.706,
+          -0.71,
+          0.347
         ],
         "rotation": [
           0,
@@ -8206,14 +9779,14 @@
         "parentSocket": "root/viscera-band-04b-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.665,
-          -0.794,
-          0.364
+          -0.217,
+          -0.605,
+          0.243
         ],
         "localEnd": [
-          -0.665,
-          -0.794,
-          0.364
+          -0.217,
+          -0.605,
+          0.243
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8232,9 +9805,9 @@
       },
       "transform": {
         "position": [
-          -0.665,
-          -0.794,
-          0.364
+          -0.217,
+          -0.605,
+          0.24299999999999997
         ],
         "rotation": [
           0,
@@ -8346,14 +9919,14 @@
         "parentSocket": "root/viscera-band-04c-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.969,
-          -0.628,
-          0.258
+          0.312,
+          -0.284,
+          0.125
         ],
         "localEnd": [
-          -0.969,
-          -0.628,
-          0.258
+          0.312,
+          -0.284,
+          0.125
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8372,9 +9945,9 @@
       },
       "transform": {
         "position": [
-          -0.969,
-          -0.628,
-          0.258
+          0.312,
+          -0.284,
+          0.125
         ],
         "rotation": [
           0,
@@ -8467,7 +10040,7 @@
       "confidence": 0.7,
       "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
+      "topologyRationale": "Soft tube folded into vertical lobes. The reference's underside is a row of down-pointing lobes with deep notches between them - the tube plunges, turns at the bottom and climbs back before advancing. A capsule cannot do that, and a gently undulating fore-aft run reads as a flat ribbon, not as packed viscera.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -8481,77 +10054,227 @@
         "tubePath": {
           "points": [
             [
-              -2.4,
-              -0.769,
-              0.19
+              -2.2,
+              -0.344,
+              0.337
             ],
             [
-              -2.154,
-              -0.758,
+              -2.136,
+              -0.249,
+              0.35
+            ],
+            [
+              -2.072,
+              -0.189,
+              0.361
+            ],
+            [
+              -2.008,
+              -0.17,
+              0.37
+            ],
+            [
+              -1.944,
+              -0.195,
+              0.376
+            ],
+            [
+              -1.88,
+              -0.261,
+              0.379
+            ],
+            [
+              -1.816,
+              -0.36,
+              0.38
+            ],
+            [
+              -1.752,
+              -0.482,
+              0.378
+            ],
+            [
+              -1.688,
+              -0.612,
+              0.373
+            ],
+            [
+              -1.624,
+              -0.737,
+              0.365
+            ],
+            [
+              -1.56,
+              -0.842,
+              0.355
+            ],
+            [
+              -1.497,
+              -0.915,
+              0.343
+            ],
+            [
+              -1.433,
+              -0.948,
+              0.33
+            ],
+            [
+              -1.369,
+              -0.938,
+              0.314
+            ],
+            [
+              -1.305,
+              -0.886,
+              0.298
+            ],
+            [
+              -1.241,
+              -0.797,
+              0.281
+            ],
+            [
+              -1.177,
+              -0.682,
+              0.265
+            ],
+            [
+              -1.113,
+              -0.553,
+              0.248
+            ],
+            [
+              -1.049,
+              -0.425,
+              0.233
+            ],
+            [
+              -0.985,
+              -0.312,
+              0.219
+            ],
+            [
+              -0.921,
+              -0.226,
+              0.206
+            ],
+            [
+              -0.857,
+              -0.178,
+              0.196
+            ],
+            [
+              -0.793,
+              -0.173,
+              0.188
+            ],
+            [
+              -0.729,
+              -0.211,
               0.183
             ],
             [
-              -1.908,
-              -0.708,
-              0.157
+              -0.665,
+              -0.288,
+              0.18
             ],
             [
-              -1.662,
-              -0.628,
-              0.116
+              -0.601,
+              -0.396,
+              0.18
             ],
             [
-              -1.415,
-              -0.531,
-              0.064
+              -0.537,
+              -0.521,
+              0.183
             ],
             [
-              -1.169,
-              -0.436,
-              0.005
+              -0.473,
+              -0.652,
+              0.189
             ],
             [
-              -0.923,
-              -0.36,
-              -0.054
+              -0.409,
+              -0.771,
+              0.197
             ],
             [
-              -0.677,
-              -0.317,
-              -0.108
+              -0.345,
+              -0.868,
+              0.208
             ],
             [
-              -0.431,
-              -0.314,
-              -0.151
+              -0.281,
+              -0.93,
+              0.221
             ],
             [
-              -0.185,
-              -0.353,
-              -0.179
+              -0.217,
+              -0.95,
+              0.235
             ],
             [
-              0.062,
-              -0.426,
-              -0.19
+              -0.153,
+              -0.927,
+              0.251
             ],
             [
-              0.308,
-              -0.52,
-              -0.182
+              -0.09,
+              -0.863,
+              0.267
             ],
             [
-              0.554,
-              -0.618,
-              -0.156
+              -0.026,
+              -0.765,
+              0.284
             ],
             [
-              0.8,
-              -0.701,
-              -0.114
+              0.038,
+              -0.644,
+              0.3
+            ],
+            [
+              0.102,
+              -0.513,
+              0.316
+            ],
+            [
+              0.166,
+              -0.388,
+              0.332
+            ],
+            [
+              0.23,
+              -0.282,
+              0.345
+            ],
+            [
+              0.294,
+              -0.208,
+              0.357
+            ],
+            [
+              0.358,
+              -0.172,
+              0.367
+            ],
+            [
+              0.422,
+              -0.18,
+              0.374
+            ],
+            [
+              0.486,
+              -0.231,
+              0.378
+            ],
+            [
+              0.55,
+              -0.318,
+              0.38
             ]
           ],
-          "radius": 0.27,
+          "radius": 0.26,
           "radialSegments": 12,
           "closed": false
         }
@@ -8718,14 +10441,14 @@
         "parentSocket": "root/viscera-band-05a-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.662,
-          -0.628,
-          0.591
+          -1.816,
+          -0.36,
+          0.855
         ],
         "localEnd": [
-          -1.662,
-          -0.628,
-          0.591
+          -1.816,
+          -0.36,
+          0.855
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8736,17 +10459,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.6264,
-        "height": 0.6264,
-        "depth": 0.6264,
+        "width": 0.6032,
+        "height": 0.6032,
+        "depth": 0.6032,
         "units": "relative",
         "confidence": 0.65
       },
       "transform": {
         "position": [
-          -1.662,
-          -0.628,
-          0.591
+          -1.816,
+          -0.36,
+          0.855
         ],
         "rotation": [
           0,
@@ -8858,14 +10581,14 @@
         "parentSocket": "root/viscera-band-05b-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.677,
-          -0.317,
-          0.367
+          -1.049,
+          -0.425,
+          0.708
         ],
         "localEnd": [
-          -0.677,
-          -0.317,
-          0.367
+          -1.049,
+          -0.425,
+          0.708
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -8876,17 +10599,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.6264,
-        "height": 0.6264,
-        "depth": 0.6264,
+        "width": 0.6032,
+        "height": 0.6032,
+        "depth": 0.6032,
         "units": "relative",
         "confidence": 0.65
       },
       "transform": {
         "position": [
-          -0.677,
-          -0.317,
-          0.367
+          -1.049,
+          -0.425,
+          0.708
         ],
         "rotation": [
           0,
@@ -8998,14 +10721,14 @@
         "parentSocket": "root/viscera-band-05c-mount",
         "structuralParent": "root",
         "localStart": [
-          0.308,
-          -0.52,
-          0.293
+          -0.217,
+          -0.95,
+          0.71
         ],
         "localEnd": [
-          0.308,
-          -0.52,
-          0.293
+          -0.217,
+          -0.95,
+          0.71
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9016,17 +10739,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.6264,
-        "height": 0.6264,
-        "depth": 0.6264,
+        "width": 0.6032,
+        "height": 0.6032,
+        "depth": 0.6032,
         "units": "relative",
         "confidence": 0.65
       },
       "transform": {
         "position": [
-          0.308,
-          -0.52,
-          0.293
+          -0.217,
+          -0.95,
+          0.71
         ],
         "rotation": [
           0,
@@ -9119,7 +10842,7 @@
       "confidence": 0.7,
       "primitive": "tube",
       "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
+      "topologyRationale": "Soft tube folded into vertical lobes. The reference's underside is a row of down-pointing lobes with deep notches between them - the tube plunges, turns at the bottom and climbs back before advancing. A capsule cannot do that, and a gently undulating fore-aft run reads as a flat ribbon, not as packed viscera.",
       "geometryDescriptor": {
         "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
         "edgeTreatment": {
@@ -9133,77 +10856,227 @@
         "tubePath": {
           "points": [
             [
-              -2.1,
-              -0.945,
-              0.141
+              -1.9,
+              -0.82,
+              0.027
             ],
             [
-              -1.896,
-              -0.869,
-              0.098
+              -1.853,
+              -0.815,
+              0.022
             ],
             [
-              -1.692,
-              -0.788,
-              0.063
+              -1.807,
+              -0.802,
+              0.019
             ],
             [
-              -1.488,
-              -0.716,
-              0.04
+              -1.76,
+              -0.78,
+              0.016
             ],
             [
-              -1.285,
-              -0.667,
-              0.03
+              -1.714,
+              -0.75,
+              0.013
             ],
             [
-              -1.081,
-              -0.65,
-              0.035
+              -1.667,
+              -0.714,
+              0.011
             ],
             [
-              -0.877,
-              -0.667,
+              -1.621,
+              -0.672,
+              0.01
+            ],
+            [
+              -1.574,
+              -0.625,
+              0.01
+            ],
+            [
+              -1.528,
+              -0.576,
+              0.01
+            ],
+            [
+              -1.481,
+              -0.525,
+              0.011
+            ],
+            [
+              -1.435,
+              -0.475,
+              0.013
+            ],
+            [
+              -1.388,
+              -0.426,
+              0.015
+            ],
+            [
+              -1.342,
+              -0.38,
+              0.018
+            ],
+            [
+              -1.295,
+              -0.339,
+              0.022
+            ],
+            [
+              -1.249,
+              -0.304,
+              0.026
+            ],
+            [
+              -1.202,
+              -0.276,
+              0.031
+            ],
+            [
+              -1.156,
+              -0.255,
+              0.036
+            ],
+            [
+              -1.109,
+              -0.243,
+              0.042
+            ],
+            [
+              -1.063,
+              -0.24,
+              0.048
+            ],
+            [
+              -1.016,
+              -0.246,
               0.055
             ],
             [
-              -0.673,
-              -0.716,
-              0.087
+              -0.97,
+              -0.26,
+              0.062
             ],
             [
-              -0.686,
-              -0.788,
-              0.128
+              -0.923,
+              -0.283,
+              0.069
             ],
             [
-              -0.953,
-              -0.869,
+              -0.877,
+              -0.313,
+              0.077
+            ],
+            [
+              -0.83,
+              -0.35,
+              0.085
+            ],
+            [
+              -0.784,
+              -0.392,
+              0.092
+            ],
+            [
+              -0.737,
+              -0.439,
+              0.1
+            ],
+            [
+              -0.691,
+              -0.488,
+              0.108
+            ],
+            [
+              -0.644,
+              -0.539,
+              0.116
+            ],
+            [
+              -0.598,
+              -0.589,
+              0.124
+            ],
+            [
+              -0.551,
+              -0.638,
+              0.131
+            ],
+            [
+              -0.505,
+              -0.683,
+              0.138
+            ],
+            [
+              -0.458,
+              -0.724,
+              0.145
+            ],
+            [
+              -0.412,
+              -0.758,
+              0.152
+            ],
+            [
+              -0.365,
+              -0.786,
+              0.158
+            ],
+            [
+              -0.319,
+              -0.806,
+              0.164
+            ],
+            [
+              -0.272,
+              -0.817,
+              0.169
+            ],
+            [
+              -0.226,
+              -0.82,
               0.174
             ],
             [
-              -1.22,
-              -0.945,
-              0.221
+              -0.179,
+              -0.813,
+              0.178
             ],
             [
-              -1.487,
-              -1.001,
-              0.264
+              -0.133,
+              -0.798,
+              0.182
             ],
             [
-              -1.754,
-              -1.028,
-              0.298
+              -0.086,
+              -0.775,
+              0.185
             ],
             [
-              -2.021,
-              -1.021,
-              0.321
+              -0.04,
+              -0.744,
+              0.187
+            ],
+            [
+              0.007,
+              -0.707,
+              0.189
+            ],
+            [
+              0.053,
+              -0.664,
+              0.19
+            ],
+            [
+              0.1,
+              -0.617,
+              0.19
             ]
           ],
-          "radius": 0.28,
+          "radius": 0.27,
           "radialSegments": 12,
           "closed": false
         }
@@ -9370,14 +11243,14 @@
         "parentSocket": "root/viscera-band-06a-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.488,
-          -0.716,
-          0.515
+          -1.621,
+          -0.672,
+          0.485
         ],
         "localEnd": [
-          -1.488,
-          -0.716,
-          0.515
+          -1.621,
+          -0.672,
+          0.485
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9388,17 +11261,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.6496000000000001,
-        "height": 0.6496000000000001,
-        "depth": 0.6496000000000001,
+        "width": 0.6264,
+        "height": 0.6264,
+        "depth": 0.6264,
         "units": "relative",
         "confidence": 0.65
       },
       "transform": {
         "position": [
-          -1.488,
-          -0.716,
-          0.515
+          -1.621,
+          -0.672,
+          0.485
         ],
         "rotation": [
           0,
@@ -9510,14 +11383,14 @@
         "parentSocket": "root/viscera-band-06b-mount",
         "structuralParent": "root",
         "localStart": [
-          -0.673,
-          -0.716,
-          0.562
+          -1.063,
+          -0.24,
+          0.523
         ],
         "localEnd": [
-          -0.673,
-          -0.716,
-          0.562
+          -1.063,
+          -0.24,
+          0.523
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9528,17 +11401,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.6496000000000001,
-        "height": 0.6496000000000001,
-        "depth": 0.6496000000000001,
+        "width": 0.6264,
+        "height": 0.6264,
+        "depth": 0.6264,
         "units": "relative",
         "confidence": 0.65
       },
       "transform": {
         "position": [
-          -0.673,
-          -0.716,
-          0.5619999999999999
+          -1.063,
+          -0.24,
+          0.523
         ],
         "rotation": [
           0,
@@ -9650,14 +11523,14 @@
         "parentSocket": "root/viscera-band-06c-mount",
         "structuralParent": "root",
         "localStart": [
-          -1.487,
-          -1.001,
-          0.739
+          -0.458,
+          -0.724,
+          0.62
         ],
         "localEnd": [
-          -1.487,
-          -1.001,
-          0.739
+          -0.458,
+          -0.724,
+          0.62
         ],
         "contactType": "overlap",
         "overlap": 0.04,
@@ -9668,669 +11541,17 @@
         ]
       },
       "dimensions": {
-        "width": 0.6496000000000001,
-        "height": 0.6496000000000001,
-        "depth": 0.6496000000000001,
+        "width": 0.6264,
+        "height": 0.6264,
+        "depth": 0.6264,
         "units": "relative",
         "confidence": 0.65
       },
       "transform": {
         "position": [
-          -1.487,
-          -1.001,
-          0.739
-        ],
-        "rotation": [
-          0,
-          0,
-          1.5707963267948966
-        ]
-      },
-      "actionProfile": {
-        "animationRole": "static",
-        "pivot": {
-          "mode": "local-origin",
-          "offset": [
-            0,
-            0,
-            0
-          ]
-        },
-        "transformChannels": {
-          "translate": true,
-          "rotate": true,
-          "scale": false
-        },
-        "sockets": [],
-        "collider": {
-          "type": "box",
-          "fit": "tight"
-        },
-        "constraints": [],
-        "destruction": {
-          "breakable": false
-        }
-      },
-      "material": "machine-grey",
-      "materialLayers": [
-        "machine-grey"
-      ],
-      "deformations": [],
-      "joints": [],
-      "seams": [],
-      "localFeatures": [],
-      "surfaceDetail": {
-        "macroRoughness": 0.1,
-        "microRoughness": 0.05,
-        "bumpAmplitude": 0.0,
-        "normalPattern": "",
-        "displacementPattern": "",
-        "occlusionPattern": "cavity-seams",
-        "edgeWearPattern": "",
-        "notes": "Cel target: relief is carried by real geometry, not maps."
-      },
-      "evidenceRefs": [
-        "belly-zone"
-      ],
-      "details": [
-        "d07"
-      ],
-      "fidelityTier": "surface",
-      "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
-        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
-        "materialClass": "metal",
-        "materialClassConfidence": 0.8,
-        "colorGradient": {
-          "type": "linear",
-          "stops": [
-            {
-              "position": 0.0,
-              "color": "rgba(83, 90, 96, 1.0)"
-            },
-            {
-              "position": 1.0,
-              "color": "rgba(109, 117, 124, 1.0)"
-            }
-          ],
-          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
-        },
-        "evidenceRefs": [
-          "mast-zone"
-        ],
-        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
-      }
-    },
-    {
-      "id": "visceral-bundle-07",
-      "name": "Visceral tube run 7",
-      "level": "meso",
-      "role": "payload",
-      "logicalParent": "root",
-      "importance": 0.85,
-      "confidence": 0.7,
-      "primitive": "tube",
-      "topologyClass": "continuous-sculpt",
-      "topologyRationale": "Soft folded tube swept along a serpentine spine. A capsule or cylinder cannot fold back on itself, and that fold is precisely what makes the reference's underside read as viscera instead of as cargo tanks.",
-      "geometryDescriptor": {
-        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
-        "edgeTreatment": {
-          "type": "chamfer",
-          "bevelRadius": 0.012,
-          "segments": 1
-        },
-        "deformationStack": [],
-        "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
-        "tubePath": {
-          "points": [
-            [
-              -1.85,
-              -0.364,
-              0.354
-            ],
-            [
-              -1.638,
-              -0.314,
-              0.367
-            ],
-            [
-              -1.427,
-              -0.291,
-              0.37
-            ],
-            [
-              -1.215,
-              -0.299,
-              0.362
-            ],
-            [
-              -1.004,
-              -0.336,
-              0.343
-            ],
-            [
-              -0.792,
-              -0.396,
-              0.317
-            ],
-            [
-              -0.581,
-              -0.467,
-              0.285
-            ],
-            [
-              -0.369,
-              -0.538,
-              0.251
-            ],
-            [
-              -0.158,
-              -0.594,
-              0.217
-            ],
-            [
-              0.054,
-              -0.625,
-              0.188
-            ],
-            [
-              0.265,
-              -0.627,
-              0.166
-            ],
-            [
-              0.477,
-              -0.598,
-              0.153
-            ],
-            [
-              0.688,
-              -0.544,
-              0.15
-            ],
-            [
-              0.9,
-              -0.474,
-              0.159
-            ]
-          ],
-          "radius": 0.25,
-          "radialSegments": 12,
-          "closed": false
-        }
-      },
-      "parent": "root",
-      "attachment": {
-        "parentId": "root",
-        "parentSocket": "root/visceral-bundle-07-mount",
-        "structuralParent": "root",
-        "localStart": [
-          0,
-          0,
-          0.475
-        ],
-        "localEnd": [
-          0,
-          0,
-          0.475
-        ],
-        "contactType": "overlap",
-        "overlap": 0.04,
-        "gapTolerance": 0.004,
-        "contactGeometry": "face-region (zero-length span: not a strut)",
-        "evidenceRefs": [
-          "belly-zone"
-        ]
-      },
-      "dimensions": {
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "units": "relative",
-        "confidence": 0.7
-      },
-      "transform": {
-        "position": [
-          0,
-          0,
-          0.475
-        ],
-        "rotation": [
-          0,
-          0,
-          0
-        ]
-      },
-      "actionProfile": {
-        "animationRole": "detachable",
-        "pivot": {
-          "mode": "local-origin",
-          "offset": [
-            0,
-            0,
-            0
-          ]
-        },
-        "transformChannels": {
-          "translate": true,
-          "rotate": true,
-          "scale": false
-        },
-        "sockets": [
-          {
-            "id": "viscera-mount-07",
-            "localPosition": [
-              0,
-              0,
-              0
-            ],
-            "localRotation": [
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        "collider": {
-          "type": "capsule",
-          "fit": "loose"
-        },
-        "constraints": [],
-        "destruction": {
-          "breakable": true,
-          "group": "viscera"
-        }
-      },
-      "material": "pod-yellow",
-      "materialLayers": [
-        "pod-yellow"
-      ],
-      "deformations": [],
-      "joints": [],
-      "seams": [],
-      "localFeatures": [],
-      "surfaceDetail": {
-        "macroRoughness": 0.1,
-        "microRoughness": 0.05,
-        "bumpAmplitude": 0.0,
-        "normalPattern": "",
-        "displacementPattern": "",
-        "occlusionPattern": "cavity-seams",
-        "edgeWearPattern": "",
-        "notes": "Cel target: relief is carried by real geometry, not maps."
-      },
-      "evidenceRefs": [
-        "belly-zone"
-      ],
-      "details": [
-        "d06",
-        "d07"
-      ],
-      "fidelityTier": "structural",
-      "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(233, 183, 8, 1.0)",
-        "secondaryAlbedo": "rgba(174, 129, 0, 1.0)",
-        "materialClass": "plastic",
-        "materialClassConfidence": 0.6,
-        "colorGradient": {
-          "type": "linear",
-          "stops": [
-            {
-              "position": 0.0,
-              "color": "rgba(233, 183, 8, 1.0)"
-            },
-            {
-              "position": 1.0,
-              "color": "rgba(174, 129, 0, 1.0)"
-            }
-          ],
-          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
-        },
-        "evidenceRefs": [
-          "belly-zone"
-        ],
-        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
-      }
-    },
-    {
-      "id": "viscera-band-07a",
-      "name": "Viscera band 7a",
-      "level": "micro",
-      "role": "detail",
-      "logicalParent": "root",
-      "importance": 0.35,
-      "confidence": 0.68,
-      "primitive": "torus",
-      "topologyClass": "assembled-solid",
-      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
-      "geometryDescriptor": {
-        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
-        "edgeTreatment": {
-          "type": "chamfer",
-          "bevelRadius": 0.012,
-          "segments": 1
-        },
-        "deformationStack": [],
-        "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
-        "torusTubeRatio": 0.16
-      },
-      "parent": "root",
-      "attachment": {
-        "parentId": "root",
-        "parentSocket": "root/viscera-band-07a-mount",
-        "structuralParent": "root",
-        "localStart": [
-          -1.215,
-          -0.299,
-          0.837
-        ],
-        "localEnd": [
-          -1.215,
-          -0.299,
-          0.837
-        ],
-        "contactType": "overlap",
-        "overlap": 0.04,
-        "gapTolerance": 0.004,
-        "contactGeometry": "face-region (zero-length span: not a strut)",
-        "evidenceRefs": [
-          "belly-zone"
-        ]
-      },
-      "dimensions": {
-        "width": 0.58,
-        "height": 0.58,
-        "depth": 0.58,
-        "units": "relative",
-        "confidence": 0.65
-      },
-      "transform": {
-        "position": [
-          -1.215,
-          -0.299,
-          0.837
-        ],
-        "rotation": [
-          0,
-          0,
-          1.5707963267948966
-        ]
-      },
-      "actionProfile": {
-        "animationRole": "static",
-        "pivot": {
-          "mode": "local-origin",
-          "offset": [
-            0,
-            0,
-            0
-          ]
-        },
-        "transformChannels": {
-          "translate": true,
-          "rotate": true,
-          "scale": false
-        },
-        "sockets": [],
-        "collider": {
-          "type": "box",
-          "fit": "tight"
-        },
-        "constraints": [],
-        "destruction": {
-          "breakable": false
-        }
-      },
-      "material": "machine-grey",
-      "materialLayers": [
-        "machine-grey"
-      ],
-      "deformations": [],
-      "joints": [],
-      "seams": [],
-      "localFeatures": [],
-      "surfaceDetail": {
-        "macroRoughness": 0.1,
-        "microRoughness": 0.05,
-        "bumpAmplitude": 0.0,
-        "normalPattern": "",
-        "displacementPattern": "",
-        "occlusionPattern": "cavity-seams",
-        "edgeWearPattern": "",
-        "notes": "Cel target: relief is carried by real geometry, not maps."
-      },
-      "evidenceRefs": [
-        "belly-zone"
-      ],
-      "details": [
-        "d07"
-      ],
-      "fidelityTier": "surface",
-      "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
-        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
-        "materialClass": "metal",
-        "materialClassConfidence": 0.8,
-        "colorGradient": {
-          "type": "linear",
-          "stops": [
-            {
-              "position": 0.0,
-              "color": "rgba(83, 90, 96, 1.0)"
-            },
-            {
-              "position": 1.0,
-              "color": "rgba(109, 117, 124, 1.0)"
-            }
-          ],
-          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
-        },
-        "evidenceRefs": [
-          "mast-zone"
-        ],
-        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
-      }
-    },
-    {
-      "id": "viscera-band-07b",
-      "name": "Viscera band 7b",
-      "level": "micro",
-      "role": "detail",
-      "logicalParent": "root",
-      "importance": 0.35,
-      "confidence": 0.68,
-      "primitive": "torus",
-      "topologyClass": "assembled-solid",
-      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
-      "geometryDescriptor": {
-        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
-        "edgeTreatment": {
-          "type": "chamfer",
-          "bevelRadius": 0.012,
-          "segments": 1
-        },
-        "deformationStack": [],
-        "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
-        "torusTubeRatio": 0.16
-      },
-      "parent": "root",
-      "attachment": {
-        "parentId": "root",
-        "parentSocket": "root/viscera-band-07b-mount",
-        "structuralParent": "root",
-        "localStart": [
-          -0.369,
-          -0.538,
-          0.726
-        ],
-        "localEnd": [
-          -0.369,
-          -0.538,
-          0.726
-        ],
-        "contactType": "overlap",
-        "overlap": 0.04,
-        "gapTolerance": 0.004,
-        "contactGeometry": "face-region (zero-length span: not a strut)",
-        "evidenceRefs": [
-          "belly-zone"
-        ]
-      },
-      "dimensions": {
-        "width": 0.58,
-        "height": 0.58,
-        "depth": 0.58,
-        "units": "relative",
-        "confidence": 0.65
-      },
-      "transform": {
-        "position": [
-          -0.369,
-          -0.538,
-          0.726
-        ],
-        "rotation": [
-          0,
-          0,
-          1.5707963267948966
-        ]
-      },
-      "actionProfile": {
-        "animationRole": "static",
-        "pivot": {
-          "mode": "local-origin",
-          "offset": [
-            0,
-            0,
-            0
-          ]
-        },
-        "transformChannels": {
-          "translate": true,
-          "rotate": true,
-          "scale": false
-        },
-        "sockets": [],
-        "collider": {
-          "type": "box",
-          "fit": "tight"
-        },
-        "constraints": [],
-        "destruction": {
-          "breakable": false
-        }
-      },
-      "material": "machine-grey",
-      "materialLayers": [
-        "machine-grey"
-      ],
-      "deformations": [],
-      "joints": [],
-      "seams": [],
-      "localFeatures": [],
-      "surfaceDetail": {
-        "macroRoughness": 0.1,
-        "microRoughness": 0.05,
-        "bumpAmplitude": 0.0,
-        "normalPattern": "",
-        "displacementPattern": "",
-        "occlusionPattern": "cavity-seams",
-        "edgeWearPattern": "",
-        "notes": "Cel target: relief is carried by real geometry, not maps."
-      },
-      "evidenceRefs": [
-        "belly-zone"
-      ],
-      "details": [
-        "d07"
-      ],
-      "fidelityTier": "surface",
-      "colorMaterialRecipe": {
-        "dominantAlbedo": "rgba(83, 90, 96, 1.0)",
-        "secondaryAlbedo": "rgba(109, 117, 124, 1.0)",
-        "materialClass": "metal",
-        "materialClassConfidence": 0.8,
-        "colorGradient": {
-          "type": "linear",
-          "stops": [
-            {
-              "position": 0.0,
-              "color": "rgba(83, 90, 96, 1.0)"
-            },
-            {
-              "position": 1.0,
-              "color": "rgba(109, 117, 124, 1.0)"
-            }
-          ],
-          "note": "Quantised by the toon ramp into discrete steps; not a continuous blend."
-        },
-        "evidenceRefs": [
-          "mast-zone"
-        ],
-        "samplingNote": "Sampled from the reference with ink-line rejection; drawn colour, not measured PBR."
-      }
-    },
-    {
-      "id": "viscera-band-07c",
-      "name": "Viscera band 7c",
-      "level": "micro",
-      "role": "detail",
-      "logicalParent": "root",
-      "importance": 0.35,
-      "confidence": 0.68,
-      "primitive": "torus",
-      "topologyClass": "assembled-solid",
-      "topologyRationale": "Steel band cinching the tube run - a torus is the exact topology.",
-      "geometryDescriptor": {
-        "topologyIntent": "hard-surface faceted shell, flat-shaded for cel response",
-        "edgeTreatment": {
-          "type": "chamfer",
-          "bevelRadius": 0.012,
-          "segments": 1
-        },
-        "deformationStack": [],
-        "uvStrategy": "generated procedural coordinates",
-        "normalStrategy": "flat-shaded facets (toon ramp needs quantised normals)",
-        "torusTubeRatio": 0.16
-      },
-      "parent": "root",
-      "attachment": {
-        "parentId": "root",
-        "parentSocket": "root/viscera-band-07c-mount",
-        "structuralParent": "root",
-        "localStart": [
-          0.477,
-          -0.598,
-          0.628
-        ],
-        "localEnd": [
-          0.477,
-          -0.598,
-          0.628
-        ],
-        "contactType": "overlap",
-        "overlap": 0.04,
-        "gapTolerance": 0.004,
-        "contactGeometry": "face-region (zero-length span: not a strut)",
-        "evidenceRefs": [
-          "belly-zone"
-        ]
-      },
-      "dimensions": {
-        "width": 0.58,
-        "height": 0.58,
-        "depth": 0.58,
-        "units": "relative",
-        "confidence": 0.65
-      },
-      "transform": {
-        "position": [
-          0.477,
-          -0.598,
-          0.628
+          -0.458,
+          -0.724,
+          0.62
         ],
         "rotation": [
           0,
@@ -17830,38 +19051,39 @@
   ],
   "repetitionSystems": [
     {
-      "id": "dorsal-deck-plates",
+      "id": "transverse-armour-bands",
       "level": "meso",
       "parent": "root",
       "primitive": "box",
       "material": "hull-cream",
-      "count": 8,
+      "count": 15,
       "instanceScale": [
-        0.66,
-        0.035,
-        0.86
+        0.055,
+        1.0,
+        0.885
       ],
       "placement": {
-        "mode": "linear",
+        "mode": "linear-transverse",
         "axis": [
           1,
           0,
           0
         ],
         "start": [
-          -2.75,
-          0.455,
+          -4.35,
+          0.0,
           0.0
         ],
         "end": [
-          2.29,
-          0.365,
+          3.95,
+          0.0,
           0.0
         ],
-        "radius": 0.0
+        "radius": 0.0,
+        "heightRule": "spans the traced hull section at each station"
       },
-      "realisedBy": "deck-plate-01..08",
-      "note": "Linear array. The stock emitter is radial-only, so this system is realised as explicitly placed components carrying the placement data above."
+      "realisedBy": "armour-band-01..15",
+      "note": "Transverse seams, not fore-aft strips: the reference divides the hull into bands ALONG its length. Realised as explicitly placed components because the stock emitter is radial-only."
     },
     {
       "id": "visceral-tube-runs",
@@ -17869,33 +19091,41 @@
       "parent": "root",
       "primitive": "tube",
       "material": "pod-yellow",
-      "count": 7,
+      "count": 6,
       "instanceScale": [
         1,
         1,
         1
       ],
       "placement": {
-        "mode": "serpentine-spines",
+        "mode": "vertical-lobes",
         "axis": [
-          1,
           0,
+          1,
           0
         ],
+        "lobesPerRun": [
+          1.2,
+          2.3
+        ],
+        "lobeDepth": [
+          0.58,
+          0.92
+        ],
         "start": [
-          -2.6,
-          -0.96,
+          -2.55,
+          -0.24,
           -0.26
         ],
         "end": [
-          0.95,
-          -0.42,
-          0.32
+          0.85,
+          -0.16,
+          0.3
         ],
         "radius": 0.0
       },
-      "realisedBy": "visceral-bundle-01..07",
-      "note": "Seven folded tube spines; three fold back on themselves so the bundle reads as viscera."
+      "realisedBy": "visceral-bundle-01..06",
+      "note": "Six tube spines folded into 1.2-2.3 VERTICAL lobes each, deliberately unequal in count, depth and span so the bundle does not read as a regular coiled spring."
     },
     {
       "id": "viscera-bands",
@@ -17903,7 +19133,7 @@
       "parent": "root",
       "primitive": "torus",
       "material": "machine-grey",
-      "count": 21,
+      "count": 18,
       "instanceScale": [
         0.5,
         0.5,
@@ -17923,7 +19153,7 @@
         ],
         "radius": 0.0
       },
-      "realisedBy": "viscera-band-01a..07c",
+      "realisedBy": "viscera-band-01a..06c",
       "note": "Three bands per tube run, at fractions of arc length."
     },
     {
@@ -18518,8 +19748,7 @@
         "visceral-bundle-03",
         "visceral-bundle-04",
         "visceral-bundle-05",
-        "visceral-bundle-06",
-        "visceral-bundle-07"
+        "visceral-bundle-06"
       ],
       "breakable": true
     }

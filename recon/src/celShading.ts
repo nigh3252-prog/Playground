@@ -74,16 +74,15 @@ function hullDetailTexture(base: string): THREE.CanvasTexture {
     g.fillStyle = grd;
     g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
   }
-  // d02 - panel-line network
-  g.strokeStyle = 'rgba(58,52,40,0.55)';
-  g.lineWidth = 1.6;
-  for (let i = 0; i < 11; i++) {
-    const x = (i + 0.5) * (S / 11) + (rnd() - 0.5) * 8;
-    g.beginPath(); g.moveTo(x, 0); g.lineTo(x + (rnd() - 0.5) * 14, S); g.stroke();
-  }
-  for (let i = 0; i < 5; i++) {
-    const y = (i + 0.5) * (S / 5) + (rnd() - 0.5) * 10;
-    g.beginPath(); g.moveTo(0, y); g.lineTo(S, y + (rnd() - 0.5) * 10); g.stroke();
+  // d02 - panel-line network. ONE direction only. The plate seams that matter are the
+  // transverse ones, and those are now real geometry (armour-band-01..15), so a cross-hatched
+  // texture grid only fought them: it added a horizontal rhythm the reference does not have.
+  // What is left here is fine sub-panel division, kept faint.
+  g.strokeStyle = 'rgba(58,52,40,0.30)';
+  g.lineWidth = 1.2;
+  for (let i = 0; i < 9; i++) {
+    const x = (i + 0.5) * (S / 9) + (rnd() - 0.5) * 8;
+    g.beginPath(); g.moveTo(x, 0); g.lineTo(x + (rnd() - 0.5) * 10, S); g.stroke();
   }
   // d18 - speckle/dirt scatter
   g.fillStyle = 'rgba(42,37,28,0.5)';
@@ -95,7 +94,7 @@ function hullDetailTexture(base: string): THREE.CanvasTexture {
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.repeat.set(3, 3);
+  tex.repeat.set(2, 2);
   return tex;
 }
 

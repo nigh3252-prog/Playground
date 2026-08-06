@@ -116,49 +116,91 @@
       "triangles": 1728
     },
     {
-      "name": "deck-plate-01",
+      "name": "armour-band-01",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "deck-plate-02",
+      "name": "armour-band-02",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "deck-plate-03",
+      "name": "armour-band-03",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "deck-plate-04",
+      "name": "armour-band-04",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "deck-plate-05",
+      "name": "armour-band-05",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "deck-plate-06",
+      "name": "armour-band-06",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "deck-plate-07",
+      "name": "armour-band-07",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "deck-plate-08",
+      "name": "armour-band-08",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "armour-band-09",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "armour-band-10",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "armour-band-11",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "armour-band-12",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "armour-band-13",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "armour-band-14",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1728
+    },
+    {
+      "name": "armour-band-15",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
@@ -251,7 +293,7 @@
       "name": "visceral-bundle-01",
       "kind": "part",
       "module": "meso",
-      "triangles": 2016
+      "triangles": 6336
     },
     {
       "name": "viscera-band-01a",
@@ -275,7 +317,7 @@
       "name": "visceral-bundle-02",
       "kind": "part",
       "module": "meso",
-      "triangles": 2016
+      "triangles": 6336
     },
     {
       "name": "viscera-band-02a",
@@ -299,7 +341,7 @@
       "name": "visceral-bundle-03",
       "kind": "part",
       "module": "meso",
-      "triangles": 2016
+      "triangles": 6336
     },
     {
       "name": "viscera-band-03a",
@@ -323,7 +365,7 @@
       "name": "visceral-bundle-04",
       "kind": "part",
       "module": "meso",
-      "triangles": 2016
+      "triangles": 6336
     },
     {
       "name": "viscera-band-04a",
@@ -347,7 +389,7 @@
       "name": "visceral-bundle-05",
       "kind": "part",
       "module": "meso",
-      "triangles": 2016
+      "triangles": 6336
     },
     {
       "name": "viscera-band-05a",
@@ -371,7 +413,7 @@
       "name": "visceral-bundle-06",
       "kind": "part",
       "module": "meso",
-      "triangles": 2016
+      "triangles": 6336
     },
     {
       "name": "viscera-band-06a",
@@ -387,30 +429,6 @@
     },
     {
       "name": "viscera-band-06c",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "visceral-bundle-07",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 2016
-    },
-    {
-      "name": "viscera-band-07a",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-07b",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-07c",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
@@ -633,5 +651,5 @@
     }
   ],
   "unnamedMeshes": 0,
-  "integralMeshes": 100
+  "integralMeshes": 103
 }

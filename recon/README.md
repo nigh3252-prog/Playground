@@ -37,11 +37,11 @@ cd recon && node verify_app.mjs      # load it in Chromium, exercise controls, s
 |---|---|
 | Reference admission | **pass** — single connected subject, 28% frame coverage |
 | Strict-quality spec validation | **pass** |
-| Multi-angle (degenerate view) | **pass** — ratios 0.39 / 1.61 / 0.49 vs a 0.15 collapse threshold |
-| Part coverage (structure) | **pass** — 99 specified, 105 built, 0 errors, 0 unnamed meshes |
-| Tier 1 scale delta | **pass** — 0.052 (threshold 0.08) |
-| Tier 1 aspect delta | **fail** — 0.059 (threshold 0.05) |
-| Tier 1 silhouette IoU | **fail** — 0.713 (threshold 0.85) |
+| Multi-angle (degenerate view) | **pass** — ratios 0.38 / 0.77 / 0.53 vs a 0.15 collapse threshold |
+| Part coverage (structure) | **pass** — 102 specified, 108 built, 0 errors, 0 unnamed meshes |
+| Tier 1 scale delta | **pass** — 0.030 (threshold 0.08) |
+| Tier 1 aspect delta | **pass** — 0.040 (threshold 0.05) |
+| Tier 1 silhouette IoU | **fail** — 0.711 (threshold 0.85) |
 
 The pipeline was stopped at `form-refinement` with `action: stop` rather than forced past the
 bar. See the reasoning in `object-sculpt-spec.json` → `reviewHistory`.
@@ -66,6 +66,24 @@ mine, both of them wrong *readings* rather than wrong execution:
 A third error surfaced from the same comparison: the traced ventral line through the belly is
 the *viscera*, not the hull. Taking it literally made the body a fat slab, so the hull's own
 ventral line is held near -0.20 there and the tubes carry the mass below it.
+
+### Direction of detail
+
+A follow-up review caught that the detail on both was running the **wrong way**:
+
+- **The guts squiggle up and down, not along.** The tube runs undulated gently while travelling
+  fore-aft, which reads as flat horizontal ribbons. The reference's underside is a row of
+  down-pointing lobes with deep notches between them: the tube plunges, turns at the bottom,
+  climbs back, then advances a little. They are now authored as 1.2–2.3 **vertical lobes** per
+  run, deliberately unequal in count, depth and span — an even lobe count with matched phases
+  read as a coiled spring, which is just as wrong as the ribbons were.
+- **The armour plating is banded transversely, not along the hull.** The plate seams in the
+  reference are near-vertical lines dividing the hull into bands along its length. The build had
+  fore-aft deck strips plus a cross-hatched texture grid, giving the opposite rhythm. There are
+  now 15 **transverse armour bands** sized to the traced hull section at each station, and the
+  texture's horizontal line set was removed so it stops fighting them. The bands are kept barely
+  proud of the flank and stop short of the deck line — at full section height they read as
+  scaffolding ribs rather than plating.
 
 ## Honest limits
 
