@@ -8,13 +8,163 @@
       "triangles": 96
     },
     {
-      "name": "bow-plane-port",
+      "name": "body-section-01",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-02",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-03",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-04",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-05",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-06",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-07",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-08",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-09",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-10",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-11",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-12",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-13",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-14",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-15",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-16",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-17",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-18",
+      "kind": "part",
+      "module": "macro",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-19",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-20",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-21",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-22",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-23",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-24",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "body-section-25",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 1632
+    },
+    {
+      "name": "caudal-lobe-upper",
       "kind": "part",
       "module": "macro",
       "triangles": 12
     },
     {
-      "name": "bow-plane-stbd",
+      "name": "caudal-lobe-lower",
       "kind": "part",
       "module": "macro",
       "triangles": 12
@@ -23,7 +173,7 @@
       "name": "ventral-keel-fin",
       "kind": "part",
       "module": "macro",
-      "triangles": 20
+      "triangles": 16
     },
     {
       "name": "dorsal-mast-fin",
@@ -96,114 +246,6 @@
       "kind": "part",
       "module": "meso",
       "triangles": 4992
-    },
-    {
-      "name": "bow-fairing",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1584
-    },
-    {
-      "name": "hull-flank-rail-stbd",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "hull-flank-rail-port",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-01",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-02",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-03",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-04",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-05",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-06",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-07",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-08",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-09",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-10",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-11",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-12",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-13",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-14",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
-    },
-    {
-      "name": "armour-band-15",
-      "kind": "part",
-      "module": "meso",
-      "triangles": 1728
     },
     {
       "name": "wing-leading-spar",
@@ -293,7 +335,7 @@
       "name": "visceral-bundle-01",
       "kind": "part",
       "module": "meso",
-      "triangles": 6336
+      "triangles": 4160
     },
     {
       "name": "viscera-band-01a",
@@ -302,70 +344,22 @@
       "triangles": 4608
     },
     {
-      "name": "viscera-band-01b",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-01c",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
       "name": "visceral-bundle-02",
       "kind": "part",
       "module": "meso",
-      "triangles": 6336
-    },
-    {
-      "name": "viscera-band-02a",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-02b",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-02c",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
+      "triangles": 4160
     },
     {
       "name": "visceral-bundle-03",
       "kind": "part",
       "module": "meso",
-      "triangles": 6336
-    },
-    {
-      "name": "viscera-band-03a",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-03b",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-03c",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
+      "triangles": 4160
     },
     {
       "name": "visceral-bundle-04",
       "kind": "part",
       "module": "meso",
-      "triangles": 6336
+      "triangles": 4160
     },
     {
       "name": "viscera-band-04a",
@@ -374,64 +368,124 @@
       "triangles": 4608
     },
     {
-      "name": "viscera-band-04b",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-04c",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
       "name": "visceral-bundle-05",
       "kind": "part",
       "module": "meso",
-      "triangles": 6336
-    },
-    {
-      "name": "viscera-band-05a",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-05b",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
-    },
-    {
-      "name": "viscera-band-05c",
-      "kind": "part",
-      "module": "micro",
-      "triangles": 4608
+      "triangles": 4160
     },
     {
       "name": "visceral-bundle-06",
       "kind": "part",
       "module": "meso",
-      "triangles": 6336
+      "triangles": 4160
     },
     {
-      "name": "viscera-band-06a",
+      "name": "visceral-bundle-07",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "viscera-band-07a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "viscera-band-06b",
+      "name": "visceral-bundle-08",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "visceral-bundle-09",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "visceral-bundle-10",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "viscera-band-10a",
       "kind": "part",
       "module": "micro",
       "triangles": 4608
     },
     {
-      "name": "viscera-band-06c",
+      "name": "visceral-bundle-11",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "visceral-bundle-12",
+      "kind": "part",
+      "module": "meso",
+      "triangles": 4160
+    },
+    {
+      "name": "gut-bridge-01",
       "kind": "part",
       "module": "micro",
-      "triangles": 4608
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-02",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-03",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-05",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-06",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-07",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-08",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-09",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-10",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
+    },
+    {
+      "name": "gut-bridge-11",
+      "kind": "part",
+      "module": "micro",
+      "triangles": 360
     },
     {
       "name": "manifold-spine",
@@ -470,61 +524,61 @@
       "triangles": 1632
     },
     {
-      "name": "radiator-vane-01",
+      "name": "gill-slit-01",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-02",
+      "name": "gill-slit-02",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-03",
+      "name": "gill-slit-03",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-04",
+      "name": "gill-slit-04",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-05",
+      "name": "gill-slit-05",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-06",
+      "name": "gill-slit-06",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-07",
+      "name": "gill-slit-07",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-08",
+      "name": "gill-slit-08",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-09",
+      "name": "gill-slit-09",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
     },
     {
-      "name": "radiator-vane-10",
+      "name": "gill-slit-10",
       "kind": "part",
       "module": "meso",
       "triangles": 1728
@@ -536,25 +590,25 @@
       "triangles": 1728
     },
     {
-      "name": "nozzle-ring-red",
+      "name": "mouth-ring-red",
       "kind": "part",
       "module": "meso",
       "triangles": 8
     },
     {
-      "name": "nozzle-ring-blue",
+      "name": "mouth-ring-blue",
       "kind": "part",
       "module": "meso",
       "triangles": 8
     },
     {
-      "name": "nozzle-throat-orange",
+      "name": "mouth-throat",
       "kind": "part",
       "module": "micro",
       "triangles": 8
     },
     {
-      "name": "nozzle-core",
+      "name": "mouth-core",
       "kind": "part",
       "module": "micro",
       "triangles": 8
@@ -641,7 +695,7 @@
       "name": "root",
       "kind": "part",
       "module": "macro",
-      "triangles": 192
+      "triangles": 4160
     },
     {
       "name": "root",
@@ -651,5 +705,5 @@
     }
   ],
   "unnamedMeshes": 0,
-  "integralMeshes": 103
+  "integralMeshes": 112
 }

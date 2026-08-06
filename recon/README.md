@@ -37,11 +37,11 @@ cd recon && node verify_app.mjs      # load it in Chromium, exercise controls, s
 |---|---|
 | Reference admission | **pass** — single connected subject, 28% frame coverage |
 | Strict-quality spec validation | **pass** |
-| Multi-angle (degenerate view) | **pass** — ratios 0.38 / 0.77 / 0.53 vs a 0.15 collapse threshold |
-| Part coverage (structure) | **pass** — 102 specified, 108 built, 0 errors, 0 unnamed meshes |
-| Tier 1 scale delta | **pass** — 0.030 (threshold 0.08) |
-| Tier 1 aspect delta | **pass** — 0.040 (threshold 0.05) |
-| Tier 1 silhouette IoU | **fail** — 0.711 (threshold 0.85) |
+| Multi-angle (degenerate view) | **pass** — ratios 0.34 / 0.56 / 0.51 vs a 0.15 collapse threshold |
+| Part coverage (structure) | **pass** — 111 specified, 117 built, 0 errors, 0 unnamed meshes |
+| Tier 1 scale delta | **borderline** — 0.080 (threshold 0.08) |
+| Tier 1 aspect delta | **fail** — 0.084 (threshold 0.05) |
+| Tier 1 silhouette IoU | **fail** — 0.652 (threshold 0.85) |
 
 The pipeline was stopped at `form-refinement` with `action: stop` rather than forced past the
 bar. See the reasoning in `object-sculpt-spec.json` → `reviewHistory`.
@@ -85,6 +85,36 @@ A follow-up review caught that the detail on both was running the **wrong way**:
   proud of the flank and stop short of the deck line — at full section height they read as
   scaffolding ribs rather than plating.
 
+### It is a fish
+
+The subject is a **billfish/shark hybrid done as a spaceship**, and it faces **+X — image
+right**. Every earlier pass had it backwards. The evidence, once looked for:
+
+- the +X end is a long tapering **rostrum** (a swordfish bill), not a tail needle;
+- immediately behind it sit slanted parallel yellow slits that are **gill slits**, which the
+  build had been treating as a chevron radiator vane array;
+- the concentric red/blue/orange rings at the bill root are a **mouth/eye cluster**, modelled
+  until now as an exhaust nozzle;
+- the -X end is a **heterocercal tail** — a long upper lobe with a shorter lower lobe — which
+  had been modelled first as a delta wing and then as a pair of bow planes.
+
+Acting on that changed the construction, not just the labels. The flat extruded slab is gone;
+the body is now **25 transverse elliptical sections** stacked along the axis, each sized to the
+traced silhouette height and to an inferred fish beam that swells behind the gills and tapers
+to a narrow caudal peduncle. Each section rim doubles as one of the reference's transverse
+plate seams, so the banding is the body's own construction rather than a decorative layer, and
+the separate armour-band ribs and the long fore-aft flank rails were both retired as redundant.
+
+The guts are now **twelve fat overlapping capsules** plus U-bend arcs joining their tops, rather
+than swept tubes: the reference's character is the hard dark notch where two lobes press
+together, and a continuous sweep has no notches.
+
+**The fidelity numbers went down for this.** Silhouette IoU 0.711 → 0.652, aspect delta 0.040 →
+0.084. A slender fish body covers less of the reference's frame area than the fuller shape it
+replaced. The trade was deliberate: the form language and the orientation are now right, and
+the lost overlap is recoverable by filling the mid-body out, whereas a ship pointing the wrong
+way is not recoverable at all.
+
 ## Honest limits
 
 - **The IoU ceiling argument has been retired.** An earlier version of this file argued that
@@ -101,7 +131,7 @@ A follow-up review caught that the detail on both was running the **wrong way**:
   its 0.7 threshold on all ten materials (0.84–0.86), but on a *drawing*: the extracted
   roughness/normal/AO describe brush and ink texture, so only the albedo and the absence of a
   specular lobe are treated as load-bearing. The relief maps are deliberately not wired in.
-- Remaining geometry deltas, largest first: the stern chevron vane array and the concentric
-  triangular nozzle read far too small and are largely occluded from the review camera; the bow
-  chin is blockier than the reference's angular jaw; the reference's characteristic thin
-  overhanging deck plates along the top edge are not modelled.
+- Remaining geometry deltas, largest first: the mid-body is too slim and sits below the
+  reference's dorsal line, which is most of the lost IoU; the gill slit bank and the mouth rings
+  read far too small; the tail fluke lobes are simple quads rather than the reference's swept
+  blades; and the reference's thin overhanging deck plates along the top edge are not modelled.

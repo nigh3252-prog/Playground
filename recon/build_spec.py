@@ -35,7 +35,7 @@ a["complexity"]["scores"] = {  # rubric is 0-3, not 0-10
 }
 
 spec["coordinateFrame"] = {
-    "front": "-X is the bow (snout, canopy blister, ventral chin)",
+    "front": "+X is the HEAD: bill/rostrum, mouth rings, gill slits. -X is the tail fluke.",
     "up": "+Y is dorsal (mast fin direction); +Z is starboard",
     "scaleReference": "normalised: 10.0 units bow-tip to tail-tip; 1 unit = 343 px in the reference",
 }
@@ -50,7 +50,7 @@ spec["referenceCamera"] = {
              "INFERRED from silhouette extents, not solved - refine against the comparison sheet."),
 }
 spec["silhouette"] = {
-    "boundingShape": "slender blade/fish body tapering to points fore and aft; NO delta planform",
+    "boundingShape": "billfish/shark body: rounded transverse sections, long rostrum at +X, heterocercal tail at -X",
     "aspectRatios": [
         {"name": "length:height(incl. mast fin)", "value": 2.7},
         {"name": "length:hull-thickness", "value": 14.1},
@@ -58,34 +58,34 @@ spec["silhouette"] = {
     ],
     "symmetry": "bilateral about the XY (fore-aft vertical) plane",
     "dominantCurves": [
-        "traced dorsal deck line falling from Y=0.52 at the snout to Y=0.02 at the tail tip",
-        "grey ventral chin descending to Y=-1.05 near X=-2.2",
-        "tube runs folded into vertical down-hanging lobes filling the belly cavity",
+        "traced dorsal line falling from Y=0.52 over the shoulder to Y=0.02 at the bill tip",
+        "ventral/anal fin descending to Y=-1.00 near X=-1.9",
+        "fat gut lobes squashed together under the belly, with hard notches between them",
     ],
     "negativeSpaces": [
-        "recessed stern drive bay between hull spine and tail blade",
+        "open gill bay behind the head",
         "open belly cavity the tube runs spill out of",
         "notch between mast fin outer shell leaves exposing inner machinery",
     ],
     "landmarks": [
-        {"id": "bow-tip", "position": [-4.91, 0.30, 0.0]},
+        {"id": "bill-tip", "position": [4.71, 0.02, 0.0]},
         {"id": "mast-tip", "position": [-1.72, 2.52, 0.0]},
-        {"id": "tail-tip", "position": [5.00, 0.02, 0.0]},
-        {"id": "keel-apex", "position": [-1.92, -1.02, 0.0]},
-        {"id": "nozzle-apex", "position": [2.90, -0.06, 0.0]},
+        {"id": "tail-tip", "position": [-4.95, 0.56, 0.0]},
+        {"id": "anal-fin-apex", "position": [-1.88, -1.00, 0.0]},
+        {"id": "mouth-apex", "position": [2.90, -0.06, 0.0]},
     ],
 }
 spec["viewEvidence"] = [
     {"id": "full-object", "view": "primary", "imageRegion": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "units": "normalized"},
      "observations": ["single port-beam elevation of the whole vehicle on a black field"], "confidence": 0.95},
     {"id": "bow-zone", "view": "detail", "imageRegion": {"x": 0.095, "y": 0.380, "width": 0.243, "height": 0.285, "units": "normalized"},
-     "observations": ["slender snout with plated deck", "long grey ventral chin", "canopy blister", "spar rivet rows"], "confidence": 0.88},
+     "observations": ["heterocercal tail fluke, upper and lower lobes", "ventral/anal fin", "fairing blister", "fastener rows"], "confidence": 0.88},
     {"id": "mast-zone", "view": "detail", "imageRegion": {"x": 0.355, "y": 0.060, "width": 0.135, "height": 0.390, "units": "normalized"},
      "observations": ["tapered mast fin", "exposed grey machinery, yellow ladder rack, teal strip, red block", "twin gold pivot bosses", "faceted base housing with diamond hatch"], "confidence": 0.92},
     {"id": "belly-zone", "view": "detail", "imageRegion": {"x": 0.295, "y": 0.440, "width": 0.325, "height": 0.295, "units": "normalized"},
-     "observations": ["packed mass of tubes folded into vertical down-hanging lobes, reading as intestines", "steel cinch bands", "plumbing manifold with red/blue/white segments", "circular red-and-blue port"], "confidence": 0.90},
+     "observations": ["fat gut lobes squashed together, bulging under one another like opened-up fish gut", "steel cinch bands", "plumbing manifold with red/blue/white segments", "circular red-and-blue port"], "confidence": 0.90},
     {"id": "stern-zone", "view": "detail", "imageRegion": {"x": 0.655, "y": 0.440, "width": 0.195, "height": 0.200, "units": "normalized"},
-     "observations": ["chevron louvre vane array", "triangular concentric nozzle", "blue bay trim"], "confidence": 0.93},
+     "observations": ["two banks of slanted gill slits", "concentric mouth/eye rings at the bill root", "blue bay trim"], "confidence": 0.93},
 ]
 
 # ------------------------------------------------------------------ materials
@@ -283,51 +283,112 @@ def ex(points, depth):
     return {"profile2D": {"points": [[round(p[0],3), round(p[1],3)] for p in points], "depth": depth}}
 
 # ---- MACRO (7) -------------------------------------------------------------
-# Hull thickness measured off the reference: deck y~880px, ventral line y~1000px at the pod
-# station => 120px = 0.35 units. The first pass authored it at 0.72 and read as an aircraft
-# fuselage rather than the reference's flat plated spine.
+# ============================================================== FISH ANATOMY
+# The subject is a FISH done as a spaceship - a billfish/shark hybrid - and it faces +X, i.e.
+# image-RIGHT. Evidence: the +X end is a long tapering rostrum (a swordfish bill); immediately
+# behind it sit slanted parallel yellow slits that are unmistakably GILL SLITS; and the -X end
+# is a heterocercal tail with a large upper lobe and a smaller lower lobe. Earlier passes had
+# the vehicle facing the OTHER way and read the gill rakers as a radiator vane array and the
+# mouth as an exhaust nozzle.
+#
+# Side profile TRACED from the reference silhouette: for each image column the subject mask's
+# top and bottom were read and converted with X=(x-2185)/343, Y=(1030-y)/343. The ventral line
+# below is the BODY's, not the raw trace - through the belly the traced bottom is the viscera.
 HULL = [(-4.91, 0.30), (-4.48, 0.47), (-3.60, 0.52), (-2.73, 0.47), (-1.85, 0.50),
         (-0.98, 0.52), (-0.10, 0.48), (0.77, 0.42), (1.65, 0.36), (2.52, 0.30),
         (3.40, 0.21), (4.27, 0.09), (4.71, 0.02),
         (4.71, -0.02), (4.27, -0.08), (3.40, -0.19), (2.52, -0.30), (1.65, -0.34),
         (0.77, -0.22), (-0.10, -0.18), (-0.98, -0.18), (-1.85, -0.20), (-2.73, -0.24),
         (-3.60, -0.18), (-4.48, -0.02)]
-# NOTE the ventral line above is the HULL's, not the traced silhouette's. Through the belly
-# (X -2.7..+0.8) the traced bottom runs near -1.1, but that is the VISCERA hanging below, not
-# the hull. Taking the trace literally there made the body a fat slab and left the tubes with
-# nothing to hang from.
-comp("root", "Hull body", "macro", "body", "extrude", None, (0,0,-0.43),
-     desc=ex(HULL, 0.86), topo="assembled-solid", imp=1.0, conf=0.82,
-     why=("Continuous plated monocoque, slender and blade-like - a fish body, not an aircraft. "
-          "Profile TRACED from the reference silhouette rather than inferred. There is NO delta "
-          "planform: the wide bright planes in the reference are this narrow body's own "
-          "overlapping armour plating seen at a shallow angle, not wings extending laterally."),
-     feats=[{"id":"deck-plate-ridges","kind":"seam","description":"15 transverse plate seams dividing the hull into bands along its length","detailRefs":["d05"]},
+
+def _hull_span_at(x):
+    half = len(HULL) // 2
+    top, bot = HULL[:half + 1], HULL[half + 1:][::-1]
+    def _interp(chain):
+        pts = sorted(chain)
+        if x <= pts[0][0]: return pts[0][1]
+        if x >= pts[-1][0]: return pts[-1][1]
+        for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+            if xa <= x <= xb:
+                t = 0.0 if xb == xa else (x - xa) / (xb - xa)
+                return ya + (yb - ya) * t
+        return pts[-1][1]
+    return _interp(top), _interp(bot)
+
+# Beam (half-width) along the body. INFERRED - one side elevation cannot show it - but shaped
+# as a fish rather than guessed flat: near zero at the bill tip, swelling to a shoulder behind
+# the gills, tapering to a narrow caudal peduncle before the tail fluke.
+BEAM = [(-4.91, 0.030), (-4.20, 0.070), (-3.60, 0.105), (-2.73, 0.150), (-1.85, 0.196),
+        (-0.98, 0.225), (-0.10, 0.238), (0.77, 0.232), (1.65, 0.212), (2.52, 0.160),
+        (3.10, 0.106), (3.80, 0.062), (4.35, 0.034), (4.71, 0.016)]
+
+def _beam_at(x):
+    if x <= BEAM[0][0]: return BEAM[0][1]
+    if x >= BEAM[-1][0]: return BEAM[-1][1]
+    for (xa, wa), (xb, wb) in zip(BEAM, BEAM[1:]):
+        if xa <= x <= xb:
+            t = 0.0 if xb == xa else (x - xa) / (xb - xa)
+            return wa + (wb - wa) * t
+    return BEAM[-1][1]
+
+# root is a thin internal spine plate, NOT the visible body. It must stay scale-neutral because
+# every other component hangs off it, and a dimension-scaled parent passes its non-uniform
+# scale down the scene graph.
+SPINE = [(x, y * 0.55) for (x, y) in HULL]
+comp("root", "Internal spine", "macro", "body", "extrude", None, (0, 0, -0.06),
+     desc=ex(SPINE, 0.12), topo="assembled-solid", imp=1.0, conf=0.80,
+     why=("Structural spine running the length of the fish, hidden inside the body sections. "
+          "Kept scale-neutral so it can parent the rest of the tree without distorting it."),
+     feats=[{"id":"deck-plate-ridges","kind":"seam","description":"transverse plate seams dividing the hull into bands along its length","detailRefs":["d05"]},
             {"id":"spar-rivet-rows","kind":"fastener","description":"fastener dot rows along the flank rails","detailRefs":["d04"]}],
      ev=("full-object","bow-zone"), det=("d02","d03","d05","d18"), tier="blockout")
+
+# The visible body: a stack of TRANSVERSE elliptical sections. This gives the fish a rounded
+# cross-section instead of the flat extruded slab earlier passes used, and it makes the armour
+# banding structural rather than decorative - each section's rim IS a plate seam, so the
+# reference's transverse rhythm holds from every angle.
+SECTION_X = [round(-4.70 + i * 0.392, 3) for i in range(25)]
+for _i, _sx in enumerate(SECTION_X):
+    _t, _b = _hull_span_at(_sx)
+    _h = max(0.055, (_t - _b) / 2.0)
+    _w = max(0.045, _beam_at(_sx))
+    _over = 1.035 if _i % 2 == 0 else 1.0   # overlapping plate step
+    comp(f"body-section-{_i+1:02d}", f"Body section {_i+1}",
+         "macro" if _i in (7, 12, 17) else "meso", "panel", "cylinder", "root",
+         (_sx, round((_t + _b) / 2.0, 3), 0.0), rot=(0, 0, 90*RAD),
+         dims={"width": round(2*_h*_over, 3), "height": 0.445,
+               "depth": round(2*_w*_over, 3), "units": "relative", "confidence": 0.50},
+         topo="assembled-solid", imp=0.5, conf=0.6,
+         why=("Transverse elliptical body section. Stacked along the axis these loft the fish's "
+              "rounded form, and each rim doubles as one of the reference's transverse plate "
+              "seams. Height is traced from the silhouette; beam is inferred from a fish taper."),
+         ev=("full-object",), det=("d05",),
+         tier="blockout" if _i in (7, 12, 17) else "structural")
 
 # The forward-swept delta wing and the broad aft tail blade that used to be defined here are
 # GONE. Both were fabricated from a misreading of the single side elevation. What the reference
 # actually has at the bow is a slim plane hugging the flank.
-BOW_FIN = [(-4.34, 0.30), (-3.00, 0.26), (-3.26, -0.16), (-4.18, -0.12)]
-comp("bow-plane-port", "Bow plane (port)", "macro", "fin", "extrude", "root", (0,0,-0.78),
-     desc=ex(BOW_FIN, 0.22), topo="conforming-shell", material="hull-grey", imp=0.6, conf=0.50,
-     why=("Slim plane hugging the hull flank. Sized as a FIN, not a wing panel: the wide "
-          "forward-swept delta this replaces was fabricated from a misreading of the single "
-          "side elevation, and the reference has no laterally-extending wings at all."),
-     feats=[{"id":"leading-edge-chamfer","kind":"bevel","description":"chamfered leading edge","edgeTreatment":{"type":"chamfer","bevelRadius":0.03,"segments":2},"detailRefs":["d09"]}],
+# Heterocercal tail: a long upper lobe sweeping up and back, and a shorter lower lobe. Both
+# traced off recon/crops/end-left.png.
+TAIL_UPPER = [(-4.95, 0.56), (-3.28, 0.30), (-3.22, 0.02), (-4.82, 0.30)]
+TAIL_LOWER = [(-3.30, -0.10), (-2.52, -0.22), (-3.12, -0.60), (-3.90, -0.80)]
+comp("caudal-lobe-upper", "Caudal fin, upper lobe", "macro", "fin", "extrude", "root", (0,0,-0.09),
+     desc=ex(TAIL_UPPER, 0.18), topo="conforming-shell", imp=0.80, conf=0.75,
+     why=("Upper lobe of a heterocercal (shark-style) tail. Earlier passes read this end as the "
+          "BOW and modelled it first as a delta wing and then as a bow plane; it is the fluke."),
+     feats=[{"id":"leading-edge-chamfer","kind":"bevel","description":"chamfered fin edge","edgeTreatment":{"type":"chamfer","bevelRadius":0.03,"segments":2},"detailRefs":["d09"]}],
      ev=("bow-zone",), det=("d09","d04"), tier="blockout")
-comp("bow-plane-stbd", "Bow plane (starboard)", "macro", "fin", "extrude", "root", (0,0,0.56),
-     desc=ex(BOW_FIN, 0.22), topo="conforming-shell", material="hull-grey", imp=0.6, conf=0.45,
-     why="Mirror of the port bow plane; starboard carries no independent evidence in this view.",
+comp("caudal-lobe-lower", "Caudal fin, lower lobe", "macro", "fin", "extrude", "root", (0,0,-0.08),
+     desc=ex(TAIL_LOWER, 0.16), topo="conforming-shell", material="hull-grey", imp=0.70, conf=0.72,
+     why="Shorter lower lobe of the tail, below and forward of the upper lobe.",
      ev=("bow-zone",), tier="blockout")
 
-# Traced: the grey ventral chin/jaw descends from the snout to Y=-1.05 near X=-2.2.
-KEEL = [(-4.62,0.02),(-2.28,-0.30),(-1.92,-1.02),(-2.66,-1.06),(-3.58,-0.62),(-4.56,-0.24)]
-comp("ventral-keel-fin", "Ventral keel / chin", "macro", "fin", "extrude", "root", (0,0,-0.21),
-     desc=ex(KEEL, 0.42), topo="conforming-shell", material="hull-grey", imp=0.7, conf=0.7,
-     why=("The reference's long grey jaw under the bow, reaching Y=-1.05. Traced, not estimated; "
-          "the previous pass had it as a small triangle."),
+# Ventral fin between the vent and the tail, traced from the reference.
+ANAL_FIN = [(-3.05,-0.16),(-1.95,-0.26),(-1.88,-1.00),(-2.62,-1.02),(-3.10,-0.62)]
+comp("ventral-keel-fin", "Ventral / anal fin", "macro", "fin", "extrude", "root", (0,0,-0.17),
+     desc=ex(ANAL_FIN, 0.34), topo="conforming-shell", material="hull-grey", imp=0.7, conf=0.7,
+     why=("Ventral fin reaching Y=-1.00. Read as a jaw when the vehicle was thought to face the "
+          "other way; on a fish facing +X it sits between the vent and the tail."),
      ev=("bow-zone",), tier="blockout")
 
 # Measured off recon/crops/dorsalfin.png: base X -1.63..-1.09 (0.54 wide) at Y 0.88 sitting on
@@ -366,11 +427,11 @@ comp("visceral-cavity", "Visceral cavity shell", "macro", "structure", "box", "r
           "must hang clear below it as they do in the reference."),
      ev=("belly-zone",), tier="blockout")
 
-comp("stern-bay-housing", "Stern drive bay housing", "macro", "structure", "box", "root", (2.05,-0.09,-0.52),
+comp("stern-bay-housing", "Gill bay housing", "macro", "structure", "box", "root", (2.05,-0.09,-0.52),
      dims={"width":1.70,"height":0.58,"depth":0.34,"units":"relative","confidence":0.75},
      material="hull-grey", topo="assembled-solid", imp=0.85, conf=0.75,
-     why=("Back wall of the recessed bay. The reference bay is OPEN toward the viewer with the "
-          "vane array and nozzle set into it; a full-depth solid box occluded both."),
+     why=("Back wall of the open gill bay behind the head. The reference bay is OPEN toward the "
+          "viewer with the gill slits and mouth set into it; a full-depth solid box occluded both."),
      ev=("stern-zone",), det=("d10","d11"), tier="blockout")
 
 # ---- MESO ------------------------------------------------------------------
@@ -379,55 +440,22 @@ comp("canopy-blister", "Canopy / sensor blister", "meso", "detail", "ellipsoid",
      material="glass-dark", topo="continuous-sculpt", imp=0.55, conf=0.6,
      why="Doubly-curved blister; a sphere section is the correct topology class, not a faceted box.",
      ev=("bow-zone",))
-comp("bow-fairing", "Bow nose fairing", "meso", "detail", "cone", "root", (-3.52,0.10,0),
-     rot=(0,0,90*RAD), dims={"width":0.34,"height":0.55,"depth":0.42,"units":"relative","confidence":0.6},
-     topo="assembled-solid", why="Tapered nose cap closing the hull spine forward.", ev=("bow-zone",))
-for i, xz in enumerate([0.47, -0.47]):
-    side = "stbd" if xz > 0 else "port"
-    comp(f"hull-flank-rail-{side}", f"Hull flank rail ({side})", "meso", "structure", "box", "root",
-         (-0.30, 0.17, xz), dims={"width":8.6,"height":0.045,"depth":0.05,"units":"relative","confidence":0.7},
-         material="hull-grey", topo="assembled-solid",
-         why=("The one genuinely fore-aft line in the reference. Kept thin so it does not "
-              "compete with the transverse banding, which is the dominant rhythm."),
-         ev=("full-object",), det=("d04",))
-# Armour banding. The reference's plate seams run TRANSVERSELY - near-vertical lines crossing
-# the hull that divide it into bands along its length, with each plate stepping over the next.
-# The previous pass laid flat plates along the deck and relied on a texture grid, which read as
-# horizontal striping: the exact opposite rhythm.
-def _hull_span_at(x):
-    """Top and bottom of the traced HULL profile at station x."""
-    half = len(HULL) // 2
-    top, bot = HULL[:half + 1], HULL[half + 1:][::-1]
-    def _interp(chain):
-        pts = sorted(chain)
-        if x <= pts[0][0]: return pts[0][1]
-        if x >= pts[-1][0]: return pts[-1][1]
-        for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
-            if xa <= x <= xb:
-                t = 0.0 if xb == xa else (x - xa) / (xb - xa)
-                return ya + (yb - ya) * t
-        return pts[-1][1]
-    return _interp(top), _interp(bot)
+# The tapered nose cone that used to sit here was a leftover from the reversed reading.
 
-BAND_X = [-4.35, -3.85, -3.35, -2.85, -2.35, -1.15, -0.60, -0.05,
-          0.50, 1.05, 1.95, 2.45, 2.95, 3.45, 3.95]
-for _i, _bx in enumerate(BAND_X):
-    _t, _b = _hull_span_at(_bx)
-    _h = max(0.09, (_t - _b) * 0.90)   # stop short of the deck line: a seam, not a rib
-    comp(f"armour-band-{_i+1:02d}", f"Armour band {_i+1}", "meso", "panel", "box", "root",
-         (_bx, (_t + _b) / 2.0, 0.0),
-         dims={"width":0.055,"height":round(_h, 3),"depth":0.885,"units":"relative","confidence":0.72},
-         topo="assembled-solid", imp=0.45, conf=0.75,
-         why=("Transverse plate seam across the hull section - the reference's dominant surface "
-              "rhythm. Real geometry rather than texture so the direction holds from every "
-              "angle, but kept barely proud of the flank and short of the deck line: at full "
-              "section height and 0.085 thick these read as scaffolding ribs, not plating."),
-         ev=("full-object",), det=("d05",), tier="structural")
+# The two long fore-aft flank rails that used to run here are gone. With the body built from
+# sectioned plating every rim is already a seam, and an 8.6-long rail read as a scaffold
+# pole bolted along the fish.
 
-comp("wing-leading-spar", "Bow plane spar", "meso", "structure", "box", "root", (-3.66,0.10,0),
-     dims={"width":1.45,"height":0.08,"depth":1.32,"units":"relative","confidence":0.55},
-     material="hull-grey", topo="assembled-solid", scale=[1,1,1],
-     why="Straight spar box across the bow plane roots.", ev=("bow-zone",), det=("d04",), tier="structural")
+# The separate transverse armour-band ribs that used to be here are GONE: the body sections
+# above supersede them. Each section rim is a plate seam, so the banding is now the body's own
+# construction rather than a decorative layer stuck onto a slab.
+
+comp("wing-leading-spar", "Tail root spar", "meso", "structure", "box", "root", (-3.30,0.06,0),
+     dims={"width":0.34,"height":0.07,"depth":0.46,"units":"relative","confidence":0.55},
+     material="hull-grey", topo="assembled-solid",
+     # No explicit scale: pinning it to [1,1,1] overrode dimensions and this rendered as a
+     # 1x1x1 grey cube parked on the caudal peduncle.
+     why="Straight spar box across the caudal fin roots.", ev=("bow-zone",), det=("d04",), tier="structural")
 comp("tail-spine-rail", "Tail spine rail", "meso", "structure", "box", "root", (2.90,0.02,0),
      dims={"width":4.1,"height":0.06,"depth":0.18,"units":"relative","confidence":0.65},
      material="hull-grey", topo="assembled-solid",
@@ -476,58 +504,68 @@ comp("mast-base-housing", "Mast base housing", "meso", "structure", "extrude", "
 # belly, cinched at intervals by steel bands, with the hard plumbing running above it. The
 # previous pass modelled seven neat capsules in two rows, which gets the character exactly
 # backwards: the identity cue here is organic disorder set against the hard hull.
-def _gut(phase, x0, x1, y_top, z0, lobes, depth, z_amp, n=44):
-    """A tube folded into VERTICAL lobes: it plunges, turns at the bottom, climbs back, then
-    advances a little and repeats. The reference's underside is a row of down-pointing lobes
-    with deep notches between them, so the dominant axis of motion is up-down, NOT along the
-    hull. An earlier version undulated gently while travelling fore-aft, which read as flat
-    horizontal ribbons instead of packed viscera."""
-    pts = []
-    for k in range(n):
-        u = k / (n - 1)
-        x = x0 + (x1 - x0) * u
-        # 1-cos gives a lobe that hangs DOWN from the cavity mouth and returns to it
-        y = y_top - depth * (1.0 - math.cos(u * 2.0 * math.pi * lobes + phase)) * 0.5
-        z = z0 + z_amp * math.sin(u * 2.0 * math.pi * lobes * 0.5 + phase * 1.3)
-        pts.append([round(x, 3), round(y, 3), round(z, 3)])
-    return pts
-
-GUTS = [
-    # phase  x0     x1    y_top   z0    lobes depth z_amp radius
-    (0.00, -2.45,  0.30, -0.18,  0.18, 1.8, 0.84, 0.09, 0.30),
-    (2.40, -1.55,  0.85, -0.20,  0.00, 1.6, 0.70, 0.11, 0.32),
-    (4.10, -2.55, -0.20, -0.16, -0.18, 1.4, 0.92, 0.08, 0.29),
-    (1.05, -0.95,  0.80, -0.22, -0.24, 1.3, 0.62, 0.12, 0.31),
-    (5.30, -2.20,  0.55, -0.17,  0.28, 2.3, 0.78, 0.10, 0.26),
-    (3.15, -1.90,  0.10, -0.24,  0.10, 1.2, 0.58, 0.09, 0.27),
+# Guts. If you opened up a fish, this is the tube gut spilling out: fat sausages squashed
+# together side by side, each bulging under its neighbours, with hard dark notches where two
+# adjacent lobes press against each other. A smooth swept tube - which is what the previous
+# pass used - gives a continuous wave with no notches, so it read as a coiled spring rather
+# than as packed viscera. Each lobe is therefore its OWN capsule, sized and dropped
+# individually and overlapped with the next, and short tube arcs join the tops so the run
+# still reads as one folded gut and not a rack of separate pods.
+#            x      y_mid   z     len   radius
+SAUSAGES = [
+    (-2.38, -0.52,  0.14, 0.50, 0.24),
+    (-2.02, -0.70, -0.02, 0.92, 0.31),
+    (-1.66, -0.58,  0.16, 0.62, 0.25),
+    (-1.26, -0.76, -0.08, 1.02, 0.33),
+    (-0.90, -0.55,  0.12, 0.54, 0.23),
+    (-0.52, -0.72, -0.04, 0.88, 0.30),
+    (-0.14, -0.60,  0.15, 0.66, 0.26),
+    ( 0.26, -0.68, -0.06, 0.80, 0.28),
+    ( 0.62, -0.50,  0.10, 0.44, 0.22),
+    (-2.16, -0.40, -0.18, 0.38, 0.20),
+    (-1.08, -0.44, -0.20, 0.46, 0.21),
+    ( 0.08, -0.40, -0.18, 0.36, 0.19),
 ]
-for _i, (_ph, _x0, _x1, _yt, _z0, _lobes, _depth, _zamp, _r) in enumerate(GUTS):
-    _pts = _gut(_ph, _x0, _x1, _yt, _z0, _lobes, _depth, _zamp)
-    comp(f"visceral-bundle-{_i+1:02d}", f"Visceral tube run {_i+1}", "meso", "payload", "tube",
-         "root", (0, 0, 0),
-         desc={"tubePath": {"points": _pts, "radius": _r, "radialSegments": 12, "closed": False}},
-         topo="continuous-sculpt", material="pod-yellow", imp=0.85, conf=0.70,
-         why=("Soft tube folded into vertical lobes. The reference's underside is a row of "
-              "down-pointing lobes with deep notches between them - the tube plunges, turns at "
-              "the bottom and climbs back before advancing. A capsule cannot do that, and a "
-              "gently undulating fore-aft run reads as a flat ribbon, not as packed viscera."),
+for _i, (_x, _y, _z, _len, _r) in enumerate(SAUSAGES):
+    comp(f"visceral-bundle-{_i+1:02d}", f"Gut lobe {_i+1}", "meso", "payload", "capsule",
+         "root", (_x, _y, _z),
+         dims={"width": round(_r/0.35, 3), "height": round(_len/1.4 + _r/0.7, 3),
+               "depth": round(_r/0.35, 3), "units": "relative", "confidence": 0.65},
+         material="pod-yellow", topo="continuous-sculpt", imp=0.85, conf=0.65,
+         why=("One gut lobe: a fat vertical sausage overlapping its neighbours. Distinct capsules "
+              "rather than one swept tube, because the reference's character is the hard dark "
+              "notch where two lobes press together, and a continuous sweep has no notches."),
          ev=("belly-zone",), det=("d06","d07"), tier="structural",
          action={"animationRole":"detachable","pivot":{"mode":"local-origin","offset":[0,0,0]},
                  "transformChannels":{"translate":True,"rotate":True,"scale":False},
                  "sockets":[{"id":f"viscera-mount-{_i+1:02d}","localPosition":[0,0,0],"localRotation":[0,0,0]}],
                  "collider":{"type":"capsule","fit":"loose"},"constraints":[],
                  "destruction":{"breakable":True,"group":"viscera"}})
-    for _b, _u in enumerate((0.14, 0.44, 0.74)):
-        _pt = _pts[int(_u * (len(_pts) - 1))]
-        comp(f"viscera-band-{_i+1:02d}{'abc'[_b]}", f"Viscera band {_i+1}{'abc'[_b]}", "micro",
-             "detail", "torus", "root", (_pt[0], _pt[1], _pt[2]), rot=(0, 0, 90*RAD),
-             # Sized just proud of the tube it wraps. At 2.6x radius these read as wheels bolted
-             # to the underside rather than as bands cinching a hose.
-             dims={"width":_r*2.32,"height":_r*2.32,"depth":_r*2.32,"units":"relative","confidence":0.65},
+    if _i % 3 == 0:
+        comp(f"viscera-band-{_i+1:02d}a", f"Gut band {_i+1}", "micro", "detail", "torus",
+             "root", (_x, _y + _len * 0.22, _z), rot=(0, 0, 90*RAD),
+             dims={"width": round(_r*2.35, 3), "height": round(_r*2.35, 3),
+                   "depth": round(_r*2.35, 3), "units": "relative", "confidence": 0.62},
              desc={"torusTubeRatio":0.16}, material="machine-grey", topo="assembled-solid",
-             imp=0.35, conf=0.68,
-             why="Steel band cinching the tube run - a torus is the exact topology.",
+             imp=0.35, conf=0.62, why="Steel band cinching a gut lobe.",
              ev=("belly-zone",), det=("d07",), tier="surface")
+
+# Short arcs over the tops so the lobes read as ONE folded gut rather than separate pods.
+for _i in range(len(SAUSAGES) - 1):
+    _a, _b = SAUSAGES[_i], SAUSAGES[_i + 1]
+    if abs(_a[1] - _b[1]) > 0.20:
+        continue
+    _mid = ((_a[0] + _b[0]) / 2.0, max(_a[1], _b[1]) + 0.20, (_a[2] + _b[2]) / 2.0)
+    comp(f"gut-bridge-{_i+1:02d}", f"Gut bridge {_i+1}", "micro", "payload", "tube", "root",
+         (0, 0, 0),
+         desc={"tubePath": {"points": [
+             [_a[0], _a[1] + _a[3] * 0.30, _a[2]],
+             [round(_mid[0], 3), round(_mid[1], 3), round(_mid[2], 3)],
+             [_b[0], _b[1] + _b[3] * 0.30, _b[2]]],
+             "radius": round(min(_a[4], _b[4]) * 0.82, 3), "radialSegments": 10, "closed": False}},
+         topo="continuous-sculpt", material="pod-yellow", imp=0.4, conf=0.6,
+         why="U-bend joining two adjacent lobes, so the bundle reads as one continuous gut.",
+         ev=("belly-zone",), det=("d06",), tier="surface")
 
 comp("manifold-spine", "Plumbing manifold spine", "meso", "detail", "cylinder", "visceral-cavity",
      (-0.90,-0.04,-0.16), rot=(0,0,90*RAD),
@@ -555,27 +593,29 @@ for i in range(10):
     j = i % 5
     x = 1.58 + j * 0.26
     z = 0.34 if bank == 0 else 0.02
-    comp(f"radiator-vane-{i+1:02d}", f"Radiator vane {i+1}", "meso", "detail", "box", "stern-bay-housing",
+    comp(f"gill-slit-{i+1:02d}", f"Gill slit {i+1}", "meso", "detail", "box", "stern-bay-housing",
          (x - 0.10, 0.01, z), rot=(0, (26 if bank == 0 else -26) * RAD, 0),
          dims={"width":0.07,"height":0.17,"depth":0.78,"units":"relative","confidence":0.8},
          material="vane-yellow", topo="assembled-solid", imp=0.55, conf=0.8,
-         why="Planar louvre slat; the chevron is two mirrored banks of slanted slats.",
+         why=("Slanted gill slit. The reference shows two mirrored banks of parallel slanted slits "
+              "immediately behind the head - gills, not a radiator vane array."),
          ev=("stern-zone",), det=("d10",), tier="structural")
 comp("bay-blue-trim", "Bay blue trim strip", "micro", "detail", "box", "stern-bay-housing",
      (1.63,0.15,0.60), dims={"width":0.70,"height":0.06,"depth":0.10,"units":"relative","confidence":0.75},
      material="accent-blue", topo="assembled-solid", imp=0.35, conf=0.75,
      why="Straight enamel trim along the upper bay edge.", ev=("stern-zone",), det=("d11",), tier="surface")
 NOZ = [(2.32,0.34),(2.92,-0.06),(2.32,-0.42)]
-for k,(scl,zoff,nmat,nid) in enumerate([(1.00,0.00,"accent-red","nozzle-ring-red"),
-                                        (0.74,0.10,"accent-blue","nozzle-ring-blue"),
-                                        (0.52,0.19,"vane-yellow","nozzle-throat-orange"),
-                                        (0.26,0.27,"machine-grey","nozzle-core")]):
+for k,(scl,zoff,nmat,nid) in enumerate([(1.00,0.00,"accent-red","mouth-ring-red"),
+                                        (0.74,0.10,"accent-blue","mouth-ring-blue"),
+                                        (0.52,0.19,"vane-yellow","mouth-throat"),
+                                        (0.26,0.27,"machine-grey","mouth-core")]):
     pts = [((p[0]-2.52)*scl+2.52, (p[1]+0.04)*scl-0.04) for p in NOZ]
     comp(nid, nid.replace("-"," ").title(), "meso" if k < 2 else "micro", "detail", "extrude",
          "stern-bay-housing", (0.0, -0.07, zoff - 0.24 + (0.48*(1-scl))/2),
          desc=ex(pts, 0.48*scl), topo="assembled-solid", material=nmat, imp=0.7 - k*0.1, conf=0.8,
-         why=("Triangular prism throat. The reference shows concentric red->blue->orange->dark bands; "
-              "modelled as nested prisms of decreasing section so the banding survives off-axis views."),
+         why=("Concentric red->blue->orange->dark rings at the bill root: the mouth/eye cluster of the "
+              "fish, not an exhaust nozzle. Nested prisms of decreasing section so the banding "
+              "survives off-axis views."),
          ev=("stern-zone",), det=("d11",), tier="structural" if k < 2 else "surface")
 
 # ---- MICRO -----------------------------------------------------------------
@@ -618,19 +658,19 @@ spec["repetitionSystems"] = [
      "realisedBy":"armour-band-01..15",
      "note":"Transverse seams, not fore-aft strips: the reference divides the hull into bands "
             "ALONG its length. Realised as explicitly placed components because the stock emitter is radial-only."},
-    {"id":"visceral-tube-runs","level":"meso","parent":"root","primitive":"tube","material":"pod-yellow",
-     "count":6,"instanceScale":[1,1,1],
-     "placement":{"mode":"vertical-lobes","axis":[0,1,0],"lobesPerRun":[1.2,2.3],"lobeDepth":[0.58,0.92],"start":[-2.55,-0.24,-0.26],"end":[0.85,-0.16,0.30],"radius":0.0},
-     "realisedBy":"visceral-bundle-01..06","note":"Six tube spines folded into 1.2-2.3 VERTICAL lobes each, deliberately unequal in count, depth and span so the bundle does not read as a regular coiled spring."},
+    {"id":"gut-lobes","level":"meso","parent":"root","primitive":"capsule","material":"pod-yellow",
+     "count":12,"instanceScale":[1,1,1],
+     "placement":{"mode":"packed-lobes","axis":[1,0,0],"pitch":0.38,"rows":2,"start":[-2.34,-0.58,0.20],"end":[0.68,-0.56,0.14],"radius":0.0},
+     "realisedBy":"visceral-bundle-01..12","note":"Twelve fat vertical lobes overlapping at a 0.38 pitch, plus U-bend arcs joining their tops. Overlap is what produces the dark notches the reference has."},
     {"id":"viscera-bands","level":"micro","parent":"root","primitive":"torus","material":"machine-grey",
-     "count":18,"instanceScale":[0.5,0.5,0.5],
+     "count":4,"instanceScale":[0.5,0.5,0.5],
      "placement":{"mode":"along-spine","axis":[1,0,0],"offsets":[0.26,0.58,0.86],"radius":0.0},
-     "realisedBy":"viscera-band-01a..06c","note":"Three bands per tube run, at fractions of arc length."},
-    {"id":"radiator-vanes","level":"meso","parent":"stern-bay-housing","primitive":"box","material":"vane-yellow",
+     "realisedBy":"viscera-band-01a, -04a, -07a, -10a","note":"One band on every third lobe."},
+    {"id":"gill-slits","level":"meso","parent":"stern-bay-housing","primitive":"box","material":"vane-yellow",
      "count":10,"instanceScale":[0.07,0.17,0.78],
      "placement":{"mode":"mirrored-linear-banks","axis":[1,0,0],"banks":2,"bankZ":[0.42,-0.42],
                   "start":[1.58,0.10,0.0],"end":[2.62,0.10,0.0],"yawDeg":[26,-26],"radius":0.0},
-     "realisedBy":"radiator-vane-01..10","note":"Two mirrored slanted banks produce the chevron."},
+     "realisedBy":"gill-slit-01..10","note":"Two mirrored slanted banks of gill slits behind the head."},
     {"id":"mast-base-vents","level":"micro","parent":"mast-base-housing","primitive":"box","material":"vane-yellow",
      "count":8,"instanceScale":[0.09,0.05,0.16],
      "placement":{"mode":"mirrored-linear-banks","axis":[1,0,0],"banks":2,"bankZ":[0.34,-0.34],
@@ -675,9 +715,9 @@ spec["featureReviewTargets"] = [
     {"id":"ventral-pod-cluster","name":"Visceral tube bundle","tier":"critical",
      "passIds":["structural-pass","form-refinement","material-pass"],"minimumScore":0.8,"mustPass":True,
      "componentRefs":["visceral-cavity","visceral-bundle-01","viscera-band-01a"],"evidenceRefs":["belly-zone"]},
-    {"id":"stern-drive-bay","name":"Chevron radiator bay and banded nozzle","tier":"critical",
+    {"id":"stern-drive-bay","name":"Gill bay and mouth rings","tier":"critical",
      "passIds":["structural-pass","material-pass","surface-pass"],"minimumScore":0.8,"mustPass":True,
-     "componentRefs":["stern-bay-housing","radiator-vane-01","nozzle-ring-red"],"evidenceRefs":["stern-zone"]},
+     "componentRefs":["stern-bay-housing","radiator-vane-01","mouth-ring-red"],"evidenceRefs":["stern-zone"]},
     {"id":"cel-render-style","name":"Ink-contour cel rendering","tier":"critical",
      "passIds":["material-pass","surface-pass","lighting-pass"],"minimumScore":0.8,"mustPass":True,
      "componentRefs":["root"],"evidenceRefs":["full-object"]},
@@ -735,10 +775,10 @@ spec["lightingFromPhoto"] = [
 spec["animationAnchors"] = [
     {"id":"mast-fold","component":"dorsal-mast-fin","channel":"rotation.z","rangeDeg":[-84,0]},
     {"id":"viscera-jettison","component":"visceral-bundle-01","channel":"position","note":"detaches along -Y"},
-    {"id":"vane-pitch","component":"radiator-vane-01","channel":"rotation.y","rangeDeg":[0,40]},
+    {"id":"gill-flare","component":"gill-slit-01","channel":"rotation.y","rangeDeg":[0,40]},
 ]
 spec["destructionAnchors"] = [
-    {"id":"viscera","components":[f"visceral-bundle-{i+1:02d}" for i in range(6)],"breakable":True},
+    {"id":"viscera","components":[f"visceral-bundle-{i+1:02d}" for i in range(12)],"breakable":True},
 ]
 
 # ------------------------------------------- localFeatures for detail binding
@@ -755,10 +795,10 @@ EXTRA_FEATURES = {
               "edgeTreatment": {"type": "chamfer", "bevelRadius": 0.02, "segments": 2},
               "detailRefs": ["d09"]}],
     "visceral-cavity": [{"id": "pod-banding-straps", "kind": "fastener",
-                    "description": "three steel bands per tube run, 18 total, cinching the viscera",
-                    "count": 18, "distribution": "along-spine", "headShape": "band", "detailRefs": ["d07"]}],
-    "stern-bay-housing": [{"id": "radiator-vane-array", "kind": "linework",
-                           "description": "chevron louvre vane array, two mirrored banks of 5 slanted slats",
+                    "description": "steel bands cinching every third gut lobe",
+                    "count": 4, "distribution": "every-third-lobe", "headShape": "band", "detailRefs": ["d07"]}],
+    "stern-bay-housing": [{"id": "gill-slit-array", "kind": "linework",
+                           "description": "two mirrored banks of 5 slanted gill slits behind the head",
                            "technique": "engraved-groove", "count": 10, "detailRefs": ["d10"]}],
     "dorsal-mast-fin": [{"id": "mast-pivot-bosses", "kind": "fastener",
                          "description": "twin gold hinge bosses on a lateral axis at the fin root",
@@ -785,7 +825,7 @@ DETAIL_REF = {
     "d01": "outline-shell", "d02": "panel-line-seams", "d03": "hull-yellow-staining",
     "d04": "spar-rivet-rows", "d05": "deck-plate-ridges", "d06": "pod-slash-highlights",
     "d07": "pod-banding-straps", "d08": "blue-bar-decal", "d09": "leading-edge-chamfer",
-    "d10": "radiator-vane-array", "d11": "nozzle-concentric-bands", "d12": "mast-pivot-bosses",
+    "d10": "gill-slit-array", "d11": "nozzle-concentric-bands", "d12": "mast-pivot-bosses",
     "d13": "mast-inner-machinery", "d14": "mast-base-vents", "d15": "mast-base-diamond-hatch",
     "d16": "manifold-collar-bands", "d17": "manifold-round-port", "d18": "hull-speckle",
 }
