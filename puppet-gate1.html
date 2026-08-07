@@ -1,403 +1,50 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Puppet Gate 1 — Robot on ECCTRL Puppet</title>
-  <style>
-    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    * { box-sizing: border-box; }
-    html, body, #root { width:100%; height:100%; margin:0; overflow:hidden; background:#11151b; }
-    canvas { display:block; }
-    .hud {
-      position:fixed; z-index:10; top:12px; left:12px; width:min(380px, calc(100vw - 24px));
-      background:rgba(12,16,22,.88); border:1px solid rgba(255,255,255,.14); border-radius:14px;
-      padding:13px 14px; box-shadow:0 12px 30px rgba(0,0,0,.35); backdrop-filter:blur(12px);
-    }
-    .title { font-weight:750; font-size:16px; letter-spacing:.01em; }
-    .sub { margin-top:4px; color:#aeb8c7; font-size:12px; line-height:1.4; }
-    .row { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-    button {
-      border:1px solid rgba(255,255,255,.17); color:#eef3fb; background:#222a36; border-radius:9px;
-      padding:8px 10px; font:inherit; font-size:12px; cursor:pointer;
-    }
-    button[data-on="true"] { background:#e9eef6; color:#131820; border-color:#e9eef6; }
-    .status {
-      margin-top:10px; padding-top:9px; border-top:1px solid rgba(255,255,255,.1);
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:11px; color:#c4cedd;
-      white-space:pre-wrap; line-height:1.42;
-    }
-    .help {
-      position:fixed; z-index:10; left:12px; bottom:12px; color:#d5deeb; background:rgba(12,16,22,.8);
-      padding:9px 11px; border-radius:10px; border:1px solid rgba(255,255,255,.12); font-size:12px;
-      backdrop-filter:blur(10px);
-    }
-    .error { color:#ffb3b3; }
-    @media (max-width:600px) {
-      .hud { top:8px; left:8px; width:calc(100vw - 16px); padding:10px; }
-      .sub { display:none; }
-      .help { left:8px; bottom:8px; font-size:11px; }
-    }
-  </style>
-  <script type="importmap">
-  {
-    "imports": {
-      "react": "https://esm.sh/react@19.2.7",
-      "react-dom": "https://esm.sh/react-dom@19.2.7?external=react",
-      "react-dom/client": "https://esm.sh/react-dom@19.2.7/client?external=react",
-      "three": "https://esm.sh/three@0.184.0",
-      "@react-three/fiber": "https://esm.sh/@react-three/fiber@9.6.1?external=react,three",
-      "@react-three/rapier": "https://esm.sh/@react-three/rapier@2.2.0?external=react,three,@react-three/fiber",
-      "ecctrl": "https://esm.sh/ecctrl@2.0.0?external=react,react-dom,three,@react-three/fiber,@react-three/rapier",
-      "three/addons/": "https://esm.sh/three@0.184.0/examples/jsm/"
-    }
-  }
-  </script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Puppet Gate 1 — Robot on ECCTRL Puppet</title>
+<style>
+*{box-sizing:border-box}html,body,#root{width:100%;height:100%;margin:0;overflow:hidden;background:#11151b;color:#eef3fb;font-family:Inter,system-ui,sans-serif}canvas{display:block}.hud{position:fixed;z-index:10;top:10px;left:10px;width:min(390px,calc(100vw - 20px));padding:12px 13px;border:1px solid #ffffff24;border-radius:13px;background:#0c1016e8;box-shadow:0 12px 30px #0006;backdrop-filter:blur(10px)}.title{font-weight:800}.sub{margin-top:4px;color:#aeb8c7;font-size:12px;line-height:1.35}.row{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}button{border:1px solid #ffffff2d;border-radius:8px;background:#222a36;color:#eef3fb;padding:7px 9px;cursor:pointer}button[data-on=true]{background:#eef3fb;color:#11151b}.status{border-top:1px solid #ffffff1c;margin-top:10px;padding-top:8px;color:#c4cedd;font:11px/1.4 ui-monospace,monospace;white-space:pre-wrap}.error{color:#ffb3b3}.help{position:fixed;z-index:10;bottom:10px;left:10px;padding:8px 10px;border:1px solid #ffffff20;border-radius:9px;background:#0c1016d9;font-size:12px}@media(max-width:600px){.sub{display:none}.hud{top:7px;left:7px;width:calc(100vw - 14px)}.help{left:7px;bottom:7px}}
+</style>
+<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.2.7","react-dom":"https://esm.sh/react-dom@19.2.7?external=react","react-dom/client":"https://esm.sh/react-dom@19.2.7/client?external=react","three":"https://esm.sh/three@0.184.0","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.1?external=react,three","@react-three/rapier":"https://esm.sh/@react-three/rapier@2.2.0?external=react,three,@react-three/fiber","ecctrl":"https://esm.sh/ecctrl@2.0.0?external=react,react-dom,three,@react-three/fiber,@react-three/rapier","three/addons/":"https://esm.sh/three@0.184.0/examples/jsm/"}}</script>
 </head>
 <body>
-  <div id="root"></div>
-
-  <div class="hud">
-    <div class="title">Puppet Gate 1 — Robot on Puppet</div>
-    <div class="sub">ECCTRL remains the controller and animation puppet. The robot is a rigid visual layer driven by the mannequin's joints.</div>
-    <div class="row">
-      <button id="robotBtn" data-on="true">Robot</button>
-      <button id="puppetBtn" data-on="false">EC Puppet</button>
-      <button id="skeletonBtn" data-on="false">Skeleton</button>
-      <button id="resetBtn">Reset</button>
-    </div>
-    <div id="status" class="status">Loading ECCTRL puppet + robot…</div>
-  </div>
-
-  <div class="help"><b>WASD</b> move · <b>Shift</b> run · <b>Space</b> jump · drag to orbit</div>
-
-  <script type="module">
-    import React, { Suspense, useEffect, useMemo, useRef } from "react";
-    import { createRoot } from "react-dom/client";
-    import * as THREE from "three";
-    import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-    import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
-    import { Ecctrl, EcctrlAnimationStateController, useEcctrlAnimationStore } from "ecctrl";
-    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
-    const h = React.createElement;
-    const ECCTRL_MODEL_URL = "https://cdn.jsdelivr.net/gh/pmndrs/ecctrl@main/public/AnimationLibrary.glb";
-    const ROBOT_URL = "./assets/cool_robot_gate1.glb";
-
-    const view = window.gate1View = { robot: true, puppet: false, skeleton: false, resetNonce: 0 };
-
-    const setStatus = (text, isError = false) => {
-      const el = document.getElementById("status");
-      if (!el) return;
-      el.textContent = text;
-      el.classList.toggle("error", isError);
-    };
-
-    function setupButton(id, key) {
-      const btn = document.getElementById(id);
-      btn.addEventListener("click", () => {
-        view[key] = !view[key];
-        btn.dataset.on = String(view[key]);
-      });
-    }
-    setupButton("robotBtn", "robot");
-    setupButton("puppetBtn", "puppet");
-    setupButton("skeletonBtn", "skeleton");
-    document.getElementById("resetBtn").addEventListener("click", () => { view.resetNonce++; });
-
-    function useKeyboardState() {
-      const keys = useRef(Object.create(null));
-      useEffect(() => {
-        const down = (e) => {
-          keys.current[e.code] = true;
-          if (["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
-        };
-        const up = (e) => { keys.current[e.code] = false; };
-        window.addEventListener("keydown", down, { passive:false });
-        window.addEventListener("keyup", up);
-        return () => {
-          window.removeEventListener("keydown", down);
-          window.removeEventListener("keyup", up);
-        };
-      }, []);
-      return keys;
-    }
-
-    function nameKey(s) { return (s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
-
-    const TARGET_ALIASES = {
-      head: ["head"],
-      chest: ["spine03","spine3","chest","upperchest","spine02","spine2"],
-      waist: ["pelvis","hips","hip","waist"],
-      upperArmL: ["upperarml","leftupperarm","leftarm","mixamorigleftarm"],
-      lowerArmL: ["lowerarml","forearml","leftforearm","mixamorigleftforearm"],
-      handL: ["handl","lefthand","mixamoriglefthand"],
-      upperArmR: ["upperarmr","rightupperarm","rightarm","mixamorigrightarm"],
-      lowerArmR: ["lowerarmr","forearmr","rightforearm","mixamorigrightforearm"],
-      handR: ["handr","righthand","mixamorigrighthand"],
-      upperLegL: ["thighl","upperlegl","leftupleg","leftupperleg","mixamorigleftupleg"],
-      lowerLegL: ["calfl","shinl","lowerlegl","leftleg","mixamorigleftleg"],
-      footL: ["footl","leftfoot","mixamorigleftfoot"],
-      upperLegR: ["thighr","upperlegr","rightupleg","rightupperleg","mixamorigrightupleg"],
-      lowerLegR: ["calfr","shinr","lowerlegr","rightleg","mixamorigrightleg"],
-      footR: ["footr","rightfoot","mixamorigrightfoot"]
-    };
-
-    const ROBOT_JOINT_ROLE = [
-      ["Head", "head"], ["Chest", "chest"], ["Waist", "waist"],
-      ["UpperArm.L_1", "upperArmL"], ["LowerArm.L_1", "lowerArmL"], ["Hand.L", "handL"],
-      ["UpperArm.R", "upperArmR"], ["LowerArm.R", "lowerArmR"], ["Hand.R", "handR"],
-      ["UpperLeg.L_1", "upperLegL"], ["LowerLeg.L", "lowerLegL"], ["FrontFoot.L", "footL"],
-      ["UpperLeg.R", "upperLegR"], ["LowerLeg.R", "lowerLegR"], ["FrontFoot.R", "footR"]
-    ];
-
-    function collectBones(root) {
-      const bones = [];
-      root.traverse(o => { if (o.isBone) bones.push(o); });
-      return bones;
-    }
-
-    function findTargetBone(bones, role) {
-      const aliases = TARGET_ALIASES[role] || [];
-      for (const alias of aliases) {
-        const hit = bones.find(b => nameKey(b.name) === alias);
-        if (hit) return hit;
-      }
-      for (const alias of aliases) {
-        const hit = bones.find(b => {
-          const n = nameKey(b.name);
-          return n.endsWith(alias) || (alias.length >= 6 && n.includes(alias));
-        });
-        if (hit) return hit;
-      }
-      return null;
-    }
-
-    function findSourceJoint(root, requestedName) {
-      let exactGroup = null;
-      let looseGroup = null;
-      root.traverse(o => {
-        if (o.isMesh) return;
-        if (o.name === requestedName) exactGroup ||= o;
-        if (nameKey(o.name) === nameKey(requestedName)) looseGroup ||= o;
-      });
-      return exactGroup || looseGroup;
-    }
-
-    function nearestMappedSourceJoint(mesh, mappedSourceJoints) {
-      let p = mesh.parent;
-      while (p) {
-        const hit = mappedSourceJoints.find(x => x.source === p);
-        if (hit) return hit;
-        p = p.parent;
-      }
-      return null;
-    }
-
-    function fitMatrix(fromBox, toBox) {
-      const fromSize = fromBox.getSize(new THREE.Vector3());
-      const toSize = toBox.getSize(new THREE.Vector3());
-      const s = (toSize.y / Math.max(fromSize.y, 1e-5)) * 1.02;
-      const fromCenter = fromBox.getCenter(new THREE.Vector3());
-      const toCenter = toBox.getCenter(new THREE.Vector3());
-      const scale = new THREE.Matrix4().makeScale(s, s, s);
-      const scaledFromCenter = fromCenter.clone().multiplyScalar(s);
-      const translate = new THREE.Matrix4().makeTranslation(
-        toCenter.x - scaledFromCenter.x,
-        toBox.min.y - fromBox.min.y * s,
-        toCenter.z - scaledFromCenter.z
-      );
-      return translate.multiply(scale);
-    }
-
-    function setMannequinVisibility(scene, visible) {
-      scene.traverse(o => { if (o.isSkinnedMesh || o.isMesh) o.visible = visible; });
-    }
-
-    function PuppetRobotVisual() {
-      const wrapper = useRef();
-      const robotLayer = useRef();
-      const skeletonHelper = useRef(null);
-      const puppetGltf = useLoader(GLTFLoader, ECCTRL_MODEL_URL);
-      const robotGltf = useLoader(GLTFLoader, ROBOT_URL);
-      const actionState = useEcctrlAnimationStore(s => s.animationState);
-      const puppetScene = useMemo(() => puppetGltf.scene, [puppetGltf]);
-      const robotSource = useMemo(() => robotGltf.scene, [robotGltf]);
-      const mixer = useMemo(() => new THREE.AnimationMixer(puppetScene), [puppetScene]);
-      const actions = useMemo(() => {
-        const result = {};
-        for (const clip of puppetGltf.animations) result[clip.name] = mixer.clipAction(clip);
-        return result;
-      }, [mixer, puppetGltf.animations]);
-      const binding = useRef({ ready:false, pieces:[], missing:[], mapped:0 });
-      const previousAction = useRef(null);
-
-      useEffect(() => {
-        const stateToClip = {
-          IDLE:"Idle_Loop", WALK:"Walk_Loop", RUN:"Jog_Fwd_Loop", JUMP_START:"Jump_Start",
-          JUMP_IDLE:"Jump_Loop", JUMP_FALL:"Jump_Loop", JUMP_LAND:"Jump_Land"
-        };
-        const clipName = stateToClip[actionState] || "Idle_Loop";
-        const next = actions[clipName];
-        if (!next || previousAction.current === next) return;
-        next.reset();
-        if (clipName === "Jump_Start" || clipName === "Jump_Land") {
-          next.setLoop(THREE.LoopOnce, 1); next.clampWhenFinished = true;
-        } else next.setLoop(THREE.LoopRepeat, Infinity);
-        if (previousAction.current) next.crossFadeFrom(previousAction.current, 0.16, true);
-        next.play();
-        previousAction.current = next;
-      }, [actionState, actions]);
-
-      useEffect(() => {
-        if (!wrapper.current || !robotLayer.current) return;
-        puppetScene.updateMatrixWorld(true);
-        robotSource.updateMatrixWorld(true);
-        const bones = collectBones(puppetScene);
-        const mapped = [];
-        const missing = [];
-        for (const [sourceName, role] of ROBOT_JOINT_ROLE) {
-          const source = findSourceJoint(robotSource, sourceName);
-          const target = findTargetBone(bones, role);
-          if (source && target) mapped.push({ source, target, sourceName, role });
-          else missing.push(`${role}${!source ? " [robot]" : ""}${!target ? " [puppet]" : ""}`);
-        }
-
-        const sourceMeshes = [];
-        robotSource.traverse(o => { if (o.isMesh) sourceMeshes.push(o); });
-        const robotBox = new THREE.Box3().setFromObject(robotSource);
-        const puppetBox = new THREE.Box3().setFromObject(puppetScene);
-        const fit = fitMatrix(robotBox, puppetBox);
-
-        wrapper.current.updateMatrixWorld(true);
-        const wrapperInv = wrapper.current.matrixWorld.clone().invert();
-        const targetRest = new Map();
-        for (const m of mapped) {
-          m.target.updateMatrixWorld(true);
-          targetRest.set(m.role, wrapperInv.clone().multiply(m.target.matrixWorld));
-        }
-        while (robotLayer.current.children.length) robotLayer.current.remove(robotLayer.current.children[0]);
-
-        const pieces = [];
-        for (const srcMesh of sourceMeshes) {
-          const owner = nearestMappedSourceJoint(srcMesh, mapped);
-          if (!owner) continue;
-          const piece = new THREE.Mesh(srcMesh.geometry, srcMesh.material);
-          piece.name = `Bound_${srcMesh.name || owner.role}`;
-          piece.castShadow = true; piece.receiveShadow = true; piece.matrixAutoUpdate = false;
-          const alignedRest = fit.clone().multiply(srcMesh.matrixWorld);
-          robotLayer.current.add(piece);
-          pieces.push({ piece, target:owner.target, restBone:targetRest.get(owner.role).clone(), alignedRest });
-        }
-
-        skeletonHelper.current = new THREE.SkeletonHelper(puppetScene);
-        skeletonHelper.current.visible = false;
-        wrapper.current.add(skeletonHelper.current);
-        binding.current = { ready:true, pieces, missing, mapped:mapped.length };
-        const missingText = missing.length ? `\nMissing: ${missing.join(", ")}` : "\nAll core joint roles found.";
-        setStatus(`BOUND ${pieces.length} robot meshes → ${mapped.length}/${ROBOT_JOINT_ROLE.length} puppet roles\nAnimation: ${actionState || "IDLE"}${missingText}`);
-      }, [puppetScene, robotSource]);
-
-      useFrame((_, delta) => {
-        mixer.update(delta);
-        setMannequinVisibility(puppetScene, view.puppet);
-        if (robotLayer.current) robotLayer.current.visible = view.robot;
-        if (skeletonHelper.current) skeletonHelper.current.visible = view.skeleton;
-        if (!binding.current.ready || !wrapper.current) return;
-        wrapper.current.updateMatrixWorld(true);
-        const wrapperInv = wrapper.current.matrixWorld.clone().invert();
-        const currentBone = new THREE.Matrix4(), deltaBone = new THREE.Matrix4(), desired = new THREE.Matrix4();
-        for (const item of binding.current.pieces) {
-          item.target.updateMatrixWorld(true);
-          currentBone.multiplyMatrices(wrapperInv, item.target.matrixWorld);
-          deltaBone.multiplyMatrices(currentBone, item.restBone.clone().invert());
-          desired.multiplyMatrices(deltaBone, item.alignedRest);
-          item.piece.matrix.copy(desired);
-          item.piece.matrixWorldNeedsUpdate = true;
-        }
-      });
-
-      useEffect(() => {
-        const t = setInterval(() => {
-          if (!binding.current.ready) return;
-          const missingText = binding.current.missing.length ? `\nMissing: ${binding.current.missing.join(", ")}` : "\nAll core joint roles found.";
-          setStatus(`BOUND ${binding.current.pieces.length} robot meshes → ${binding.current.mapped}/${ROBOT_JOINT_ROLE.length} puppet roles\nAnimation: ${useEcctrlAnimationStore.getState().animationState || "IDLE"}${missingText}`);
-        }, 250);
-        return () => clearInterval(t);
-      }, []);
-
-      return h("group", { ref:wrapper, position:[0,-0.95,0] },
-        h("primitive", { object:puppetScene }), h("group", { ref:robotLayer })
-      );
-    }
-
-    function Player() {
-      const controllerRef = useRef(null);
-      const keys = useKeyboardState();
-      const resetSeen = useRef(view.resetNonce);
-      useFrame(() => {
-        const c = controllerRef.current;
-        if (!c) return;
-        c.setMovement({
-          forward:!!(keys.current.KeyW || keys.current.ArrowUp), backward:!!(keys.current.KeyS || keys.current.ArrowDown),
-          leftward:!!(keys.current.KeyA || keys.current.ArrowLeft), rightward:!!(keys.current.KeyD || keys.current.ArrowRight),
-          run:!!(keys.current.ShiftLeft || keys.current.ShiftRight), jump:!!keys.current.Space
-        });
-        if (resetSeen.current !== view.resetNonce) {
-          resetSeen.current = view.resetNonce;
-          if (c.body) {
-            c.body.setTranslation({x:0,y:2,z:0}, true);
-            c.body.setLinvel({x:0,y:0,z:0}, true);
-            c.body.setAngvel({x:0,y:0,z:0}, true);
-          }
-        }
-      });
-      return h(Ecctrl, { ref:controllerRef, position:[0,2,0], maxVelLimit:5, sprintMult:1.8 },
-        h(EcctrlAnimationStateController, { ecctrl:controllerRef }), h(PuppetRobotVisual)
-      );
-    }
-
-    function Ground() {
-      return h(RigidBody, { type:"fixed", colliders:false },
-        h(CuboidCollider, { args:[30,0.25,30], position:[0,-0.25,0] }),
-        h("mesh", { receiveShadow:true, position:[0,-0.25,0] },
-          h("boxGeometry", { args:[60,0.5,60] }), h("meshStandardMaterial", { color:"#2a313b", roughness:0.88 })
-        ),
-        h("gridHelper", { args:[60,60,"#52606f","#343d49"], position:[0,0.011,0] })
-      );
-    }
-
-    function CameraRig() {
-      const { camera, gl } = useThree();
-      const controls = useMemo(() => new OrbitControls(camera, gl.domElement), [camera, gl]);
-      useEffect(() => {
-        camera.position.set(4.6,3.2,7); controls.target.set(0,1.05,0); controls.enableDamping = true;
-        controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI * 0.49; controls.minDistance = 2; controls.maxDistance = 14;
-        return () => controls.dispose();
-      }, [camera, controls]);
-      useFrame(() => controls.update());
-      return null;
-    }
-
-    function Scene() {
-      return h(React.Fragment, null,
-        h("color", { attach:"background", args:["#11151b"] }), h("fog", { attach:"fog", args:["#11151b",18,52] }),
-        h("hemisphereLight", { intensity:1.15, color:"#f5f7ff", groundColor:"#303845" }),
-        h("directionalLight", { position:[6,10,4], intensity:2, castShadow:true, "shadow-mapSize-width":2048, "shadow-mapSize-height":2048 }),
-        h(CameraRig), h(Physics, { gravity:[0,-9.81,0] }, h(Ground), h(Player))
-      );
-    }
-
-    function App() {
-      return h(Canvas, { shadows:true, dpr:[1,1.75], camera:{fov:48,near:0.05,far:160,position:[4.6,3.2,7]}, gl:{antialias:true,powerPreference:"high-performance"} },
-        h(Suspense, { fallback:null }, h(Scene))
-      );
-    }
-
-    window.addEventListener("unhandledrejection", e => { console.error(e.reason); setStatus("Prototype load error:\n" + (e.reason?.message || String(e.reason)), true); });
-    window.addEventListener("error", e => { console.error(e.error || e.message); setStatus("Prototype error:\n" + (e.error?.message || e.message), true); });
-    createRoot(document.getElementById("root")).render(h(App));
-  </script>
-</body>
-</html>
+<div id="root"></div>
+<div class="hud"><div class="title">Puppet Gate 1 — Robot on Puppet</div><div class="sub">ECCTRL owns physics + locomotion. Its mannequin skeleton stays underneath as the puppet; rigid robot pieces follow equivalent joints.</div><div class="row"><button id="robot" data-on="true">Robot</button><button id="puppet" data-on="false">EC Puppet</button><button id="bones" data-on="false">Skeleton</button><button id="reset">Reset</button></div><div id="status" class="status">Loading ECCTRL puppet + robot…</div></div>
+<div class="help"><b>WASD</b> move · <b>Shift</b> run · <b>Space</b> jump · drag to orbit</div>
+<script type="module">
+import React,{Suspense,useEffect,useMemo,useRef}from"react";
+import{createRoot}from"react-dom/client";
+import*as THREE from"three";
+import{Canvas,useFrame,useLoader,useThree}from"@react-three/fiber";
+import{Physics,RigidBody,CuboidCollider}from"@react-three/rapier";
+import{Ecctrl,EcctrlAnimationStateController,useEcctrlAnimationStore}from"ecctrl";
+import{GLTFLoader}from"three/addons/loaders/GLTFLoader.js";
+import{OrbitControls}from"three/addons/controls/OrbitControls.js";
+const h=React.createElement,status=document.querySelector("#status"),view={robot:true,puppet:false,bones:false,reset:0};
+function stat(t,e=false){status.textContent=t;status.classList.toggle("error",e)}
+for(const k of["robot","puppet","bones"]){const b=document.querySelector("#"+k);b.onclick=()=>{view[k]=!view[k];b.dataset.on=view[k]}}
+document.querySelector("#reset").onclick=()=>view.reset++;
+async function robotUrl(){try{const ps=await Promise.all([0,1,2].map(async i=>{const r=await fetch(`./assets/cool_robot_gate1.glb.gz.b64.part${i}`);if(!r.ok)throw Error(`${r.status} loading robot part ${i}`);return(await r.text()).trim()}));const bin=atob(ps.join("")),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);if(!window.DecompressionStream)throw Error("Browser lacks DecompressionStream");const stream=new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"));return URL.createObjectURL(new Blob([await new Response(stream).arrayBuffer()],{type:"model/gltf-binary"}))}catch(e){stat("Robot asset load failed:\n"+e.message,true);throw e}}
+const ROBOT=await robotUrl();
+const EC="https://cdn.jsdelivr.net/gh/pmndrs/ecctrl@e2f4eb899ab54787170f5472832efb0a238c0ef9/public/AnimationLibrary.glb";
+const norm=s=>(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const target={head:["head"],chest:["spine03","chest","upperchest","spine02"],waist:["pelvis","hips","waist"],uaL:["upperarml","leftupperarm","mixamorigleftarm"],laL:["lowerarml","leftforearm","mixamorigleftforearm"],handL:["handl","lefthand","mixamoriglefthand"],uaR:["upperarmr","rightupperarm","mixamorigrightarm"],laR:["lowerarmr","rightforearm","mixamorigrightforearm"],handR:["handr","righthand","mixamorigrighthand"],ulL:["thighl","leftupleg","leftupperleg","mixamorigleftupleg"],llL:["calfl","leftleg","mixamorigleftleg"],footL:["footl","leftfoot","mixamorigleftfoot"],ulR:["thighr","rightupleg","rightupperleg","mixamorigrightupleg"],llR:["calfr","rightleg","mixamorigrightleg"],footR:["footr","rightfoot","mixamorigrightfoot"]};
+const source=[["Head_1","head"],["Chest","chest"],["Waist","waist"],["UpperArm.L_1","uaL"],["LowerArm.L_1","laL"],["Hand.L","handL"],["UpperArm.R","uaR"],["LowerArm.R","laR"],["Hand.R","handR"],["UpperLeg.L_1","ulL"],["LowerLeg.L","llL"],["FrontFoot.L","footL"],["UpperLeg.R","ulR"],["LowerLeg.R","llR"],["FrontFoot.R","footR"]];
+function bones(root){const a=[];root.traverse(o=>o.isBone&&a.push(o));return a}
+function tgt(bs,role){const as=target[role]||[];for(const a of as){let x=bs.find(b=>norm(b.name)===a);if(x)return x}for(const a of as){let x=bs.find(b=>norm(b.name).endsWith(a));if(x)return x}return null}
+function src(root,name){let exact=null,loose=null;root.traverse(o=>{if(o.isMesh)return;if(o.name===name)exact??=o;if(norm(o.name)===norm(name))loose??=o});return exact||loose}
+function owner(mesh,maps){for(let p=mesh.parent;p;p=p.parent){const m=maps.find(x=>x.s===p);if(m)return m}return null}
+function fit(a,b){const as=a.getSize(new THREE.Vector3()),bs=b.getSize(new THREE.Vector3()),s=bs.y/Math.max(as.y,1e-5),ac=a.getCenter(new THREE.Vector3()),bc=b.getCenter(new THREE.Vector3());return new THREE.Matrix4().makeTranslation(bc.x-ac.x*s,b.min.y-a.min.y*s,bc.z-ac.z*s).multiply(new THREE.Matrix4().makeScale(s,s,s))}
+function keys(){const r=useRef({});useEffect(()=>{const d=e=>{r.current[e.code]=1;if(e.code==="Space")e.preventDefault()},u=e=>delete r.current[e.code];addEventListener("keydown",d,{passive:false});addEventListener("keyup",u);return()=>{removeEventListener("keydown",d);removeEventListener("keyup",u)}},[]);return r}
+function Visual(){const wrap=useRef(),layer=useRef(),helper=useRef(),binding=useRef([]),prev=useRef();const pg=useLoader(GLTFLoader,EC),rg=useLoader(GLTFLoader,ROBOT),state=useEcctrlAnimationStore(s=>s.animationState),puppet=pg.scene,robot=rg.scene,mixer=useMemo(()=>new THREE.AnimationMixer(puppet),[puppet]),acts=useMemo(()=>Object.fromEntries(pg.animations.map(c=>[c.name,mixer.clipAction(c)])),[pg.animations,mixer]);
+useEffect(()=>{const map={IDLE:"Idle_Loop",WALK:"Walk_Loop",RUN:"Jog_Fwd_Loop",JUMP_START:"Jump_Start",JUMP_IDLE:"Jump_Loop",JUMP_FALL:"Jump_Loop",JUMP_LAND:"Jump_Land"},n=map[state]||"Idle_Loop",a=acts[n];if(!a||a===prev.current)return;a.reset();if(n==="Jump_Start"||n==="Jump_Land"){a.setLoop(THREE.LoopOnce,1);a.clampWhenFinished=true}else a.setLoop(THREE.LoopRepeat,Infinity);prev.current&&a.crossFadeFrom(prev.current,.15,true);a.play();prev.current=a},[state,acts]);
+useEffect(()=>{if(!wrap.current)return;wrap.current.updateWorldMatrix(true,true);puppet.updateMatrixWorld(true);robot.updateMatrixWorld(true);const bs=bones(puppet),maps=[],miss=[];for(const[n,r]of source){const s=src(robot,n),t=tgt(bs,r);s&&t?maps.push({s,t,r}):miss.push(r)}const winv=wrap.current.matrixWorld.clone().invert(),rests=new Map();for(const m of maps){m.t.updateMatrixWorld(true);rests.set(m.r,winv.clone().multiply(m.t.matrixWorld))}const pb=new THREE.Box3().setFromObject(puppet).applyMatrix4(winv),rb=new THREE.Box3().setFromObject(robot),F=fit(rb,pb),meshes=[];robot.traverse(o=>o.isMesh&&meshes.push(o));layer.current.clear();const out=[];for(const sm of meshes){const o=owner(sm,maps);if(!o)continue;const rest=rests.get(o.r),sp=new THREE.Vector3().setFromMatrixPosition(F.clone().multiply(o.s.matrixWorld)),tp=new THREE.Vector3().setFromMatrixPosition(rest),snap=new THREE.Matrix4().makeTranslation(tp.x-sp.x,tp.y-sp.y,tp.z-sp.z),p=new THREE.Mesh(sm.geometry,sm.material);p.matrixAutoUpdate=false;p.castShadow=p.receiveShadow=true;layer.current.add(p);out.push({p,t:o.t,ri:rest.clone().invert(),base:snap.multiply(F.clone()).multiply(sm.matrixWorld)})}binding.current=out;helper.current=new THREE.SkeletonHelper(puppet);wrap.current.add(helper.current);stat(`BOUND ${out.length} robot meshes → ${maps.length}/${source.length} puppet joints\n${miss.length?"Missing: "+miss.join(", "):"Core joints mapped"}`)},[puppet,robot]);
+useFrame((_,dt)=>{mixer.update(dt);puppet.traverse(o=>{if(o.isMesh||o.isSkinnedMesh)o.visible=view.puppet});layer.current&&(layer.current.visible=view.robot);helper.current&&(helper.current.visible=view.bones);if(!wrap.current)return;wrap.current.updateWorldMatrix(true,true);const wi=wrap.current.matrixWorld.clone().invert(),cur=new THREE.Matrix4(),del=new THREE.Matrix4(),des=new THREE.Matrix4();for(const x of binding.current){x.t.updateMatrixWorld(true);cur.multiplyMatrices(wi,x.t.matrixWorld);del.multiplyMatrices(cur,x.ri);des.multiplyMatrices(del,x.base);x.p.matrix.copy(des);x.p.matrixWorldNeedsUpdate=true}});return h("group",{ref:wrap,position:[0,-.95,0]},h("primitive",{object:puppet}),h("group",{ref:layer}))}
+function Player(){const c=useRef(),k=keys(),seen=useRef(0);useFrame(()=>{if(!c.current)return;const q=k.current;c.current.setMovement({forward:!!q.KeyW,backward:!!q.KeyS,leftward:!!q.KeyA,rightward:!!q.KeyD,run:!!q.ShiftLeft||!!q.ShiftRight,jump:!!q.Space});if(seen.current!==view.reset){seen.current=view.reset;c.current.body?.setTranslation({x:0,y:2,z:0},true);c.current.body?.setLinvel({x:0,y:0,z:0},true)}});return h(Ecctrl,{ref:c,position:[0,2,0],maxVelLimit:5,sprintMult:1.8},h(EcctrlAnimationStateController,{ecctrl:c}),h(Visual))}
+function Camera(){const{camera,gl}=useThree(),o=useMemo(()=>new OrbitControls(camera,gl.domElement),[camera,gl]);useEffect(()=>{camera.position.set(4.5,3.2,7);o.target.set(0,1,0);o.enableDamping=true;o.maxPolarAngle=1.54;return()=>o.dispose()},[o]);useFrame(()=>o.update());return null}
+function Scene(){return h(React.Fragment,null,h("color",{attach:"background",args:["#11151b"]}),h("hemisphereLight",{intensity:1.2}),h("directionalLight",{position:[6,10,4],intensity:2,castShadow:true}),h(Camera),h(Physics,{gravity:[0,-9.81,0]},h(RigidBody,{type:"fixed",colliders:false},h(CuboidCollider,{args:[30,.25,30],position:[0,-.25,0]}),h("mesh",{position:[0,-.25,0],receiveShadow:true},h("boxGeometry",{args:[60,.5,60]}),h("meshStandardMaterial",{color:"#2a313b"})),h("gridHelper",{args:[60,60]})),h(Player)))}
+window.addEventListener("error",e=>stat("Prototype error:\n"+(e.error?.message||e.message),true));
+createRoot(document.querySelector("#root")).render(h(Canvas,{shadows:true,camera:{fov:48,position:[4.5,3.2,7]}},h(Suspense,{fallback:null},h(Scene))));
+</script>
+</body></html>
