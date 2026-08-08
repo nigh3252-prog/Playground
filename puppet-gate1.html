@@ -39,16 +39,14 @@ const loadModule=async(label,url)=>{
   try{return await import(url)}catch(err){throw new Error(`${label} failed to load\n${url}\n${err?.message||err}`)}
 };
 try{
-  // Use fully-resolved CDN URLs instead of browser bare-specifier/import-map resolution.
-  // This keeps peer-dependency versions explicit and gives us an exact failing URL if mobile loading breaks.
   const ReactMod=await loadModule('React','https://esm.sh/react@19.2.7');
   const React=ReactMod.default;
   const {Suspense,useEffect,useMemo,useRef}=ReactMod;
   const {createRoot}=await loadModule('React DOM','https://esm.sh/react-dom@19.2.7/client?deps=react@19.2.7');
   const THREE=await loadModule('Three.js','https://esm.sh/three@0.184.0');
   const {Canvas,useFrame,useLoader,useThree}=await loadModule('React Three Fiber','https://esm.sh/@react-three/fiber@9.6.1?deps=react@19.2.7,react-dom@19.2.7,three@0.184.0');
-  const {Physics,RigidBody,CuboidCollider}=await loadModule('React Three Rapier','https://esm.sh/@react-three/rapier@2.2.0?deps=react@19.2.7,react-dom@19.2.7,three@0.184.0,@react-three/fiber@9.6.1');
-  const {Ecctrl,EcctrlAnimationStateController,useEcctrlAnimationStore}=await loadModule('ECCTRL','https://esm.sh/ecctrl@2.0.0?deps=react@19.2.7,react-dom@19.2.7,three@0.184.0,@react-three/fiber@9.6.1,@react-three/rapier@2.2.0');
+  const {Physics,RigidBody,CuboidCollider}=await loadModule('React Three Rapier','@react-three/rapier');
+  const {Ecctrl,EcctrlAnimationStateController,useEcctrlAnimationStore}=await loadModule('ECCTRL','ecctrl');
   const {GLTFLoader}=await loadModule('GLTF loader','https://esm.sh/three@0.184.0/examples/jsm/loaders/GLTFLoader.js');
   const {OrbitControls}=await loadModule('Orbit controls','https://esm.sh/three@0.184.0/examples/jsm/controls/OrbitControls.js');
   const h=React.createElement;
