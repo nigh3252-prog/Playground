@@ -32,26 +32,38 @@
 <script type="module">
 const status=document.querySelector('#status');
 const stat=(t,e=false)=>{status.textContent=t;status.classList.toggle('error',e)};
+let bootStage='starting';
+const loadModule=async(label,url)=>{
+  bootStage=label;
+  stat(`Loading module: ${label}…`);
+  try{return await import(url)}catch(err){throw new Error(`${label} failed to load\n${url}\n${err?.message||err}`)}
+};
 try{
-  stat('Loading JavaScript modules…');
-  const ReactMod=await import('react');
+  // Use fully-resolved CDN URLs instead of browser bare-specifier/import-map resolution.
+  // This keeps peer-dependency versions explicit and gives us an exact failing URL if mobile loading breaks.
+  const ReactMod=await loadModule('React','https://esm.sh/react@19.2.7');
   const React=ReactMod.default;
   const {Suspense,useEffect,useMemo,useRef}=ReactMod;
-  const {createRoot}=await import('react-dom/client');
-  const THREE=await import('three');
-  const {Canvas,useFrame,useLoader,useThree}=await import('@react-three/fiber');
-  const {Physics,RigidBody,CuboidCollider}=await import('@react-three/rapier');
-  const {Ecctrl,EcctrlAnimationStateController,useEcctrlAnimationStore}=await import('ecctrl');
-  const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
-  const {OrbitControls}=await import('three/addons/controls/OrbitControls.js');
+  const {createRoot}=await loadModule('React DOM','https://esm.sh/react-dom@19.2.7/client?deps=react@19.2.7');
+  const THREE=await loadModule('Three.js','https://esm.sh/three@0.184.0');
+  const {Canvas,useFrame,useLoader,useThree}=await loadModule('React Three Fiber','https://esm.sh/@react-three/fiber@9.6.1?deps=react@19.2.7,react-dom@19.2.7,three@0.184.0');
+  const {Physics,RigidBody,CuboidCollider}=await loadModule('React Three Rapier','https://esm.sh/@react-three/rapier@2.2.0?deps=react@19.2.7,react-dom@19.2.7,three@0.184.0,@react-three/fiber@9.6.1');
+  const {Ecctrl,EcctrlAnimationStateController,useEcctrlAnimationStore}=await loadModule('ECCTRL','https://esm.sh/ecctrl@2.0.0?deps=react@19.2.7,react-dom@19.2.7,three@0.184.0,@react-three/fiber@9.6.1,@react-three/rapier@2.2.0');
+  const {GLTFLoader}=await loadModule('GLTF loader','https://esm.sh/three@0.184.0/examples/jsm/loaders/GLTFLoader.js');
+  const {OrbitControls}=await loadModule('Orbit controls','https://esm.sh/three@0.184.0/examples/jsm/controls/OrbitControls.js');
   const h=React.createElement;
   const view={robot:true,puppet:false,bones:false,reset:0};
   for(const k of['robot','puppet','bones']){const b=document.querySelector('#'+k);b.onclick=()=>{view[k]=!view[k];b.dataset.on=String(view[k])}}
   document.querySelector('#reset').onclick=()=>view.reset++;
 
   async function robotUrl(){
+    bootStage='robot payload';
     stat('Loading robot asset…');
-    const ps=await Promise.all([0,1,2].map(async i=>{const r=await fetch(`./assets/cool_robot_gate1.glb.gz.b64.part${i}`);if(!r.ok)throw Error(`${r.status} loading robot part ${i}`);return(await r.text()).trim()}));
+    const ps=await Promise.all([0,1,2].map(async i=>{
+      const url=`./assets/cool_robot_gate1.glb.gz.b64.part${i}`;
+      try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(`HTTP ${r.status}`);return(await r.text()).trim()}
+      catch(err){throw new Error(`Robot payload part ${i} failed\n${url}\n${err?.message||err}`)}
+    }));
     if(!window.DecompressionStream)throw Error('This browser does not support DecompressionStream');
     const bin=atob(ps.join('')),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     const stream=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'));
@@ -86,7 +98,7 @@ try{
   function Camera(){const{camera,gl}=useThree(),o=useMemo(()=>new OrbitControls(camera,gl.domElement),[camera,gl]);useEffect(()=>{camera.position.set(4.5,3.2,7);o.target.set(0,1,0);o.enableDamping=true;o.maxPolarAngle=1.54;return()=>o.dispose()},[o]);useFrame(()=>o.update());return null}
   function Scene(){return h(React.Fragment,null,h('color',{attach:'background',args:['#11151b']}),h('hemisphereLight',{intensity:1.2}),h('directionalLight',{position:[6,10,4],intensity:2,castShadow:true}),h(Camera),h(Physics,{gravity:[0,-9.81,0]},h(RigidBody,{type:'fixed',colliders:false},h(CuboidCollider,{args:[30,.25,30],position:[0,-.25,0]}),h('mesh',{position:[0,-.25,0],receiveShadow:true},h('boxGeometry',{args:[60,.5,60]}),h('meshStandardMaterial',{color:'#2a313b'})),h('gridHelper',{args:[60,60]})),h(Player)))}
   createRoot(document.querySelector('#root')).render(h(Canvas,{shadows:true,camera:{fov:48,position:[4.5,3.2,7]}},h(Suspense,{fallback:null},h(Scene))));
-}catch(err){window.__gate1Fail('Gate 1 boot failed:',err)}
+}catch(err){window.__gate1Fail(`Gate 1 boot failed at ${bootStage}:`,err)}
 </script>
 </body>
 </html>
