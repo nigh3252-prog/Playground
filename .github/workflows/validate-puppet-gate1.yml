@@ -123,18 +123,24 @@ jobs:
           app = (root / 'puppet-gate1-app.js').read_text()
           assert 'src="./puppet-gate1-app.js"' in html
           assert 'id="context-rail"' in html and 'id="mode-rail"' in html
+          assert 'id="editor-toolbar"' in html
           assert "from './puppet-gate1-robot.js'" in app
-          assert 'Idle_loop appearance bind + full EC joint-frame runtime' in app
-          assert 'PUPPET_GROUND_Y=-(CAPSULE_HALF_HEIGHT+CAPSULE_RADIUS+FLOAT_HEIGHT)' in app
-          assert 'Puppet sole → ECCTRL ground · robot sole → puppet sole' in app
-          assert "id:'bind',label:'BIND'" in app
-          assert "id:'tweak',label:'TWEAK'" in app
-          assert "STORAGE_KEY='puppet-lab-gate1-appearance-v1'" in app
+          assert "TransformControls" in app
+          assert "PUPPET_SCHEMA" in app and "mirror:'uaR'" in app and "mirror:'llR'" in app
+          assert "STORAGE_KEY='puppet-lab-humanoid15-appearance-v2'" in app
+          assert "s:[1,1,1]" in app
+          assert "controls.touches.ONE=THREE.TOUCH.ROTATE" in app
+          assert "controls.touches.TWO=THREE.TOUCH.DOLLY_PAN" in app
+          assert "controls.maxPolarAngle=Math.PI" in app
+          assert "editor.roleGroups" in app and "editable tweak frame" in app
+          assert "ui.symmetry" in app and "mirroredTransform" in app
           assert "frame:'appearance'" in app and "frame==='puppet'" in app
+          assert 'PUPPET_GROUND_Y=-(CAPSULE_HALF_HEIGHT+CAPSULE_RADIUS+FLOAT_HEIGHT)' in app
+          assert 'Puppet sole → ECCTRL ground · appearance sole → puppet sole' in app
 
           print(f'Validated package SHA-256 {actual_sha}')
           print(f'Validated {len(package["pieces"])} real robot pieces, {total_vertices:,} vertices, {total_triangles:,} triangles')
-          print('Validated mobile rail shell, bind comparison, and persistent tweak controls')
+          print('Validated viewport gizmo editor, free camera gestures, XYZ scale, and puppet-schema symmetry')
           PY
 
       - name: Check browser module syntax
