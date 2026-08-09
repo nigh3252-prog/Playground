@@ -115,8 +115,10 @@ jobs:
               total_vertices += vertex_count
               total_triangles += len(indices) // (3 * index_bytes)
 
-          required_names = {'Head','Chest','Waist','Sword'}
+          required_names = {'Head','Sword'}
           assert required_names <= names, sorted(required_names - names)
+          piece_roles = {piece['role'] for piece in package['pieces']}
+          assert {'chest','waist'} <= piece_roles
 
           html = (root / 'puppet-gate1.html').read_text()
           app = (root / 'puppet-gate1-app.js').read_text()
