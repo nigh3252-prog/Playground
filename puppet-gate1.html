@@ -1,70 +1,551 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Puppet Gate 1 — Actual Robot on ECCTRL Puppet</title>
 <style>
-*{box-sizing:border-box}html,body,#root{width:100%;height:100%;margin:0;overflow:hidden;background:#11151b;color:#eef3fb;font-family:Inter,system-ui,sans-serif}canvas{display:block}.hud{position:fixed;z-index:10;top:10px;left:10px;width:min(410px,calc(100vw - 20px));padding:12px 13px;border:1px solid #ffffff24;border-radius:13px;background:#0c1016e8;box-shadow:0 12px 30px #0006;backdrop-filter:blur(10px)}.title{font-weight:800}.sub{margin-top:4px;color:#aeb8c7;font-size:12px;line-height:1.35}.row{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}button{border:1px solid #ffffff2d;border-radius:8px;background:#222a36;color:#eef3fb;padding:7px 9px;cursor:pointer}button[data-on=true]{background:#eef3fb;color:#11151b}.status{border-top:1px solid #ffffff1c;margin-top:10px;padding-top:8px;color:#c4cedd;font:11px/1.4 ui-monospace,monospace;white-space:pre-wrap}.error{color:#ffb3b3}.help{position:fixed;z-index:10;bottom:10px;left:10px;padding:8px 10px;border:1px solid #ffffff20;border-radius:9px;background:#0c1016d9;font-size:12px}@media(max-width:600px){.sub{display:none}.hud{top:7px;left:7px;width:calc(100vw - 14px)}.help{left:7px;bottom:7px}}
+*{box-sizing:border-box}
+html,body,#root{width:100%;height:100%;margin:0;overflow:hidden;background:#11151b;color:#eef3fb;font-family:Inter,system-ui,sans-serif}
+canvas{display:block}
+.hud{position:fixed;z-index:10;top:10px;left:10px;width:min(420px,calc(100vw - 20px));padding:12px 13px;border:1px solid #ffffff24;border-radius:13px;background:#0c1016e8;box-shadow:0 12px 30px #0006;backdrop-filter:blur(10px)}
+.title{font-weight:800}.sub{margin-top:4px;color:#aeb8c7;font-size:12px;line-height:1.35}
+.row{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+button{border:1px solid #ffffff2d;border-radius:8px;background:#222a36;color:#eef3fb;padding:7px 9px;cursor:pointer}
+button[data-on=true]{background:#eef3fb;color:#11151b}
+.status{border-top:1px solid #ffffff1c;margin-top:10px;padding-top:8px;color:#c4cedd;font:11px/1.42 ui-monospace,monospace;white-space:pre-wrap}
+.error{color:#ffb3b3}
+.help{position:fixed;z-index:10;bottom:10px;left:10px;padding:8px 10px;border:1px solid #ffffff20;border-radius:9px;background:#0c1016d9;font-size:12px}
+@media(max-width:600px){.sub{display:none}.hud{top:7px;left:7px;width:calc(100vw - 14px)}.help{left:7px;bottom:7px}}
 </style>
-<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.2.7","react/":"https://esm.sh/react@19.2.7/","react/jsx-runtime":"https://esm.sh/react@19.2.7/jsx-runtime","react/jsx-dev-runtime":"https://esm.sh/react@19.2.7/jsx-dev-runtime","react-dom":"https://esm.sh/react-dom@19.2.7?external=react","react-dom/":"https://esm.sh/react-dom@19.2.7/","react-dom/client":"https://esm.sh/react-dom@19.2.7/client?external=react","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.1?external=react,react-dom,three","@react-three/rapier":"https://esm.sh/@react-three/rapier@2.2.0?external=react,react-dom,three,@react-three/fiber","ecctrl":"https://esm.sh/ecctrl@2.0.0?external=react,react-dom,three,@react-three/fiber,@react-three/rapier","fflate":"https://esm.sh/fflate@0.8.2?bundle","three/addons/":"https://esm.sh/three@0.184.0/examples/jsm/"}}</script>
+<script type="importmap">
+{"imports":{"react":"https://esm.sh/react@19.2.7","react/":"https://esm.sh/react@19.2.7/","react/jsx-runtime":"https://esm.sh/react@19.2.7/jsx-runtime","react/jsx-dev-runtime":"https://esm.sh/react@19.2.7/jsx-dev-runtime","react-dom":"https://esm.sh/react-dom@19.2.7?external=react","react-dom/":"https://esm.sh/react-dom@19.2.7/","react-dom/client":"https://esm.sh/react-dom@19.2.7/client?external=react","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.1?external=react,react-dom,three","@react-three/rapier":"https://esm.sh/@react-three/rapier@2.2.0?external=react,react-dom,three,@react-three/fiber","ecctrl":"https://esm.sh/ecctrl@2.0.0?external=react,react-dom,three,@react-three/fiber,@react-three/rapier","fflate":"https://esm.sh/fflate@0.8.2?bundle","three/addons/":"https://esm.sh/three@0.184.0/examples/jsm/"}}
+</script>
 </head>
 <body>
 <div id="root"></div>
-<div class="hud"><div class="title">Puppet Gate 1 — Actual Robot on Puppet</div><div class="sub">The ECCTRL skeleton is authoritative. These are the actual uploaded robot meshes; its texture color is baked into the mesh for a mobile-safe Gate 1 asset.</div><div class="row"><button id="robot" data-on="true">Robot</button><button id="puppet" data-on="false">EC Puppet</button><button id="bones" data-on="false">Skeleton</button><button id="reset">Reset</button></div><div id="status" class="status">Booting Gate 1…</div></div>
+<div class="hud">
+  <div class="title">Puppet Gate 1 — Actual Robot on Puppet</div>
+  <div class="sub">The ECCTRL mannequin skeleton is authoritative. The uploaded robot's real rigid meshes are attached to its equivalent joints.</div>
+  <div class="row">
+    <button id="robot" data-on="true">Robot</button>
+    <button id="puppet" data-on="false">EC Puppet</button>
+    <button id="bones" data-on="false">Skeleton</button>
+    <button id="reset">Reset</button>
+  </div>
+  <div id="status" class="status">Booting Gate 1…</div>
+</div>
 <div class="help"><b>WASD</b> move · <b>Shift</b> run · <b>Space</b> jump · drag to orbit</div>
-<script>(()=>{const el=()=>document.querySelector('#status');const fail=(label,err)=>{const e=el();if(!e)return;e.textContent=label+'\n'+(err?.message||err||'Unknown error');e.classList.add('error')};window.__gate1Fail=fail;addEventListener('error',e=>fail('Browser error:',e.error||e.message));addEventListener('unhandledrejection',e=>fail('Unhandled promise error:',e.reason))})();</script>
+<script>
+(() => {
+  const el=()=>document.querySelector('#status');
+  const fail=(label,err)=>{
+    const e=el(); if(!e)return;
+    e.textContent=label+'\n'+(err?.message||err||'Unknown error');
+    e.classList.add('error');
+  };
+  window.__gate1Fail=fail;
+  addEventListener('error',e=>fail('Browser error:',e.error||e.message));
+  addEventListener('unhandledrejection',e=>fail('Unhandled promise error:',e.reason));
+})();
+</script>
 <script type="module">
-const status=document.querySelector('#status');const stat=(t,e=false)=>{status.textContent=t;status.classList.toggle('error',e)};let bootStage='starting';
-const loadModule=async(label,url)=>{bootStage=label;stat(`Loading module: ${label}…`);try{return await import(url)}catch(err){throw new Error(`${label} failed to load\n${url}\n${err?.message||err}`)}};
+const status=document.querySelector('#status');
+const stat=(text,isError=false)=>{status.textContent=text;status.classList.toggle('error',isError)};
+let bootStage='starting';
+const loadModule=async(label,url)=>{
+  bootStage=label; stat(`Loading module: ${label}…`);
+  try{return await import(url)}
+  catch(error){throw new Error(`${label} failed to load\n${url}\n${error?.message||error}`)}
+};
+
 try{
-const ReactMod=await loadModule('React','react'),React=ReactMod.default,{Suspense,useEffect,useMemo,useRef}=ReactMod,{createRoot}=await loadModule('React DOM','react-dom/client'),THREE=await loadModule('Three.js','three'),{Canvas,useFrame,useLoader,useThree}=await loadModule('React Three Fiber','@react-three/fiber'),{Physics,RigidBody,CuboidCollider}=await loadModule('React Three Rapier','@react-three/rapier'),{Ecctrl,EcctrlAnimationStateController,useEcctrlAnimationStore}=await loadModule('ECCTRL','ecctrl'),{gunzipSync}=await loadModule('Robot decoder','fflate'),{GLTFLoader}=await loadModule('GLTF loader','three/addons/loaders/GLTFLoader.js'),{OrbitControls}=await loadModule('Orbit controls','three/addons/controls/OrbitControls.js'),h=React.createElement;
-const VISUAL_Y=-0.95;
-const view={robot:true,puppet:false,bones:false,reset:0};for(const k of['robot','puppet','bones']){const b=document.querySelector('#'+k);b.onclick=()=>{view[k]=!view[k];b.dataset.on=String(view[k])}}document.querySelector('#reset').onclick=()=>view.reset++;
+  const ReactMod=await loadModule('React','react');
+  const React=ReactMod.default;
+  const {Suspense,useEffect,useMemo,useRef}=ReactMod;
+  const {createRoot}=await loadModule('React DOM','react-dom/client');
+  const THREE=await loadModule('Three.js','three');
+  const {Canvas,useFrame,useLoader,useThree}=await loadModule('React Three Fiber','@react-three/fiber');
+  const {Physics,RigidBody,CuboidCollider}=await loadModule('React Three Rapier','@react-three/rapier');
+  const {Ecctrl,EcctrlAnimationStateController,useEcctrlAnimationStore}=await loadModule('ECCTRL','ecctrl');
+  const {gunzipSync}=await loadModule('Robot decoder','fflate');
+  const {GLTFLoader}=await loadModule('GLTF loader','three/addons/loaders/GLTFLoader.js');
+  const {OrbitControls}=await loadModule('Orbit controls','three/addons/controls/OrbitControls.js');
+  const h=React.createElement;
 
-async function loadActualRobot(){
- bootStage='actual robot payload';stat('Loading actual uploaded robot geometry…');
- const parts=await Promise.all([0,1,2].map(async i=>{const url=`./assets/cool_robot_actual_baked.glb.gz.b64.part${i}`;try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(`HTTP ${r.status}`);return(await r.text()).trim()}catch(err){throw new Error(`Actual robot payload part ${i} failed\n${url}\n${err?.message||err}`)}}));
- let packed;try{const text=atob(parts.join(''));packed=new Uint8Array(text.length);for(let i=0;i<text.length;i++)packed[i]=text.charCodeAt(i)}catch(err){throw new Error(`Actual robot base64 decode failed\n${err?.message||err}`)}
- let bytes;try{bytes=gunzipSync(packed)}catch(err){throw new Error(`Actual robot gzip decode failed\n${err?.message||err}`)}
- bootStage='actual robot GLB';stat('Parsing actual robot meshes…');
- try{const ab=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);return await new GLTFLoader().parseAsync(ab,'')}catch(err){throw new Error(`Actual robot GLB parse failed\n${err?.message||err}`)}
-}
-const ROBOT_GLTF=await loadActualRobot(),ROBOT=ROBOT_GLTF.scene;ROBOT.updateMatrixWorld(true);
-const source=[['Head','head'],['Chest','chest'],['Waist','waist'],['UpperArm.L','uaL'],['LowerArm.L','laL'],['Hand.L','handL'],['UpperArm.R','uaR'],['LowerArm.R','laR'],['Hand.R','handR'],['UpperLeg.L','ulL'],['LowerLeg.L','llL'],['FrontFoot.L','footL'],['UpperLeg.R','ulR'],['LowerLeg.R','llR'],['FrontFoot.R','footR']];
-const EC='https://cdn.jsdelivr.net/gh/pmndrs/ecctrl@e2f4eb899ab54787170f5472832efb0a238c0ef9/public/AnimationLibrary.glb';stat('Loading ECCTRL mannequin…');
-const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-const aliases={head:['head','head1'],chest:['chest','upperchest','spine03','spine3','spine02','spine2','spine1','spine'],waist:['pelvis','hips','hip','waist'],uaL:['lupperarmbend','lupperarm','leftupperarm','leftarm','upperarml','mixamorigleftarm'],laL:['lforearmbend','lforearm','leftforearm','leftlowerarm','lowerarml','mixamorigleftforearm'],handL:['lhand','lefthand','handl','mixamoriglefthand'],uaR:['rupperarmbend','rupperarm','rightupperarm','rightarm','upperarmr','mixamorigrightarm'],laR:['rforearmbend','rforearm','rightforearm','rightlowerarm','lowerarmr','mixamorigrightforearm'],handR:['rhand','righthand','handr','mixamorigrighthand'],ulL:['lthigh','leftupleg','leftupperleg','thighl','mixamorigleftupleg'],llL:['lshin','leftshin','leftleg','leftlowerleg','calfl','lowerlegl','mixamorigleftleg'],footL:['lfoot','leftfoot','footl','mixamorigleftfoot'],ulR:['rthigh','rightupleg','rightupperleg','thighr','mixamorigrightupleg'],llR:['rshin','rightshin','rightleg','rightlowerleg','calfr','lowerlegr','mixamorigrightleg'],footR:['rfoot','rightfoot','footr','mixamorigrighfoot','mixamorigrigh tfoot'.replace(' ','')]};
-function bones(root){const a=[];root.traverse(o=>o.isBone&&a.push(o));return a}
-function findBone(bs,role){const names=aliases[role]||[];for(const n of names){const b=bs.find(x=>norm(x.name)===n);if(b)return b}for(const n of names){const hits=bs.filter(x=>norm(x.name).endsWith(n));if(hits.length)return hits.sort((a,b)=>norm(a.name).length-norm(b.name).length)[0]}for(const n of names){const hits=bs.filter(x=>norm(x.name).includes(n));if(hits.length)return hits.sort((a,b)=>norm(a.name).length-norm(b.name).length)[0]}return null}
-function commonAncestor(a,b){if(!a||!b)return null;const seen=new Set();for(let p=a;p;p=p.parent)if(p.isBone)seen.add(p);for(let p=b;p;p=p.parent)if(p.isBone&&seen.has(p))return p;return null}
-function inferTargets(bs){const t=new Map();for(const role of Object.keys(aliases)){const b=findBone(bs,role);if(b)t.set(role,b)}if(!t.has('laL')&&t.get('handL')?.parent?.isBone)t.set('laL',t.get('handL').parent);if(!t.has('laR')&&t.get('handR')?.parent?.isBone)t.set('laR',t.get('handR').parent);if(!t.has('llL')&&t.get('footL')?.parent?.isBone)t.set('llL',t.get('footL').parent);if(!t.has('llR')&&t.get('footR')?.parent?.isBone)t.set('llR',t.get('footR').parent);if(!t.has('chest')){const c=commonAncestor(t.get('uaL'),t.get('uaR'));if(c)t.set('chest',c);else if(t.get('head')?.parent?.parent?.isBone)t.set('chest',t.get('head').parent.parent)}return t}
-function srcNode(root,name){let exact=null,loose=null;root.traverse(o=>{if(o.isMesh||o.isSkinnedMesh)return;if(o.name===name)exact??=o;if(norm(o.name)===norm(name))loose??=o});return exact||loose}
-function owner(mesh,maps){for(let p=mesh.parent;p;p=p.parent){const m=maps.find(x=>x.s===p);if(m)return m}return null}
-function avgPosition(a,b){return new THREE.Vector3().addVectors(new THREE.Vector3().setFromMatrixPosition(a),new THREE.Vector3().setFromMatrixPosition(b)).multiplyScalar(.5)}
-function keys(){const r=useRef({});useEffect(()=>{const d=e=>{r.current[e.code]=1;if(e.code==='Space')e.preventDefault()},u=e=>delete r.current[e.code];addEventListener('keydown',d,{passive:false});addEventListener('keyup',u);return()=>{removeEventListener('keydown',d);removeEventListener('keyup',u)}},[]);return r}
+  const VISUAL_Y=-0.95;
+  const ROBOT_PART_COUNT=13;
+  const ROBOT_PART_PREFIX='./assets/cool_robot_actual_baked.v2.b64.part';
+  const view={robot:true,puppet:false,bones:false,reset:0};
 
-function Visual(){
- const wrap=useRef(),layer=useRef(),skeletonHelper=useRef(),binding=useRef([]),prev=useRef(),threeScene=useThree(s=>s.scene),pg=useLoader(GLTFLoader,EC),state=useEcctrlAnimationStore(s=>s.animationState),puppet=pg.scene,mixer=useMemo(()=>new THREE.AnimationMixer(puppet),[puppet]),acts=useMemo(()=>Object.fromEntries(pg.animations.map(c=>[c.name,mixer.clipAction(c)])),[pg.animations,mixer]);
- useEffect(()=>{const map={IDLE:'Idle_Loop',WALK:'Walk_Loop',RUN:'Jog_Fwd_Loop',JUMP_START:'Jump_Start',JUMP_IDLE:'Jump_Loop',JUMP_FALL:'Jump_Loop',JUMP_LAND:'Jump_Land'},n=map[state]||'Idle_Loop',a=acts[n];if(!a||a===prev.current)return;a.reset();if(n==='Jump_Start'||n==='Jump_Land'){a.setLoop(THREE.LoopOnce,1);a.clampWhenFinished=true}else a.setLoop(THREE.LoopRepeat,Infinity);prev.current&&a.crossFadeFrom(prev.current,.15,true);a.play();prev.current=a},[state,acts]);
- useEffect(()=>{
-  if(!wrap.current||!layer.current)return;wrap.current.updateWorldMatrix(true,true);puppet.updateMatrixWorld(true);ROBOT.updateMatrixWorld(true);
-  const bs=bones(puppet),targets=inferTargets(bs),roles=source.map(x=>x[1]),missing=roles.filter(r=>!targets.has(r)),winv=wrap.current.matrixWorld.clone().invert(),rests=new Map();for(const [role,bone] of targets){bone.updateMatrixWorld(true);rests.set(role,winv.clone().multiply(bone.matrixWorld))}
-  const maps=[],missingSource=[];for(const [name,role] of source){const s=srcNode(ROBOT,name),t=targets.get(role);if(s&&t)maps.push({s,t,role});else missingSource.push(`${name}→${role}`)}
-  const srcHead=maps.find(x=>x.role==='head')?.s?.matrixWorld,srcFootL=maps.find(x=>x.role==='footL')?.s?.matrixWorld,srcFootR=maps.find(x=>x.role==='footR')?.s?.matrixWorld,dstHead=rests.get('head'),dstFootL=rests.get('footL'),dstFootR=rests.get('footR');if(!srcHead||!srcFootL||!srcFootR||!dstHead||!dstFootL||!dstFootR)throw new Error('Could not establish head/foot landmarks for authoritative puppet scale');
-  const srcFeet=avgPosition(srcFootL,srcFootR),dstFeet=avgPosition(dstFootL,dstFootR),srcHeight=new THREE.Vector3().setFromMatrixPosition(srcHead).distanceTo(srcFeet),dstHeight=new THREE.Vector3().setFromMatrixPosition(dstHead).distanceTo(dstFeet),scale=dstHeight/Math.max(srcHeight,1e-5),S=new THREE.Matrix4().makeScale(scale,scale,scale);
-  const meshes=[];ROBOT.traverse(o=>(o.isMesh||o.isSkinnedMesh)&&meshes.push(o));layer.current.clear();const out=[];
-  for(const sm of meshes){const own=owner(sm,maps);if(!own)continue;const rest=rests.get(own.role),sourcePosition=new THREE.Vector3().setFromMatrixPosition(S.clone().multiply(own.s.matrixWorld)),targetPosition=new THREE.Vector3().setFromMatrixPosition(rest),snap=new THREE.Matrix4().makeTranslation(targetPosition.x-sourcePosition.x,targetPosition.y-sourcePosition.y,targetPosition.z-sourcePosition.z),mesh=new THREE.Mesh(sm.geometry,sm.material);mesh.name=`Bound_${sm.name||own.role}`;mesh.matrixAutoUpdate=false;mesh.castShadow=mesh.receiveShadow=true;layer.current.add(mesh);out.push({p:mesh,t:own.t,ri:rest.clone().invert(),base:snap.multiply(S.clone()).multiply(sm.matrixWorld)})}
-  binding.current=out;
-  const helper=new THREE.SkeletonHelper(puppet);helper.visible=view.bones;helper.renderOrder=999;if(helper.material){helper.material.depthTest=false;helper.material.transparent=true;helper.material.opacity=.9}threeScene.add(helper);skeletonHelper.current=helper;
-  const detail=missing.length?`Missing puppet: ${missing.join(', ')}`:missingSource.length?`Missing robot source: ${missingSource.join(', ')}`:'15/15 puppet joints mapped';stat(`BOUND ${out.length} actual robot mesh primitives → ${targets.size}/15 puppet joints\n${detail}\nSkeleton + puppet share one world frame\nECCTRL visual offset: ${VISUAL_Y.toFixed(2)} · scale: ${scale.toFixed(3)}×`);
-  return()=>{threeScene.remove(helper);helper.geometry?.dispose();helper.material?.dispose();if(skeletonHelper.current===helper)skeletonHelper.current=null}
- },[puppet,threeScene]);
- useFrame((_,dt)=>{mixer.update(dt);puppet.traverse(o=>{if(o.isMesh||o.isSkinnedMesh)o.visible=view.puppet});if(layer.current)layer.current.visible=view.robot;if(skeletonHelper.current)skeletonHelper.current.visible=view.bones;if(!wrap.current)return;wrap.current.updateWorldMatrix(true,true);const wi=wrap.current.matrixWorld.clone().invert(),cur=new THREE.Matrix4(),delta=new THREE.Matrix4(),desired=new THREE.Matrix4();for(const x of binding.current){x.t.updateMatrixWorld(true);cur.multiplyMatrices(wi,x.t.matrixWorld);delta.multiplyMatrices(cur,x.ri);desired.multiplyMatrices(delta,x.base);x.p.matrix.copy(desired);x.p.matrixWorldNeedsUpdate=true}});
- return h('group',{ref:wrap,position:[0,VISUAL_Y,0]},h('primitive',{object:puppet}),h('group',{ref:layer}));
+  for(const key of ['robot','puppet','bones']){
+    const button=document.querySelector('#'+key);
+    button.onclick=()=>{
+      view[key]=!view[key];
+      button.dataset.on=String(view[key]);
+    };
+  }
+  document.querySelector('#reset').onclick=()=>view.reset++;
+
+  function decodeBase64Part(text,index){
+    const clean=text.replace(/\s+/g,'');
+    if(!clean.length)throw new Error(`Actual robot part ${index} was empty`);
+    if(clean.length%4!==0)throw new Error(`Actual robot part ${index} has invalid base64 length ${clean.length}`);
+    if(!/^[A-Za-z0-9+/]*={0,2}$/.test(clean))throw new Error(`Actual robot part ${index} contains a non-base64 character`);
+    let binary;
+    try{binary=atob(clean)}
+    catch(error){throw new Error(`Actual robot part ${index} could not be decoded\n${error?.message||error}`)}
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    return bytes;
+  }
+
+  async function loadActualRobot(){
+    bootStage='actual robot payload';
+    const decoded=[];
+    let packedLength=0;
+    for(let i=0;i<ROBOT_PART_COUNT;i++){
+      stat(`Loading actual robot geometry… ${i+1}/${ROBOT_PART_COUNT}`);
+      const url=`${ROBOT_PART_PREFIX}${i}`;
+      let response;
+      try{response=await fetch(url,{cache:'no-store'})}
+      catch(error){throw new Error(`Actual robot part ${i} fetch failed\n${url}\n${error?.message||error}`)}
+      if(!response.ok)throw new Error(`Actual robot part ${i} returned HTTP ${response.status}\n${url}`);
+      const bytes=decodeBase64Part(await response.text(),i);
+      decoded.push(bytes);
+      packedLength+=bytes.length;
+    }
+
+    const packed=new Uint8Array(packedLength);
+    let offset=0;
+    for(const part of decoded){packed.set(part,offset);offset+=part.length}
+    if(packed[0]!==0x1f||packed[1]!==0x8b)throw new Error(`Actual robot payload is not gzip data (first bytes ${packed[0]}, ${packed[1]})`);
+
+    let bytes;
+    try{bytes=gunzipSync(packed)}
+    catch(error){throw new Error(`Actual robot gzip decode failed\n${error?.message||error}`)}
+
+    if(bytes.length<12||String.fromCharCode(bytes[0],bytes[1],bytes[2],bytes[3])!=='glTF'){
+      throw new Error('Decoded robot payload is not a GLB file');
+    }
+    const declaredLength=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength).getUint32(8,true);
+    if(declaredLength!==bytes.byteLength){
+      throw new Error(`Robot GLB length check failed: header ${declaredLength}, bytes ${bytes.byteLength}`);
+    }
+
+    bootStage='actual robot GLB';
+    stat(`Parsing actual robot meshes… ${(bytes.byteLength/1024).toFixed(0)} KB`);
+    try{
+      const buffer=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+      return await new GLTFLoader().parseAsync(buffer,'');
+    }catch(error){
+      throw new Error(`Actual robot GLB parse failed\n${error?.message||error}`);
+    }
+  }
+
+  const ROBOT_GLTF=await loadActualRobot();
+  const ROBOT=ROBOT_GLTF.scene;
+  ROBOT.updateMatrixWorld(true);
+
+  const source=[
+    ['Head','head'],['Chest','chest'],['Waist','waist'],
+    ['UpperArm.L','uaL'],['LowerArm.L','laL'],['Hand.L','handL'],
+    ['UpperArm.R','uaR'],['LowerArm.R','laR'],['Hand.R','handR'],
+    ['UpperLeg.L','ulL'],['LowerLeg.L','llL'],['FrontFoot.L','footL'],
+    ['UpperLeg.R','ulR'],['LowerLeg.R','llR'],['FrontFoot.R','footR']
+  ];
+  const skeletonPairs=[
+    ['waist','chest'],['chest','head'],
+    ['chest','uaL'],['uaL','laL'],['laL','handL'],
+    ['chest','uaR'],['uaR','laR'],['laR','handR'],
+    ['waist','ulL'],['ulL','llL'],['llL','footL'],
+    ['waist','ulR'],['ulR','llR'],['llR','footR']
+  ];
+  const skeletonRoles=['head','chest','waist','uaL','laL','handL','uaR','laR','handR','ulL','llL','footL','ulR','llR','footR'];
+
+  const EC='https://cdn.jsdelivr.net/gh/pmndrs/ecctrl@e2f4eb899ab54787170f5472832efb0a238c0ef9/public/AnimationLibrary.glb';
+  stat('Loading ECCTRL mannequin…');
+
+  const norm=value=>(value||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const aliases={
+    head:['head','head1'],
+    chest:['chest','upperchest','spine03','spine3','spine02','spine2','spine1','spine'],
+    waist:['pelvis','hips','hip','waist'],
+    uaL:['lupperarmbend','lupperarm','leftupperarm','leftarm','upperarml','mixamorigleftarm'],
+    laL:['lforearmbend','lforearm','leftforearm','leftlowerarm','lowerarml','mixamorigleftforearm'],
+    handL:['lhand','lefthand','handl','mixamoriglefthand'],
+    uaR:['rupperarmbend','rupperarm','rightupperarm','rightarm','upperarmr','mixamorigrightarm'],
+    laR:['rforearmbend','rforearm','rightforearm','rightlowerarm','lowerarmr','mixamorigrightforearm'],
+    handR:['rhand','righthand','handr','mixamorigrighthand'],
+    ulL:['lthighbend','lthigh','leftupleg','leftupperleg','thighl','mixamorigleftupleg'],
+    llL:['lshin','leftshin','leftleg','leftlowerleg','calfl','lowerlegl','mixamorigleftleg'],
+    footL:['lfoot','leftfoot','footl','mixamorigleftfoot'],
+    ulR:['rthighbend','rthigh','rightupleg','rightupperleg','thighr','mixamorigrightupleg'],
+    llR:['rshin','rightshin','rightleg','rightlowerleg','calfr','lowerlegr','mixamorigrightleg'],
+    footR:['rfoot','rightfoot','footr','mixamorigrighfoot','mixamorigrig hfoot'.replace(' ',''),'mixamorigrigh tfoot'.replace(' ','')]
+  };
+
+  function allBones(root){
+    const result=[];
+    root.traverse(object=>{if(object.isBone)result.push(object)});
+    return result;
+  }
+  function findBone(bones,role){
+    const names=aliases[role]||[];
+    for(const name of names){
+      const match=bones.find(bone=>norm(bone.name)===name);
+      if(match)return match;
+    }
+    for(const name of names){
+      const matches=bones.filter(bone=>norm(bone.name).endsWith(name));
+      if(matches.length)return matches.sort((a,b)=>norm(a.name).length-norm(b.name).length)[0];
+    }
+    for(const name of names){
+      const matches=bones.filter(bone=>norm(bone.name).includes(name));
+      if(matches.length)return matches.sort((a,b)=>norm(a.name).length-norm(b.name).length)[0];
+    }
+    return null;
+  }
+  function commonAncestor(a,b){
+    if(!a||!b)return null;
+    const seen=new Set();
+    for(let node=a;node;node=node.parent)if(node.isBone)seen.add(node);
+    for(let node=b;node;node=node.parent)if(node.isBone&&seen.has(node))return node;
+    return null;
+  }
+  function inferTargets(bones){
+    const targets=new Map();
+    for(const role of Object.keys(aliases)){
+      const bone=findBone(bones,role);
+      if(bone)targets.set(role,bone);
+    }
+    if(!targets.has('laL')&&targets.get('handL')?.parent?.isBone)targets.set('laL',targets.get('handL').parent);
+    if(!targets.has('laR')&&targets.get('handR')?.parent?.isBone)targets.set('laR',targets.get('handR').parent);
+    if(!targets.has('llL')&&targets.get('footL')?.parent?.isBone)targets.set('llL',targets.get('footL').parent);
+    if(!targets.has('llR')&&targets.get('footR')?.parent?.isBone)targets.set('llR',targets.get('footR').parent);
+    if(!targets.has('chest')){
+      const ancestor=commonAncestor(targets.get('uaL'),targets.get('uaR'));
+      if(ancestor)targets.set('chest',ancestor);
+      else if(targets.get('head')?.parent?.parent?.isBone)targets.set('chest',targets.get('head').parent.parent);
+    }
+    return targets;
+  }
+  function sourceNode(root,name){
+    let exact=null,loose=null;
+    root.traverse(object=>{
+      if(object.isMesh||object.isSkinnedMesh)return;
+      if(object.name===name)exact??=object;
+      if(norm(object.name)===norm(name))loose??=object;
+    });
+    return exact||loose;
+  }
+  function owningMap(mesh,maps){
+    for(let parent=mesh.parent;parent;parent=parent.parent){
+      const match=maps.find(entry=>entry.source===parent);
+      if(match)return match;
+    }
+    return null;
+  }
+  function averageMatrixPositions(a,b){
+    return new THREE.Vector3()
+      .addVectors(new THREE.Vector3().setFromMatrixPosition(a),new THREE.Vector3().setFromMatrixPosition(b))
+      .multiplyScalar(0.5);
+  }
+  function keyboard(){
+    const state=useRef({});
+    useEffect(()=>{
+      const down=event=>{state.current[event.code]=true;if(event.code==='Space')event.preventDefault()};
+      const up=event=>delete state.current[event.code];
+      addEventListener('keydown',down,{passive:false});
+      addEventListener('keyup',up);
+      return()=>{removeEventListener('keydown',down);removeEventListener('keyup',up)};
+    },[]);
+    return state;
+  }
+
+  function Visual(){
+    const wrap=useRef();
+    const robotLayer=useRef();
+    const binding=useRef([]);
+    const debug=useRef(null);
+    const targetsRef=useRef(new Map());
+    const previousAction=useRef();
+    const gltf=useLoader(GLTFLoader,EC);
+    const animationState=useEcctrlAnimationStore(state=>state.animationState);
+    const puppet=gltf.scene;
+    const mixer=useMemo(()=>new THREE.AnimationMixer(puppet),[puppet]);
+    const actions=useMemo(()=>Object.fromEntries(gltf.animations.map(clip=>[clip.name,mixer.clipAction(clip)])),[gltf.animations,mixer]);
+
+    useEffect(()=>{
+      const map={
+        IDLE:'Idle_Loop',WALK:'Walk_Loop',RUN:'Jog_Fwd_Loop',
+        JUMP_START:'Jump_Start',JUMP_IDLE:'Jump_Loop',JUMP_FALL:'Jump_Loop',JUMP_LAND:'Jump_Land'
+      };
+      const name=map[animationState]||'Idle_Loop';
+      const action=actions[name];
+      if(!action||action===previousAction.current)return;
+      action.reset();
+      if(name==='Jump_Start'||name==='Jump_Land'){
+        action.setLoop(THREE.LoopOnce,1);
+        action.clampWhenFinished=true;
+      }else{
+        action.setLoop(THREE.LoopRepeat,Infinity);
+      }
+      if(previousAction.current)action.crossFadeFrom(previousAction.current,0.15,true);
+      action.play();
+      previousAction.current=action;
+    },[animationState,actions]);
+
+    useEffect(()=>{
+      if(!wrap.current||!robotLayer.current)return;
+      wrap.current.updateWorldMatrix(true,true);
+      puppet.updateMatrixWorld(true);
+      ROBOT.updateMatrixWorld(true);
+
+      const bones=allBones(puppet);
+      const targets=inferTargets(bones);
+      targetsRef.current=targets;
+      const missing=skeletonRoles.filter(role=>!targets.has(role));
+      const inverseWrap=wrap.current.matrixWorld.clone().invert();
+      const rests=new Map();
+
+      for(const [role,bone] of targets){
+        bone.updateMatrixWorld(true);
+        rests.set(role,new THREE.Matrix4().multiplyMatrices(inverseWrap,bone.matrixWorld));
+      }
+
+      const maps=[];
+      const missingSource=[];
+      for(const [name,role] of source){
+        const source=sourceNode(ROBOT,name);
+        const target=targets.get(role);
+        if(source&&target)maps.push({source,target,role});
+        else missingSource.push(`${name}→${role}`);
+      }
+
+      const srcHead=maps.find(entry=>entry.role==='head')?.source.matrixWorld;
+      const srcFootL=maps.find(entry=>entry.role==='footL')?.source.matrixWorld;
+      const srcFootR=maps.find(entry=>entry.role==='footR')?.source.matrixWorld;
+      const dstHead=rests.get('head');
+      const dstFootL=rests.get('footL');
+      const dstFootR=rests.get('footR');
+      if(!srcHead||!srcFootL||!srcFootR||!dstHead||!dstFootL||!dstFootR){
+        throw new Error('Could not establish robot and puppet head/foot landmarks');
+      }
+
+      const srcFeet=averageMatrixPositions(srcFootL,srcFootR);
+      const dstFeet=averageMatrixPositions(dstFootL,dstFootR);
+      const srcHeight=new THREE.Vector3().setFromMatrixPosition(srcHead).distanceTo(srcFeet);
+      const dstHeight=new THREE.Vector3().setFromMatrixPosition(dstHead).distanceTo(dstFeet);
+      const scale=dstHeight/Math.max(srcHeight,1e-5);
+      const scaleMatrix=new THREE.Matrix4().makeScale(scale,scale,scale);
+
+      const puppetBox=new THREE.Box3().setFromObject(puppet).applyMatrix4(inverseWrap);
+      const robotMeshes=[];
+      ROBOT.traverse(object=>{if(object.isMesh||object.isSkinnedMesh)robotMeshes.push(object)});
+      robotLayer.current.clear();
+      const output=[];
+
+      for(const sourceMesh of robotMeshes){
+        const owner=owningMap(sourceMesh,maps);
+        if(!owner)continue;
+        const rest=rests.get(owner.role);
+        const sourceJointPosition=new THREE.Vector3().setFromMatrixPosition(scaleMatrix.clone().multiply(owner.source.matrixWorld));
+        const targetJointPosition=new THREE.Vector3().setFromMatrixPosition(rest);
+        const snap=new THREE.Matrix4().makeTranslation(
+          targetJointPosition.x-sourceJointPosition.x,
+          targetJointPosition.y-sourceJointPosition.y,
+          targetJointPosition.z-sourceJointPosition.z
+        );
+        const base=snap.multiply(scaleMatrix.clone()).multiply(sourceMesh.matrixWorld);
+        const mesh=new THREE.Mesh(sourceMesh.geometry,sourceMesh.material);
+        mesh.name=`Bound_${sourceMesh.name||owner.role}`;
+        mesh.matrixAutoUpdate=false;
+        mesh.castShadow=true;
+        mesh.receiveShadow=true;
+        robotLayer.current.add(mesh);
+        output.push({mesh,bone:owner.target,inverseRest:rest.clone().invert(),base,role:owner.role});
+      }
+
+      for(const item of output.filter(entry=>entry.role==='footL'||entry.role==='footR')){
+        item.mesh.geometry.computeBoundingBox();
+        if(item.mesh.geometry.boundingBox){
+          const box=item.mesh.geometry.boundingBox.clone().applyMatrix4(item.base);
+          const correction=puppetBox.min.y-box.min.y;
+          item.base.premultiply(new THREE.Matrix4().makeTranslation(0,correction,0));
+        }
+      }
+      binding.current=output;
+
+      const linePositions=new Float32Array(skeletonPairs.length*2*3);
+      const lineGeometry=new THREE.BufferGeometry();
+      lineGeometry.setAttribute('position',new THREE.BufferAttribute(linePositions,3));
+      const lineMaterial=new THREE.LineBasicMaterial({color:0x52e6ff,depthTest:false,transparent:true,opacity:0.95});
+      const lines=new THREE.LineSegments(lineGeometry,lineMaterial);
+      lines.frustumCulled=false;
+      lines.renderOrder=999;
+
+      const pointPositions=new Float32Array(skeletonRoles.length*3);
+      const pointGeometry=new THREE.BufferGeometry();
+      pointGeometry.setAttribute('position',new THREE.BufferAttribute(pointPositions,3));
+      const pointMaterial=new THREE.PointsMaterial({color:0xffffff,size:0.055,sizeAttenuation:true,depthTest:false});
+      const points=new THREE.Points(pointGeometry,pointMaterial);
+      points.frustumCulled=false;
+      points.renderOrder=1000;
+
+      wrap.current.add(lines,points);
+      debug.current={lines,points,pairs:skeletonPairs,roles:skeletonRoles};
+      lines.visible=view.bones;
+      points.visible=view.bones;
+
+      const detail=missing.length
+        ?`Missing puppet joints: ${missing.join(', ')}`
+        :missingSource.length
+          ?`Missing robot sockets: ${missingSource.join(', ')}`
+          :'15/15 puppet joints mapped';
+
+      stat(
+        `BOUND ${output.length} actual robot mesh primitives → ${targets.size}/15 puppet joints\n`+
+        `${detail}\n`+
+        `Canonical skeleton and EC Puppet share one local frame\n`+
+        `Robot soles aligned to puppet sole · scale ${scale.toFixed(3)}×`
+      );
+
+      return()=>{
+        wrap.current?.remove(lines,points);
+        lineGeometry.dispose();lineMaterial.dispose();
+        pointGeometry.dispose();pointMaterial.dispose();
+        if(debug.current?.lines===lines)debug.current=null;
+      };
+    },[puppet]);
+
+    useFrame((_,deltaTime)=>{
+      mixer.update(deltaTime);
+      puppet.traverse(object=>{if(object.isMesh||object.isSkinnedMesh)object.visible=view.puppet});
+      if(robotLayer.current)robotLayer.current.visible=view.robot;
+
+      const wrapObject=wrap.current;
+      if(!wrapObject)return;
+      wrapObject.updateWorldMatrix(true,true);
+      const inverseWrap=wrapObject.matrixWorld.clone().invert();
+
+      if(debug.current){
+        const {lines,points,pairs,roles}=debug.current;
+        lines.visible=view.bones;
+        points.visible=view.bones;
+        const lineArray=lines.geometry.attributes.position.array;
+        const pointArray=points.geometry.attributes.position.array;
+        const temp=new THREE.Vector3();
+
+        let index=0;
+        for(const [from,to] of pairs){
+          for(const role of [from,to]){
+            const bone=targetsRef.current.get(role);
+            if(bone)bone.getWorldPosition(temp).applyMatrix4(inverseWrap);
+            else temp.set(0,0,0);
+            lineArray[index++]=temp.x;lineArray[index++]=temp.y;lineArray[index++]=temp.z;
+          }
+        }
+        lines.geometry.attributes.position.needsUpdate=true;
+
+        index=0;
+        for(const role of roles){
+          const bone=targetsRef.current.get(role);
+          if(bone)bone.getWorldPosition(temp).applyMatrix4(inverseWrap);
+          else temp.set(0,0,0);
+          pointArray[index++]=temp.x;pointArray[index++]=temp.y;pointArray[index++]=temp.z;
+        }
+        points.geometry.attributes.position.needsUpdate=true;
+      }
+
+      const current=new THREE.Matrix4();
+      const delta=new THREE.Matrix4();
+      const desired=new THREE.Matrix4();
+      for(const item of binding.current){
+        item.bone.updateMatrixWorld(true);
+        current.multiplyMatrices(inverseWrap,item.bone.matrixWorld);
+        delta.multiplyMatrices(current,item.inverseRest);
+        desired.multiplyMatrices(delta,item.base);
+        item.mesh.matrix.copy(desired);
+        item.mesh.matrixWorldNeedsUpdate=true;
+      }
+    });
+
+    return h('group',{ref:wrap,position:[0,VISUAL_Y,0]},
+      h('primitive',{object:puppet}),
+      h('group',{ref:robotLayer})
+    );
+  }
+
+  function Player(){
+    const controller=useRef();
+    const input=keyboard();
+    const seenReset=useRef(0);
+    useFrame(()=>{
+      if(!controller.current)return;
+      const keys=input.current;
+      controller.current.setMovement({
+        forward:!!keys.KeyW,backward:!!keys.KeyS,leftward:!!keys.KeyA,rightward:!!keys.KeyD,
+        run:!!keys.ShiftLeft||!!keys.ShiftRight,jump:!!keys.Space
+      });
+      if(seenReset.current!==view.reset){
+        seenReset.current=view.reset;
+        controller.current.body?.setTranslation({x:0,y:2,z:0},true);
+        controller.current.body?.setLinvel({x:0,y:0,z:0},true);
+      }
+    });
+    return h(Ecctrl,{
+      ref:controller,position:[0,2,0],
+      capsuleHalfHeight:0.3,capsuleRadius:0.3,floatHeight:0.2,
+      maxWalkVel:2,maxRunVel:5
+    },
+      h(EcctrlAnimationStateController,{ecctrl:controller}),
+      h(Visual)
+    );
+  }
+
+  function Camera(){
+    const {camera,gl}=useThree();
+    const controls=useMemo(()=>new OrbitControls(camera,gl.domElement),[camera,gl]);
+    useEffect(()=>{
+      camera.position.set(4.5,3.2,7);
+      controls.target.set(0,1,0);
+      controls.enableDamping=true;
+      controls.maxPolarAngle=1.54;
+      return()=>controls.dispose();
+    },[controls,camera]);
+    useFrame(()=>controls.update());
+    return null;
+  }
+
+  function Scene(){
+    return h(React.Fragment,null,
+      h('color',{attach:'background',args:['#11151b']}),
+      h('hemisphereLight',{intensity:1.25}),
+      h('directionalLight',{position:[6,10,4],intensity:2,castShadow:true}),
+      h(Camera),
+      h(Physics,{gravity:[0,-9.81,0]},
+        h(RigidBody,{type:'fixed',colliders:false},
+          h(CuboidCollider,{args:[30,0.25,30],position:[0,-0.25,0]}),
+          h('mesh',{position:[0,-0.25,0],receiveShadow:true},
+            h('boxGeometry',{args:[60,0.5,60]}),
+            h('meshStandardMaterial',{color:'#2a313b'})
+          ),
+          h('gridHelper',{args:[60,60]})
+        ),
+        h(Player)
+      )
+    );
+  }
+
+  createRoot(document.querySelector('#root')).render(
+    h(Canvas,{shadows:true,camera:{fov:48,position:[4.5,3.2,7]}},
+      h(Suspense,{fallback:null},h(Scene))
+    )
+  );
+}catch(error){
+  window.__gate1Fail(`Gate 1 boot failed at ${bootStage}:`,error);
 }
-function Player(){const c=useRef(),k=keys(),seen=useRef(0);useFrame(()=>{if(!c.current)return;const q=k.current;c.current.setMovement({forward:!!q.KeyW,backward:!!q.KeyS,leftward:!!q.KeyA,rightward:!!q.KeyD,run:!!q.ShiftLeft||!!q.ShiftRight,jump:!!q.Space});if(seen.current!==view.reset){seen.current=view.reset;c.current.body?.setTranslation({x:0,y:2,z:0},true);c.current.body?.setLinvel({x:0,y:0,z:0},true)}});return h(Ecctrl,{ref:c,position:[0,2,0],capsuleHalfHeight:.3,capsuleRadius:.3,floatHeight:.2,maxWalkVel:2,maxRunVel:5},h(EcctrlAnimationStateController,{ecctrl:c}),h(Visual))}
-function Camera(){const{camera,gl}=useThree(),o=useMemo(()=>new OrbitControls(camera,gl.domElement),[camera,gl]);useEffect(()=>{camera.position.set(4.5,3.2,7);o.target.set(0,1,0);o.enableDamping=true;o.maxPolarAngle=1.54;return()=>o.dispose()},[o]);useFrame(()=>o.update());return null}
-function Scene(){return h(React.Fragment,null,h('color',{attach:'background',args:['#11151b']}),h('hemisphereLight',{intensity:1.2}),h('directionalLight',{position:[6,10,4],intensity:2,castShadow:true}),h(Camera),h(Physics,{gravity:[0,-9.81,0]},h(RigidBody,{type:'fixed',colliders:false},h(CuboidCollider,{args:[30,.25,30],position:[0,-.25,0]}),h('mesh',{position:[0,-.25,0],receiveShadow:true},h('boxGeometry',{args:[60,.5,60]}),h('meshStandardMaterial',{color:'#2a313b'})),h('gridHelper',{args:[60,60]})),h(Player)))}
-createRoot(document.querySelector('#root')).render(h(Canvas,{shadows:true,camera:{fov:48,position:[4.5,3.2,7]}},h(Suspense,{fallback:null},h(Scene))));
-}catch(err){window.__gate1Fail(`Gate 1 boot failed at ${bootStage}:`,err)}
-</script></body></html>
+</script>
+</body>
+</html>
