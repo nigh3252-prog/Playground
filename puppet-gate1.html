@@ -54,40 +54,86 @@ try{
   for(const k of['robot','puppet','bones']){const b=document.querySelector('#'+k);b.onclick=()=>{view[k]=!view[k];b.dataset.on=String(view[k])}}
   document.querySelector('#reset').onclick=()=>view.reset++;
 
-  async function robotUrl(){
-    bootStage='robot payload';
-    stat('Loading robot asset…');
-    const ps=await Promise.all([0,1,2].map(async i=>{
-      const url=`./assets/cool_robot_gate1.glb.gz.b64.part${i}`;
-      try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(`HTTP ${r.status}`);return(await r.text()).trim()}
-      catch(err){throw new Error(`Robot payload part ${i} failed\n${url}\n${err?.message||err}`)}
+  async function loadRobotData(){
+    bootStage='robot payload';stat('Loading compact robot pieces…');
+    const parts=await Promise.all(Array.from({length:6},async(_,i)=>{
+      const url=`./assets/cool_robot_gate1.hull.part${i}`;
+      try{const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);return await response.text()}
+      catch(err){throw new Error(`Robot data part ${i} failed\n${url}\n${err?.message||err}`)}
     }));
-    if(!window.DecompressionStream)throw Error('This browser does not support DecompressionStream');
-    const bin=atob(ps.join('')),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-    const stream=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'));
-    return URL.createObjectURL(new Blob([await new Response(stream).arrayBuffer()],{type:'model/gltf-binary'}));
+    try{return JSON.parse(parts.join(''))}
+    catch(err){throw new Error(`Robot data could not be decoded\n${err?.message||err}`)}
   }
+  const ROBOT_DATA=await loadRobotData();
+  const decodeBytes=b64=>{const text=atob(b64),out=new Uint8Array(text.length);for(let i=0;i<text.length;i++)out[i]=text.charCodeAt(i);return out};
+  const decodeU16=b64=>{const bytes=decodeBytes(b64);return new Uint16Array(bytes.buffer,bytes.byteOffset,bytes.byteLength/2)};
+  const decodeI8=b64=>{const bytes=decodeBytes(b64);return new Int8Array(bytes.buffer,bytes.byteOffset,bytes.byteLength)};
+  const matrixFrom=a=>new THREE.Matrix4().fromArray(a);
 
-  const ROBOT=await robotUrl();
+  function buildRobotAsset(data){
+    bootStage='embedded robot';stat('Building embedded robot asset…');
+    if(data?.version!==2||!data.geometries||!data.pieces)throw new Error('Embedded robot data has an unsupported or incomplete format');
+    const geometries={};
+    for(const [name,src] of Object.entries(data.geometries)){
+      const qp=decodeU16(src.p),qn=decodeI8(src.n),index=decodeU16(src.i);
+      const positions=new Float32Array(src.v*3),normals=new Float32Array(src.v*3);
+      for(let v=0;v<src.v;v++){
+        for(let a=0;a<3;a++)positions[v*3+a]=src.lo[a]+(qp[v*3+a]/65535)*(src.hi[a]-src.lo[a]);
+        normals[v*3]=qn[v*3]/127;normals[v*3+1]=qn[v*3+1]/127;normals[v*3+2]=qn[v*3+2]/127;
+      }
+      const geometry=new THREE.BufferGeometry();
+      geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+      geometry.setAttribute('normal',new THREE.BufferAttribute(normals,3));
+      geometry.setIndex(new THREE.BufferAttribute(index,1));
+      geometry.computeBoundingBox();geometry.computeBoundingSphere();geometries[name]=geometry;
+    }
+    const materials={
+      body:new THREE.MeshStandardMaterial({color:0x9ba6af,roughness:.68,metalness:.28}),
+      accent:new THREE.MeshStandardMaterial({color:0xd8dde1,roughness:.58,metalness:.22}),
+      dark:new THREE.MeshStandardMaterial({color:0x303942,roughness:.74,metalness:.32}),
+      sword:new THREE.MeshStandardMaterial({color:0xa9bbc8,roughness:.44,metalness:.56})
+    };
+    const joints=Object.fromEntries(Object.entries(data.joints).map(([role,m])=>[role,matrixFrom(m)]));
+    return {geometries,materials,joints,pieces:data.pieces.map(piece=>({...piece,matrix:matrixFrom(piece.m)})),bounds:new THREE.Box3(new THREE.Vector3(...data.bounds[0]),new THREE.Vector3(...data.bounds[1]))};
+  }
+  const ROBOT=buildRobotAsset(ROBOT_DATA);
   const EC='https://cdn.jsdelivr.net/gh/pmndrs/ecctrl@e2f4eb899ab54787170f5472832efb0a238c0ef9/public/AnimationLibrary.glb';
   stat('Loading ECCTRL mannequin…');
   const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const target={head:['head'],chest:['spine03','chest','upperchest','spine02'],waist:['pelvis','hips','waist'],uaL:['upperarml','leftupperarm','mixamorigleftarm'],laL:['lowerarml','leftforearm','mixamorigleftforearm'],handL:['handl','lefthand','mixamoriglefthand'],uaR:['upperarmr','rightupperarm','mixamorigrightarm'],laR:['lowerarmr','rightforearm','mixamorigrightforearm'],handR:['handr','righthand','mixamorigrighthand'],ulL:['thighl','leftupleg','leftupperleg','mixamorigleftupleg'],llL:['calfl','leftleg','mixamorigleftleg'],footL:['footl','leftfoot','mixamorigleftfoot'],ulR:['thighr','rightupleg','rightupperleg','mixamorigrightupleg'],llR:['calfr','rightleg','mixamorigrightleg'],footR:['footr','rightfoot','mixamorigrightfoot']};
-  const source=[['Head_1','head'],['Chest','chest'],['Waist','waist'],['UpperArm.L_1','uaL'],['LowerArm.L_1','laL'],['Hand.L','handL'],['UpperArm.R','uaR'],['LowerArm.R','laR'],['Hand.R','handR'],['UpperLeg.L_1','ulL'],['LowerLeg.L','llL'],['FrontFoot.L','footL'],['UpperLeg.R','ulR'],['LowerLeg.R','llR'],['FrontFoot.R','footR']];
   function bones(root){const a=[];root.traverse(o=>o.isBone&&a.push(o));return a}
   function tgt(bs,role){const as=target[role]||[];for(const a of as){const x=bs.find(b=>norm(b.name)===a);if(x)return x}for(const a of as){const x=bs.find(b=>norm(b.name).endsWith(a));if(x)return x}return null}
-  function src(root,name){let exact=null,loose=null;root.traverse(o=>{if(o.isMesh)return;if(o.name===name)exact??=o;if(norm(o.name)===norm(name))loose??=o});return exact||loose}
-  function owner(mesh,maps){for(let p=mesh.parent;p;p=p.parent){const m=maps.find(x=>x.s===p);if(m)return m}return null}
   function fit(a,b){const as=a.getSize(new THREE.Vector3()),bs=b.getSize(new THREE.Vector3()),s=bs.y/Math.max(as.y,1e-5),ac=a.getCenter(new THREE.Vector3()),bc=b.getCenter(new THREE.Vector3());return new THREE.Matrix4().makeTranslation(bc.x-ac.x*s,b.min.y-a.min.y*s,bc.z-ac.z*s).multiply(new THREE.Matrix4().makeScale(s,s,s))}
   function keys(){const r=useRef({});useEffect(()=>{const d=e=>{r.current[e.code]=1;if(e.code==='Space')e.preventDefault()},u=e=>delete r.current[e.code];addEventListener('keydown',d,{passive:false});addEventListener('keyup',u);return()=>{removeEventListener('keydown',d);removeEventListener('keyup',u)}},[]);return r}
 
   function Visual(){
     const wrap=useRef(),layer=useRef(),helper=useRef(),binding=useRef([]),prev=useRef();
-    const pg=useLoader(GLTFLoader,EC),rg=useLoader(GLTFLoader,ROBOT),state=useEcctrlAnimationStore(s=>s.animationState),puppet=pg.scene,robot=rg.scene;
+    const pg=useLoader(GLTFLoader,EC),state=useEcctrlAnimationStore(s=>s.animationState),puppet=pg.scene;
     const mixer=useMemo(()=>new THREE.AnimationMixer(puppet),[puppet]);
     const acts=useMemo(()=>Object.fromEntries(pg.animations.map(c=>[c.name,mixer.clipAction(c)])),[pg.animations,mixer]);
     useEffect(()=>{const map={IDLE:'Idle_Loop',WALK:'Walk_Loop',RUN:'Jog_Fwd_Loop',JUMP_START:'Jump_Start',JUMP_IDLE:'Jump_Loop',JUMP_FALL:'Jump_Loop',JUMP_LAND:'Jump_Land'},n=map[state]||'Idle_Loop',a=acts[n];if(!a||a===prev.current)return;a.reset();if(n==='Jump_Start'||n==='Jump_Land'){a.setLoop(THREE.LoopOnce,1);a.clampWhenFinished=true}else a.setLoop(THREE.LoopRepeat,Infinity);prev.current&&a.crossFadeFrom(prev.current,.15,true);a.play();prev.current=a},[state,acts]);
-    useEffect(()=>{if(!wrap.current)return;wrap.current.updateWorldMatrix(true,true);puppet.updateMatrixWorld(true);robot.updateMatrixWorld(true);const bs=bones(puppet),maps=[],miss=[];for(const[n,r]of source){const s=src(robot,n),t=tgt(bs,r);s&&t?maps.push({s,t,r}):miss.push(r)}const winv=wrap.current.matrixWorld.clone().invert(),rests=new Map();for(const m of maps){m.t.updateMatrixWorld(true);rests.set(m.r,winv.clone().multiply(m.t.matrixWorld))}const pb=new THREE.Box3().setFromObject(puppet).applyMatrix4(winv),rb=new THREE.Box3().setFromObject(robot),F=fit(rb,pb),meshes=[];robot.traverse(o=>o.isMesh&&meshes.push(o));layer.current.clear();const out=[];for(const sm of meshes){const o=owner(sm,maps);if(!o)continue;const rest=rests.get(o.r),sp=new THREE.Vector3().setFromMatrixPosition(F.clone().multiply(o.s.matrixWorld)),tp=new THREE.Vector3().setFromMatrixPosition(rest),snap=new THREE.Matrix4().makeTranslation(tp.x-sp.x,tp.y-sp.y,tp.z-sp.z),p=new THREE.Mesh(sm.geometry,sm.material);p.matrixAutoUpdate=false;p.castShadow=p.receiveShadow=true;layer.current.add(p);out.push({p,t:o.t,ri:rest.clone().invert(),base:snap.multiply(F.clone()).multiply(sm.matrixWorld)})}binding.current=out;helper.current=new THREE.SkeletonHelper(puppet);wrap.current.add(helper.current);stat(`BOUND ${out.length} robot meshes → ${maps.length}/${source.length} puppet joints\n${miss.length?'Missing: '+miss.join(', '):'Core joints mapped'}`)},[puppet,robot]);
+    useEffect(()=>{
+      if(!wrap.current||!layer.current)return;
+      wrap.current.updateWorldMatrix(true,true);puppet.updateMatrixWorld(true);
+      const bs=bones(puppet),roles=Object.keys(ROBOT.joints),targets=new Map(),missing=[];
+      for(const role of roles){const bone=tgt(bs,role);bone?targets.set(role,bone):missing.push(role)}
+      const winv=wrap.current.matrixWorld.clone().invert(),rests=new Map();
+      for(const [role,bone] of targets){bone.updateMatrixWorld(true);rests.set(role,winv.clone().multiply(bone.matrixWorld))}
+      const pb=new THREE.Box3().setFromObject(puppet).applyMatrix4(winv),F=fit(ROBOT.bounds,pb);
+      layer.current.clear();const out=[];
+      for(const piece of ROBOT.pieces){
+        const bone=targets.get(piece.role),rest=rests.get(piece.role),sourceJoint=ROBOT.joints[piece.role],geometry=ROBOT.geometries[piece.g];
+        if(!bone||!rest||!sourceJoint||!geometry)continue;
+        const sourcePosition=new THREE.Vector3().setFromMatrixPosition(F.clone().multiply(sourceJoint));
+        const targetPosition=new THREE.Vector3().setFromMatrixPosition(rest);
+        const snap=new THREE.Matrix4().makeTranslation(targetPosition.x-sourcePosition.x,targetPosition.y-sourcePosition.y,targetPosition.z-sourcePosition.z);
+        const mesh=new THREE.Mesh(geometry,ROBOT.materials[piece.kind]||ROBOT.materials.body);mesh.name=`Bound_${piece.name}`;mesh.matrixAutoUpdate=false;mesh.castShadow=mesh.receiveShadow=true;layer.current.add(mesh);
+        out.push({p:mesh,t:bone,ri:rest.clone().invert(),base:snap.multiply(F.clone()).multiply(piece.matrix)});
+      }
+      binding.current=out;helper.current=new THREE.SkeletonHelper(puppet);wrap.current.add(helper.current);
+      stat(`BOUND ${out.length}/${ROBOT.pieces.length} robot pieces → ${targets.size}/${roles.length} puppet joints\n${missing.length?'Missing: '+missing.join(', '):'Core joints mapped'}`);
+      return()=>{if(helper.current?.parent)helper.current.parent.remove(helper.current);helper.current=null};
+    },[puppet]);
     useFrame((_,dt)=>{mixer.update(dt);puppet.traverse(o=>{if(o.isMesh||o.isSkinnedMesh)o.visible=view.puppet});if(layer.current)layer.current.visible=view.robot;if(helper.current)helper.current.visible=view.bones;if(!wrap.current)return;wrap.current.updateWorldMatrix(true,true);const wi=wrap.current.matrixWorld.clone().invert(),cur=new THREE.Matrix4(),del=new THREE.Matrix4(),des=new THREE.Matrix4();for(const x of binding.current){x.t.updateMatrixWorld(true);cur.multiplyMatrices(wi,x.t.matrixWorld);del.multiplyMatrices(cur,x.ri);des.multiplyMatrices(del,x.base);x.p.matrix.copy(des);x.p.matrixWorldNeedsUpdate=true}});
     return h('group',{ref:wrap,position:[0,-.95,0]},h('primitive',{object:puppet}),h('group',{ref:layer}));
   }
