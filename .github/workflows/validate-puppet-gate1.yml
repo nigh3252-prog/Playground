@@ -1,0 +1,59 @@
+name: Validate Puppet Gate 1 asset
+
+on:
+  push:
+    paths:
+      - "puppet-gate1.html"
+      - "assets/cool_robot_actual_baked.v2.b64.part*"
+      - ".github/workflows/validate-puppet-gate1.yml"
+  pull_request:
+    paths:
+      - "puppet-gate1.html"
+      - "assets/cool_robot_actual_baked.v2.b64.part*"
+      - ".github/workflows/validate-puppet-gate1.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and validate compact actual robot GLB
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip, json, re, struct
+
+          root = Path('.')
+          parts = [root / 'assets' / f'cool_robot_actual_baked.v2.b64.part{i}' for i in range(13)]
+          missing = [str(path) for path in parts if not path.exists()]
+          assert not missing, f'Missing payload files: {missing}'
+
+          packed_parts = []
+          for index, path in enumerate(parts):
+              text = re.sub(r'\s+', '', path.read_text())
+              assert text, f'Part {index} is empty'
+              assert len(text) % 4 == 0, f'Part {index} base64 length is {len(text)}'
+              packed_parts.append(base64.b64decode(text, validate=True))
+
+          packed = b''.join(packed_parts)
+          assert packed[:2] == b'\x1f\x8b', f'Not gzip: {packed[:4]!r}'
+          glb = gzip.decompress(packed)
+          assert glb[:4] == b'glTF', f'Not GLB: {glb[:8]!r}'
+          version, declared = struct.unpack_from('<II', glb, 4)
+          assert version == 2, version
+          assert declared == len(glb), (declared, len(glb))
+
+          json_length, json_type = struct.unpack_from('<II', glb, 12)
+          assert json_type == 0x4E4F534A
+          doc = json.loads(glb[20:20 + json_length].decode('utf-8').rstrip(' \t\r\n\x00'))
+          assert len(doc.get('meshes', [])) >= 18, len(doc.get('meshes', []))
+          assert len(doc.get('nodes', [])) >= 45, len(doc.get('nodes', []))
+
+          html = (root / 'puppet-gate1.html').read_text()
+          assert 'ROBOT_PART_COUNT=13' in html
+          assert 'cool_robot_actual_baked.v2.b64.part' in html
+          assert 'Canonical skeleton and EC Puppet share one local frame' in html
+
+          print(f'Validated {len(packed):,} compressed bytes -> {len(glb):,} GLB bytes')
+          print(f"GLB: {len(doc.get('meshes', []))} meshes, {len(doc.get('nodes', []))} nodes")
+          PY
