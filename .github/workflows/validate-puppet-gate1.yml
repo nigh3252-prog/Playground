@@ -1,0 +1,138 @@
+name: Validate Puppet Gate 1 asset
+
+on:
+  push:
+    paths:
+      - "puppet-gate1.html"
+      - "puppet-gate1-app.js"
+      - "puppet-gate1-robot.js"
+      - "assets/actual_robot_pack_v4*"
+      - ".github/workflows/validate-puppet-gate1.yml"
+  pull_request:
+    paths:
+      - "puppet-gate1.html"
+      - "puppet-gate1-app.js"
+      - "puppet-gate1-robot.js"
+      - "assets/actual_robot_pack_v4*"
+      - ".github/workflows/validate-puppet-gate1.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct and validate actual robot package
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import gzip
+          import hashlib
+          import json
+          import re
+          import struct
+
+          root = Path('.')
+          assets = root / 'assets'
+          parts = [
+              ('actual_robot_pack_v4.b64.part0', None),
+              ('actual_robot_pack_v4.b64.part1', None),
+              ('actual_robot_pack_v4.b64.part2', None),
+              ('actual_robot_pack_v4.b64.part3', None),
+              ('actual_robot_pack_v4.b64.part4', None),
+              ('actual_robot_pack_v4.b64.part5', None),
+              ('actual_robot_pack_v4.b64.part6a', 'actual_robot_pack_v4.patch6a'),
+              ('actual_robot_pack_v4.b64.part6b', 'actual_robot_pack_v4.patch6b'),
+              ('actual_robot_pack_v4.b64.part6c', 'actual_robot_pack_v4.patch6c'),
+              ('actual_robot_pack_v4.b64.part6d', 'actual_robot_pack_v4.patch6d'),
+              ('actual_robot_pack_v4.b64.part7a', None),
+              ('actual_robot_pack_v4.b64.part7b', None),
+              ('actual_robot_pack_v4.b64.part7c', None),
+              ('actual_robot_pack_v4.b64.part7d', None),
+              ('actual_robot_pack_v4.b64.part8', None),
+          ]
+
+          def clean(path):
+              assert path.is_file(), f'Missing {path}'
+              return ''.join(path.read_text().split())
+
+          compressed_parts = []
+          for filename, patchname in parts:
+              text = clean(assets / filename)
+              if patchname:
+                  patch = clean(assets / patchname)
+                  assert len(text) == 3000, (filename, len(text))
+                  assert len(patch) == 100, (patchname, len(patch))
+                  text = text[:2600] + patch + text[2700:]
+              assert text and len(text) % 4 == 0, (filename, len(text))
+              compressed_parts.append(base64.b64decode(text, validate=True))
+
+          compressed = b''.join(compressed_parts)
+          assert compressed[:2] == b'\x1f\x8b', compressed[:4]
+          raw = gzip.decompress(compressed)
+
+          robot_js = (root / 'puppet-gate1-robot.js').read_text()
+          expected_sha = re.search(r"PACKAGE_SHA256='([0-9a-f]{64})'", robot_js)
+          assert expected_sha, 'PACKAGE_SHA256 not found'
+          actual_sha = hashlib.sha256(raw).hexdigest()
+          assert actual_sha == expected_sha.group(1), (actual_sha, expected_sha.group(1))
+
+          package = json.loads(raw)
+          assert package.get('version') == 4
+          assert isinstance(package.get('joints'), dict) and len(package['joints']) == 15
+          assert isinstance(package.get('pieces'), list) and len(package['pieces']) == 20
+
+          expected_roles = {
+              'head','chest','waist',
+              'uaL','laL','handL','uaR','laR','handR',
+              'ulL','llL','footL','ulR','llR','footR',
+          }
+          assert set(package['joints']) == expected_roles
+          for role, matrix in package['joints'].items():
+              assert len(matrix) == 16, (role, len(matrix))
+
+          total_vertices = 0
+          total_triangles = 0
+          names = set()
+          for piece in package['pieces']:
+              name = piece['name']
+              names.add(name)
+              assert piece['role'] in expected_roles, (name, piece['role'])
+              assert len(piece['m']) == 16
+              assert len(piece['lo']) == 3 and len(piece['hi']) == 3
+              vertex_count = int(piece['v'])
+              assert vertex_count > 0
+              positions = base64.b64decode(piece['p'], validate=True)
+              normals = base64.b64decode(piece['n'], validate=True)
+              colors = base64.b64decode(piece['c'], validate=True)
+              indices = base64.b64decode(piece['i'], validate=True)
+              assert len(positions) == vertex_count * 3 * 2, (name, len(positions), vertex_count)
+              assert len(normals) == vertex_count * 3, (name, len(normals), vertex_count)
+              assert len(colors) == vertex_count * 3, (name, len(colors), vertex_count)
+              index_bytes = 4 if piece.get('it') == 32 else 2
+              assert len(indices) % (3 * index_bytes) == 0, (name, len(indices), index_bytes)
+              total_vertices += vertex_count
+              total_triangles += len(indices) // (3 * index_bytes)
+
+          required_names = {'Head','Sword'}
+          assert required_names <= names, sorted(required_names - names)
+          piece_roles = {piece['role'] for piece in package['pieces']}
+          assert {'chest','waist'} <= piece_roles
+
+          html = (root / 'puppet-gate1.html').read_text()
+          app = (root / 'puppet-gate1-app.js').read_text()
+          assert 'src="./puppet-gate1-app.js"' in html
+          assert "from './puppet-gate1-robot.js'" in app
+          assert 'Canonical skeleton and EC Puppet share one local frame' in app
+          assert 'PUPPET_GROUND_Y=-(CAPSULE_HALF_HEIGHT+CAPSULE_RADIUS+FLOAT_HEIGHT)' in app
+          assert 'Puppet sole → ECCTRL ground · robot sole → puppet sole' in app
+
+          print(f'Validated package SHA-256 {actual_sha}')
+          print(f'Validated {len(package["pieces"])} real robot pieces, {total_vertices:,} vertices, {total_triangles:,} triangles')
+          PY
+
+      - name: Check browser module syntax
+        run: |
+          node --check puppet-gate1-app.js
+          node --check puppet-gate1-robot.js
