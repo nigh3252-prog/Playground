@@ -17,30 +17,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Diagnose uploaded robot payload blocks
+      - name: Find corrupted robot payload blocks
         run: |
           python - <<'PY'
           from pathlib import Path
           import hashlib, json
 
+          expected = json.loads(r'''{"actual_robot_pack_v4.b64.part6a":["5a9dbad59685","62e3e665f380","eb84360fc8e9","604091f27ae7","127bc6c48668","ab239e0ceacf","0b1fbc68ea71","de600b67f649","346da43b89e8","08722e455e8c","e2d16c36d138","774888de2dbc","69ea124bf9c4","d919a26d2780","c4be21ca8730","e723fd82197f","9f01389bb4be","19f82ef4c97e","5a93844714b9","7bbaa4de2c5f","910d9fdd3480","cd9bb8ef92ad","8ead3b7cbdb5","1aa860d6c651","bde39d05e234","d7968aed5a64","f7c6a3a7708e","5a69d40989a6","7281c57ed0c1","093f4db63ad7"],"actual_robot_pack_v4.b64.part6b":["27af51b3d81b","d925b4fbd061","a5e6b25786d8","434d997a0d46","90b5c3acec35","d1f537f62fa7","913791aeb7b1","43a03f16b868","2d125fa27fd0","d587773e0478","2edb913d4f06","34a41387cf8a","44674d4a7319","51fbeea2a4e2","d01c546d02a3","3cf0ca3250b4","afb49f3571a2","258b1abf5a70","c72c3f5b78bd","816b7edae275","57a62ac54495","6822c9405518","9963bd687113","3ae947fcdf9b","1edc313c2718","3bf9226be96b","d1c4105590d8","86025de549be","55b0631f53ca","f33aa307b444"],"actual_robot_pack_v4.b64.part6c":["19529ddbe3bb","a43f220cef80","0c46f5af180d","9c4bf36e4a4a","b2c7de184d5c","5b1c8baee420","4a00e1166916","758b7774e74d","6b32a9392ac8","14fe69879a3e","2c2a83961277","99181f1bef2e","c1c326190928","016ea67f1304","03af92acab59","ab0e6df880e8","06cafdea04b6","ea47d460eca4","784e22865f59","55f85840bf2d","0ffe5ee83fcf","e499ffbcdb00","2cc06eb906a6","2c153d367d1f","665f6eb741ed","c306f87750cc","82ccf819dc95","a6c19bf7b45d","b2e1abf2a945","0440a2771d54"],"actual_robot_pack_v4.b64.part6d":["ed1a2f9ebfc3","136f28a0db29","9a7f6e1940a4","b77cb0e4f64d","5f44877436b7","327b9e23f317","58cb6ac49450","bbcc513cdb1c","a7ccb4aef1f4","92406cc5723a","be617a0b1aab","53b9cb31435d","aeddfb10a27c","3c2bc92cbd2f","ff849093375f","cc6ea04a4701","8204ef014d4c","e573b8eb632a","8a90937f6151","0435bc44fe3b","37b9fe47e71f","7be32ea655bc","fe297e339a82","dfe4af588ab0","f1d62b850fd2","8a17918e8f23","64b84c88fe70","dc1ad020e1e1","d0c59a505947","e31bc4b80fd9"],"actual_robot_pack_v4.b64.part7a":["edb7d0118ab6","a7fc1688ba2a","b41d269f7e2d","95d9baa7dba0","39626d9a0b46","d6efa9a51869","5f5b48d11392","127f1843cafa","09a216c2b046","2fd75fa288e3","8cc40a8808e6","02ca2e65be76","e63278033b52","10e2ca303805","be4a36c1f3cb","c4817f7165c7","d752d31cadc1","7d804833d418","3d60afde4b3e","9539b445b066","6cdbee919803","c49327d33869","04c04d418765","82c9c936ad33","f9846d180697","c399b53984d5","8d864de0b9bb","05c59628541b","d24f4dcf6552","986d52b88825"],"actual_robot_pack_v4.b64.part7b":["a5ee855a9c91","5831a17ffd06","70f689a4b38f","70206c487817","845b14cab762","b07383e50a6e","88f424951c8a","56e7d5dcaa03","2c519fd41f1e","0a96f6031836","f0a47ee31c3e","af030bef99c9","e23994f7dad1","864afd55014f","ad9416200b83","fd2288ea22a1","c3f7e52c9721","b80b5cae25b7","a5ecc941454c","ccbe540e4d2f","2ee4387b044d","ec337e331990","905e7fb12fac","7d1af95320da","892f94c92cf6","eda2f45916e8","7509b7f10f45","4aef8756b9cb","eef18ee06630","185eb7fe39b9"],"actual_robot_pack_v4.b64.part7c":["c54c6c752bf0","5267d70b2e7c","9b66ba89c8fd","0a6cca465750","dfa185b77d21","fbc6aad39b3b","b31301bcd063","ad44116c993e","48e27519b4de","5850ddadd011","9daf2e30482d","90106976ad52","aedcea5ab4d9","4c8973c83a76","be3fc5fd9790","39dce7fa02b0","1ac466811163","a496230eb9ca","27e93230d5e9","ff26b393530d","a095c3a60fef","7cec38a6bd8a","74d90d9a38df","e2d7ad73cd75","f8ef0ec87fe7","aebca05c9e19","64c0e33b188c","b99f743a2d91","22e919aa1884","67188b54c762"],"actual_robot_pack_v4.b64.part7d":["56fb9891eec2","7ddb4a74558e","585d3e4e9951","83513352eb3d","c78cc5948404","f573a3eb2d38","aa917dfbf0a1","0316d5125763","d445a4f6d538","59782f5fba69","ee623b6e053b","d3a250163a7c","6b1e463044b2","c3ddbcefe0c0","29bc91687843","4b71734c0ac1","2a51c773195c","a85fc2754a5d","651f33de161d","f872c2759749","f875a2122ec2","4eefda7f8e96","2912f282d477","eae962d37608","8a7a9427c1c5","9c9e01c2b859","e055d01a6300","5e3f34832491","c2f9382304cc","80a7418f1b59"]}''')
+
           root = Path('assets')
-          names = [
-              *(f'actual_robot_pack_v4.b64.part{i}' for i in range(6)),
-              *(f'actual_robot_pack_v4.b64.part6{x}' for x in 'abcd'),
-              *(f'actual_robot_pack_v4.b64.part7{x}' for x in 'abcd'),
-              'actual_robot_pack_v4.b64.part8',
-          ]
-          missing = [name for name in names if not (root / name).exists()]
-          assert not missing, f'Missing payload files: {missing}'
-
-          hashes = {}
-          for name in names:
+          mismatches = []
+          for name, wanted in expected.items():
               text = ''.join((root / name).read_text().split())
-              hashes[name] = [
-                  hashlib.sha256(text[i:i + 100].encode()).hexdigest()[:16]
-                  for i in range(0, len(text), 100)
-              ]
-              print(name, len(text), hashlib.sha1(f'blob {len(text)}\0'.encode() + text.encode()).hexdigest())
+              assert len(text) == 3000, (name, len(text))
+              blocks = [text[i:i + 100] for i in range(0, len(text), 100)]
+              actual = [hashlib.sha256(block.encode()).hexdigest()[:12] for block in blocks]
+              for index, (got, need) in enumerate(zip(actual, wanted)):
+                  if got != need:
+                      mismatches.append((name, index, got, need, blocks[index]))
 
-          print('REMOTE_HASHES=' + json.dumps(hashes, separators=(',', ':')))
+          print('MISMATCH_COUNT', len(mismatches))
+          for name, index, got, need, block in mismatches:
+              print(f'MISMATCH {name} block={index} actual={got} expected={need}')
+              print('ACTUAL_BLOCK=' + block)
           PY
