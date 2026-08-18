@@ -110,8 +110,7 @@ const HIP_Y        = -150;     // leg sockets, up inside the cavity
   their tops finishing near the top of the cavity. Hanging them off the bottom
   of the bell instead — which is what the previous rig did — leaves a gap and
   reads as legs hiding behind the bell rather than standing inside it.
-*/
-/*
+
   Joint chain for the arms.
 
   Each shoulder piece is a pauldron plate AND the upper arm in one image,
@@ -145,20 +144,20 @@ const RIG = [
   // front of the crown's base and the head sits down into the casting rather
   // than on top of it.
   ['head',      118, [0.50, 0.95],          [   6, -298]],
+  // The right shoulder tucks in behind the bell, so only the plate's outer
+  // half clears the silhouette. The left one reads correctly in front.
+  ['pauldronR', SHOULDERS.pauldronR.w, SHOULDERS.pauldronR.axle, SHOULDERS.pauldronR.at],
   ['torso',     238, [0.50, 0.55],          [   0, -176]],
   ['legR',       82, [0.50, 0.06],          [  64, -121]],   // far leg, set back
-  // The hip block sits high in the cavity, where the bell's own shadow does
-  // most of the work of hiding it. It has to stay out of the gap between the
-  // legs: in the concept art that gap is empty dark and the bell's brass lip
-  // reads straight through it, which is what gives the legs somewhere to come
-  // out of. Sat lower and brighter it just looks like a plate bolted on.
-  ['pelvis',    104, [0.50, 0.88],          [   0, -134], 0.45],
+  // Kept in the rig as the hip anchor but deliberately not drawn — at any
+  // opacity it read as a plate bolted across the bell's mouth. Alpha 0 is
+  // skipped outright by the draw loop, so this costs nothing per frame.
+  ['pelvis',    104, [0.50, 0.88],          [   0, -134], 0],
   ['legL',       88, [0.55, 0.05],          [ -64, -136]],   // near leg
   // Shoulder first, then the arm socketed into it, so the arm's elbow covers
   // the ball.
   ['pauldronL', SHOULDERS.pauldronL.w, SHOULDERS.pauldronL.axle, SHOULDERS.pauldronL.at],
   ['flailArm',  132, ELBOW.flailArm,        BALL_OF.pauldronL],
-  ['pauldronR', SHOULDERS.pauldronR.w, SHOULDERS.pauldronR.axle, SHOULDERS.pauldronR.at],
   ['shieldArm', 155, ELBOW.shieldArm,       BALL_OF.pauldronR],
 ];
 
@@ -174,6 +173,64 @@ const smooth = t => t * t * (3 - 2 * t);
 const rad = d => d * Math.PI / 180;
 /** Frame-rate independent approach: pulls `cur` toward `to` with time constant `k`. */
 const approach = (cur, to, k, dt) => cur + (to - cur) * (1 - Math.exp(-k * dt));
+
+/* ────────────────────────────────────────────────────────────────────────
+   Art treatments, baked once at load rather than per frame.
+   ──────────────────────────────────────────────────────────────────────── */
+const TREATMENT = {
+  // The supplied shoulders are drawn about 20% brighter than the body they
+  // bolt to, which is what made them read pale against the brass. Their hue is
+  // already right — blue:red within a hundredth of the bell's — so this is a
+  // brightness pull with a little extra bite on blue to warm it toward the
+  // concept art.
+  pauldronL: { gain: [0.76, 0.80, 0.73] },
+  pauldronR: { gain: [0.76, 0.80, 0.73] },
+  // The legs rise up inside the bell's mouth, so their tops are in its shadow.
+  // Baked as a gradient over the top third of the art.
+  legL: { shadeTop: 0.32 },
+  legR: { shadeTop: 0.32 },
+};
+
+/**
+ * Returns a canvas holding the treated part. Safe to use `source-atop` for the
+ * shadow because this canvas contains only this one part — the same op against
+ * the live scene would bleed onto whatever was already painted underneath.
+ */
+function treat(img, box, spec) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0);
+
+  if (spec.gain) {
+    try {
+      const data = g.getImageData(0, 0, c.width, c.height);
+      const px = data.data;
+      const [gr, gg, gb] = spec.gain;
+      for (let i = 0; i < px.length; i += 4) {
+        if (px[i + 3] === 0) continue;
+        px[i] = Math.min(255, px[i] * gr);
+        px[i + 1] = Math.min(255, px[i + 1] * gg);
+        px[i + 2] = Math.min(255, px[i + 2] * gb);
+      }
+      g.putImageData(data, 0, 0);
+    } catch (e) { /* unreadable canvas: ship the part untinted */ }
+  }
+
+  if (spec.shadeTop) {
+    const top = box.sy;
+    const depth = box.sh * spec.shadeTop;
+    const grad = g.createLinearGradient(0, top, 0, top + depth);
+    grad.addColorStop(0, 'rgba(0,0,0,0.80)');
+    grad.addColorStop(0.55, 'rgba(0,0,0,0.34)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = grad;
+    g.fillRect(box.sx, top, box.sw, depth);
+  }
+  return c;
+}
 
 /* ── Asset loading ─────────────────────────────────────────────────────── */
 /**
@@ -213,7 +270,11 @@ function loadAll() {
     im.src = ART[n];
   }))).then(pairs => {
     const out = {};
-    for (const [n, im] of pairs) out[n] = { img: im, box: measure(im) };
+    for (const [n, im] of pairs) {
+      const box = measure(im);
+      const spec = TREATMENT[n];
+      out[n] = { img: spec ? treat(im, box, spec) : im, box };
+    }
     return out;
   });
 }
@@ -490,6 +551,7 @@ function drawKnight(g, parts) {
   g.scale(s, s);
 
   for (const p of parts) {
+    if (p.alpha === 0) continue;
     g.save();
     g.translate(p.ax + p.dx, p.ay + p.dy);
     if (p.rot) g.rotate(rad(p.rot));
