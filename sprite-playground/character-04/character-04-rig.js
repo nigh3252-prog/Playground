@@ -23,6 +23,29 @@
     right_fore: { crop: [1280, 1030, 477, 260], prox: [38.16, 130], dist: [429.3, 130] }
   };
 
+  // The source sheet's top row is the image-right chained focus; its bottom
+  // row is the image-left shafted focus. Both strips are wrist-aligned so a
+  // frame change only moves the painted fire, never the hand connection.
+  const FOCUS_ANIMATIONS = {
+    right_focus: {
+      frameWidth: 536,
+      frameHeight: 840,
+      frameCount: 4,
+      pivot: [63, 500],
+      ringCenter: [216, -52],
+      phaseOffset: 0
+    },
+    left_focus: {
+      frameWidth: 780,
+      frameHeight: 640,
+      frameCount: 4,
+      pivot: [70, 438],
+      ringCenter: [375, -155],
+      phaseOffset: 2
+    }
+  };
+  const FOCUS_FPS = 8;
+
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   const mix = (a, b, amount) => a + (b - a) * amount;
   const ease = value => {
@@ -43,7 +66,7 @@
   function chooseTarget(sim) {
     // Both weapons are wide. These bounds keep their full silhouettes on the
     // field even during the arms-out resonance pose.
-    sim.targetX = mix(340, 620, sim.random());
+    sim.targetX = mix(380, 600, sim.random());
     sim.targetY = mix(466, 548, sim.random());
     sim.timer = mix(5.4, 8.5, sim.random());
   }
@@ -141,6 +164,33 @@
     ctx.scale(scale, scale);
     ctx.globalAlpha *= opacity;
     ctx.drawImage(atlas, sx, sy, sw, sh, -part.prox[0], -part.prox[1], sw, sh);
+    ctx.restore();
+  }
+
+  function drawAnimatedFocus(ctx, assets, name, x, y, angle, time, opacity = 1) {
+    const definition = FOCUS_ANIMATIONS[name];
+    const sheet = assets.focusSheets && assets.focusSheets[name];
+    if (!sheet) {
+      drawPart(ctx, assets.atlas || assets, name, x, y, angle, undefined, opacity);
+      return;
+    }
+
+    const frame = (Math.floor(time * FOCUS_FPS) + definition.phaseOffset) % definition.frameCount;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.globalAlpha *= opacity;
+    ctx.drawImage(
+      sheet,
+      frame * definition.frameWidth,
+      0,
+      definition.frameWidth,
+      definition.frameHeight,
+      -definition.pivot[0],
+      -definition.pivot[1],
+      definition.frameWidth,
+      definition.frameHeight
+    );
     ctx.restore();
   }
 
@@ -263,94 +313,8 @@
     ctx.restore();
   }
 
-  const FLAME_PHASES = [
-    [0.82, -0.16],
-    [1.12, 0.10],
-    [0.94, 0.22],
-    [1.05, -0.08]
-  ];
-
-  function drawFlameLick(ctx, x, y, size, angle, phase, opacity) {
-    const [stretch, lean] = FLAME_PHASES[phase];
-    const height = size * stretch;
-    const width = size * 0.42;
-    const sway = lean * size;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-    ctx.globalAlpha *= opacity;
-    ctx.shadowColor = "rgba(178, 86, 255, .82)";
-    ctx.shadowBlur = size * 0.2;
-    const flame = ctx.createLinearGradient(0, 0, sway, -height);
-    flame.addColorStop(0, "rgba(112, 38, 186, .42)");
-    flame.addColorStop(0.48, "rgba(171, 91, 244, .88)");
-    flame.addColorStop(1, "rgba(226, 196, 255, .96)");
-    ctx.fillStyle = flame;
-    ctx.strokeStyle = "rgba(222, 180, 255, .62)";
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(-width * 0.56, 0);
-    ctx.bezierCurveTo(-width * 0.7, -height * 0.22, sway - width * 0.28, -height * 0.58, sway, -height);
-    ctx.bezierCurveTo(sway + width * 0.12, -height * 0.65, width * 0.68, -height * 0.28, width * 0.5, 0);
-    ctx.quadraticCurveTo(0, -height * 0.15, -width * 0.56, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(239, 219, 255, .58)";
-    ctx.beginPath();
-    ctx.moveTo(-width * 0.13, -height * 0.08);
-    ctx.quadraticCurveTo(sway * 0.35, -height * 0.54, sway * 0.48, -height * 0.72);
-    ctx.quadraticCurveTo(width * 0.24, -height * 0.37, width * 0.18, -height * 0.1);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawFocusFire(ctx, wrist, focusAngle, kind, time, energy) {
-    const frame = Math.floor(time * 11) % FLAME_PHASES.length;
-    const definition = kind === "left"
-      ? { center: [355, -166], radiusX: 174, radiusY: 154, size: 61, seed: 1 }
-      : { center: [170, -190], radiusX: 154, radiusY: 145, size: 57, seed: 3 };
-    const polarAngles = [-Math.PI / 2, -0.88, -0.18, 0.62, 1.34, 2.18, 2.88, 3.72];
-    const flicker = 0.34 + energy * 0.16 + (frame % 2) * 0.055;
-
-    ctx.save();
-    ctx.translate(wrist[0], wrist[1]);
-    ctx.rotate(focusAngle);
-    ctx.globalCompositeOperation = "lighter";
-    for (let index = 0; index < polarAngles.length; index += 1) {
-      const polar = polarAngles[index];
-      const phase = (frame + index + definition.seed) % FLAME_PHASES.length;
-      const radialJitter = ((phase - 1.5) * 2.4);
-      const x = definition.center[0] + Math.cos(polar) * (definition.radiusX + radialJitter);
-      const y = definition.center[1] + Math.sin(polar) * (definition.radiusY + radialJitter);
-      const outwardAngle = polar + Math.PI / 2;
-      const size = definition.size * (0.78 + ((index + frame) % 3) * 0.1);
-      drawFlameLick(ctx, x, y, size, outwardAngle, phase, flicker);
-
-      if ((index + frame) % 3 === 0) {
-        const sparkDistance = 24 + phase * 5;
-        const sparkX = x + Math.cos(polar) * sparkDistance;
-        const sparkY = y + Math.sin(polar) * sparkDistance;
-        ctx.save();
-        ctx.translate(sparkX, sparkY);
-        ctx.rotate(time * 2.4 + index);
-        ctx.fillStyle = `rgba(225, 188, 255, ${0.45 + energy * 0.2})`;
-        ctx.beginPath();
-        ctx.moveTo(0, -6);
-        ctx.lineTo(3.5, 0);
-        ctx.lineTo(0, 6);
-        ctx.lineTo(-3.5, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-    ctx.restore();
-  }
-
-  function renderCharacter(ctx, atlas, sim, time) {
+  function renderCharacter(ctx, assets, sim, time) {
+    const atlas = assets.atlas || assets;
     const walkAmount = sim.mode === "wander" ? 1 : Math.max(0, 1 - sim.modeElapsed * 3);
     const stride = Math.sin(sim.stepPhase) * walkAmount;
     const energy = ease(sim.resonance);
@@ -368,8 +332,8 @@
     const leftFocusAngle = Math.PI + Math.sin(time * 1.9) * 0.035 - energy * 0.16;
     const rightFocusAngle = Math.sin(time * 1.5 + 0.6) * 0.03 + energy * 0.11;
 
-    const leftRingOffset = rotatePoint(365, -128, leftFocusAngle);
-    const rightRingOffset = rotatePoint(188, -188, rightFocusAngle);
+    const leftRingOffset = rotatePoint(...FOCUS_ANIMATIONS.left_focus.ringCenter, leftFocusAngle);
+    const rightRingOffset = rotatePoint(...FOCUS_ANIMATIONS.right_focus.ringCenter, rightFocusAngle);
     const leftRingWorld = localToWorld([leftWrist[0] + leftRingOffset[0], leftWrist[1] + leftRingOffset[1]], originX, originY, scale);
     const rightRingWorld = localToWorld([rightWrist[0] + rightRingOffset[0], rightWrist[1] + rightRingOffset[1]], originX, originY, scale);
     const forkWorld = localToWorld([0, -616], originX, originY, scale);
@@ -401,8 +365,7 @@
       ctx.shadowColor = `rgba(170, 76, 255, ${0.85 * energy})`;
       ctx.shadowBlur = 34 * energy;
     }
-    drawPart(ctx, atlas, "right_focus", rightWrist[0], rightWrist[1], rightFocusAngle);
-    drawFocusFire(ctx, rightWrist, rightFocusAngle, "right", time, energy);
+    drawAnimatedFocus(ctx, assets, "right_focus", rightWrist[0], rightWrist[1], rightFocusAngle, time);
     ctx.restore();
     drawSegment(ctx, atlas, "right_fore", rightElbow, rightWrist);
     drawSegment(ctx, atlas, "right_upper", rightShoulder, rightElbow);
@@ -443,8 +406,7 @@
       ctx.shadowColor = `rgba(180, 83, 255, ${0.8 * energy})`;
       ctx.shadowBlur = 28 * energy;
     }
-    drawPart(ctx, atlas, "left_focus", leftWrist[0], leftWrist[1], leftFocusAngle);
-    drawFocusFire(ctx, leftWrist, leftFocusAngle, "left", time, energy);
+    drawAnimatedFocus(ctx, assets, "left_focus", leftWrist[0], leftWrist[1], leftFocusAngle, time);
     ctx.restore();
     drawSegment(ctx, atlas, "left_fore", leftElbow, leftWrist);
 
@@ -458,11 +420,11 @@
     ctx.restore();
   }
 
-  function renderScene(ctx, atlas, sim, time, width = WIDTH, height = HEIGHT) {
+  function renderScene(ctx, assets, sim, time, width = WIDTH, height = HEIGHT) {
     ctx.save();
     ctx.clearRect(0, 0, width, height);
     drawField(ctx, time, width, height);
-    renderCharacter(ctx, atlas, sim, time);
+    renderCharacter(ctx, assets, sim, time);
     const vignette = ctx.createRadialGradient(width / 2, height * 0.48, width * 0.24, width / 2, height * 0.48, width * 0.72);
     vignette.addColorStop(0, "rgba(3, 7, 10, 0)");
     vignette.addColorStop(1, "rgba(3, 7, 10, .42)");
@@ -471,7 +433,7 @@
     ctx.restore();
   }
 
-  const api = { WIDTH, HEIGHT, PARTS, createSimulation, stepSimulation, renderScene };
+  const api = { WIDTH, HEIGHT, PARTS, FOCUS_ANIMATIONS, createSimulation, stepSimulation, renderScene };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof window !== "undefined") window.Character04Rig = api;
 })();
@@ -482,11 +444,19 @@ if (typeof document !== "undefined") {
     const status = document.querySelector("#status");
     const fallback = document.querySelector("#fallback");
     const rig = window.Character04Rig;
-    const atlas = new Image();
+    const assets = {
+      atlas: new Image(),
+      focusSheets: {
+        right_focus: new Image(),
+        left_focus: new Image()
+      }
+    };
     const sim = rig.createSimulation(Math.floor(Date.now() / 1000));
     let lastTime = performance.now();
     let elapsed = 0;
     let ready = false;
+    let pendingImages = 3;
+    let loadFailed = false;
 
     function sizeCanvas() {
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -504,23 +474,38 @@ if (typeof document !== "undefined") {
         const context = canvas.getContext("2d");
         const ratio = Number(canvas.dataset.ratio || 1);
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
-        rig.renderScene(context, atlas, sim, elapsed, rig.WIDTH, rig.HEIGHT);
+        rig.renderScene(context, assets, sim, elapsed, rig.WIDTH, rig.HEIGHT);
         const names = { wander: "DRIFTING", tune: "LISTENING", resonate: "RESONATING" };
         status.textContent = names[sim.mode];
       }
       requestAnimationFrame(frame);
     }
 
-    atlas.onload = () => {
-      ready = true;
-      fallback.hidden = true;
-    };
-    atlas.onerror = () => {
+    function imageLoaded() {
+      pendingImages -= 1;
+      if (pendingImages === 0 && !loadFailed) {
+        ready = true;
+        fallback.hidden = true;
+      }
+    }
+
+    function imageFailed() {
+      loadFailed = true;
       fallback.hidden = false;
-      fallback.textContent = "The parts atlas could not be loaded.";
-    };
+      fallback.textContent = "The character animation assets could not be loaded.";
+    }
+
+    const imageSources = [
+      [assets.atlas, "character-04-parts-atlas.png"],
+      [assets.focusSheets.right_focus, "parts/right_focus-frames.png"],
+      [assets.focusSheets.left_focus, "parts/left_focus-frames.png"]
+    ];
+    for (const [image, source] of imageSources) {
+      image.onload = imageLoaded;
+      image.onerror = imageFailed;
+      image.src = source;
+    }
     sizeCanvas();
-    atlas.src = "character-04-parts-atlas.png";
     requestAnimationFrame(frame);
   });
 }
