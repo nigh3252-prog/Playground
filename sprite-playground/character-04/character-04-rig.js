@@ -9,8 +9,12 @@
   const PARTS = {
     head: { crop: [20, 20, 300, 670], pivot: [150, 629.8] },
     torso: { crop: [350, 20, 549, 599], pivot: [274.5, 347.42] },
-    left_leg: { crop: [1000, 20, 204, 577], prox: [102, 28.85], dist: [102, 530.84] },
-    right_leg: { crop: [1280, 20, 216, 578], prox: [108, 28.9], dist: [108, 531.76] },
+    left_thigh: { crop: [950, 20, 116, 310], prox: [58, 24.8], dist: [58, 272.8] },
+    left_shin: { crop: [950, 360, 122, 320], prox: [64.66, 28.8], dist: [64.66, 256] },
+    right_thigh: { crop: [1190, 20, 135, 310], prox: [67.5, 24.8], dist: [67.5, 272.8] },
+    right_shin: { crop: [1190, 360, 111, 320], prox: [52.17, 28.8], dist: [52.17, 256] },
+    left_knee: { crop: [1440, 120, 94, 120], pivot: [47, 60] },
+    right_knee: { crop: [1440, 430, 95, 120], pivot: [47.5, 60] },
     right_focus: { crop: [1580, 20, 413, 700], pivot: [45.43, 490] },
     left_focus: { crop: [20, 790, 650, 492], pivot: [45.5, 413.28] },
     left_upper: { crop: [700, 790, 351, 250], prox: [35.1, 210], dist: [315.9, 40] },
@@ -107,13 +111,14 @@
     sim.resonance = mix(sim.resonance, resonanceTarget, 1 - Math.exp(-dt * 4.8));
   }
 
-  function drawPart(ctx, atlas, name, x, y, angle = 0, pivot, opacity = 1) {
+  function drawPart(ctx, atlas, name, x, y, angle = 0, pivot, opacity = 1, partScale = 1) {
     const part = PARTS[name];
     const [sx, sy, sw, sh] = part.crop;
     const anchor = pivot || part.pivot || part.prox;
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
+    ctx.scale(partScale, partScale);
     ctx.globalAlpha *= opacity;
     ctx.drawImage(atlas, sx, sy, sw, sh, -anchor[0], -anchor[1], sw, sh);
     ctx.restore();
@@ -137,6 +142,25 @@
     ctx.globalAlpha *= opacity;
     ctx.drawImage(atlas, sx, sy, sw, sh, -part.prox[0], -part.prox[1], sw, sh);
     ctx.restore();
+  }
+
+  function solveTwoBone(hip, ankle, upperLength, lowerLength, bend) {
+    const dx = ankle[0] - hip[0];
+    const dy = ankle[1] - hip[1];
+    const rawDistance = Math.hypot(dx, dy);
+    const distance = clamp(rawDistance, Math.abs(upperLength - lowerLength) + 0.01, upperLength + lowerLength - 0.01);
+    const baseAngle = Math.atan2(dy, dx);
+    const cosine = clamp(
+      (distance * distance + upperLength * upperLength - lowerLength * lowerLength) /
+      (2 * distance * upperLength),
+      -1,
+      1
+    );
+    const upperAngle = baseAngle + bend * Math.acos(cosine);
+    return [
+      hip[0] + Math.cos(upperAngle) * upperLength,
+      hip[1] + Math.sin(upperAngle) * upperLength
+    ];
   }
 
   function rotatePoint(x, y, angle) {
@@ -239,6 +263,93 @@
     ctx.restore();
   }
 
+  const FLAME_PHASES = [
+    [0.82, -0.16],
+    [1.12, 0.10],
+    [0.94, 0.22],
+    [1.05, -0.08]
+  ];
+
+  function drawFlameLick(ctx, x, y, size, angle, phase, opacity) {
+    const [stretch, lean] = FLAME_PHASES[phase];
+    const height = size * stretch;
+    const width = size * 0.42;
+    const sway = lean * size;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.globalAlpha *= opacity;
+    ctx.shadowColor = "rgba(178, 86, 255, .82)";
+    ctx.shadowBlur = size * 0.2;
+    const flame = ctx.createLinearGradient(0, 0, sway, -height);
+    flame.addColorStop(0, "rgba(112, 38, 186, .42)");
+    flame.addColorStop(0.48, "rgba(171, 91, 244, .88)");
+    flame.addColorStop(1, "rgba(226, 196, 255, .96)");
+    ctx.fillStyle = flame;
+    ctx.strokeStyle = "rgba(222, 180, 255, .62)";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(-width * 0.56, 0);
+    ctx.bezierCurveTo(-width * 0.7, -height * 0.22, sway - width * 0.28, -height * 0.58, sway, -height);
+    ctx.bezierCurveTo(sway + width * 0.12, -height * 0.65, width * 0.68, -height * 0.28, width * 0.5, 0);
+    ctx.quadraticCurveTo(0, -height * 0.15, -width * 0.56, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(239, 219, 255, .58)";
+    ctx.beginPath();
+    ctx.moveTo(-width * 0.13, -height * 0.08);
+    ctx.quadraticCurveTo(sway * 0.35, -height * 0.54, sway * 0.48, -height * 0.72);
+    ctx.quadraticCurveTo(width * 0.24, -height * 0.37, width * 0.18, -height * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFocusFire(ctx, wrist, focusAngle, kind, time, energy) {
+    const frame = Math.floor(time * 11) % FLAME_PHASES.length;
+    const definition = kind === "left"
+      ? { center: [355, -166], radiusX: 174, radiusY: 154, size: 61, seed: 1 }
+      : { center: [170, -190], radiusX: 154, radiusY: 145, size: 57, seed: 3 };
+    const polarAngles = [-Math.PI / 2, -0.88, -0.18, 0.62, 1.34, 2.18, 2.88, 3.72];
+    const flicker = 0.34 + energy * 0.16 + (frame % 2) * 0.055;
+
+    ctx.save();
+    ctx.translate(wrist[0], wrist[1]);
+    ctx.rotate(focusAngle);
+    ctx.globalCompositeOperation = "lighter";
+    for (let index = 0; index < polarAngles.length; index += 1) {
+      const polar = polarAngles[index];
+      const phase = (frame + index + definition.seed) % FLAME_PHASES.length;
+      const radialJitter = ((phase - 1.5) * 2.4);
+      const x = definition.center[0] + Math.cos(polar) * (definition.radiusX + radialJitter);
+      const y = definition.center[1] + Math.sin(polar) * (definition.radiusY + radialJitter);
+      const outwardAngle = polar + Math.PI / 2;
+      const size = definition.size * (0.78 + ((index + frame) % 3) * 0.1);
+      drawFlameLick(ctx, x, y, size, outwardAngle, phase, flicker);
+
+      if ((index + frame) % 3 === 0) {
+        const sparkDistance = 24 + phase * 5;
+        const sparkX = x + Math.cos(polar) * sparkDistance;
+        const sparkY = y + Math.sin(polar) * sparkDistance;
+        ctx.save();
+        ctx.translate(sparkX, sparkY);
+        ctx.rotate(time * 2.4 + index);
+        ctx.fillStyle = `rgba(225, 188, 255, ${0.45 + energy * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(0, -6);
+        ctx.lineTo(3.5, 0);
+        ctx.lineTo(0, 6);
+        ctx.lineTo(-3.5, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+
   function renderCharacter(ctx, atlas, sim, time) {
     const walkAmount = sim.mode === "wander" ? 1 : Math.max(0, 1 - sim.modeElapsed * 3);
     const stride = Math.sin(sim.stepPhase) * walkAmount;
@@ -246,7 +357,7 @@
     const scale = clamp(0.286 + (sim.y - 466) * 0.00052, 0.286, 0.332);
     const bob = -Math.abs(Math.sin(sim.stepPhase)) * 3.5 * walkAmount + Math.sin(time * 1.8) * 0.7;
     const originX = sim.x;
-    const originY = sim.y - 530 * scale + bob;
+    const originY = sim.y - 625 * scale + bob;
 
     const leftShoulder = [-198, -165];
     const rightShoulder = [198, -165];
@@ -291,14 +402,36 @@
       ctx.shadowBlur = 34 * energy;
     }
     drawPart(ctx, atlas, "right_focus", rightWrist[0], rightWrist[1], rightFocusAngle);
+    drawFocusFire(ctx, rightWrist, rightFocusAngle, "right", time, energy);
     ctx.restore();
     drawSegment(ctx, atlas, "right_fore", rightElbow, rightWrist);
     drawSegment(ctx, atlas, "right_upper", rightShoulder, rightElbow);
 
-    const leftHip = [-52, 14];
-    const rightHip = [52, 14];
-    drawPart(ctx, atlas, "right_leg", rightHip[0], rightHip[1] - Math.max(0, stride) * 7, -0.045 - stride * 0.07, PARTS.right_leg.prox);
-    drawPart(ctx, atlas, "left_leg", leftHip[0], leftHip[1] - Math.max(0, -stride) * 7, 0.045 + stride * 0.07, PARTS.left_leg.prox);
+    // The hip points match the two black sockets painted into the torso. Each
+    // leg now has a real two-bone solve, with an independent knee cover hiding
+    // the paper-doll overlap during the stride.
+    const leftHip = [-101, 118];
+    const rightHip = [92, 118];
+    const stepLift = Math.cos(sim.stepPhase) * walkAmount;
+    const leftAnkle = [-112 + stride * 25, 563 - Math.max(0, stepLift) * 30];
+    const rightAnkle = [104 - stride * 25, 563 - Math.max(0, -stepLift) * 30];
+    const leftKnee = solveTwoBone(leftHip, leftAnkle, 225, 230, 1);
+    const rightKnee = solveTwoBone(rightHip, rightAnkle, 225, 230, -1);
+    const leftKneeAngle = (
+      Math.atan2(leftKnee[1] - leftHip[1], leftKnee[0] - leftHip[0]) +
+      Math.atan2(leftAnkle[1] - leftKnee[1], leftAnkle[0] - leftKnee[0])
+    ) * 0.5 - Math.PI / 2;
+    const rightKneeAngle = (
+      Math.atan2(rightKnee[1] - rightHip[1], rightKnee[0] - rightHip[0]) +
+      Math.atan2(rightAnkle[1] - rightKnee[1], rightAnkle[0] - rightKnee[0])
+    ) * 0.5 - Math.PI / 2;
+
+    drawSegment(ctx, atlas, "right_thigh", rightHip, rightKnee);
+    drawSegment(ctx, atlas, "right_shin", rightKnee, rightAnkle);
+    drawSegment(ctx, atlas, "left_thigh", leftHip, leftKnee);
+    drawSegment(ctx, atlas, "left_shin", leftKnee, leftAnkle);
+    drawPart(ctx, atlas, "right_knee", rightKnee[0], rightKnee[1], rightKneeAngle, undefined, 1, 0.7);
+    drawPart(ctx, atlas, "left_knee", leftKnee[0], leftKnee[1], leftKneeAngle, undefined, 1, 0.7);
 
     // The image-left shoulder is under the cowl; its forearm and unique small
     // shafted focus are deliberately drawn in front after the torso.
@@ -311,6 +444,7 @@
       ctx.shadowBlur = 28 * energy;
     }
     drawPart(ctx, atlas, "left_focus", leftWrist[0], leftWrist[1], leftFocusAngle);
+    drawFocusFire(ctx, leftWrist, leftFocusAngle, "left", time, energy);
     ctx.restore();
     drawSegment(ctx, atlas, "left_fore", leftElbow, leftWrist);
 
