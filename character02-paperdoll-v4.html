@@ -1900,18 +1900,39 @@
     }
   });
 
-  document.getElementById('poseBtn').addEventListener('click', () => {
+  // Saving works two ways: the hosted viewer mediates saves through its own
+  // prompt, while the standalone file falls back to a plain download link.
+  function dataUriToBytes(uri) {
+    const binary = atob(uri.slice(uri.indexOf(',') + 1));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  async function offerFile(filename, dataUri) {
+    if (typeof window.claude?.use === 'function') {
+      const downloads = await window.claude.use('downloads');
+      if (downloads) {
+        try {
+          await downloads.save({ filename, data: dataUriToBytes(dataUri) });
+        } catch (error) {
+          if (error?.code && error.code !== 'declined') console.warn('Save failed:', error.code);
+        }
+        return;
+      }
+    }
     const anchor = document.createElement('a');
-    anchor.href = canvas.toDataURL('image/png');
-    anchor.download = `character-02-teapot-${action ? action.name : baseMode}.png`;
+    anchor.href = dataUri;
+    anchor.download = filename;
     anchor.click();
+  }
+
+  document.getElementById('poseBtn').addEventListener('click', () => {
+    offerFile(`character-02-teapot-${action ? action.name : baseMode}.png`, canvas.toDataURL('image/png'));
   });
 
   document.getElementById('sheetBtn').addEventListener('click', () => {
-    const anchor = document.createElement('a');
-    anchor.href = SPRITE_URI;
-    anchor.download = 'character-02-teapot-parts-v3.png';
-    anchor.click();
+    offerFile('character-02-teapot-parts-v3.png', SPRITE_URI);
   });
 
   canvas.addEventListener('pointerdown', () => fire('thrust'));
