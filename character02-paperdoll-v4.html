@@ -309,8 +309,8 @@
     }
 
     .controls {
-      display: grid;
-      grid-template-columns: minmax(150px, 1fr) repeat(4, auto);
+      display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       align-items: center;
       padding: 12px;
@@ -318,7 +318,10 @@
       margin-top: 10px;
     }
 
+    .controls .small-btn { flex: 0 0 auto; }
+
     .speed-control {
+      flex: 1 1 190px;
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
@@ -524,8 +527,8 @@
       header { align-items: flex-start; }
       .source-badge { display: none; }
       .stage-toolbar { align-items: flex-start; }
-      .controls { grid-template-columns: 1fr 1fr; }
-      .speed-control { grid-column: 1 / -1; }
+      .speed-control { flex-basis: 100%; }
+      .controls .small-btn { flex: 1 1 44%; }
       aside { grid-template-columns: 1fr; }
       .stage-wrap { min-height: 0; }
     }
@@ -569,7 +572,7 @@
             <span id="readoutName">Idle</span>
             <span id="readoutFrame" class="frame">looping</span>
           </div>
-          <div class="stage-hint">Tap the knight to thrust · keys 1–5</div>
+          <div id="stageHint" class="stage-hint">She roams on her own · tap her to cut in · keys 1–5</div>
         </div>
 
         <div id="timeline" class="timeline" aria-hidden="true"></div>
@@ -581,6 +584,7 @@
             <input id="speed" type="range" min="0.15" max="1.6" step="0.05" value="1">
             <span id="speedValue" class="speed-value">1.00×</span>
           </label>
+          <button id="autoBtn" class="small-btn active">Auto roam</button>
           <button id="loopBtn" class="small-btn">Loop attack</button>
           <button id="fxBtn" class="small-btn active">FX on</button>
           <button id="facingBtn" class="small-btn">Face right</button>
@@ -696,6 +700,10 @@
   let fxOn = true;
   let loopAttack = false;
   let clock = 0;
+  let walkPhase = 0;
+  let roamX = 0;
+  let biasX = 46;
+  let stanceWeight = 1;
   let last = performance.now();
   let action = null;
   let queue = [];
@@ -824,7 +832,7 @@
 
   function emitDust(x, y, count, power = 1, dir = 0) {
     for (let i = 0; i < count; i++) {
-      const side = dir || (Math.random() < .5 ? -1 : 1);
+      const side = (dir || (Math.random() < .5 ? -1 : 1)) * facing;
       spawn('dust', x + rand(-7, 7), y + rand(-3, 3),
         side * rand(12, 74) * power, -rand(8, 46) * power,
         rand(.34, .72), rand(5, 15) * (.7 + power * .4));
@@ -837,7 +845,7 @@
     for (let i = 0; i < puffs; i++) {
       const lead = i / puffs;
       spawn('steam', x + rand(-6, 6), y + rand(-6, 6),
-        (vx + rand(-20, 20) * power) * (.55 + lead * .8),
+        (vx * facing + rand(-20, 20) * power) * (.55 + lead * .8),
         (vy * power + rand(-12, 12)) * (.5 + lead * .9),
         rand(.42, .92) + power * .16,
         rand(7, 14) * (.55 + power * .5),
@@ -847,7 +855,8 @@
 
   function emitSpark(x, y, count, power = 1, aim = null) {
     for (let i = 0; i < count; i++) {
-      const a = aim === null ? rand(0, 6.28) : aim + rand(-.75, .75);
+      const aimed = aim === null ? null : (facing === 1 ? aim : Math.PI - aim);
+      const a = aimed === null ? rand(0, 6.28) : aimed + rand(-.75, .75);
       const s = rand(90, 300) * power;
       spawn('spark', x, y, Math.cos(a) * s, Math.sin(a) * s, rand(.16, .38), rand(2.4, 5));
     }
@@ -1045,11 +1054,14 @@
   const LIFT = 16;
   const WALK_RATE = 4.6;
   const WALK_STANCE = 15;
+  const CONTACT = .62;
+  // Ground speed that keeps the planted foot from sliding under her.
+  const WALK_SPEED = 2 * STRIDE * WALK_RATE / (Math.PI * 2 * CONTACT);
   let stepIndex = null;
 
   function walkFoot(baseX, phase) {
     const p = ((phase / (Math.PI * 2)) % 1 + 1) % 1;
-    const contact = .62;
+    const contact = CONTACT;
     if (p < contact) {
       const k = p / contact;
       const heel = Math.max(0, k - .78) / .22;
@@ -1091,9 +1103,8 @@
     return p;
   }
 
-  function walkPose(t, live) {
+  function walkPose(cycle, live) {
     const p = basePose();
-    const cycle = t * WALK_RATE;
     const plantPhase = ((cycle % Math.PI) + Math.PI) % Math.PI;
     const impact = Math.exp(-plantPhase * 5.5);
     const swing = Math.cos(cycle);
@@ -1143,6 +1154,7 @@
   /* ---------------------------- attacks ---------------------------- */
   const ATTACKS = {
     thrust: {
+      isAttack: true,
       label: 'Lance Thrust',
       duration: .92,
       phases: [['Coil', 0, .24], ['Drive', .24, .36], ['Hold', .36, .56], ['Recover', .56, 1]],
@@ -1188,6 +1200,7 @@
     },
 
     smash: {
+      isAttack: true,
       label: 'Crown Smash',
       duration: 1.25,
       phases: [['Wind up', 0, .32], ['Fall', .32, .44], ['Impact', .44, .64], ['Recover', .64, 1]],
@@ -1238,6 +1251,7 @@
     },
 
     sweep: {
+      isAttack: true,
       label: 'Kettle Sweep',
       duration: 1.1,
       phases: [['Turn', 0, .30], ['Scythe', .30, .50], ['Finish', .50, .68], ['Recover', .68, 1]],
@@ -1288,6 +1302,7 @@
     },
 
     vent: {
+      isAttack: true,
       label: 'Pressure Vent',
       duration: 1.5,
       phases: [['Build', 0, .42], ['Blow', .42, .56], ['Rise', .56, .78], ['Land', .78, 1]],
@@ -1332,21 +1347,50 @@
           const chest = anchors.chest;
           ring(chest.x, chest.y, { r: 210, r0: 14, flat: .95, width: 7, life: .42, above: true, color: 'rgba(255,246,222,.95)' });
           ring(chest.x, chest.y, { r: 120, r0: 6, flat: .95, width: 12, life: .28, above: true, color: 'rgba(255,196,96,.7)' });
-          ring(0, GROUND, { r: 230, r0: 20, flat: .26, width: 6, life: .5, color: 'rgba(120,108,92,.7)' });
+          ring(anchors.root.x, GROUND, { r: 230, r0: 20, flat: .26, width: 6, life: .5, color: 'rgba(120,108,92,.7)' });
           for (let i = 0; i < 40; i++) emitSteam(lid.x, lid.y - 8, 1, 1.5, rand(-52, 52), -rand(150, 340));
           emitSteam(anchors.spout.x, anchors.spout.y, 16, 1.4, FORWARD * 110, -40);
-          emitDust(0, GROUND + 2, 16, 1.4);
+          emitDust(anchors.root.x, GROUND + 2, 16, 1.4);
           emitSpark(lid.x, lid.y, 16, 1.1, -Math.PI / 2);
           lidVelocity += 7;
           shake(19); hitStop(.07); flash(.19, { x: lid.x, y: lid.y + 30 }, 250);
         });
         ev(.84, () => {
           ring(anchors.rearFoot.x, GROUND, { r: 140, r0: 8, flat: .28, width: 5, life: .34, color: 'rgba(126,114,96,.65)' });
-          emitDust(0, GROUND + 2, 12, 1);
+          emitDust(anchors.root.x, GROUND + 2, 12, 1);
           emitSteam(anchors.spout.x, anchors.spout.y, 5, .9, FORWARD * 40, -18);
           shake(9); lidVelocity += 3;
         });
       }
+    }
+  };
+
+  // Turning around is an action too: she plants, squeezes through edge-on,
+  // and comes out facing the other way.
+  ATTACKS.pivot = {
+    label: 'About face',
+    duration: .66,
+    phases: [['Plant', 0, .28], ['Turn', .28, .56], ['Settle', .56, 1]],
+    pose(u, p, ev) {
+      const gather = pulse(u, 0, .2, .5, .9);
+      const turn = pulse(u, .16, .44, .5, .84);
+
+      p.rootY = 4 * gather - 5 * turn;
+      p.torso = -.02 * gather;
+      p.head = .03 * gather - .02 * turn;
+      p.tail = -.02 + .26 * turn;
+      p.eye = 1 + .2 * turn;
+      p.squashX = 1 - .84 * turn;
+      p.squashY = 1 + .05 * turn;
+      p.nearHand = trackPt(u, [[0, [-30, 68]], [.3, [-16, 62], 'out3'], [.7, [-24, 66]], [1, [-30, 68], 'io']]);
+      p.farHand = trackPt(u, [[0, [34, 68]], [.3, [22, 62], 'out3'], [1, [34, 68], 'io']]);
+      p.nearFoot = { x: track(u, [[0, -21], [.34, -11, 'out3'], [.66, -18, 'out3'], [1, -21, 'io']]), y: GROUND - pulse(u, .2, .3, .38, .5) * 9 };
+      p.farFoot = { x: track(u, [[0, 21], [.34, 12, 'out3'], [.66, 19, 'out3'], [1, 21, 'io']]), y: GROUND - pulse(u, .34, .44, .52, .64) * 7 };
+      p.spear = -.91 + .12 * turn;
+      p.steam = .14 + turn * .5;
+
+      ev(.5, () => { setFacing(-facing); });
+      ev(.62, () => { emitDust(anchors.root.x, GROUND + 2, 4, .5); lidVelocity += 1.4; });
     }
   };
 
@@ -1357,6 +1401,83 @@
      ---------------------------------------------------------------- */
   let lastRequest = null;
   let pending = [];
+  let stanceMix = 0;
+  let lastRaw = 1 / 60;
+
+  // How far she is allowed to wander from centre, and how much clear stage a
+  // full-reach attack needs in front of her before the director will call one.
+  const ROAM_LIMIT = 105;
+  const STAGE_EDGE = W / 2 / 1.12;
+  const ATTACK_ROOM = 315;
+  const AUTO_POOL = [['thrust', 32], ['sweep', 24], ['smash', 20], ['vent', 14], ['combo', 10]];
+
+  const auto = { on: true, hold: 1.2, last: null };
+
+  function setFacing(next) {
+    facing = next;
+    syncFacingButton();
+  }
+
+  function forwardRoom() {
+    const body = roamX + biasX;
+    return facing === 1 ? body + STAGE_EDGE : STAGE_EDGE - body;
+  }
+
+  function pickAutoAttack() {
+    const pool = AUTO_POOL.filter(entry => entry[0] !== auto.last);
+    let total = 0;
+    for (const entry of pool) total += entry[1];
+    let roll = Math.random() * total;
+    for (const [name, weight] of pool) {
+      roll -= weight;
+      if (roll <= 0) return name;
+    }
+    return pool[0][0];
+  }
+
+  function autoUpdate(dt) {
+    if (!auto.on || action || dt <= 0) return;
+
+    // Turn around before she walks out of frame.
+    if (baseMode === 'walk' && facing * roamX <= -ROAM_LIMIT) {
+      startAttack('pivot');
+      return;
+    }
+
+    auto.hold -= dt;
+    if (auto.hold > 0) return;
+
+    const canAttack = forwardRoom() > ATTACK_ROOM;
+    const roll = Math.random();
+
+    if (baseMode === 'idle') {
+      if (canAttack && roll < .34) {
+        auto.last = pickAutoAttack();
+        startAttack(auto.last);
+      } else if (roll > .95) {
+        startAttack('pivot');
+      } else {
+        setStance('walk');
+        auto.hold = rand(1.4, 3.6);
+      }
+      return;
+    }
+
+    // Marching with her back to open stage: keep going until there is room.
+    if (!canAttack) {
+      auto.hold = .45;
+      return;
+    }
+    if (roll < .55) {
+      auto.last = pickAutoAttack();
+      startAttack(auto.last);
+    } else if (roll < .72) {
+      setStance('idle');
+      auto.hold = rand(.8, 2.2);
+    } else {
+      auto.hold = rand(.9, 2.4);
+    }
+  }
 
   function startAttack(name) {
     if (name === 'combo') {
@@ -1378,16 +1499,28 @@
     action.t += dt;
     if (action.t >= action.spec.duration) {
       const finished = action.name;
+      const wasAttack = !!action.spec.isAttack;
       action = null;
+      auto.hold = wasAttack ? rand(.9, 2.2) : .25;
       if (queue.length) startAttack(queue.shift());
-      else if (loopAttack) startAttack(lastRequest === 'combo' ? 'combo' : finished);
+      else if (loopAttack && wasAttack) startAttack(lastRequest === 'combo' ? 'combo' : finished);
       else syncAttackButtons();
     }
   }
 
   function currentPose(live) {
-    const stance = baseMode === 'walk' ? walkPose(clock, live && !action) : idlePose(clock, live && !action);
-    if (!action) return stance;
+    // Idle and march cross-fade, so the director can switch without a pop.
+    const marching = baseMode === 'walk';
+    const target = marching ? 1 : 0;
+    if (live) stanceMix += clamp(target - stanceMix, -1, 1) * Math.min(1, (1 / .22) * lastRaw);
+    else stanceMix = clamp(stanceMix, 0, 1);
+    stanceMix = clamp(stanceMix, 0, 1);
+    const wantsWalk = stanceMix > .001;
+    const wantsIdle = stanceMix < .999;
+    const idle = wantsIdle ? idlePose(clock, live && !action && !marching) : null;
+    const walk = wantsWalk ? walkPose(walkPhase, live && !action && marching) : null;
+    const stance = !walk ? idle : !idle ? walk : lerpPose(idle, walk, smooth(stanceMix));
+    if (!action) { stanceWeight = 1; return stance; }
     const spec = action.spec;
     const u = clamp(action.t / spec.duration, 0, 1);
     const attack = basePose();
@@ -1399,6 +1532,7 @@
     };
     spec.pose(u, attack, ev);
     const w = Math.min(smooth(clamp(action.t / .11, 0, 1)), smooth(clamp((spec.duration - action.t) / .16, 0, 1)));
+    stanceWeight = 1 - w;
     return lerpPose(stance, attack, w);
   }
 
@@ -1560,7 +1694,7 @@
     ctx.globalAlpha = .24 * (1 - height * .55);
     ctx.fillStyle = '#36332f';
     ctx.beginPath();
-    ctx.ellipse(root.x, SHADOW_Y, (68 + pose.charge * 10) * (1 - height * .3), 11.5 * (1 - height * .35), 0, 0, Math.PI * 2);
+    ctx.ellipse(root.x, SHADOW_Y, (68 + pose.charge * 10) * (1 - height * .3) * (.35 + pose.squashX * .65), 11.5 * (1 - height * .35), 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
@@ -1586,7 +1720,8 @@
     lidAngle += lidVelocity * dt * .01;
     const headRotation = torsoRotation + pose.head + lidAngle;
 
-    const farLeg = solveTwoBone(farHip, pose.farFoot, linkLength(P.farThigh), linkLength(P.farShin), -1);
+    // Both knees take the same pole so they break forward, the way a knee does.
+    const farLeg = solveTwoBone(farHip, pose.farFoot, linkLength(P.farThigh), linkLength(P.farShin), 1);
     const nearLeg = solveTwoBone(nearHip, pose.nearFoot, linkLength(P.nearThigh), linkLength(P.nearShin), 1);
 
     const nearHandTarget = { x: nearShoulder.x + pose.nearHand.x, y: nearShoulder.y + pose.nearHand.y };
@@ -1600,7 +1735,8 @@
       };
     }
 
-    const farArm = solveTwoBone(farShoulder, farHandTarget, linkLength(P.farUpper), linkLength(P.farFore), 1);
+    // Both elbows point back, so neither arm hyperextends the wrong way.
+    const farArm = solveTwoBone(farShoulder, farHandTarget, linkLength(P.farUpper), linkLength(P.farFore), -1);
     const nearArm = solveTwoBone(nearShoulder, nearHandTarget, linkLength(P.nearUpper), linkLength(P.nearFore), -1);
 
     // Scarf tail spring.
@@ -1668,15 +1804,21 @@
     }
     ctx.restore();
 
-    // Publish world-space anchors for the effects pass.
-    anchors.spout = sq(localPoint(neck, headRotation, -86, -60));
-    anchors.lid = sq(localPoint(neck, headRotation, 1, -152));
-    anchors.chest = sq(localPoint(root, torsoRotation, -6, -62));
-    anchors.grip = sq(nearArm.target);
-    anchors.tip = sq(alongSpear(nearArm.target, pose.spear, SPEAR_LEN));
-    anchors.mid = sq(alongSpear(nearArm.target, pose.spear, SPEAR_LEN * .72));
+    // Publish stage-space anchors for the effects pass: effects are dropped
+    // on the ground she is standing on, not carried along with her.
+    const stage = pt => {
+      const s = sq(pt);
+      return { x: roamX + biasX + facing * s.x, y: s.y };
+    };
+    anchors.spout = stage(localPoint(neck, headRotation, -86, -60));
+    anchors.lid = stage(localPoint(neck, headRotation, 1, -152));
+    anchors.chest = stage(localPoint(root, torsoRotation, -6, -62));
+    anchors.grip = stage(nearArm.target);
+    anchors.tip = stage(alongSpear(nearArm.target, pose.spear, SPEAR_LEN));
+    anchors.mid = stage(alongSpear(nearArm.target, pose.spear, SPEAR_LEN * .72));
     anchors.dir = pose.spear;
-    anchors.rearFoot = sq(pose.farFoot);
+    anchors.rearFoot = stage(pose.farFoot);
+    anchors.root = stage(root);
 
     if (fxOn && pose.trail > .01) {
       fx.trail.push({ tip: anchors.tip, mid: anchors.mid, life: 1, power: pose.trail });
@@ -1701,12 +1843,18 @@
       ctx.translate(rand(-fx.shake, fx.shake), rand(-fx.shake, fx.shake) * .7);
     }
     ctx.translate(W / 2, -27);
-    ctx.scale(facing * 1.12, 1.12);
-    // Bias the knight toward his back foot so a full lunge still fits the frame.
-    ctx.translate(46, 0);
+    ctx.scale(1.12, 1.12);
 
     drawGroundFx();
+
+    ctx.save();
+    // roamX is where she has walked to; biasX leans her toward her back foot
+    // so a full lunge still fits the frame, and it eases across an about-face.
+    ctx.translate(roamX + biasX, 0);
+    ctx.scale(facing, 1);
     drawCharacter(pose, dt);
+    ctx.restore();
+
     drawAirFx();
 
     if (fx.flash > .004) {
@@ -1752,6 +1900,8 @@
   function frame(now) {
     const raw = clamp((now - last) / 1000, 0, .05);
     last = now;
+    lastRaw = raw;
+    biasX += (46 * facing - biasX) * Math.min(1, raw * 8);
     let dt = 0;
     if (playing) {
       if (fx.hitStop > 0) {
@@ -1761,7 +1911,15 @@
       } else {
         dt = raw * speed;
         clock += dt;
+        if (baseMode === 'walk') {
+          // The cycle and the ground speed advance together, so the planted
+          // foot stays put even while an attack is fading in over the march.
+          const march = dt * stanceWeight * smooth(stanceMix);
+          walkPhase += WALK_RATE * march;
+          roamX = clamp(roamX - facing * WALK_SPEED * march, -ROAM_LIMIT - 24, ROAM_LIMIT + 24);
+        }
         updateAction(dt);
+        autoUpdate(dt);
         updateFx(raw);
       }
     }
@@ -1811,7 +1969,7 @@
       readoutFrame.textContent = `frame ${String(Math.floor(u * spec.duration * 60)).padStart(2, '0')} / ${Math.round(spec.duration * 60)}${queue.length ? ` · +${queue.length}` : ''}`;
     } else {
       readoutName.textContent = baseMode === 'walk' ? 'March' : 'Idle';
-      readoutFrame.textContent = playing ? 'looping' : 'paused';
+      readoutFrame.textContent = !playing ? 'paused' : auto.on ? 'auto · roaming' : 'looping';
     }
   }
 
@@ -1824,26 +1982,50 @@
   }
 
   function setStance(next) {
+    if (baseMode === next) return;
     baseMode = next;
-    stepIndex = null;
+    if (next === 'walk') { walkPhase = 0; stepIndex = null; }
     document.querySelectorAll('.mode-btn').forEach(button => {
       button.setAttribute('aria-pressed', String(button.dataset.mode === next));
     });
+  }
+
+  function syncFacingButton() {
+    const button = document.getElementById('facingBtn');
+    button.textContent = facing === 1 ? 'Face right' : 'Face left';
+  }
+
+  function setAuto(on) {
+    auto.on = on;
+    auto.hold = on ? .6 : 0;
+    const button = document.getElementById('autoBtn');
+    button.classList.toggle('active', on);
+    button.textContent = on ? 'Auto roam' : 'Manual';
+    document.getElementById('stageHint').textContent = on
+      ? 'She roams on her own · tap her to cut in · keys 1–5'
+      : 'Tap her to thrust · keys 1–5 · W march, I idle';
   }
 
   function fire(name) {
     lastRequest = name;
     queue = [];
     startAttack(name);
+    // An attack is an interjection, not a takeover: the director just waits.
+    auto.hold = Math.max(auto.hold, 1.4);
   }
 
   document.querySelectorAll('.mode-btn').forEach(button => {
-    button.addEventListener('click', () => setStance(button.dataset.mode));
+    button.addEventListener('click', () => {
+      if (auto.on) setAuto(false);
+      setStance(button.dataset.mode);
+    });
   });
 
   document.querySelectorAll('.atk-btn').forEach(button => {
     button.addEventListener('click', () => fire(button.dataset.attack));
   });
+
+  document.getElementById('autoBtn').addEventListener('click', () => setAuto(!auto.on));
 
   document.getElementById('playBtn').addEventListener('click', event => {
     playing = !playing;
@@ -1854,6 +2036,8 @@
 
   document.getElementById('restartBtn').addEventListener('click', () => {
     clock = 0;
+    walkPhase = 0;
+    roamX = 0;
     tailVelocity = 0;
     lidVelocity = 0;
     stepIndex = null;
@@ -1869,9 +2053,10 @@
     document.getElementById('speedValue').textContent = `${speed.toFixed(2)}×`;
   });
 
-  document.getElementById('facingBtn').addEventListener('click', event => {
-    facing *= -1;
-    event.currentTarget.textContent = facing === 1 ? 'Face right' : 'Face left';
+  document.getElementById('facingBtn').addEventListener('click', () => {
+    if (auto.on) setAuto(false);
+    if (!action) startAttack('pivot');
+    else setFacing(-facing);
   });
 
   document.getElementById('rigBtn').addEventListener('click', event => {
@@ -1882,6 +2067,7 @@
 
   document.getElementById('loopBtn').addEventListener('click', event => {
     loopAttack = !loopAttack;
+    if (loopAttack && auto.on) setAuto(false);
     event.currentTarget.classList.toggle('active', loopAttack);
     event.currentTarget.textContent = loopAttack ? 'Looping' : 'Loop attack';
     if (loopAttack && !action && lastRequest) fire(lastRequest);
@@ -1942,8 +2128,9 @@
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const key = event.key.toLowerCase();
     if (KEYS[key]) { fire(KEYS[key]); event.preventDefault(); return; }
-    if (key === 'w') setStance('walk');
-    else if (key === 'i') setStance('idle');
+    if (key === 'w') { if (auto.on) setAuto(false); setStance('walk'); }
+    else if (key === 'i') { if (auto.on) setAuto(false); setStance('idle'); }
+    else if (key === 'a') setAuto(!auto.on);
     else if (key === ' ') { document.getElementById('playBtn').click(); event.preventDefault(); }
     else if (key === 'r') document.getElementById('restartBtn').click();
     else if (key === 'f') document.getElementById('facingBtn').click();
@@ -1962,6 +2149,8 @@
     frameBody.appendChild(row);
   }
 
+  syncFacingButton();
+  setAuto(true);
   buildTimeline(null);
   atlas.addEventListener('load', () => render(0));
   requestAnimationFrame(frame);
