@@ -1,22 +1,22 @@
 {
   "character": "05",
   "generated_atlas_size": [
-    1254,
-    1254
+    1536,
+    1536
   ],
   "grid": [
     4,
     4
   ],
-  "handedness": "Names are image-left/image-right in the bind pose; no sprites are mirrored at runtime.",
+  "handedness": "Names are viewer/image-left and viewer/image-right in the bind pose. Shoulder and upper-arm sprites are independently generated from their same-side original-concept crops; no runtime mirroring.",
   "parts": {
     "body": {
       "file": "parts/body.png",
       "atlas_crop": [
         0,
         0,
-        314,
-        314
+        384,
+        384
       ],
       "size": [
         280,
@@ -26,10 +26,10 @@
     "pelvis": {
       "file": "parts/pelvis.png",
       "atlas_crop": [
-        314,
+        384,
         0,
-        313,
-        314
+        384,
+        384
       ],
       "size": [
         333,
@@ -39,36 +39,36 @@
     "left_shoulder": {
       "file": "parts/left_shoulder.png",
       "atlas_crop": [
-        627,
+        768,
         0,
-        313,
-        314
+        384,
+        384
       ],
       "size": [
-        246,
-        284
+        621,
+        845
       ]
     },
     "right_shoulder": {
       "file": "parts/right_shoulder.png",
       "atlas_crop": [
-        940,
+        1152,
         0,
-        314,
-        314
+        384,
+        384
       ],
       "size": [
-        247,
-        278
+        831,
+        829
       ]
     },
     "left_upper_arm": {
       "file": "parts/left_upper_arm.png",
       "atlas_crop": [
         0,
-        314,
-        314,
-        313
+        384,
+        384,
+        384
       ],
       "size": [
         180,
@@ -78,10 +78,10 @@
     "right_upper_arm": {
       "file": "parts/right_upper_arm.png",
       "atlas_crop": [
-        314,
-        314,
-        313,
-        313
+        384,
+        384,
+        384,
+        384
       ],
       "size": [
         172,
@@ -91,10 +91,10 @@
     "left_forearm_fist": {
       "file": "parts/left_forearm_fist.png",
       "atlas_crop": [
-        627,
-        314,
-        313,
-        313
+        768,
+        384,
+        384,
+        384
       ],
       "size": [
         169,
@@ -104,10 +104,10 @@
     "right_forearm_fist": {
       "file": "parts/right_forearm_fist.png",
       "atlas_crop": [
-        940,
-        314,
-        314,
-        313
+        1152,
+        384,
+        384,
+        384
       ],
       "size": [
         160,
@@ -118,9 +118,9 @@
       "file": "parts/left_thigh.png",
       "atlas_crop": [
         0,
-        627,
-        314,
-        313
+        768,
+        384,
+        384
       ],
       "size": [
         169,
@@ -130,10 +130,10 @@
     "right_thigh": {
       "file": "parts/right_thigh.png",
       "atlas_crop": [
-        314,
-        627,
-        313,
-        313
+        384,
+        768,
+        384,
+        384
       ],
       "size": [
         163,
@@ -143,10 +143,10 @@
     "left_shin_foot": {
       "file": "parts/left_shin_foot.png",
       "atlas_crop": [
-        627,
-        627,
-        313,
-        313
+        768,
+        768,
+        384,
+        384
       ],
       "size": [
         205,
@@ -156,10 +156,10 @@
     "right_shin_foot": {
       "file": "parts/right_shin_foot.png",
       "atlas_crop": [
-        940,
-        627,
-        314,
-        313
+        1152,
+        768,
+        384,
+        384
       ],
       "size": [
         212,
@@ -170,9 +170,9 @@
       "file": "parts/left_knee.png",
       "atlas_crop": [
         0,
-        940,
-        314,
-        314
+        1152,
+        384,
+        384
       ],
       "size": [
         188,
@@ -182,10 +182,10 @@
     "right_knee": {
       "file": "parts/right_knee.png",
       "atlas_crop": [
-        314,
-        940,
-        313,
-        314
+        384,
+        1152,
+        384,
+        384
       ],
       "size": [
         280,
@@ -195,10 +195,10 @@
     "left_weight": {
       "file": "parts/left_weight.png",
       "atlas_crop": [
-        627,
-        940,
-        313,
-        314
+        768,
+        1152,
+        384,
+        384
       ],
       "size": [
         333,
@@ -208,10 +208,10 @@
     "right_weight": {
       "file": "parts/right_weight.png",
       "atlas_crop": [
-        940,
-        940,
-        314,
-        314
+        1152,
+        1152,
+        384,
+        384
       ],
       "size": [
         279,

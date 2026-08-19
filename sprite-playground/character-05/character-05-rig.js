@@ -9,12 +9,17 @@
   // Names are image-left/image-right in the neutral bind pose. Nothing is
   // mirrored: the painted wear, joints, fists, feet, and weights stay paired.
   const PARTS = {
-    body: { file: "parts/body.png", pivot: [0.5, 0.5], scale: 1.25 },
-    pelvis: { file: "parts/pelvis.png", pivot: [0.5, 0.45], scale: 0.66 },
-    left_shoulder: { file: "parts/left_shoulder.png", pivot: [0.78, 0.44], scale: 0.68 },
-    right_shoulder: { file: "parts/right_shoulder.png", pivot: [0.22, 0.44], scale: 0.68 },
-    left_upper_arm: { file: "parts/left_upper_arm.png", prox: [0.56, 0.13], dist: [0.31, 0.86] },
-    right_upper_arm: { file: "parts/right_upper_arm.png", prox: [0.43, 0.13], dist: [0.68, 0.86] },
+    body: { file: "parts/body.png", pivot: [0.5, 0.5], scale: 1.05 },
+    pelvis: { file: "parts/pelvis.png", pivot: [0.5, 0.45], scale: 0.55 },
+    // These are independent source-side extractions. The viewer-left part has
+    // its torso ring on the right; the viewer-right part has its ring on the
+    // left. Their different silhouettes and scales are intentional.
+    left_shoulder: { file: "parts/left_shoulder.png", prox: [0.84, 0.39], dist: [0.34, 0.91] },
+    right_shoulder: { file: "parts/right_shoulder.png", prox: [0.13, 0.41], dist: [0.89, 0.87] },
+    // Optional standalone atlas pieces remain downloadable, but the runtime
+    // uses the complete shoulder-through-elbow assemblies above.
+    left_upper_arm: { file: "parts/left_upper_arm.png", prox: [0.4, 0.19], dist: [0.51, 0.79] },
+    right_upper_arm: { file: "parts/right_upper_arm.png", prox: [0.19, 0.25], dist: [0.79, 0.71] },
     left_forearm_fist: { file: "parts/left_forearm_fist.png", prox: [0.51, 0.12], dist: [0.45, 0.86] },
     right_forearm_fist: { file: "parts/right_forearm_fist.png", prox: [0.48, 0.12], dist: [0.53, 0.86] },
     left_thigh: { file: "parts/left_thigh.png", prox: [0.55, 0.13], dist: [0.54, 0.84] },
@@ -206,43 +211,43 @@
     const shake = impact * Math.sin(time * 58) * 5;
     const bob = -Math.abs(Math.sin(sim.stepPhase)) * 4.4 * walk;
 
-    const leftHip = [mix(-72, -92, action), mix(-151, -137, action) + bob];
-    const rightHip = [mix(72, 92, action), mix(-151, -137, action) + bob];
+    const leftHip = [mix(-66, -91, action), mix(-151, -137, action) + bob];
+    const rightHip = [mix(66, 91, action), mix(-151, -137, action) + bob];
     const leftAnkle = [
-      mix(-78 + stride * 24, -150, action),
-      -Math.max(0, lift) * 14 * walk
+      mix(-76 + stride * 26, -145, action),
+      -Math.max(0, lift) * 16 * walk
     ];
     const rightAnkle = [
-      mix(78 - stride * 24, 150, action),
-      -Math.max(0, -lift) * 14 * walk
+      mix(76 - stride * 26, 145, action),
+      -Math.max(0, -lift) * 16 * walk
     ];
-    const leftKnee = solveTwoBone(leftHip, leftAnkle, 109, 111, 1);
-    const rightKnee = solveTwoBone(rightHip, rightAnkle, 109, 111, -1);
+    const leftKnee = solveTwoBone(leftHip, leftAnkle, 124, 128, 1);
+    const rightKnee = solveTwoBone(rightHip, rightAnkle, 124, 128, -1);
 
-    const leftShoulder = [mix(-148, -166, action), mix(-294, -270, action) + bob + shake];
-    const rightShoulder = [mix(148, 166, action), mix(-294, -270, action) + bob + shake];
+    const leftShoulder = [mix(-132, -146, action), mix(-272, -255, action) + bob + shake];
+    const rightShoulder = [mix(132, 146, action), mix(-272, -255, action) + bob + shake];
     const leftElbow = [
-      mix(-166 - stride * 7, -208, action),
-      mix(-173 + stride * 9, -156, action) + bob
+      mix(-171 - stride * 7, -211, action),
+      mix(-151 + stride * 9, -142, action) + bob
     ];
     const rightElbow = [
-      mix(166 + stride * 7, 208, action),
-      mix(-173 - stride * 9, -156, action) + bob
+      mix(171 + stride * 7, 211, action),
+      mix(-151 - stride * 9, -142, action) + bob
     ];
     const leftWrist = [
-      mix(-151 - stride * 8, -208, action),
-      mix(-51 + stride * 12, -55, action) + bob
+      mix(-158 - stride * 8, -211, action),
+      mix(-35 + stride * 12, -40, action) + bob
     ];
     const rightWrist = [
-      mix(151 + stride * 8, 208, action),
-      mix(-51 - stride * 12, -55, action) + bob
+      mix(158 + stride * 8, 211, action),
+      mix(-35 - stride * 12, -40, action) + bob
     ];
 
     return {
       action,
       stride,
       impact,
-      body: [shake, mix(-282, -257, action) + bob + shake],
+      body: [shake, mix(-257, -239, action) + bob + shake],
       bodyAngle: stride * 0.012 - action * 0.018,
       pelvis: [0, mix(-156, -138, action) + bob],
       leftHip,
@@ -493,27 +498,14 @@
     drawSprite(ctx, assets.left_knee, PARTS.left_knee, pose.leftKnee[0], pose.leftKnee[1], leftKneeAngle);
 
     drawSprite(ctx, assets.pelvis, PARTS.pelvis, pose.pelvis[0], pose.pelvis[1], pose.bodyAngle * 0.4);
-    drawBone(ctx, assets.right_upper_arm, PARTS.right_upper_arm, pose.rightShoulder, pose.rightElbow);
-    drawBone(ctx, assets.left_upper_arm, PARTS.left_upper_arm, pose.leftShoulder, pose.leftElbow);
 
+    // Each shoulder is one uninterrupted source-faithful assembly from its
+    // inward torso ring through its elbow. Drawing it behind the body lets the
+    // ring tuck beneath the spherical shell; the forearm then covers the only
+    // remaining cut at the complete elbow socket.
+    drawBone(ctx, assets.right_shoulder, PARTS.right_shoulder, pose.rightShoulder, pose.rightElbow);
+    drawBone(ctx, assets.left_shoulder, PARTS.left_shoulder, pose.leftShoulder, pose.leftElbow);
     drawSprite(ctx, assets.body, PARTS.body, pose.body[0], pose.body[1], pose.bodyAngle);
-
-    drawSprite(
-      ctx,
-      assets.right_shoulder,
-      PARTS.right_shoulder,
-      pose.rightShoulder[0],
-      pose.rightShoulder[1],
-      pose.action * 0.045
-    );
-    drawSprite(
-      ctx,
-      assets.left_shoulder,
-      PARTS.left_shoulder,
-      pose.leftShoulder[0],
-      pose.leftShoulder[1],
-      -pose.action * 0.045
-    );
 
     drawBone(ctx, assets.right_forearm_fist, PARTS.right_forearm_fist, pose.rightElbow, pose.rightWrist);
     drawBone(ctx, assets.left_forearm_fist, PARTS.left_forearm_fist, pose.leftElbow, pose.leftWrist);
