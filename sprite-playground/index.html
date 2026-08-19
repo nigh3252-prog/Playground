@@ -78,6 +78,8 @@
       box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .28);
     }
 
+    article + article { margin-top: 1.4rem; }
+
     .preview {
       min-height: 29rem;
       display: grid;
@@ -155,6 +157,28 @@
 
     .action:hover,
     .action:focus-visible { translate: 0 -1px; }
+
+    article.character-05 .preview {
+      background:
+        linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px),
+        radial-gradient(circle at center, rgba(200, 117, 45, .23), transparent 64%),
+        #1a211b;
+      background-size: 2rem 2rem, 2rem 2rem, auto, auto;
+    }
+
+    article.character-05 .number { color: #f1a251; }
+
+    article.character-05 .action {
+      border-color: rgba(241, 162, 81, .4);
+      background: rgba(197, 103, 32, .14);
+    }
+
+    article.character-05 .action.primary {
+      border-color: #f1a251;
+      color: #24150a;
+      background: #f1a251;
+    }
 
     details {
       margin-top: 1.1rem;
@@ -239,6 +263,44 @@
             <a href="character-04/parts/right_fore.png" download>right_fore</a>
             <a href="character-04/parts/right_focus.png" download>right_focus</a>
             <a href="character-04/parts/right_focus-frames.png" download>right_focus · 4 frames</a>
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <article class="character-05">
+      <div class="preview">
+        <img src="character-05/character-05-reference.png" alt="Character 5, a massive cream, orange, and olive robot dragging a different chained block weight on each side">
+      </div>
+      <div class="copy">
+        <p class="number">CHARACTER 05</p>
+        <h2>Iron Haul</h2>
+        <p>A heavyweight field walker assembled from sixteen completed paper-doll parts. It hauls two independently trailing chain weights, plants into the concept's broad action stance, then drives both blocks outward in an anchor slam.</p>
+        <div class="actions">
+          <a class="action primary" href="character-05/">Open animation</a>
+          <a class="action" href="character-05/character-05-reference.png" download>Reference PNG</a>
+          <a class="action" href="character-05/character-05-parts-atlas.png" download>Parts atlas</a>
+          <a class="action" href="character-05/character-05-parts-atlas.json" download>Atlas JSON</a>
+        </div>
+        <details>
+          <summary>Individual transparent parts</summary>
+          <div class="parts">
+            <a href="character-05/parts/body.png" download>body</a>
+            <a href="character-05/parts/pelvis.png" download>pelvis</a>
+            <a href="character-05/parts/left_shoulder.png" download>left_shoulder</a>
+            <a href="character-05/parts/right_shoulder.png" download>right_shoulder</a>
+            <a href="character-05/parts/left_upper_arm.png" download>left_upper_arm</a>
+            <a href="character-05/parts/right_upper_arm.png" download>right_upper_arm</a>
+            <a href="character-05/parts/left_forearm_fist.png" download>left_forearm_fist</a>
+            <a href="character-05/parts/right_forearm_fist.png" download>right_forearm_fist</a>
+            <a href="character-05/parts/left_thigh.png" download>left_thigh</a>
+            <a href="character-05/parts/right_thigh.png" download>right_thigh</a>
+            <a href="character-05/parts/left_shin_foot.png" download>left_shin_foot</a>
+            <a href="character-05/parts/right_shin_foot.png" download>right_shin_foot</a>
+            <a href="character-05/parts/left_knee.png" download>left_knee</a>
+            <a href="character-05/parts/right_knee.png" download>right_knee</a>
+            <a href="character-05/parts/left_weight.png" download>left_weight</a>
+            <a href="character-05/parts/right_weight.png" download>right_weight</a>
           </div>
         </details>
       </div>
