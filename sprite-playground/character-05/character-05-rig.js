@@ -6,30 +6,28 @@
   const HEIGHT = 620;
   const TAU = Math.PI * 2;
 
-  // Names are image-left/image-right in the neutral bind pose. Nothing is
-  // mirrored: the painted wear, joints, fists, feet, and weights stay paired.
+  // Names are image-left/image-right in the concept pose. Nothing is mirrored:
+  // the painted wear, joints, fists, feet, and weights stay paired. The v4
+  // subtraction pass gives every visible joint one owner; there are no helper
+  // sprites that repaint a second shoulder, pelvis, knee, or ankle over it.
   const PARTS = {
-    // The v3 torso comes directly from the original concept crop rather than
-    // the rounder generated bind pose used by the first paper-doll pass.
     body: { file: "parts/body.png", pivot: [0.5, 0.5], scale: 0.48 },
-    pelvis: { file: "parts/pelvis.png", pivot: [0.5, 0.45], scale: 0.46 },
-    // Each corrected side-specific shoulder is now split at its real armor
-    // seam. The rigid cap covers the upper-arm socket instead of stretching a
-    // full shoulder-through-elbow painting as one bone.
-    left_shoulder_cap: { file: "parts/left_shoulder_cap.png", prox: [0.86, 0.49], dist: [0.46, 0.91] },
-    right_shoulder_cap: { file: "parts/right_shoulder_cap.png", prox: [0.13, 0.5], dist: [0.8, 0.91] },
-    left_upper_arm: { file: "parts/left_upper_arm.png", prox: [0.4, 0.19], dist: [0.51, 0.79], widthScale: 1.06 },
-    right_upper_arm: { file: "parts/right_upper_arm.png", prox: [0.19, 0.25], dist: [0.79, 0.71], widthScale: 1.08 },
+    // These are the corrected, side-specific concept-grounded shoulders kept
+    // intact from torso socket to elbow. They replace the false
+    // shoulder -> armRoot -> elbow chain used by the previous pass.
+    left_shoulder: { file: "parts/left_shoulder.png", prox: [0.837, 0.39], dist: [0.348, 0.929], widthScale: 1.0 },
+    right_shoulder: { file: "parts/right_shoulder.png", prox: [0.143, 0.411], dist: [0.916, 0.872], widthScale: 1.0 },
     left_forearm_fist: { file: "parts/left_forearm_fist.png", prox: [0.51, 0.12], dist: [0.45, 0.86], widthScale: 1.1 },
     right_forearm_fist: { file: "parts/right_forearm_fist.png", prox: [0.48, 0.12], dist: [0.53, 0.86], widthScale: 1.12 },
     left_thigh: { file: "parts/left_thigh.png", prox: [0.7, 0.13], dist: [0.72, 0.84], widthScale: 1.18 },
     right_thigh: { file: "parts/right_thigh.png", prox: [0.16, 0.19], dist: [0.86, 0.85], widthScale: 1.16 },
-    left_shin: { file: "parts/left_shin.png", prox: [0.55, 0.08], dist: [0.5, 0.92], widthScale: 1.24 },
-    right_shin: { file: "parts/right_shin.png", prox: [0.67, 0.1], dist: [0.51, 0.94], widthScale: 1.22 },
-    left_boot: { file: "parts/left_boot.png", pivot: [0.58, 0.12], scale: 0.36 },
-    right_boot: { file: "parts/right_boot.png", pivot: [0.5, 0.1], scale: 0.37 },
-    left_knee: { file: "parts/left_knee.png", pivot: [0.5, 0.54], scale: 0.31 },
-    right_knee: { file: "parts/right_knee.png", pivot: [0.5, 0.54], scale: 0.32 },
+    // The lower legs come from the clean original shin/foot sprites with the
+    // feet removed. The separate feet begin at the real ankle hinge instead
+    // of carrying a second calf and ankle collar.
+    left_lower_leg: { file: "parts/left_lower_leg.png", prox: [0.502, 0.098], dist: [0.8, 0.976], widthScale: 1.03 },
+    right_lower_leg: { file: "parts/right_lower_leg.png", prox: [0.509, 0.087], dist: [0.222, 0.985], widthScale: 1.04 },
+    left_foot: { file: "parts/left_foot.png", pivot: [0.753, 0.364], scale: 0.36 },
+    right_foot: { file: "parts/right_foot.png", pivot: [0.776, 0.358], scale: 0.37 },
     left_weight: { file: "parts/left_weight.png", pivot: [0.5, 0.82], scale: 0.58 },
     right_weight: { file: "parts/right_weight.png", pivot: [0.5, 0.82], scale: 0.62 }
   };
@@ -251,10 +249,23 @@
     const leftKnee = solveTwoBone(leftHip, leftAnkle, 104, 110, 1);
     const rightKnee = solveTwoBone(rightHip, rightAnkle, 108, 114, -1);
 
-    const leftShoulder = [mix(-158, -168, action) + sway, mix(-296, -304, action) + slam * 35 + bob + shake];
-    const rightShoulder = [mix(162, 172, action) + sway, mix(-292, -300, action) + slam * 35 + bob + shake];
-    const leftArmRoot = [mix(-184, -205, action) + sway, mix(-226, -239, action) + slam * 37 + bob];
-    const rightArmRoot = [mix(232, 252, action) + sway, mix(-211, -218, action) + slam * 37 + bob];
+    const body = [sway + shake, mix(-250, -265, action) + slam * 38 + bob + shake];
+    const bodyAngle = -0.035 + stride * 0.018 - action * 0.018 + slam * 0.04;
+
+    // The torso painting already owns both shoulder sockets. Derive the limb
+    // pivots from those exact painted centers so the upper-arm hubs land under
+    // them instead of appearing as a second, offset pair of rings.
+    function bodyAttachment(localX, localY) {
+      const cosine = Math.cos(bodyAngle);
+      const sine = Math.sin(bodyAngle);
+      return [
+        body[0] + localX * cosine - localY * sine,
+        body[1] + localX * sine + localY * cosine
+      ];
+    }
+
+    const leftShoulder = bodyAttachment(-152, -17);
+    const rightShoulder = bodyAttachment(147, -19);
     const leftElbow = [
       mix(-203 - stride * 7, -230, action) + sway,
       mix(-154 + stride * 8, -178, action) + slam * 49 + bob
@@ -277,9 +288,8 @@
       slam,
       stride,
       impact,
-      body: [sway + shake, mix(-250, -265, action) + slam * 38 + bob + shake],
-      bodyAngle: -0.035 + stride * 0.018 - action * 0.018 + slam * 0.04,
-      pelvis: [sway * 0.55, mix(-151, -147, action) + slam * 20 + bob],
+      body,
+      bodyAngle,
       leftHip,
       rightHip,
       leftKnee,
@@ -288,8 +298,6 @@
       rightAnkle,
       leftShoulder,
       rightShoulder,
-      leftArmRoot,
-      rightArmRoot,
       leftElbow,
       rightElbow,
       leftWrist,
@@ -532,38 +540,26 @@
     ctx.translate(originX, originY);
     ctx.scale(scale, scale);
 
-    // Thigh and shin remain articulated, but each boot is a separate rigid
-    // sprite so its sole can stay parallel to the field during knee motion.
+    // Lower legs go down first. Each thigh then owns the visible knee face and
+    // covers the lower-leg socket; no third knee sprite is painted on top.
+    drawBone(ctx, assets.left_lower_leg, PARTS.left_lower_leg, pose.leftKnee, pose.leftAnkle);
+    drawBone(ctx, assets.right_lower_leg, PARTS.right_lower_leg, pose.rightKnee, pose.rightAnkle);
     drawBone(ctx, assets.left_thigh, PARTS.left_thigh, pose.leftHip, pose.leftKnee);
-    drawBone(ctx, assets.left_shin, PARTS.left_shin, pose.leftKnee, pose.leftAnkle);
     drawBone(ctx, assets.right_thigh, PARTS.right_thigh, pose.rightHip, pose.rightKnee);
-    drawBone(ctx, assets.right_shin, PARTS.right_shin, pose.rightKnee, pose.rightAnkle);
 
-    drawSprite(ctx, assets.pelvis, PARTS.pelvis, pose.pelvis[0], pose.pelvis[1], pose.bodyAngle * 0.35);
-
-    // Upper arms sit behind the rigid, side-specific shoulder caps. The body
-    // is drawn last in this group to tuck both inward collar rings cleanly.
-    drawBone(ctx, assets.left_upper_arm, PARTS.left_upper_arm, pose.leftArmRoot, pose.leftElbow);
-    drawBone(ctx, assets.right_upper_arm, PARTS.right_upper_arm, pose.rightArmRoot, pose.rightElbow);
-    drawBone(ctx, assets.left_shoulder_cap, PARTS.left_shoulder_cap, pose.leftShoulder, pose.leftArmRoot);
-    drawBone(ctx, assets.right_shoulder_cap, PARTS.right_shoulder_cap, pose.rightShoulder, pose.rightArmRoot);
-    drawSprite(ctx, assets.body, PARTS.body, pose.body[0], pose.body[1], pose.bodyAngle);
-
-    const leftKneeAngle = (
-      Math.atan2(pose.leftKnee[1] - pose.leftHip[1], pose.leftKnee[0] - pose.leftHip[0]) +
-      Math.atan2(pose.leftAnkle[1] - pose.leftKnee[1], pose.leftAnkle[0] - pose.leftKnee[0])
-    ) * 0.5 - Math.PI / 2;
-    const rightKneeAngle = (
-      Math.atan2(pose.rightKnee[1] - pose.rightHip[1], pose.rightKnee[0] - pose.rightHip[0]) +
-      Math.atan2(pose.rightAnkle[1] - pose.rightKnee[1], pose.rightAnkle[0] - pose.rightKnee[0])
-    ) * 0.5 - Math.PI / 2;
-    drawSprite(ctx, assets.left_knee, PARTS.left_knee, pose.leftKnee[0], pose.leftKnee[1], leftKneeAngle);
-    drawSprite(ctx, assets.right_knee, PARTS.right_knee, pose.rightKnee[0], pose.rightKnee[1], rightKneeAngle);
-    drawSprite(ctx, assets.left_boot, PARTS.left_boot, pose.leftAnkle[0], pose.leftAnkle[1], pose.leftBootAngle);
-    drawSprite(ctx, assets.right_boot, PARTS.right_boot, pose.rightAnkle[0], pose.rightAnkle[1], pose.rightBootAngle);
-
+    // Forearms tuck under the elbow faces painted into the corrected full
+    // shoulder-to-elbow sprites. The body goes last so its socket rings cover
+    // the proximal art cleanly.
     drawBone(ctx, assets.left_forearm_fist, PARTS.left_forearm_fist, pose.leftElbow, pose.leftWrist);
     drawBone(ctx, assets.right_forearm_fist, PARTS.right_forearm_fist, pose.rightElbow, pose.rightWrist);
+    drawBone(ctx, assets.left_shoulder, PARTS.left_shoulder, pose.leftShoulder, pose.leftElbow);
+    drawBone(ctx, assets.right_shoulder, PARTS.right_shoulder, pose.rightShoulder, pose.rightElbow);
+    drawSprite(ctx, assets.body, PARTS.body, pose.body[0], pose.body[1], pose.bodyAngle);
+
+    // Feet own the only visible ankle caps and remain nearly level with the
+    // field while the lower legs rotate above them.
+    drawSprite(ctx, assets.left_foot, PARTS.left_foot, pose.leftAnkle[0], pose.leftAnkle[1], pose.leftBootAngle);
+    drawSprite(ctx, assets.right_foot, PARTS.right_foot, pose.rightAnkle[0], pose.rightAnkle[1], pose.rightBootAngle);
     ctx.restore();
 
     // Chains attach at the outer forearms, not at the fists, and are rendered

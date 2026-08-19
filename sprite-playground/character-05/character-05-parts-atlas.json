@@ -1,100 +1,70 @@
 {
   "character": "05",
   "generated_atlas_size": [
-    1600,
-    1280
+    1536,
+    1536
   ],
   "grid": [
-    5,
+    4,
     4
   ],
-  "handedness": "Names are viewer/image-left and viewer/image-right. Torso and both leg sets were generated independently from original-concept crops; no side is mirrored at runtime.",
+  "active_part_count": 13,
+  "joint_ownership": {
+    "shoulder": "body socket; full side-specific upper arm tucks beneath",
+    "elbow": "full side-specific upper arm",
+    "hip": "body; thigh tucks beneath",
+    "knee": "thigh; lower leg tucks beneath",
+    "ankle": "foot; lower leg tucks beneath",
+    "wrist": "combined forearm/fist"
+  },
+  "handedness": "Names are viewer/image-left and viewer/image-right. Corrected shoulders and all other side-specific pieces remain independent; nothing is mirrored at runtime.",
   "parts": {
     "body": {
       "file": "parts/body.png",
       "atlas_crop": [
         0,
         0,
-        320,
-        320
+        384,
+        384
       ],
       "size": [
         739,
         560
       ]
     },
-    "pelvis": {
-      "file": "parts/pelvis.png",
+    "left_shoulder": {
+      "file": "parts/left_shoulder.png",
       "atlas_crop": [
-        320,
+        384,
         0,
-        320,
-        320
+        384,
+        384
       ],
       "size": [
-        271,
-        203
+        621,
+        845
       ]
     },
-    "left_shoulder_cap": {
-      "file": "parts/left_shoulder_cap.png",
+    "right_shoulder": {
+      "file": "parts/right_shoulder.png",
       "atlas_crop": [
-        640,
+        768,
         0,
-        320,
-        320
+        384,
+        384
       ],
       "size": [
-        607,
-        679
-      ]
-    },
-    "right_shoulder_cap": {
-      "file": "parts/right_shoulder_cap.png",
-      "atlas_crop": [
-        960,
-        0,
-        320,
-        320
-      ],
-      "size": [
-        822,
-        684
-      ]
-    },
-    "left_upper_arm": {
-      "file": "parts/left_upper_arm.png",
-      "atlas_crop": [
-        1280,
-        0,
-        320,
-        320
-      ],
-      "size": [
-        180,
-        303
-      ]
-    },
-    "right_upper_arm": {
-      "file": "parts/right_upper_arm.png",
-      "atlas_crop": [
-        0,
-        320,
-        320,
-        320
-      ],
-      "size": [
-        172,
-        303
+        831,
+        829
       ]
     },
     "left_forearm_fist": {
       "file": "parts/left_forearm_fist.png",
       "atlas_crop": [
-        320,
-        320,
-        320,
-        320
+        1152,
+        0,
+        384,
+        384
       ],
       "size": [
         169,
@@ -104,10 +74,10 @@
     "right_forearm_fist": {
       "file": "parts/right_forearm_fist.png",
       "atlas_crop": [
-        640,
-        320,
-        320,
-        320
+        0,
+        384,
+        384,
+        384
       ],
       "size": [
         160,
@@ -117,10 +87,10 @@
     "left_thigh": {
       "file": "parts/left_thigh.png",
       "atlas_crop": [
-        960,
-        320,
-        320,
-        320
+        384,
+        384,
+        384,
+        384
       ],
       "size": [
         263,
@@ -130,101 +100,75 @@
     "right_thigh": {
       "file": "parts/right_thigh.png",
       "atlas_crop": [
-        1280,
-        320,
-        320,
-        320
+        768,
+        384,
+        384,
+        384
       ],
       "size": [
         400,
         379
       ]
     },
-    "left_shin": {
-      "file": "parts/left_shin.png",
+    "left_lower_leg": {
+      "file": "parts/left_lower_leg.png",
+      "atlas_crop": [
+        1152,
+        384,
+        384,
+        384
+      ],
+      "size": [
+        205,
+        205
+      ]
+    },
+    "right_lower_leg": {
+      "file": "parts/right_lower_leg.png",
       "atlas_crop": [
         0,
-        640,
-        320,
-        320
+        768,
+        384,
+        384
       ],
       "size": [
-        273,
-        500
+        212,
+        206
       ]
     },
-    "right_shin": {
-      "file": "parts/right_shin.png",
+    "left_foot": {
+      "file": "parts/left_foot.png",
       "atlas_crop": [
-        320,
-        640,
-        320,
-        320
-      ],
-      "size": [
-        235,
-        520
-      ]
-    },
-    "left_boot": {
-      "file": "parts/left_boot.png",
-      "atlas_crop": [
-        640,
-        640,
-        320,
-        320
+        384,
+        768,
+        384,
+        384
       ],
       "size": [
         292,
-        260
+        110
       ]
     },
-    "right_boot": {
-      "file": "parts/right_boot.png",
+    "right_foot": {
+      "file": "parts/right_foot.png",
       "atlas_crop": [
-        960,
-        640,
-        320,
-        320
+        768,
+        768,
+        384,
+        384
       ],
       "size": [
         290,
-        270
-      ]
-    },
-    "left_knee": {
-      "file": "parts/left_knee.png",
-      "atlas_crop": [
-        1280,
-        640,
-        320,
-        320
-      ],
-      "size": [
-        188,
-        212
-      ]
-    },
-    "right_knee": {
-      "file": "parts/right_knee.png",
-      "atlas_crop": [
-        0,
-        960,
-        320,
-        320
-      ],
-      "size": [
-        280,
-        213
+        120
       ]
     },
     "left_weight": {
       "file": "parts/left_weight.png",
       "atlas_crop": [
-        320,
-        960,
-        320,
-        320
+        1152,
+        768,
+        384,
+        384
       ],
       "size": [
         333,
@@ -234,10 +178,10 @@
     "right_weight": {
       "file": "parts/right_weight.png",
       "atlas_crop": [
-        640,
-        960,
-        320,
-        320
+        0,
+        1152,
+        384,
+        384
       ],
       "size": [
         279,
