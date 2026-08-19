@@ -9,27 +9,29 @@
   // Names are image-left/image-right in the neutral bind pose. Nothing is
   // mirrored: the painted wear, joints, fists, feet, and weights stay paired.
   const PARTS = {
-    body: { file: "parts/body.png", pivot: [0.5, 0.5], scale: 1.05 },
-    pelvis: { file: "parts/pelvis.png", pivot: [0.5, 0.45], scale: 0.55 },
-    // These are independent source-side extractions. The viewer-left part has
-    // its torso ring on the right; the viewer-right part has its ring on the
-    // left. Their different silhouettes and scales are intentional.
-    left_shoulder: { file: "parts/left_shoulder.png", prox: [0.84, 0.39], dist: [0.34, 0.91] },
-    right_shoulder: { file: "parts/right_shoulder.png", prox: [0.13, 0.41], dist: [0.89, 0.87] },
-    // Optional standalone atlas pieces remain downloadable, but the runtime
-    // uses the complete shoulder-through-elbow assemblies above.
-    left_upper_arm: { file: "parts/left_upper_arm.png", prox: [0.4, 0.19], dist: [0.51, 0.79] },
-    right_upper_arm: { file: "parts/right_upper_arm.png", prox: [0.19, 0.25], dist: [0.79, 0.71] },
-    left_forearm_fist: { file: "parts/left_forearm_fist.png", prox: [0.51, 0.12], dist: [0.45, 0.86] },
-    right_forearm_fist: { file: "parts/right_forearm_fist.png", prox: [0.48, 0.12], dist: [0.53, 0.86] },
-    left_thigh: { file: "parts/left_thigh.png", prox: [0.55, 0.13], dist: [0.54, 0.84] },
-    right_thigh: { file: "parts/right_thigh.png", prox: [0.45, 0.13], dist: [0.49, 0.84] },
-    left_shin_foot: { file: "parts/left_shin_foot.png", prox: [0.51, 0.13], dist: [0.48, 0.92] },
-    right_shin_foot: { file: "parts/right_shin_foot.png", prox: [0.49, 0.13], dist: [0.53, 0.92] },
-    left_knee: { file: "parts/left_knee.png", pivot: [0.5, 0.54], scale: 0.27 },
-    right_knee: { file: "parts/right_knee.png", pivot: [0.5, 0.54], scale: 0.27 },
-    left_weight: { file: "parts/left_weight.png", pivot: [0.5, 0.8], scale: 0.43 },
-    right_weight: { file: "parts/right_weight.png", pivot: [0.5, 0.8], scale: 0.47 }
+    // The v3 torso comes directly from the original concept crop rather than
+    // the rounder generated bind pose used by the first paper-doll pass.
+    body: { file: "parts/body.png", pivot: [0.5, 0.5], scale: 0.48 },
+    pelvis: { file: "parts/pelvis.png", pivot: [0.5, 0.45], scale: 0.46 },
+    // Each corrected side-specific shoulder is now split at its real armor
+    // seam. The rigid cap covers the upper-arm socket instead of stretching a
+    // full shoulder-through-elbow painting as one bone.
+    left_shoulder_cap: { file: "parts/left_shoulder_cap.png", prox: [0.86, 0.49], dist: [0.46, 0.91] },
+    right_shoulder_cap: { file: "parts/right_shoulder_cap.png", prox: [0.13, 0.5], dist: [0.8, 0.91] },
+    left_upper_arm: { file: "parts/left_upper_arm.png", prox: [0.4, 0.19], dist: [0.51, 0.79], widthScale: 1.06 },
+    right_upper_arm: { file: "parts/right_upper_arm.png", prox: [0.19, 0.25], dist: [0.79, 0.71], widthScale: 1.08 },
+    left_forearm_fist: { file: "parts/left_forearm_fist.png", prox: [0.51, 0.12], dist: [0.45, 0.86], widthScale: 1.1 },
+    right_forearm_fist: { file: "parts/right_forearm_fist.png", prox: [0.48, 0.12], dist: [0.53, 0.86], widthScale: 1.12 },
+    left_thigh: { file: "parts/left_thigh.png", prox: [0.7, 0.13], dist: [0.72, 0.84], widthScale: 1.18 },
+    right_thigh: { file: "parts/right_thigh.png", prox: [0.16, 0.19], dist: [0.86, 0.85], widthScale: 1.16 },
+    left_shin: { file: "parts/left_shin.png", prox: [0.55, 0.08], dist: [0.5, 0.92], widthScale: 1.24 },
+    right_shin: { file: "parts/right_shin.png", prox: [0.67, 0.1], dist: [0.51, 0.94], widthScale: 1.22 },
+    left_boot: { file: "parts/left_boot.png", pivot: [0.58, 0.12], scale: 0.36 },
+    right_boot: { file: "parts/right_boot.png", pivot: [0.5, 0.1], scale: 0.37 },
+    left_knee: { file: "parts/left_knee.png", pivot: [0.5, 0.54], scale: 0.31 },
+    right_knee: { file: "parts/right_knee.png", pivot: [0.5, 0.54], scale: 0.32 },
+    left_weight: { file: "parts/left_weight.png", pivot: [0.5, 0.82], scale: 0.58 },
+    right_weight: { file: "parts/right_weight.png", pivot: [0.5, 0.82], scale: 0.62 }
   };
 
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
@@ -63,7 +65,7 @@
   }
 
   function chooseTarget(sim) {
-    sim.targetX = mix(335, 625, sim.random());
+    sim.targetX = mix(360, 600, sim.random());
     sim.targetY = mix(500, 548, sim.random());
     sim.timer = mix(6.5, 9.5, sim.random());
     sim.modeDuration = sim.timer;
@@ -74,6 +76,7 @@
     sim.modeElapsed = 0;
     sim.modeDuration = duration;
     sim.timer = duration;
+    if (mode === "slam") sim.didImpact = false;
   }
 
   function createSimulation(seed = 505) {
@@ -93,10 +96,11 @@
       stepPhase: 0,
       travelled: 0,
       impactAge: 99,
+      didImpact: false,
       random,
       weights: {
-        left: { x: 298, y: 526, vx: 0, vy: 0, angle: -0.04 },
-        right: { x: 662, y: 526, vx: 0, vy: 0, angle: 0.04 }
+        left: { x: 250, y: 526, vx: 0, vy: 0, angle: -0.02 },
+        right: { x: 710, y: 526, vx: 0, vy: 0, angle: 0.02 }
       }
     };
     chooseTarget(sim);
@@ -104,19 +108,17 @@
   }
 
   function updateWeight(weight, targetX, targetY, dt, side) {
-    const spring = 9.5;
+    // The blocks scrape along the field instead of bobbing like pendulums.
+    // Horizontal inertia remains independent per side; vertical motion is
+    // constrained to the common ground plane.
+    const spring = 7.6;
     weight.vx += (targetX - weight.x) * spring * dt;
-    weight.vy += (targetY - weight.y) * spring * dt;
-    const damping = Math.exp(-dt * 4.5);
+    const damping = Math.exp(-dt * 5.4);
     weight.vx *= damping;
-    weight.vy *= damping;
     weight.x += weight.vx * dt;
-    weight.y += weight.vy * dt;
-    if (weight.y > targetY + 4) {
-      weight.y = targetY + 4;
-      weight.vy *= -0.18;
-    }
-    const targetAngle = clamp(weight.vx * 0.0025 + side * 0.025, -0.16, 0.16);
+    weight.y = mix(weight.y, targetY, 1 - Math.exp(-dt * 18));
+    weight.vy = 0;
+    const targetAngle = clamp(weight.vx * 0.0018 + side * 0.018, -0.11, 0.11);
     weight.angle = mix(weight.angle, targetAngle, 1 - Math.exp(-dt * 7));
   }
 
@@ -141,18 +143,19 @@
       }
       sim.travelled += travel;
       sim.stepPhase += travel * 0.064;
-      if (distance < 5 || sim.timer <= 0) setMode(sim, "brace", 1.35);
+      if (distance < 5 || sim.timer <= 0) setMode(sim, "brace", 1.1);
     } else if (sim.mode === "brace") {
       if (sim.timer <= 0) {
-        setMode(sim, "slam", 0.9);
-        sim.impactAge = 0;
-        sim.weights.left.vx -= 75;
-        sim.weights.right.vx += 75;
-        sim.weights.left.vy -= 24;
-        sim.weights.right.vy -= 24;
+        setMode(sim, "slam", 0.68);
       }
     } else if (sim.mode === "slam") {
-      if (sim.timer <= 0) setMode(sim, "recover", 1.35);
+      if (!sim.didImpact && sim.modeElapsed >= 0.18) {
+        sim.didImpact = true;
+        sim.impactAge = 0;
+        sim.weights.left.vx -= 92;
+        sim.weights.right.vx += 92;
+      }
+      if (sim.timer <= 0) setMode(sim, "recover", 1.25);
     } else if (sim.timer <= 0) {
       setMode(sim, "haul", 8);
       chooseTarget(sim);
@@ -172,11 +175,12 @@
     sim.velocityY = (sim.y - previousY) / Math.max(dt, 0.001);
 
     const scale = sceneScale(sim.y);
-    const spread = mix(218, 324, sim.action) * scale;
+    const spread = mix(282, 340, sim.action) * scale;
     const drag = sim.velocityX * 1.5;
-    const scrape = Math.abs(Math.sin(sim.stepPhase)) * 2 * (1 - sim.action);
-    updateWeight(sim.weights.left, sim.x - spread - drag, sim.y + 2 - scrape, dt, -1);
-    updateWeight(sim.weights.right, sim.x + spread - drag, sim.y + 2 - scrape, dt, 1);
+    const leftLag = Math.max(0, Math.sin(sim.stepPhase)) * 15 * (1 - sim.action);
+    const rightLag = Math.max(0, -Math.sin(sim.stepPhase)) * 15 * (1 - sim.action);
+    updateWeight(sim.weights.left, sim.x - spread - drag + leftLag, sim.y, dt, -1);
+    updateWeight(sim.weights.right, sim.x + spread - drag - rightLag, sim.y, dt, 1);
   }
 
   function solveTwoBone(hip, ankle, upperLength, lowerLength, bend) {
@@ -204,52 +208,78 @@
 
   function createPose(sim, time) {
     const action = ease(sim.action);
-    const walk = sim.mode === "haul" ? 1 : Math.max(0, 1 - action * 1.8);
-    const stride = Math.sin(sim.stepPhase) * walk;
-    const lift = Math.cos(sim.stepPhase);
-    const impact = sim.impactAge < 1.2 ? Math.exp(-sim.impactAge * 4.2) : 0;
-    const shake = impact * Math.sin(time * 58) * 5;
-    const bob = -Math.abs(Math.sin(sim.stepPhase)) * 4.4 * walk;
+    const walk = sim.mode === "haul" ? 1 : Math.max(0, 1 - action * 2.2);
+    const slam = sim.mode === "slam"
+      ? ease(clamp(sim.modeElapsed / 0.2, 0, 1))
+      : sim.mode === "recover"
+        ? 1 - ease(sim.modeElapsed / sim.modeDuration)
+        : 0;
 
-    const leftHip = [mix(-66, -91, action), mix(-151, -137, action) + bob];
-    const rightHip = [mix(66, 91, action), mix(-151, -137, action) + bob];
+    // A foot spends most of its cycle planted. Its local x movement cancels
+    // the body's travel before a short, low swing phase returns it forward.
+    function footCycle(phase) {
+      const normalized = ((phase / TAU) % 1 + 1) % 1;
+      if (normalized < 0.62) {
+        const planted = ease(normalized / 0.62);
+        return { x: mix(31, -31, planted), y: 0 };
+      }
+      const swing = ease((normalized - 0.62) / 0.38);
+      return {
+        x: mix(-31, 31, swing),
+        y: -Math.sin(swing * Math.PI) * 13
+      };
+    }
+
+    const leftStep = footCycle(sim.stepPhase);
+    const rightStep = footCycle(sim.stepPhase + Math.PI);
+    const stride = clamp((leftStep.x - rightStep.x) / 62, -1, 1) * walk;
+    const impact = sim.impactAge < 1.2 ? Math.exp(-sim.impactAge * 4.2) : 0;
+    const shake = impact * Math.sin(time * 58) * 4.2;
+    const bob = -Math.abs(Math.sin(sim.stepPhase)) * 3.2 * walk;
+    const sway = Math.cos(sim.stepPhase) * 4.5 * walk;
+
+    const leftHip = [mix(-80, -94, action) + sway * 0.5, mix(-157, -143, action) + slam * 17 + bob];
+    const rightHip = [mix(84, 98, action) + sway * 0.5, mix(-157, -143, action) + slam * 17 + bob];
     const leftAnkle = [
-      mix(-76 + stride * 26, -145, action),
-      -Math.max(0, lift) * 16 * walk
+      mix(-112 + leftStep.x * walk, -146, action),
+      leftStep.y * walk
     ];
     const rightAnkle = [
-      mix(76 - stride * 26, 145, action),
-      -Math.max(0, -lift) * 16 * walk
+      mix(116 + rightStep.x * walk, 150, action),
+      rightStep.y * walk
     ];
-    const leftKnee = solveTwoBone(leftHip, leftAnkle, 124, 128, 1);
-    const rightKnee = solveTwoBone(rightHip, rightAnkle, 124, 128, -1);
+    const leftKnee = solveTwoBone(leftHip, leftAnkle, 104, 110, 1);
+    const rightKnee = solveTwoBone(rightHip, rightAnkle, 108, 114, -1);
 
-    const leftShoulder = [mix(-132, -146, action), mix(-272, -255, action) + bob + shake];
-    const rightShoulder = [mix(132, 146, action), mix(-272, -255, action) + bob + shake];
+    const leftShoulder = [mix(-158, -168, action) + sway, mix(-296, -304, action) + slam * 35 + bob + shake];
+    const rightShoulder = [mix(162, 172, action) + sway, mix(-292, -300, action) + slam * 35 + bob + shake];
+    const leftArmRoot = [mix(-184, -205, action) + sway, mix(-226, -239, action) + slam * 37 + bob];
+    const rightArmRoot = [mix(232, 252, action) + sway, mix(-211, -218, action) + slam * 37 + bob];
     const leftElbow = [
-      mix(-171 - stride * 7, -211, action),
-      mix(-151 + stride * 9, -142, action) + bob
+      mix(-203 - stride * 7, -230, action) + sway,
+      mix(-154 + stride * 8, -178, action) + slam * 49 + bob
     ];
     const rightElbow = [
-      mix(171 + stride * 7, 211, action),
-      mix(-151 - stride * 9, -142, action) + bob
+      mix(207 + stride * 7, 234, action) + sway,
+      mix(-151 - stride * 8, -175, action) + slam * 49 + bob
     ];
     const leftWrist = [
-      mix(-158 - stride * 8, -211, action),
-      mix(-35 + stride * 12, -40, action) + bob
+      mix(-196 - stride * 8, -232, action) + sway,
+      mix(-29 + stride * 10, -70, action) + slam * 59 + bob
     ];
     const rightWrist = [
-      mix(158 + stride * 8, 211, action),
-      mix(-35 - stride * 12, -40, action) + bob
+      mix(201 + stride * 8, 238, action) + sway,
+      mix(-27 - stride * 10, -68, action) + slam * 59 + bob
     ];
 
     return {
       action,
+      slam,
       stride,
       impact,
-      body: [shake, mix(-257, -239, action) + bob + shake],
-      bodyAngle: stride * 0.012 - action * 0.018,
-      pelvis: [0, mix(-156, -138, action) + bob],
+      body: [sway + shake, mix(-250, -265, action) + slam * 38 + bob + shake],
+      bodyAngle: -0.035 + stride * 0.018 - action * 0.018 + slam * 0.04,
+      pelvis: [sway * 0.55, mix(-151, -147, action) + slam * 20 + bob],
       leftHip,
       rightHip,
       leftKnee,
@@ -258,10 +288,14 @@
       rightAnkle,
       leftShoulder,
       rightShoulder,
+      leftArmRoot,
+      rightArmRoot,
       leftElbow,
       rightElbow,
       leftWrist,
-      rightWrist
+      rightWrist,
+      leftBootAngle: -0.025 + stride * 0.018,
+      rightBootAngle: 0.018 + stride * 0.018
     };
   }
 
@@ -286,11 +320,14 @@
     const targetDx = to[0] - from[0];
     const targetDy = to[1] - from[1];
     const scale = Math.hypot(targetDx, targetDy) / Math.hypot(sourceDx, sourceDy);
-    const angle = Math.atan2(targetDy, targetDx) - Math.atan2(sourceDy, sourceDx);
+    const sourceAngle = Math.atan2(sourceDy, sourceDx);
+    const targetAngle = Math.atan2(targetDy, targetDx);
+    const widthScale = definition.widthScale || 1;
     ctx.save();
     ctx.translate(from[0], from[1]);
-    ctx.rotate(angle);
-    ctx.scale(scale, scale);
+    ctx.rotate(targetAngle);
+    ctx.scale(scale, scale * widthScale);
+    ctx.rotate(-sourceAngle);
     ctx.globalAlpha *= opacity;
     ctx.drawImage(image, -prox[0], -prox[1]);
     ctx.restore();
@@ -304,8 +341,8 @@
     const dx = end[0] - start[0];
     const dy = end[1] - start[1];
     const distance = Math.hypot(dx, dy);
-    const count = clamp(Math.round(distance / (16 * scale)), 8, 23);
-    const sag = clamp(distance * 0.16, 18, 46) + Math.sin(time * 2 + side) * 2;
+    const count = clamp(Math.round(distance / (28 * scale)), 5, 12);
+    const sag = clamp(distance * 0.19, 20, 52) + Math.sin(time * 1.5 + side) * 1.4;
     const control = [(start[0] + end[0]) / 2, Math.max(start[1], end[1]) + sag];
 
     for (let index = 0; index <= count; index += 1) {
@@ -316,16 +353,16 @@
       const tangentX = 2 * inverse * (control[0] - start[0]) + 2 * t * (end[0] - control[0]);
       const tangentY = 2 * inverse * (control[1] - start[1]) + 2 * t * (end[1] - control[1]);
       const angle = Math.atan2(tangentY, tangentX) + (index % 2 ? Math.PI / 2 : 0);
-      const radius = 7.5 * scale;
+      const radius = 10.5 * scale;
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(angle);
-      ctx.lineWidth = Math.max(3.2, 5.8 * scale);
+      ctx.lineWidth = Math.max(3.5, 6.4 * scale);
       ctx.strokeStyle = "rgba(12, 13, 12, .96)";
       ctx.beginPath();
       ctx.ellipse(0, 0, radius, radius * 0.58, 0, 0, TAU);
       ctx.stroke();
-      ctx.lineWidth = Math.max(1.7, 3.3 * scale);
+      ctx.lineWidth = Math.max(1.9, 3.7 * scale);
       ctx.strokeStyle = index % 2 ? "#777a73" : "#555a55";
       ctx.beginPath();
       ctx.ellipse(0, 0, radius, radius * 0.58, 0, 0, TAU);
@@ -444,6 +481,21 @@
     }
   }
 
+  function drawContactShadow(ctx, x, y, radiusX, radiusY, alpha = 0.36) {
+    ctx.save();
+    ctx.translate(x, y + 4);
+    ctx.scale(1, radiusY / radiusX);
+    const shadow = ctx.createRadialGradient(0, 0, 2, 0, 0, radiusX);
+    shadow.addColorStop(0, `rgba(7, 11, 8, ${alpha})`);
+    shadow.addColorStop(0.68, `rgba(7, 11, 8, ${alpha * 0.48})`);
+    shadow.addColorStop(1, "rgba(7, 11, 8, 0)");
+    ctx.fillStyle = shadow;
+    ctx.beginPath();
+    ctx.arc(0, 0, radiusX, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
   function renderCharacter(ctx, assets, sim, time) {
     const pose = createPose(sim, time);
     const scale = sceneScale(sim.y);
@@ -451,40 +503,51 @@
     const originY = sim.y;
 
     ctx.save();
-    ctx.translate(originX, originY + 8);
+    ctx.translate(originX, originY + 7);
     ctx.scale(1, 0.25);
-    const shadow = ctx.createRadialGradient(0, 0, 12, 0, 0, 245 * scale);
-    shadow.addColorStop(0, "rgba(8, 12, 8, .52)");
-    shadow.addColorStop(0.58, "rgba(8, 12, 8, .26)");
+    const shadow = ctx.createRadialGradient(0, 0, 12, 0, 0, 210 * scale);
+    shadow.addColorStop(0, "rgba(8, 12, 8, .4)");
+    shadow.addColorStop(0.58, "rgba(8, 12, 8, .2)");
     shadow.addColorStop(1, "rgba(8, 12, 8, 0)");
     ctx.fillStyle = shadow;
     ctx.beginPath();
-    ctx.arc(0, 0, 245 * scale, 0, TAU);
+    ctx.arc(0, 0, 210 * scale, 0, TAU);
     ctx.fill();
     ctx.restore();
 
     drawImpact(ctx, sim, scale);
 
-    // Weight sprites and chains stay image-side paired throughout the cycle.
+    const leftAnkleWorld = localToWorld(pose.leftAnkle, originX, originY, scale);
+    const rightAnkleWorld = localToWorld(pose.rightAnkle, originX, originY, scale);
+    drawContactShadow(ctx, leftAnkleWorld[0], originY, 56 * scale, 13 * scale, 0.36);
+    drawContactShadow(ctx, rightAnkleWorld[0], originY, 59 * scale, 14 * scale, 0.38);
+    drawContactShadow(ctx, sim.weights.left.x, sim.weights.left.y, 78 * scale, 16 * scale, 0.42);
+    drawContactShadow(ctx, sim.weights.right.x, sim.weights.right.y, 78 * scale, 16 * scale, 0.42);
+
+    // The two blocks remain side-paired and ground-locked throughout the cycle.
     drawSprite(ctx, assets.left_weight, PARTS.left_weight, sim.weights.left.x, sim.weights.left.y, sim.weights.left.angle, PARTS.left_weight.scale * scale);
     drawSprite(ctx, assets.right_weight, PARTS.right_weight, sim.weights.right.x, sim.weights.right.y, sim.weights.right.angle, PARTS.right_weight.scale * scale);
-
-    const leftWristWorld = localToWorld(pose.leftWrist, originX, originY, scale);
-    const rightWristWorld = localToWorld(pose.rightWrist, originX, originY, scale);
-    const leftWeightTop = [sim.weights.left.x, sim.weights.left.y - 72 * scale];
-    const rightWeightTop = [sim.weights.right.x, sim.weights.right.y - 72 * scale];
-    drawChain(ctx, leftWristWorld, leftWeightTop, scale, time, -1);
-    drawChain(ctx, rightWristWorld, rightWeightTop, scale, time, 1);
 
     ctx.save();
     ctx.translate(originX, originY);
     ctx.scale(scale, scale);
 
-    // Two-bone legs make the neutral walk readable before the wide action pose.
-    drawBone(ctx, assets.right_thigh, PARTS.right_thigh, pose.rightHip, pose.rightKnee);
-    drawBone(ctx, assets.right_shin_foot, PARTS.right_shin_foot, pose.rightKnee, pose.rightAnkle);
+    // Thigh and shin remain articulated, but each boot is a separate rigid
+    // sprite so its sole can stay parallel to the field during knee motion.
     drawBone(ctx, assets.left_thigh, PARTS.left_thigh, pose.leftHip, pose.leftKnee);
-    drawBone(ctx, assets.left_shin_foot, PARTS.left_shin_foot, pose.leftKnee, pose.leftAnkle);
+    drawBone(ctx, assets.left_shin, PARTS.left_shin, pose.leftKnee, pose.leftAnkle);
+    drawBone(ctx, assets.right_thigh, PARTS.right_thigh, pose.rightHip, pose.rightKnee);
+    drawBone(ctx, assets.right_shin, PARTS.right_shin, pose.rightKnee, pose.rightAnkle);
+
+    drawSprite(ctx, assets.pelvis, PARTS.pelvis, pose.pelvis[0], pose.pelvis[1], pose.bodyAngle * 0.35);
+
+    // Upper arms sit behind the rigid, side-specific shoulder caps. The body
+    // is drawn last in this group to tuck both inward collar rings cleanly.
+    drawBone(ctx, assets.left_upper_arm, PARTS.left_upper_arm, pose.leftArmRoot, pose.leftElbow);
+    drawBone(ctx, assets.right_upper_arm, PARTS.right_upper_arm, pose.rightArmRoot, pose.rightElbow);
+    drawBone(ctx, assets.left_shoulder_cap, PARTS.left_shoulder_cap, pose.leftShoulder, pose.leftArmRoot);
+    drawBone(ctx, assets.right_shoulder_cap, PARTS.right_shoulder_cap, pose.rightShoulder, pose.rightArmRoot);
+    drawSprite(ctx, assets.body, PARTS.body, pose.body[0], pose.body[1], pose.bodyAngle);
 
     const leftKneeAngle = (
       Math.atan2(pose.leftKnee[1] - pose.leftHip[1], pose.leftKnee[0] - pose.leftHip[0]) +
@@ -494,22 +557,37 @@
       Math.atan2(pose.rightKnee[1] - pose.rightHip[1], pose.rightKnee[0] - pose.rightHip[0]) +
       Math.atan2(pose.rightAnkle[1] - pose.rightKnee[1], pose.rightAnkle[0] - pose.rightKnee[0])
     ) * 0.5 - Math.PI / 2;
-    drawSprite(ctx, assets.right_knee, PARTS.right_knee, pose.rightKnee[0], pose.rightKnee[1], rightKneeAngle);
     drawSprite(ctx, assets.left_knee, PARTS.left_knee, pose.leftKnee[0], pose.leftKnee[1], leftKneeAngle);
+    drawSprite(ctx, assets.right_knee, PARTS.right_knee, pose.rightKnee[0], pose.rightKnee[1], rightKneeAngle);
+    drawSprite(ctx, assets.left_boot, PARTS.left_boot, pose.leftAnkle[0], pose.leftAnkle[1], pose.leftBootAngle);
+    drawSprite(ctx, assets.right_boot, PARTS.right_boot, pose.rightAnkle[0], pose.rightAnkle[1], pose.rightBootAngle);
 
-    drawSprite(ctx, assets.pelvis, PARTS.pelvis, pose.pelvis[0], pose.pelvis[1], pose.bodyAngle * 0.4);
-
-    // Each shoulder is one uninterrupted source-faithful assembly from its
-    // inward torso ring through its elbow. Drawing it behind the body lets the
-    // ring tuck beneath the spherical shell; the forearm then covers the only
-    // remaining cut at the complete elbow socket.
-    drawBone(ctx, assets.right_shoulder, PARTS.right_shoulder, pose.rightShoulder, pose.rightElbow);
-    drawBone(ctx, assets.left_shoulder, PARTS.left_shoulder, pose.leftShoulder, pose.leftElbow);
-    drawSprite(ctx, assets.body, PARTS.body, pose.body[0], pose.body[1], pose.bodyAngle);
-
-    drawBone(ctx, assets.right_forearm_fist, PARTS.right_forearm_fist, pose.rightElbow, pose.rightWrist);
     drawBone(ctx, assets.left_forearm_fist, PARTS.left_forearm_fist, pose.leftElbow, pose.leftWrist);
+    drawBone(ctx, assets.right_forearm_fist, PARTS.right_forearm_fist, pose.rightElbow, pose.rightWrist);
     ctx.restore();
+
+    // Chains attach at the outer forearms, not at the fists, and are rendered
+    // above the arm/weight layers so the overlapping links remain readable.
+    const leftChainLocal = [
+      mix(pose.leftElbow[0], pose.leftWrist[0], 0.32) - 16,
+      mix(pose.leftElbow[1], pose.leftWrist[1], 0.32)
+    ];
+    const rightChainLocal = [
+      mix(pose.rightElbow[0], pose.rightWrist[0], 0.32) + 16,
+      mix(pose.rightElbow[1], pose.rightWrist[1], 0.32)
+    ];
+    const leftChainStart = localToWorld(leftChainLocal, originX, originY, scale);
+    const rightChainStart = localToWorld(rightChainLocal, originX, originY, scale);
+    const leftWeightTop = [
+      sim.weights.left.x,
+      sim.weights.left.y - assets.left_weight.height * PARTS.left_weight.pivot[1] * PARTS.left_weight.scale * scale
+    ];
+    const rightWeightTop = [
+      sim.weights.right.x,
+      sim.weights.right.y - assets.right_weight.height * PARTS.right_weight.pivot[1] * PARTS.right_weight.scale * scale
+    ];
+    drawChain(ctx, leftChainStart, leftWeightTop, scale, time, -1);
+    drawChain(ctx, rightChainStart, rightWeightTop, scale, time, 1);
   }
 
   function renderScene(ctx, assets, sim, time, width = WIDTH, height = HEIGHT) {
