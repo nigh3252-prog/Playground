@@ -36,6 +36,7 @@ The image-left fist always drives the image-left chain and image-left weight; im
 - `source/character-05-body-context-v3.png` — original-concept torso crop used by the barrel-body pass
 - `source/character-05-viewer-left-leg-context-v3.png` — original viewer-left leg context
 - `source/character-05-viewer-right-leg-context-v3.png` — original viewer-right leg context
+- `source/imagegen-archive/` — all fourteen raw Character 5 image-generation outputs, including selected, superseded, and rejected attempts, with original output IDs and checksums in a manifest
 - `source/build-rough-atlas.py` — checkerboard key and rough crop builder
 - `source/build-final-atlas.py` — final checkerboard key, atlas splitter, and compact PNG writer
 - `source/build-shoulders-v2.py` — side-faithful shoulder extraction, alpha key, and atlas repacker; run after the base atlas build
