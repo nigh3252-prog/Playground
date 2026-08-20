@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1800" height="1000" viewBox="0 0 1800 1000">
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111917"/>
+      <stop offset="1" stop-color="#243128"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".3"/>
+    </filter>
+    <style>
+      .title { font-family: Georgia, serif; font-size: 48px; font-weight: 700; fill: #f7f1e7; }
+      .eyebrow { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; font-weight: 700; letter-spacing: 4px; fill: #efac66; }
+      .subtitle { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 20px; fill: #b9c5ba; }
+      .section { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 17px; font-weight: 700; letter-spacing: 2px; fill: #efac66; }
+      .bodytext { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 20px; fill: #e9eee7; }
+      .small { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 17px; fill: #b9c5ba; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; font-weight: 800; fill: #11201d; text-anchor: middle; dominant-baseline: central; }
+      .bone { fill: none; stroke: #e8f1eb; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: .72; }
+      .bone-inferred { fill: none; stroke: #f0a44b; stroke-width: 5; stroke-dasharray: 11 9; stroke-linecap: round; opacity: .78; }
+      .overlap-visible { fill: #2fd0ba; fill-opacity: .14; stroke: #2fd0ba; stroke-width: 3; stroke-dasharray: 8 7; }
+      .overlap-inferred { fill: #f0a44b; fill-opacity: .15; stroke: #f0a44b; stroke-width: 3; stroke-dasharray: 8 7; }
+      .pivot-visible { fill: #2fd0ba; stroke: #10221e; stroke-width: 4; }
+      .pivot-inferred { fill: #f0a44b; stroke: #2d1c0e; stroke-width: 4; }
+      .anchor { fill: #b78af2; stroke: #20132f; stroke-width: 4; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1000" fill="url(#page)"/>
+  <text class="eyebrow" x="72" y="70">PAPER DOLL · CHARACTER 05</text>
+  <text class="title" x="72" y="126">Iron Haul — proposed joint map</text>
+  <text class="subtitle" x="72" y="166">Exact concept-art pixels; overlay only. Screen-side naming prevents accidental mirroring.</text>
+
+  <rect x="62" y="204" width="1136" height="714" rx="30" fill="#f3eee5" filter="url(#shadow)"/>
+  <image x="98" y="239" width="1065" height="645" preserveAspectRatio="none" xlink:href="character-05-concept-isolated.png"/>
+
+  <!-- Skeleton: all coordinates are the 710 × 430 source crop scaled 1.5 and offset by (98,239). -->
+  <path class="bone-inferred" d="M 626 638 L 539 638 M 626 638 L 439 416 M 626 638 L 800 430"/>
+  <path class="bone" d="M 439 416 L 365 536 L 326 676 M 800 430 L 925 536 L 914 677"/>
+  <path class="bone-inferred" d="M 626 638 L 536 638 L 484 712 M 626 638 L 715 640 L 778 712"/>
+  <path class="bone" d="M 484 712 L 437 812 M 778 712 L 775 812"/>
+
+  <!-- Screen-left / far-side upper limb. -->
+  <circle class="overlap-visible" cx="439" cy="416" r="43"/>
+  <circle class="pivot-visible" cx="439" cy="416" r="14"/>
+  <text class="code" x="439" y="416">S</text>
+  <circle class="overlap-visible" cx="365" cy="536" r="32"/>
+  <circle class="pivot-visible" cx="365" cy="536" r="13"/>
+  <text class="code" x="365" y="536">E</text>
+  <circle class="overlap-visible" cx="326" cy="676" r="27"/>
+  <circle class="pivot-visible" cx="326" cy="676" r="12"/>
+  <text class="code" x="326" y="676">W</text>
+
+  <!-- Screen-right / near-side upper limb. -->
+  <circle class="overlap-visible" cx="800" cy="430" r="47"/>
+  <circle class="pivot-visible" cx="800" cy="430" r="14"/>
+  <text class="code" x="800" y="430">S</text>
+  <circle class="overlap-visible" cx="925" cy="536" r="34"/>
+  <circle class="pivot-visible" cx="925" cy="536" r="13"/>
+  <text class="code" x="925" y="536">E</text>
+  <circle class="overlap-visible" cx="914" cy="677" r="27"/>
+  <circle class="pivot-visible" cx="914" cy="677" r="12"/>
+  <text class="code" x="914" y="677">W</text>
+
+  <!-- Lower body. Hip centers are partially occluded, so those are inferred. -->
+  <circle class="overlap-inferred" cx="536" cy="638" r="37"/>
+  <circle class="pivot-inferred" cx="536" cy="638" r="13"/>
+  <text class="code" x="536" y="638">H</text>
+  <circle class="overlap-visible" cx="484" cy="712" r="31"/>
+  <circle class="pivot-visible" cx="484" cy="712" r="13"/>
+  <text class="code" x="484" y="712">K</text>
+  <circle class="overlap-visible" cx="437" cy="812" r="27"/>
+  <circle class="pivot-visible" cx="437" cy="812" r="12"/>
+  <text class="code" x="437" y="812">A</text>
+
+  <circle class="overlap-inferred" cx="715" cy="640" r="39"/>
+  <circle class="pivot-inferred" cx="715" cy="640" r="13"/>
+  <text class="code" x="715" y="640">H</text>
+  <circle class="overlap-visible" cx="778" cy="712" r="31"/>
+  <circle class="pivot-visible" cx="778" cy="712" r="13"/>
+  <text class="code" x="778" y="712">K</text>
+  <circle class="overlap-visible" cx="775" cy="812" r="27"/>
+  <circle class="pivot-visible" cx="775" cy="812" r="12"/>
+  <text class="code" x="775" y="812">A</text>
+
+  <!-- Root and chain attachment candidates. -->
+  <circle class="overlap-inferred" cx="626" cy="638" r="46"/>
+  <circle class="pivot-inferred" cx="626" cy="638" r="15"/>
+  <text class="code" x="626" y="638">R</text>
+  <path class="anchor" d="M 407 486 l 14 14 -14 14 -14 -14 z"/>
+  <path class="anchor" d="M 986 526 l 14 14 -14 14 -14 -14 z"/>
+
+  <rect x="1238" y="204" width="500" height="714" rx="30" fill="#1b2521" stroke="#3c4a40" stroke-width="2"/>
+  <text class="section" x="1280" y="260">READING THE MAP</text>
+  <circle class="pivot-visible" cx="1296" cy="306" r="11"/><text class="bodytext" x="1324" y="313">Visible mechanical center</text>
+  <circle class="pivot-inferred" cx="1296" cy="350" r="11"/><text class="bodytext" x="1324" y="357">Inferred / partly hidden center</text>
+  <path class="anchor" d="M 1296 383 l 11 11 -11 11 -11 -11 z"/><text class="bodytext" x="1324" y="401">Chain exit / guide candidate</text>
+  <circle class="overlap-visible" cx="1296" cy="441" r="20"/><text class="bodytext" x="1324" y="448">Recommended overlap zone</text>
+
+  <text class="section" x="1280" y="510">JOINT CODES</text>
+  <text class="bodytext" x="1280" y="550">S  shoulder socket</text>
+  <text class="bodytext" x="1280" y="584">E  elbow hinge</text>
+  <text class="bodytext" x="1280" y="618">W  wrist / fist collar</text>
+  <text class="bodytext" x="1280" y="652">H  hip socket</text>
+  <text class="bodytext" x="1280" y="686">K  knee hinge</text>
+  <text class="bodytext" x="1280" y="720">A  ankle / boot hinge</text>
+  <text class="bodytext" x="1280" y="754">R  torso rig root</text>
+
+  <text class="section" x="1280" y="818">SIDE LOCK</text>
+  <text class="bodytext" x="1280" y="854">Screen-left = far assembly</text>
+  <text class="bodytext" x="1280" y="886">Screen-right = near assembly</text>
+
+  <text class="small" x="78" y="965">Crop rule: keep the full collar on both adjoining sprites, extending past each dotted ring. Complete hidden metal behind the overlap during image generation.</text>
+</svg>
