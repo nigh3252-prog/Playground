@@ -149,6 +149,9 @@
      * the chassis.  The view scale is applied once, at the root, so no
      * transform maths leaks into the pose code.
      * ------------------------------------------------------------------ */
+    // The art is a fixed three-quarter view, so the doll is never mirrored:
+    // the open nose of the basket always leads to the left and the lance is
+    // always carried out to the right.
     const RIG = {
       riderK: 0.92,       // rider bust, arms and weapons ride at their own scale
       armK:   0.86,
@@ -157,7 +160,9 @@
       seat:   { x: -55, y: -326 },        // where the rider stands in the basket
       shoulderR: { x: 66, y: -50 },       // sockets, in rider space (already scaled)
       shoulderL: { x: -62, y: -46 },
-      grip:   { x: 10, y: 117 },          // spear hand, in spear-arm space
+      // The spear arm is drawn mirrored so its elbow breaks outwards, away
+      // from the basket; the grip follows it to the far side of the socket.
+      grip:   { x: -10, y: 117 },         // spear hand, in spear-arm space
       spearTip: { x: 388, y: -2 },        // measured from the spear grip
       knifeTip: { x: -49, y: 181 },       // measured from the knife shoulder
       bannerMount: { x: 200, y: -549 },   // capped end of the push handle
@@ -212,7 +217,6 @@
     const actor = {
       x: 0, y: 0, vx: 0, vy: 0,
       phase: 0,
-      face: 1, faceT: 1,               // faceT sweeps -1..1 so turns read as a whip-round
       target: null, nextTarget: 0, nextMove: 0
     };
 
@@ -225,7 +229,7 @@
 
     function newPose() {
       return {
-        bodyX: 0, bodyY: 0, bodyRot: 0, pivotX: 0, pivotY: 0,
+        bodyX: 0, bodyY: 0, bodyRot: 0, pivotX: 0, pivotY: 0, orbitX: 0, orbitY: 0,
         squashX: 1, squashY: 1, spin: 1, ghost: 0,
         riderRot: 0, riderY: 0,
         spearArm: RIG.rest.spearArm, spearAim: RIG.rest.spearAim, reach: 0,
@@ -431,11 +435,10 @@
     /* ------------------------------------------------------------------ *
      * Attacks.
      *
-     * Local rig space: +x is the SPEAR side (the cart's handle end, where
-     * the lance is carried), -x is the KNIFE side (the open nose of the
-     * basket).  The cart normally rolls nose-first, so `lead` says which
-     * local side is pointing the way the doll travels -- the lance charge
-     * is the one move that whips the cart round to lead with the point.
+     * Rig space: +x is the SPEAR side (the cart's handle end, where the
+     * lance is carried), -x is the KNIFE side (the open nose of the
+     * basket).  The doll is never mirrored, so every move is authored for
+     * the weapon it uses: the lance drives right, the knife cuts left.
      *
      * Each move drives the pose from a normalised clock and fires its
      * beats -- impacts, dust, screen shake -- at fixed times, so the hits
@@ -444,10 +447,10 @@
     const R = RIG.rest;
 
     const MOVES = {
-      // Lance: whip the cart around, wind back onto the heels, then throw
-      // the whole chassis behind the spear point.  The signature move.
+      // Lance: haul the cart back onto its heels, then throw the whole
+      // chassis right, behind the spear point.  The signature move.
       lance: {
-        dur: 0.96, label: 'Lance', lead: 1,
+        dur: 0.96, label: 'Lance',
         drive(u, p) {
           const w = easeOut(seg(u, 0, .32));
           const t = snap(seg(u, .32, .45));
@@ -456,12 +459,13 @@
           p.pivotX = -30; p.pivotY = -70;
           p.bodyX = -54 * back + (134 * t) * out + 20 * wob * s;
           p.bodyY = 7 * back - 9 * t * out;
-          p.bodyRot = -.14 * back + .17 * t * out - .05 * wob * s;
+          p.bodyRot = -.13 * back + .13 * t * out - .05 * wob * s;
           p.squashX = 1 + .06 * back - .06 * t * out;
           p.squashY = 1 - .05 * back + .05 * t * out;
           p.riderRot = -.26 * back + .42 * t * out - .12 * wob * s;
           p.spearArm = mix(R.spearArm, .40, back) - .52 * t * out + .08 * wob * s;
-          p.spearAim = mix(R.spearAim, -.02, Math.max(back, t * out)) + .13 * wob * s;
+          const aimTo = mix(-.10, .06, t);          // cocked, then couched level
+          p.spearAim = mix(R.spearAim, aimTo, Math.max(back, t) * out) + .13 * wob * s;
           p.reach = -62 * back + 152 * t * out + 18 * wob * s;
           p.knifeArm = R.knifeArm - .50 * back + .62 * t * out;
           p.knifeSpread = 30 * t * out;
@@ -474,14 +478,14 @@
         beats: [
           { at: .30, fn: () => { const c = probe.casters[2]; spawnGrit(c.x, c.y, 5, 150 * S); shake(2.4); } },
           { at: .35, fn: () => {
-              actor.vx += actor.dir * 620 * S; actor.vy *= .25;
+              actor.vx += 620 * S; actor.vy *= .25;
               const c = probe.casters[3];
               spawnDust(c.x, c.y, 9, 210 * S);
               decal(c.x, c.y - 2 * S, 62 * S, 0, 'skid');
               shake(5);
           } },
           { at: .42, fn: () => {
-              const t = probe.spearTip, a = actor.dir > 0 ? -.12 : Math.PI + .12;
+              const t = probe.spearTip, a = -.12;
               spawnSparks(t.x, t.y, 18, a, 660 * S);
               ring(t.x, t.y, 8 * S, 108 * S, .34, 4.5 * S, 'rgba(255,238,200,', false);
               burst(t.x, t.y, a, 128 * S);
@@ -510,7 +514,7 @@
           p.bodyY = (-4 * s1 - 8 * s2) * out;
           p.riderRot = (-.16 * a1 + .26 * s1 - .12 * a2 + .32 * s2) * out;
           p.spearArm = R.spearArm + (-.20 * a1 + .12 * s1 - .18 * a2 + .10 * s2) * out;
-          p.spearAim = R.spearAim + (.22 * a1 + .26 * a2) * out;
+          p.spearAim = R.spearAim + .5 * p.bodyRot + (.22 * a1 + .26 * a2) * out;
           p.banner = R.banner + (-.24 * s1 - .34 * s2) * out;
           p.bannerFlap = 1.1;
           p.squashX = 1 + .04 * (s1 + s2) * out;
@@ -535,46 +539,53 @@
         ]
       },
 
-      // Spin: two turns on the casters with the lance held out level.  The
-      // rig has no back view, so the turn is sold the honest 2D way -- the
-      // whole doll squashes through zero and comes back mirrored.
+      // Spin: a handbrake donut.  The cart swings a full circle around its
+      // back caster with the lance held out level, squashing edge-on twice
+      // a turn -- the doll is never mirrored, so the yaw is sold by the
+      // squash plus the orbit the chassis actually travels.
       spin: {
-        dur: 1.24, label: 'Spin',
+        dur: 1.30, label: 'Spin',
         drive(u, p) {
-          const wind = easeOut(seg(u, 0, .18));
-          const turn = easeInOut(seg(u, .12, .86));
-          const o = seg(u, .86, 1);
+          const wind = easeOut(seg(u, 0, .16));
+          const turn = easeInOut(seg(u, .12, .88));
+          const o = seg(u, .88, 1);
           const held = Math.min(1, wind + (turn > 0 ? 1 : 0)) * (1 - o * .8);
           const th = turn * TAU * 2;
-          const c = Math.cos(th);
-          p.spin = Math.abs(c) < .07 ? (c < 0 ? -.07 : .07) : c;
+          const c = Math.cos(th), sn = Math.sin(th);
+          const P = RIG.rearPivot.x;
+          p.spin = Math.max(.07, Math.abs(c));
+          p.orbitX = P - P * c;                 // chassis swings around the back caster
+          p.orbitY = P * sn * .30;              // ...and leans into the near side of the arc
           p.pivotY = -90;
-          p.bodyRot = Math.sin(th) * .07 - .09 * wind * (1 - turn) + .06 * settle(o * 1.5);
-          p.bodyY = -12 * Math.sin(Math.PI * turn);
+          p.bodyRot = sn * .10 - .10 * wind * (1 - turn) + .07 * settle(o * 1.5);
+          p.bodyY = -10 * Math.sin(Math.PI * turn);
           p.squashY = 1 + .04 * Math.sin(Math.PI * turn);
-          p.riderRot = -Math.sin(th) * .17 + .12 * wind * (1 - turn);
+          p.riderRot = -sn * .20 + .12 * wind * (1 - turn);
           p.spearArm = mix(R.spearArm, -.58, held);
-          p.spearAim = mix(R.spearAim, -.04, held);
+          p.spearAim = mix(R.spearAim, -.04, held) + sn * .10;
           p.reach = 28 * held;
           p.knifeArm = R.knifeArm - .48 * held;
           p.knifeSpread = 22 * held;
-          p.banner = R.banner - .58 * held;
+          p.banner = R.banner - .58 * held - sn * .22;
           p.bannerFlap = 1.7;
           for (let i = 0; i < 4; i++) p.casterRot[i] = Math.sin(th + i) * .55;
-          if (u > .16 && u < .92) p.trail = 'spear';
+          if (u > .16 && u < .94) p.trail = 'spear';
         },
         beats: [
-          { at: .16, fn: () => {
-              decal(actor.x, actor.y - 6 * S, 130 * S, 0, 'ring');
-              spawnDust(actor.x, actor.y, 7, 190 * S);
+          { at: .14, fn: () => {
+              const c = probe.casters[2];
+              decal(c.x, c.y, RIG.rearPivot.x * S, 0, 'ring');
+              spawnDust(c.x, c.y, 7, 190 * S);
               shake(3);
           } },
-          { at: .38, fn: () => { spawnGrit(actor.x - 92 * S, actor.y, 6, 220 * S); spawnDust(actor.x - 62 * S, actor.y, 5, 200 * S); shake(2.4); } },
-          { at: .60, fn: () => { spawnGrit(actor.x + 92 * S, actor.y, 6, 220 * S); spawnDust(actor.x + 62 * S, actor.y, 5, 200 * S); shake(2.4); } },
-          { at: .84, fn: () => {
-              ring(actor.x, actor.y - 4 * S, 30 * S, 230 * S, .5, 6 * S, 'rgba(228,214,182,');
-              spawnDust(actor.x, actor.y, 12, 300 * S);
-              spawnSparks(probe.spearTip.x, probe.spearTip.y, 10, actor.dir > 0 ? .2 : Math.PI - .2, 460 * S);
+          { at: .34, fn: () => { const c = probe.casters[1]; spawnGrit(c.x, c.y, 6, 230 * S); spawnDust(c.x, c.y, 5, 210 * S); shake(2.4); } },
+          { at: .56, fn: () => { const c = probe.casters[3]; spawnGrit(c.x, c.y, 6, 230 * S); spawnDust(c.x, c.y, 5, 210 * S); shake(2.4); } },
+          { at: .78, fn: () => { const c = probe.casters[1]; spawnGrit(c.x, c.y, 6, 240 * S); spawnDust(c.x, c.y, 6, 220 * S); shake(2.6); } },
+          { at: .88, fn: () => {
+              const c = probe.casters[2];
+              ring(c.x, c.y, 30 * S, 230 * S, .5, 6 * S, 'rgba(228,214,182,');
+              spawnDust(c.x, c.y, 12, 300 * S);
+              spawnSparks(probe.spearTip.x, probe.spearTip.y, 10, .2, 460 * S);
               burst(probe.spearTip.x, probe.spearTip.y, 0, 96 * S);
               cam.flash = .34; shake(7);
           } }
@@ -600,7 +611,7 @@
           p.riderRot = .44 * lift + Math.sin(hang * 9) * .04 * (1 - drop) - .34 * drop * out - .18 * settle(o * 1.5);
           p.riderY = 7 * lift - 6 * drop * out;
           p.spearArm = R.spearArm + .60 * lift - .45 * drop * out;
-          p.spearAim = R.spearAim - .45 * lift + .60 * drop * out;
+          p.spearAim = R.spearAim + .85 * p.bodyRot - .16 * lift + .22 * drop * out;
           p.knifeArm = R.knifeArm - .75 * lift + .60 * drop * out;
           p.knifeSpread = 26 * lift;
           p.banner = R.banner - .38 * lift + .52 * drop * out - .3 * settle(o * 1.2);
@@ -635,7 +646,6 @@
     function startMove(key) {
       if (!ready || paused || !MOVES[key] || move.key) return;
       move.key = key; move.def = MOVES[key]; move.t = 0; move.fired = 0;
-      actor.lead = MOVES[key].lead || -1;
       actor.target = null;
       trail.length = 0;
       syncButtons();
@@ -651,7 +661,7 @@
         if (!(move.fired & bit) && u >= d.beats[i].at) { move.fired |= bit; d.beats[i].fn(); }
       }
       if (u >= 1) {
-        move.key = null; move.def = null; actor.lead = -1;
+        move.key = null; move.def = null;
         actor.nextMove = now + rand(2800, 5600);
         syncButtons();
       }
@@ -662,7 +672,7 @@
      * driving it: chassis rattle, caster shimmy, banner in the slipstream.
      * ------------------------------------------------------------------ */
     function resetPose(p) {
-      p.bodyX = p.bodyY = p.bodyRot = p.pivotX = p.pivotY = 0;
+      p.bodyX = p.bodyY = p.bodyRot = p.pivotX = p.pivotY = p.orbitX = p.orbitY = 0;
       p.squashX = p.squashY = p.spin = 1;
       p.ghost = 0;
       p.riderRot = p.riderY = 0;
@@ -680,19 +690,19 @@
       const sx = actor.vx / S, sy = actor.vy / S;
       const spd = Math.hypot(sx, sy);
       const motion = clamp(spd / 300, 0, 1);
-      const vxLocal = sx * actor.face;
+      const glide = clamp(-sx / 300, -1, 1);   // + when rolling nose-first (left)
       const ph = actor.phase;
       const breathe = Math.sin(now / 1250);
 
       p.bodyY = -4.6 * Math.abs(Math.sin(ph)) * motion + 1.3 * breathe * (1 - motion);
-      p.bodyRot = Math.sin(ph * .5) * .019 * motion + actor.lead * .05 * motion;
+      p.bodyRot = Math.sin(ph * .5) * .019 * motion - .05 * glide;
       p.pivotY = -120;
       p.squashY = 1 + .012 * Math.sin(ph) * motion;
 
-      p.riderRot = -actor.lead * .035 * motion + .028 * breathe * (1 - motion) + Math.sin(ph * .5) * .016 * motion;
+      p.riderRot = .035 * glide + .028 * breathe * (1 - motion) + Math.sin(ph * .5) * .016 * motion;
       p.riderY = -1.6 * Math.abs(Math.sin(ph + .5)) * motion;
 
-      const swivel = -clamp(vxLocal / 300, -1, 1) * .34 - clamp(sy / 260, -1, 1) * .12;
+      const swivel = glide * .34 - clamp(sy / 260, -1, 1) * .12;
       for (let i = 0; i < 4; i++) {
         const lag = 6.5 + i * 1.6;
         actor.casterA[i] += (swivel + Math.sin(ph * 2.1 + i * 1.7) * .10 * motion - actor.casterA[i]) * clamp(dt * lag, 0, 1);
@@ -701,12 +711,15 @@
       }
 
       p.spearArm = R.spearArm + Math.sin(ph * .93) * .055 * motion + .022 * breathe;
-      p.spearAim = R.spearAim + Math.sin(ph * .93 + .4) * .05 * motion - .10 * motion * actor.lead;
+      p.spearAim = R.spearAim + .6 * p.bodyRot + Math.sin(ph * .93 + .4) * .05 * motion - .10 * Math.max(0, glide);
       p.knifeArm = R.knifeArm + Math.sin(ph * .87 + 2.1) * .07 * motion - .03 * breathe;
 
-      p.banner = R.banner - .34 * motion + Math.sin(ph * 1.55) * (.06 + .07 * motion);
+      // The banner hangs off the back of the cart, so it only flies when the
+      // doll rolls nose-first; shoved the other way it just goes slack.
+      p.banner = R.banner - .40 * Math.max(0, glide) + .16 * Math.max(0, -glide)
+        + Math.sin(ph * 1.55) * (.06 + .07 * motion);
       p.bannerFlap = .8 + .8 * motion;
-      p.bannerStretch = 1 + .05 * Math.sin(ph * 2.4 + 1);
+      p.bannerStretch = 1 + .05 * Math.sin(ph * 2.4 + 1) - .06 * Math.max(0, -glide);
     }
 
     /* ------------------------------------------------------------------ *
@@ -715,8 +728,10 @@
     function scaleForView() { return clamp(Math.min(vw / 1150, vh / 1450), .27, .55); }
 
     function bounds() {
-      const padX = 300 * S, top = 132 + 640 * S;
-      let minX = padX, maxX = vw - padX, minY = Math.min(top, vh * .58), maxY = vh - 46 * S - 18;
+      // Asymmetric: the lance always sticks out to the right, the nose and
+      // the knife to the left.
+      const top = 132 + 640 * S;
+      let minX = 290 * S, maxX = vw - 430 * S, minY = Math.min(top, vh * .58), maxY = vh - 46 * S - 18;
       if (maxX < minX) { minX = maxX = vw * .5; }
       if (maxY < minY) { minY = maxY = vh * .66; }
       return { minX, maxX, minY, maxY };
@@ -743,6 +758,14 @@
 
     const MOVE_KEYS = ['lance', 'slash', 'spin', 'slam'];
 
+    // The lance charge and the donut both travel right, so only offer them
+    // when there is room that way -- otherwise the doll buries itself in
+    // the edge of the arena.
+    function pickMove(b) {
+      const list = b.maxX - actor.x > 300 * S ? MOVE_KEYS : ['slash', 'slam'];
+      return list[Math.random() * list.length | 0];
+    }
+
     function update(dt, now) {
       updateMove(dt, now);
       const b = bounds();
@@ -756,7 +779,7 @@
       if (roam && !busy && !paused) {
         if (!actor.target || now > actor.nextTarget ||
             Math.hypot(actor.target.x - actor.x, actor.target.y - actor.y) < 26) pickTarget(now);
-        if (now > actor.nextMove) startMove(MOVE_KEYS[Math.random() * MOVE_KEYS.length | 0]);
+        if (now > actor.nextMove) startMove(pickMove(b));
       }
 
       let dx = 0, dy = 0;
@@ -786,11 +809,6 @@
       }
 
       const spd = Math.hypot(actor.vx, actor.vy);
-      if (!busy && Math.abs(actor.vx) > 22 * S) actor.dir = actor.vx > 0 ? 1 : -1;
-      const faceGoal = actor.dir * actor.lead;
-      actor.faceT += clamp((faceGoal - actor.faceT) * dt * 13, -1, 1) || 0;
-      if (Math.abs(faceGoal - actor.faceT) < .01) actor.faceT = faceGoal;
-      actor.face = actor.faceT >= 0 ? 1 : -1;
       actor.phase += dt * (2.1 + spd / S * .017);
 
       // Rolling casters kick up a little grit at speed.
@@ -888,7 +906,7 @@
       const lift = clamp(-pose.bodyY / 26, 0, 1);
       const r = (196 - 24 * lift) * S;
       ctx.save();
-      ctx.translate(actor.x + pose.bodyX * S * actor.faceT * .4, actor.y - 10 * S);
+      ctx.translate(actor.x + (pose.bodyX * .4 + pose.orbitX) * S, actor.y - 10 * S + pose.orbitY * S);
       ctx.scale(1, .3);
       const g = ctx.createRadialGradient(0, 0, 6, 0, 0, r);
       g.addColorStop(0, 'rgba(0,0,0,' + (.5 - .16 * lift).toFixed(3) + ')');
@@ -926,12 +944,13 @@
     function drawPuppet(alpha, capture) {
       const p = pose;
       ALPHA = alpha;
-      const face = actor.faceT * p.spin;
-      const fx = Math.abs(face) < .05 ? (face < 0 ? -.05 : .05) : face;
+      // p.spin only ever squashes the doll towards zero and back out again --
+      // it never goes negative, because a mirrored three-quarter view lies.
+      const squeeze = Math.max(.06, p.spin);
 
       ctx.save();
-      ctx.translate(actor.x, actor.y);
-      ctx.scale(S * fx, S);
+      ctx.translate(actor.x + p.orbitX * S, actor.y + p.orbitY * S);
+      ctx.scale(S * squeeze, S);
 
       // Chassis: everything else hangs off this bone.
       ctx.translate(p.bodyX, p.bodyY);
@@ -983,12 +1002,16 @@
       riderBone();
 
       bone(RIG.shoulderR.x, RIG.shoulderR.y, p.spearArm);
-      bone(RIG.grip.x, RIG.grip.y, p.spearAim - p.spearArm);
+      // spearAim is the lance angle in world terms, so the point holds its
+      // line while the chassis rocks underneath it.
+      bone(RIG.grip.x, RIG.grip.y, p.spearAim - p.spearArm - p.riderRot - p.bodyRot);
       ctx.translate(p.reach, 0);
       drawPart('spear', RIG.spearK);
       if (capture) { probe.spearTip = worldPoint(RIG.spearTip.x, RIG.spearTip.y); pin(0, 0, '#ffa657'); pin(RIG.spearTip.x, RIG.spearTip.y, '#ff5c5c', 3); }
       unbone();
+      bone(0, 0, 0, -1, 1);
       drawPart('spearArm', RIG.armK);
+      unbone();
       unbone();
 
       bone(RIG.shoulderL.x - p.knifeSpread, RIG.shoulderL.y + p.knifeSpread * .3, p.knifeArm);
@@ -1024,7 +1047,7 @@
         const g = pose.ghost;
         for (let i = 3; i >= 1; i--) {
           ctx.save();
-          ctx.translate(-actor.dir * i * 30 * S * g, 0);
+          ctx.translate(-i * 30 * S * g, 0);
           drawPuppet(.20 * g / i, false);
           ctx.restore();
         }
@@ -1116,7 +1139,6 @@
       roam = false;
       const b = bounds();
       actor.target = { x: clamp(e.clientX, b.minX, b.maxX), y: clamp(e.clientY, b.minY, b.maxY) };
-      if (Math.abs(actor.target.x - actor.x) > 30) actor.dir = actor.target.x > actor.x ? 1 : -1;
       syncButtons();
     });
 
@@ -1141,10 +1163,6 @@
     atlas.onerror = () => { loading.textContent = 'Could not load the sprite atlas'; };
 
     actor.casterA = [0, 0, 0, 0];
-    actor.dir = -1;
-    actor.lead = -1;
-    actor.face = 1;
-    actor.faceT = 1;
     addEventListener('resize', resize);
     resize();
     actor.x = vw * .5; actor.y = vh * .68;
