@@ -144,9 +144,11 @@ const RIG = [
   // front of the crown's base and the head sits down into the casting rather
   // than on top of it.
   ['head',      118, [0.50, 0.95],          [   6, -298]],
-  // The right shoulder tucks in behind the bell, so only the plate's outer
-  // half clears the silhouette. The left one reads correctly in front.
-  ['pauldronR', SHOULDERS.pauldronR.w, SHOULDERS.pauldronR.axle, SHOULDERS.pauldronR.at],
+  // The knight's OWN right shoulder — the flail side, on the viewer's left —
+  // tucks in behind the bell, so only the outer half of its plate clears the
+  // silhouette and the arm reads as coming from behind the shell. His left
+  // shoulder stays in front, where it already read correctly.
+  ['pauldronL', SHOULDERS.pauldronL.w, SHOULDERS.pauldronL.axle, SHOULDERS.pauldronL.at],
   ['torso',     238, [0.50, 0.55],          [   0, -176]],
   ['legR',       82, [0.50, 0.06],          [  64, -121]],   // far leg, set back
   // Kept in the rig as the hip anchor but deliberately not drawn — at any
@@ -154,9 +156,8 @@ const RIG = [
   // skipped outright by the draw loop, so this costs nothing per frame.
   ['pelvis',    104, [0.50, 0.88],          [   0, -134], 0],
   ['legL',       88, [0.55, 0.05],          [ -64, -136]],   // near leg
-  // Shoulder first, then the arm socketed into it, so the arm's elbow covers
-  // the ball.
-  ['pauldronL', SHOULDERS.pauldronL.w, SHOULDERS.pauldronL.axle, SHOULDERS.pauldronL.at],
+  // Each arm is painted after its shoulder so the arm's elbow covers the ball.
+  ['pauldronR', SHOULDERS.pauldronR.w, SHOULDERS.pauldronR.axle, SHOULDERS.pauldronR.at],
   ['flailArm',  132, ELBOW.flailArm,        BALL_OF.pauldronL],
   ['shieldArm', 155, ELBOW.shieldArm,       BALL_OF.pauldronR],
 ];
