@@ -46,6 +46,7 @@
     button, a { font: inherit; }
 
     .app {
+      --shake: 6px;
       position: relative;
       z-index: 1;
       width: min(100%, 31rem);
@@ -55,7 +56,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      transform-origin: 50% 52%;
     }
+
+    .app.is-screen-shaking { animation: screen-rattle 300ms cubic-bezier(.2,.9,.3,1); }
 
     .topbar {
       width: 100%;
@@ -111,7 +115,7 @@
       letter-spacing: -0.035em;
     }
 
-    .actions { display: flex; gap: 0.42rem; }
+    .actions { display: flex; gap: 0.34rem; }
 
     .icon-button { border: 1px solid var(--line); }
 
@@ -179,6 +183,7 @@
       position: relative;
       display: grid;
       justify-items: center;
+      isolation: isolate;
     }
 
     .status {
@@ -224,9 +229,30 @@
 
     .board.is-shaking { animation: board-shake 280ms ease; }
 
+    .board.is-grabbing {
+      border-color: rgba(255, 231, 153, 0.42);
+      box-shadow:
+        0 28px 62px rgba(0, 0, 0, 0.38),
+        0 0 28px rgba(246, 202, 100, 0.14),
+        inset 0 0 0 4px rgba(0, 0, 0, 0.2),
+        inset 0 0 24px rgba(246, 202, 100, 0.06);
+    }
+
+    .board.is-impact { animation: board-impact 300ms cubic-bezier(.2,.9,.2,1); }
+
+    .board.is-invalid {
+      animation: invalid-flash 330ms ease;
+      border-color: rgba(255, 92, 112, 0.8);
+    }
+
     .tile {
       --col: 0;
       --row: 0;
+      --drag-x: 0px;
+      --drag-y: 0px;
+      --nudge-x: 0px;
+      --nudge-y: 0px;
+      --tilt: 0deg;
       position: absolute;
       left: 0;
       top: 0;
@@ -239,12 +265,43 @@
       color: white;
       background: transparent;
       cursor: grab;
-      transform: translate(calc(var(--col) * 100%), calc(var(--row) * 100%));
+      transform:
+        translate(
+          calc(var(--col) * 100% + var(--drag-x) + var(--nudge-x)),
+          calc(var(--row) * 100% + var(--drag-y) + var(--nudge-y))
+        )
+        rotate(var(--tilt));
       transition: transform 210ms cubic-bezier(.2,.8,.2,1), opacity 160ms ease;
       will-change: transform;
     }
 
     .tile:active { cursor: grabbing; }
+
+    .tile.is-dragging {
+      z-index: 8;
+      transition-duration: 32ms;
+      transition-timing-function: linear;
+    }
+
+    .tile.is-dragging .gem {
+      filter: brightness(1.24) saturate(1.25);
+      transform: scale(1.13);
+      box-shadow:
+        inset 0 1px rgba(255,255,255,0.72),
+        inset 0 -5px 9px rgba(0,0,0,0.18),
+        0 0 0 3px rgba(255,255,255,0.25),
+        0 0 22px var(--gem-glow, rgba(255,255,255,0.6)),
+        0 9px 16px rgba(0,0,0,0.45);
+    }
+
+    .tile.is-nudged { z-index: 2; }
+
+    .tile.is-nudged .gem {
+      filter: brightness(1.08) saturate(1.1);
+      transform: scale(0.9);
+    }
+
+    .tile.is-blocked .gem { animation: edge-bump 180ms ease both; }
 
     .gem {
       position: relative;
@@ -334,6 +391,7 @@
     .tile.is-selected .gem {
       filter: brightness(1.18) saturate(1.18);
       transform: scale(1.08);
+      animation: selected-pulse 720ms ease-in-out infinite alternate;
       box-shadow:
         inset 0 1px rgba(255,255,255,0.7),
         0 0 0 3px rgba(255, 237, 162, 0.9),
@@ -341,6 +399,97 @@
     }
 
     .tile.is-matched .gem { animation: gem-pop 240ms ease forwards; }
+
+    .tile.is-swapping { z-index: 7; }
+
+    .tile.is-swapping .gem { animation: swap-punch 230ms cubic-bezier(.2,.9,.2,1); }
+
+    .tile.is-rejected .gem { animation: reject-squash 300ms ease; }
+
+    .tile.is-landing .gem { animation: landing-squash 320ms cubic-bezier(.16,1.25,.35,1); }
+
+    .fx-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size, 7px);
+      height: var(--size, 7px);
+      border-radius: 36%;
+      opacity: 0;
+      background: var(--color, #fff6c2);
+      box-shadow: 0 0 9px var(--color, #fff6c2);
+      transform: translate(-50%, -50%);
+      animation: particle-flight var(--duration, 620ms) cubic-bezier(.12,.65,.2,1) forwards;
+      will-change: transform, opacity;
+    }
+
+    .particle.trail {
+      border-radius: 50%;
+      filter: blur(0.4px);
+      animation-name: trail-fade;
+      animation-timing-function: ease-out;
+    }
+
+    .particle.confetti {
+      width: var(--size, 8px);
+      height: calc(var(--size, 8px) * 0.48);
+      border-radius: 2px;
+      box-shadow: none;
+      animation-name: confetti-flight;
+      animation-timing-function: cubic-bezier(.1,.7,.1,1);
+    }
+
+    .shockwave {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 2.5rem;
+      aspect-ratio: 1;
+      border: 3px solid var(--color, #fff4ae);
+      border-radius: 50%;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.2);
+      box-shadow: 0 0 18px var(--color, #fff4ae);
+      animation: shockwave 440ms ease-out forwards;
+    }
+
+    .floating-score {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      color: #fff8cc;
+      font-size: clamp(0.8rem, 4vw, 1.15rem);
+      font-weight: 950;
+      letter-spacing: -0.03em;
+      text-shadow: 0 2px 8px #000, 0 0 12px var(--color, #ffe77f);
+      transform: translate(-50%, -50%);
+      animation: score-float 800ms ease-out forwards;
+      white-space: nowrap;
+    }
+
+    .screen-flash {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      background: var(--flash-color, rgba(255,255,255,0.26));
+      mix-blend-mode: screen;
+    }
+
+    .screen-flash.show { animation: screen-flash 240ms ease-out; }
+
+    #score.is-punching { animation: score-punch 280ms cubic-bezier(.2,1.4,.3,1); }
+
+    .goal-fill.is-punching { animation: goal-pulse 380ms ease; }
 
     .combo-toast {
       position: absolute;
@@ -432,8 +581,39 @@
 
     @keyframes gem-pop {
       0% { transform: scale(1); filter: brightness(1); opacity: 1; }
-      48% { transform: scale(1.22); filter: brightness(1.75); opacity: 1; }
+      38% { transform: scale(0.76, 1.28) rotate(-5deg); filter: brightness(1.5); opacity: 1; }
+      58% { transform: scale(1.35, 0.82) rotate(6deg); filter: brightness(2.2); opacity: 1; }
       100% { transform: scale(0.08); filter: brightness(2); opacity: 0; }
+    }
+
+    @keyframes swap-punch {
+      0% { transform: scale(1); filter: brightness(1); }
+      42% { transform: scale(0.8, 1.18); filter: brightness(1.5) saturate(1.25); }
+      72% { transform: scale(1.12, 0.9); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes selected-pulse {
+      0% { transform: scale(1.045); filter: brightness(1.1) saturate(1.1); }
+      100% { transform: scale(1.12); filter: brightness(1.3) saturate(1.3); }
+    }
+
+    @keyframes reject-squash {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      30% { transform: scale(1.18, 0.72); filter: brightness(1.2) saturate(.7); }
+      58% { transform: scale(0.84, 1.12) rotate(-4deg); }
+    }
+
+    @keyframes landing-squash {
+      0% { transform: scale(0.82, 1.16); filter: brightness(1.25); }
+      48% { transform: scale(1.12, 0.82); }
+      75% { transform: scale(0.96, 1.05); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    @keyframes edge-bump {
+      0%, 100% { transform: scale(1); }
+      45% { transform: scale(0.76, 1.13); filter: saturate(.6); }
     }
 
     @keyframes combo-rise {
@@ -448,6 +628,70 @@
       24% { transform: translateX(-6px); }
       48% { transform: translateX(5px); }
       72% { transform: translateX(-3px); }
+    }
+
+    @keyframes board-impact {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      20% { transform: scale(1.016); filter: brightness(1.35); }
+      48% { transform: scale(0.993); }
+    }
+
+    @keyframes invalid-flash {
+      0%, 100% { box-shadow: 0 26px 55px rgba(0,0,0,.34), inset 0 0 0 4px rgba(0,0,0,.2); }
+      35% { box-shadow: 0 0 0 4px rgba(255,82,105,.45), 0 0 35px rgba(255,55,90,.4), inset 0 0 30px rgba(255,50,80,.22); }
+    }
+
+    @keyframes screen-rattle {
+      0%, 100% { transform: translate(0, 0) rotate(0); }
+      14% { transform: translate(calc(var(--shake) * -1), calc(var(--shake) * .35)) rotate(-.3deg); }
+      30% { transform: translate(calc(var(--shake) * .75), calc(var(--shake) * -.55)) rotate(.28deg); }
+      46% { transform: translate(calc(var(--shake) * -.55), calc(var(--shake) * .3)) rotate(-.2deg); }
+      62% { transform: translate(calc(var(--shake) * .35), calc(var(--shake) * -.2)) rotate(.14deg); }
+      78% { transform: translate(calc(var(--shake) * -.18), calc(var(--shake) * .1)); }
+    }
+
+    @keyframes particle-flight {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(.5) rotate(0); }
+      22% { opacity: 1; }
+      100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.08) rotate(var(--rot, 220deg)); }
+    }
+
+    @keyframes trail-fade {
+      0% { opacity: .9; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.08); }
+    }
+
+    @keyframes confetti-flight {
+      0% { opacity: 1; transform: translate(-50%, -50%) rotate(0); }
+      100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot, 540deg)); }
+    }
+
+    @keyframes shockwave {
+      0% { opacity: .95; transform: translate(-50%, -50%) scale(.18); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(4.3); }
+    }
+
+    @keyframes score-float {
+      0% { opacity: 0; transform: translate(-50%, -15%) scale(.55) rotate(-4deg); }
+      18% { opacity: 1; transform: translate(-50%, -50%) scale(1.18) rotate(2deg); }
+      72% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -150%) scale(.9); }
+    }
+
+    @keyframes screen-flash {
+      0% { opacity: 0; }
+      18% { opacity: .85; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes score-punch {
+      0%, 100% { transform: scale(1); color: inherit; }
+      40% { transform: scale(1.34) rotate(-2deg); color: #fff0a6; text-shadow: 0 0 16px #f5c85f; }
+    }
+
+    @keyframes goal-pulse {
+      0%, 100% { filter: brightness(1); }
+      45% { filter: brightness(1.8); box-shadow: 0 0 24px #ffe584; }
     }
 
     @media (max-height: 650px) {
@@ -479,6 +723,7 @@
         <h1>Gemfall</h1>
       </div>
       <div class="actions">
+        <button class="icon-button" id="soundButton" type="button" aria-label="Mute sound effects" aria-pressed="false"><span id="soundIcon" aria-hidden="true">♪</span></button>
         <button class="icon-button" id="helpButton" type="button" aria-label="How to play"><span aria-hidden="true">?</span></button>
         <button class="icon-button" id="newButton" type="button" aria-label="Start a new game"><span aria-hidden="true">↻</span></button>
       </div>
@@ -494,12 +739,15 @@
     </div>
 
     <section class="game-shell" aria-label="Gemfall game">
+      <div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
       <div class="status" id="status" role="status" aria-live="polite">Make a line of three or more.</div>
       <div class="board" id="board" role="grid" aria-label="6 column by 10 row match-3 board"></div>
       <div class="combo-toast" id="comboToast" aria-hidden="true"></div>
     </section>
-    <p class="hint">Swipe a gem, or tap two neighbors. Only matching swaps use a move.</p>
+    <p class="hint">Drag or swipe a gem—or tap two neighbors. Only matching swaps use a move.</p>
   </main>
+
+  <div class="screen-flash" id="screenFlash" aria-hidden="true"></div>
 
   <dialog id="helpDialog">
     <div class="dialog-body">
@@ -537,15 +785,19 @@
       const FALL_MS = 285;
 
       const GEM_TYPES = [
-        { key: "ruby", label: "Ruby", mark: "◆" },
-        { key: "amber", label: "Amber", mark: "⬡" },
-        { key: "jade", label: "Jade", mark: "●" },
-        { key: "sapphire", label: "Sapphire", mark: "■" },
-        { key: "amethyst", label: "Amethyst", mark: "✦" },
-        { key: "pearl", label: "Pearl", mark: "✚" }
+        { key: "ruby", label: "Ruby", mark: "◆", color: "#ff5c78", glow: "rgba(255,64,105,.85)", pitch: 262 },
+        { key: "amber", label: "Amber", mark: "⬡", color: "#ffc857", glow: "rgba(255,184,65,.88)", pitch: 294 },
+        { key: "jade", label: "Jade", mark: "●", color: "#51e49c", glow: "rgba(57,224,145,.82)", pitch: 330 },
+        { key: "sapphire", label: "Sapphire", mark: "■", color: "#55c8ff", glow: "rgba(55,177,255,.86)", pitch: 392 },
+        { key: "amethyst", label: "Amethyst", mark: "✦", color: "#cd76ff", glow: "rgba(187,86,255,.86)", pitch: 440 },
+        { key: "pearl", label: "Pearl", mark: "✚", color: "#e8fbff", glow: "rgba(194,240,255,.88)", pitch: 523 }
       ];
 
+      const appElement = document.querySelector(".app");
+      const gameShell = document.querySelector(".game-shell");
       const boardElement = document.querySelector("#board");
+      const fxLayer = document.querySelector("#fxLayer");
+      const screenFlash = document.querySelector("#screenFlash");
       const scoreElement = document.querySelector("#score");
       const movesElement = document.querySelector("#moves");
       const goalElement = document.querySelector("#goal");
@@ -553,8 +805,11 @@
       const goalTrack = document.querySelector(".goal-track");
       const statusElement = document.querySelector("#status");
       const comboToast = document.querySelector("#comboToast");
+      const soundButton = document.querySelector("#soundButton");
+      const soundIcon = document.querySelector("#soundIcon");
       const helpDialog = document.querySelector("#helpDialog");
       const endDialog = document.querySelector("#endDialog");
+      const reduceMotion = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 
       let board = [];
       let elements = new Map();
@@ -567,12 +822,302 @@
       let gesture = null;
       let suppressClickUntil = 0;
       let session = 0;
+      let activeParticles = 0;
+      let audioEnabled = true;
+      let audioContext = null;
+      let audioMaster = null;
+      let audioNoise = null;
+      let lastDragSoundAt = 0;
 
       const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
       const format = (value) => value.toLocaleString("en-US");
       const indexOf = (row, col) => row * COLS + col;
       const rowOf = (index) => Math.floor(index / COLS);
       const colOf = (index) => index % COLS;
+      const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
+
+      function pulseClass(element, className, duration = 350) {
+        if (!element) return;
+        element.classList.remove(className);
+        void element.offsetWidth;
+        element.classList.add(className);
+        setTimeout(() => element.classList.remove(className), duration);
+      }
+
+      function ensureAudio() {
+        if (!audioEnabled) return null;
+        const AudioConstructor = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AudioConstructor) return null;
+
+        if (!audioContext) {
+          audioContext = new AudioConstructor();
+          const compressor = audioContext.createDynamicsCompressor();
+          compressor.threshold.value = -20;
+          compressor.knee.value = 14;
+          compressor.ratio.value = 8;
+          compressor.attack.value = 0.003;
+          compressor.release.value = 0.2;
+
+          audioMaster = audioContext.createGain();
+          audioMaster.gain.value = 0.25;
+          audioMaster.connect(compressor);
+          compressor.connect(audioContext.destination);
+
+          audioNoise = audioContext.createBuffer(1, Math.floor(audioContext.sampleRate * 0.35), audioContext.sampleRate);
+          const channel = audioNoise.getChannelData(0);
+          for (let index = 0; index < channel.length; index++) {
+            const fade = 1 - index / channel.length;
+            channel[index] = (Math.random() * 2 - 1) * fade;
+          }
+        }
+
+        if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+        return audioContext;
+      }
+
+      function tone(from, to = from, duration = 0.08, volume = 0.06, type = "sine", wait = 0) {
+        const context = ensureAudio();
+        if (!context || !audioMaster) return;
+        const start = context.currentTime + wait;
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(Math.max(30, from), start);
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, to), start + duration);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(volume, start + Math.min(0.012, duration * 0.25));
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gain);
+        gain.connect(audioMaster);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
+      }
+
+      function noiseBurst(duration = 0.08, volume = 0.045, frequency = 1200, wait = 0) {
+        const context = ensureAudio();
+        if (!context || !audioMaster || !audioNoise) return;
+        const start = context.currentTime + wait;
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const gain = context.createGain();
+        source.buffer = audioNoise;
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(frequency, start);
+        filter.frequency.exponentialRampToValueAtTime(Math.max(120, frequency * 0.45), start + duration);
+        filter.Q.value = 0.8;
+        gain.gain.setValueAtTime(volume, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioMaster);
+        source.start(start);
+        source.stop(start + Math.min(duration, audioNoise.duration));
+      }
+
+      function playPick(type = 0) {
+        const pitch = GEM_TYPES[type]?.pitch || 330;
+        tone(pitch * 0.72, pitch, 0.055, 0.045, "sine");
+        tone(pitch * 1.5, pitch * 1.8, 0.035, 0.018, "triangle", 0.018);
+      }
+
+      function playDrag(intensity, type = 0) {
+        const now = globalThis.performance?.now?.() ?? Date.now();
+        if (now - lastDragSoundAt < 58) return;
+        lastDragSoundAt = now;
+        const pitch = (GEM_TYPES[type]?.pitch || 330) * (0.72 + intensity * 0.45);
+        tone(pitch, pitch * 1.08, 0.035, 0.018 + intensity * 0.016, "triangle");
+      }
+
+      function playSwap(firstType, secondType) {
+        const firstPitch = GEM_TYPES[firstType]?.pitch || 330;
+        const secondPitch = GEM_TYPES[secondType]?.pitch || 392;
+        noiseBurst(0.12, 0.04, 1700);
+        tone(firstPitch * 0.62, secondPitch * 1.15, 0.13, 0.065, "triangle");
+        tone(secondPitch * 0.9, firstPitch * 1.35, 0.11, 0.035, "sine", 0.025);
+      }
+
+      function playInvalid() {
+        tone(210, 92, 0.18, 0.085, "square");
+        tone(126, 72, 0.22, 0.055, "sawtooth", 0.025);
+        noiseBurst(0.1, 0.04, 360);
+      }
+
+      function playMatch(type, count, chain) {
+        const base = (GEM_TYPES[type]?.pitch || 330) * Math.pow(2, Math.min(chain - 1, 5) * 2 / 12);
+        const strength = Math.min(0.11, 0.055 + count * 0.006 + chain * 0.008);
+        tone(76 + chain * 10, 48, 0.18, strength * 0.85, "sine");
+        tone(base, base * 1.5, 0.12, strength, "triangle");
+        tone(base * 1.25, base * 2, 0.1, strength * 0.65, "sine", 0.035);
+        tone(base * 1.5, base * 2.5, 0.09, strength * 0.45, "triangle", 0.07);
+        noiseBurst(0.12, strength * 0.7, 2100 + chain * 380);
+      }
+
+      function playLanding(chain) {
+        tone(94 + chain * 9, 62, 0.075, 0.027, "sine");
+        noiseBurst(0.04, 0.012, 520);
+      }
+
+      function playWin() {
+        [0, 4, 7, 12, 16, 19].forEach((semitones, index) => {
+          const pitch = 294 * Math.pow(2, semitones / 12);
+          tone(pitch, pitch * 1.015, 0.24, 0.075, index % 2 ? "triangle" : "sine", index * 0.075);
+        });
+        noiseBurst(0.32, 0.065, 3600, 0.16);
+      }
+
+      function playLose() {
+        tone(260, 155, 0.3, 0.065, "triangle");
+        tone(185, 92, 0.35, 0.04, "sine", 0.08);
+      }
+
+      function rumble(pattern) {
+        globalThis.navigator?.vibrate?.(pattern);
+      }
+
+      function effectPoint(element) {
+        const rect = element?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
+        const shell = gameShell?.getBoundingClientRect?.() || { left: 0, top: 0 };
+        return {
+          x: (rect.left || 0) - (shell.left || 0) + (rect.width || 0) / 2,
+          y: (rect.top || 0) - (shell.top || 0) + (rect.height || 0) / 2
+        };
+      }
+
+      function appendEffect(element, lifetime) {
+        if (!fxLayer || activeParticles >= 220) return false;
+        activeParticles += 1;
+        fxLayer.appendChild(element);
+        setTimeout(() => {
+          element.remove();
+          activeParticles = Math.max(0, activeParticles - 1);
+        }, lifetime);
+        return true;
+      }
+
+      function particleAt(x, y, color, options = {}) {
+        const particle = document.createElement("i");
+        particle.className = `particle${options.kind ? ` ${options.kind}` : ""}`;
+        const duration = options.duration || 620;
+        particle.style.setProperty("--x", `${x}px`);
+        particle.style.setProperty("--y", `${y}px`);
+        particle.style.setProperty("--dx", `${options.dx || 0}px`);
+        particle.style.setProperty("--dy", `${options.dy || 0}px`);
+        particle.style.setProperty("--rot", `${options.rot || 240}deg`);
+        particle.style.setProperty("--size", `${options.size || 7}px`);
+        particle.style.setProperty("--duration", `${duration}ms`);
+        particle.style.setProperty("--color", color);
+        appendEffect(particle, duration + 80);
+      }
+
+      function burstAt(element, type, amount = 8, power = 1) {
+        if (!element) return;
+        const point = effectPoint(element);
+        const color = GEM_TYPES[type]?.color || "#fff5bd";
+        const count = reduceMotion ? Math.min(3, amount) : amount;
+        for (let index = 0; index < count; index++) {
+          const angle = Math.random() * Math.PI * 2;
+          const distance = (20 + Math.random() * 45) * power;
+          particleAt(point.x, point.y, color, {
+            dx: Math.cos(angle) * distance,
+            dy: Math.sin(angle) * distance - 8 * power,
+            rot: (Math.random() - 0.5) * 620,
+            size: 4 + Math.random() * 6,
+            duration: 430 + Math.random() * 260
+          });
+        }
+      }
+
+      function trailAt(element, type, deltaX, deltaY) {
+        if (!element || reduceMotion) return;
+        const point = effectPoint(element);
+        const color = GEM_TYPES[type]?.color || "#fff5bd";
+        for (let index = 0; index < 2; index++) {
+          particleAt(point.x + (Math.random() - 0.5) * 9, point.y + (Math.random() - 0.5) * 9, color, {
+            kind: "trail",
+            dx: -deltaX * (0.12 + Math.random() * 0.14),
+            dy: -deltaY * (0.12 + Math.random() * 0.14),
+            size: 3 + Math.random() * 5,
+            duration: 220 + Math.random() * 120
+          });
+        }
+      }
+
+      function swapStreak(firstElement, secondElement, firstType, secondType) {
+        if (reduceMotion) return;
+        const first = effectPoint(firstElement);
+        const second = effectPoint(secondElement);
+        const deltaX = second.x - first.x;
+        const deltaY = second.y - first.y;
+        for (let index = 0; index < 10; index++) {
+          const progress = index / 9;
+          particleAt(first.x + deltaX * progress, first.y + deltaY * progress, GEM_TYPES[index % 2 ? firstType : secondType].color, {
+            kind: "trail",
+            dx: (Math.random() - 0.5) * 24,
+            dy: (Math.random() - 0.5) * 24,
+            size: 3 + Math.random() * 4,
+            duration: 210 + Math.random() * 140
+          });
+        }
+      }
+
+      function shockwaveAt(point, color) {
+        const wave = document.createElement("i");
+        wave.className = "shockwave";
+        wave.style.setProperty("--x", `${point.x}px`);
+        wave.style.setProperty("--y", `${point.y}px`);
+        wave.style.setProperty("--color", color);
+        appendEffect(wave, 520);
+      }
+
+      function scoreAt(point, points, color, chain) {
+        const label = document.createElement("b");
+        label.className = "floating-score";
+        label.textContent = chain > 1 ? `×${chain}  +${format(points)}` : `+${format(points)}`;
+        label.style.setProperty("--x", `${point.x}px`);
+        label.style.setProperty("--y", `${point.y}px`);
+        label.style.setProperty("--color", color);
+        appendEffect(label, 880);
+      }
+
+      function impactScreen(color, chain = 1, invalid = false) {
+        pulseClass(boardElement, invalid ? "is-invalid" : "is-impact", 360);
+        if (!reduceMotion) {
+          appElement.style.setProperty("--shake", `${invalid ? 4 : Math.min(13, 3 + chain * 2.2)}px`);
+          pulseClass(appElement, "is-screen-shaking", 330);
+        }
+        screenFlash.style.setProperty("--flash-color", invalid ? "rgba(255,58,84,.22)" : color);
+        pulseClass(screenFlash, "show", 260);
+      }
+
+      function punchHud() {
+        pulseClass(scoreElement, "is-punching", 300);
+        pulseClass(goalFill, "is-punching", 400);
+      }
+
+      function markLanding(ids) {
+        for (const id of ids) pulseClass(elements.get(id), "is-landing", 340);
+      }
+
+      function celebrate() {
+        playWin();
+        rumble([25, 35, 45, 35, 70]);
+        impactScreen("rgba(255,224,102,.35)", 5);
+        const boardRect = boardElement.getBoundingClientRect();
+        const shellRect = gameShell.getBoundingClientRect();
+        const count = reduceMotion ? 12 : 70;
+        for (let index = 0; index < count; index++) {
+          const x = (boardRect.left || 0) - (shellRect.left || 0) + Math.random() * (boardRect.width || 300);
+          const y = (boardRect.top || 0) - (shellRect.top || 0) + (boardRect.height || 500) * (0.15 + Math.random() * 0.45);
+          particleAt(x, y, GEM_TYPES[index % GEM_TYPES.length].color, {
+            kind: "confetti",
+            dx: (Math.random() - 0.5) * 240,
+            dy: 90 + Math.random() * 250,
+            rot: (Math.random() - 0.5) * 1300,
+            size: 5 + Math.random() * 7,
+            duration: 900 + Math.random() * 850
+          });
+        }
+      }
 
       function randomType() {
         return Math.floor(Math.random() * GEM_TYPES.length);
@@ -666,6 +1211,33 @@
         return rowDistance + colDistance === 1;
       }
 
+      function dragTarget(index, deltaX, deltaY) {
+        let target = index;
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          target += deltaX > 0 ? 1 : -1;
+          if (target < 0 || target >= board.length || rowOf(target) !== rowOf(index)) return null;
+        } else {
+          target += deltaY > 0 ? COLS : -COLS;
+          if (target < 0 || target >= board.length) return null;
+        }
+        return target;
+      }
+
+      function resetDragEffects(state = gesture) {
+        boardElement.classList.remove("is-grabbing");
+        if (!state) return;
+        const held = elements.get(state.id);
+        held?.classList.remove("is-dragging", "is-blocked");
+        held?.style.setProperty("--drag-x", "0px");
+        held?.style.setProperty("--drag-y", "0px");
+        held?.style.setProperty("--tilt", "0deg");
+
+        const neighbor = elements.get(state.neighborId);
+        neighbor?.classList.remove("is-nudged");
+        neighbor?.style.setProperty("--nudge-x", "0px");
+        neighbor?.style.setProperty("--nudge-y", "0px");
+      }
+
       function createTileElement(tile) {
         const element = document.createElement("button");
         element.type = "button";
@@ -675,38 +1247,106 @@
 
         element.addEventListener("pointerdown", event => {
           if (busy || gameOver) return;
-          gesture = { id: tile.id, x: event.clientX, y: event.clientY };
+          ensureAudio();
+          const rect = boardElement.getBoundingClientRect();
+          gesture = {
+            id: tile.id,
+            x: event.clientX,
+            y: event.clientY,
+            cellWidth: (rect.width || 300) / COLS,
+            cellHeight: (rect.height || 500) / ROWS,
+            neighborId: null,
+            lastTrailAt: 0,
+            blocked: false
+          };
+          boardElement.classList.add("is-grabbing");
+          element.classList.add("is-dragging");
+          playPick(tile.type);
           element.setPointerCapture?.(event.pointerId);
+        });
+
+        element.addEventListener("pointermove", event => {
+          if (!gesture || gesture.id !== tile.id || busy || gameOver) return;
+          event.preventDefault?.();
+          const rawX = event.clientX - gesture.x;
+          const rawY = event.clientY - gesture.y;
+          const horizontal = Math.abs(rawX) > Math.abs(rawY);
+          const deltaX = horizontal ? clamp(rawX, -gesture.cellWidth * 0.92, gesture.cellWidth * 0.92) : 0;
+          const deltaY = horizontal ? 0 : clamp(rawY, -gesture.cellHeight * 0.92, gesture.cellHeight * 0.92);
+          const distance = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+          const cellSize = horizontal ? gesture.cellWidth : gesture.cellHeight;
+          const intensity = clamp(distance / cellSize, 0, 1);
+
+          element.style.setProperty("--drag-x", `${deltaX}px`);
+          element.style.setProperty("--drag-y", `${deltaY}px`);
+          element.style.setProperty("--tilt", `${horizontal ? deltaX / gesture.cellWidth * 8 : -deltaY / gesture.cellHeight * 5}deg`);
+
+          const currentIndex = board.findIndex(current => current && current.id === tile.id);
+          const target = currentIndex < 0 ? null : dragTarget(currentIndex, deltaX, deltaY);
+          const nextNeighborId = target === null ? null : board[target]?.id;
+
+          if (gesture.neighborId !== nextNeighborId) {
+            const previous = elements.get(gesture.neighborId);
+            previous?.classList.remove("is-nudged");
+            previous?.style.setProperty("--nudge-x", "0px");
+            previous?.style.setProperty("--nudge-y", "0px");
+            gesture.neighborId = nextNeighborId;
+          }
+
+          if (nextNeighborId) {
+            gesture.blocked = false;
+            element.classList.remove("is-blocked");
+            const neighbor = elements.get(nextNeighborId);
+            neighbor?.classList.add("is-nudged");
+            neighbor?.style.setProperty("--nudge-x", `${horizontal ? -Math.sign(deltaX) * gesture.cellWidth * 0.2 * intensity : 0}px`);
+            neighbor?.style.setProperty("--nudge-y", `${horizontal ? 0 : -Math.sign(deltaY) * gesture.cellHeight * 0.2 * intensity}px`);
+          } else if (distance > cellSize * 0.25 && !gesture.blocked) {
+            gesture.blocked = true;
+            pulseClass(element, "is-blocked", 190);
+          }
+
+          const now = globalThis.performance?.now?.() ?? Date.now();
+          if (distance > 8 && now - gesture.lastTrailAt > 38) {
+            gesture.lastTrailAt = now;
+            trailAt(element, tile.type, deltaX, deltaY);
+          }
+          if (distance > 5) playDrag(intensity, tile.type);
         });
 
         element.addEventListener("pointerup", event => {
           if (!gesture || gesture.id !== tile.id || busy || gameOver) return;
-          const deltaX = event.clientX - gesture.x;
-          const deltaY = event.clientY - gesture.y;
+          const activeGesture = gesture;
+          const deltaX = event.clientX - activeGesture.x;
+          const deltaY = event.clientY - activeGesture.y;
+          const horizontal = Math.abs(deltaX) > Math.abs(deltaY);
           const distance = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+          const threshold = (horizontal ? activeGesture.cellWidth : activeGesture.cellHeight) * 0.2;
+          resetDragEffects(activeGesture);
           gesture = null;
 
-          if (distance < 16) return;
+          if (distance < threshold) return;
           suppressClickUntil = performance.now() + 320;
 
           const currentIndex = board.findIndex(current => current && current.id === tile.id);
           if (currentIndex < 0) return;
-          let target = currentIndex;
-
-          if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            target += deltaX > 0 ? 1 : -1;
-            if (rowOf(target) !== rowOf(currentIndex)) return;
-          } else {
-            target += deltaY > 0 ? COLS : -COLS;
-            if (target < 0 || target >= board.length) return;
+          const target = dragTarget(currentIndex, deltaX, deltaY);
+          if (target === null) {
+            playInvalid();
+            rumble(18);
+            impactScreen("rgba(255,58,84,.18)", 1, true);
+            return;
           }
           attemptSwap(currentIndex, target);
         });
 
-        element.addEventListener("pointercancel", () => { gesture = null; });
+        element.addEventListener("pointercancel", () => {
+          resetDragEffects();
+          gesture = null;
+        });
 
         element.addEventListener("click", () => {
           if (performance.now() < suppressClickUntil || busy || gameOver) return;
+          ensureAudio();
           const index = board.findIndex(current => current && current.id === tile.id);
           if (index < 0) return;
           selectOrSwap(index);
@@ -752,6 +1392,7 @@
           element.setAttribute("aria-selected", index === selectedIndex ? "true" : "false");
           element.classList.toggle("is-selected", index === selectedIndex);
           element.style.setProperty("--col", colOf(index));
+          element.style.setProperty("--gem-glow", gemType.glow);
 
           if (isNew && spawnRows.has(tile.id)) {
             element.style.setProperty("--row", spawnRows.get(tile.id));
@@ -773,6 +1414,8 @@
       function selectOrSwap(index) {
         if (selectedIndex === null) {
           selectedIndex = index;
+          playPick(board[index].type);
+          burstAt(elements.get(board[index].id), board[index].type, 3, 0.42);
           statusElement.textContent = "Choose a neighboring gem.";
           renderBoard();
           return;
@@ -787,6 +1430,8 @@
 
         if (!isAdjacent(selectedIndex, index)) {
           selectedIndex = index;
+          playPick(board[index].type);
+          burstAt(elements.get(board[index].id), board[index].type, 3, 0.42);
           statusElement.textContent = "Choose a neighboring gem.";
           renderBoard();
           return;
@@ -800,19 +1445,37 @@
       async function attemptSwap(first, second) {
         if (busy || gameOver || !isAdjacent(first, second)) return;
         const activeSession = session;
+        const firstTile = board[first];
+        const secondTile = board[second];
         busy = true;
         selectedIndex = null;
         boardElement.setAttribute("aria-busy", "true");
 
+        playSwap(firstTile.type, secondTile.type);
+        rumble(8);
         [board[first], board[second]] = [board[second], board[first]];
         renderBoard();
+        const firstElement = elements.get(firstTile.id);
+        const secondElement = elements.get(secondTile.id);
+        pulseClass(firstElement, "is-swapping", SWAP_MS + 30);
+        pulseClass(secondElement, "is-swapping", SWAP_MS + 30);
+        swapStreak(firstElement, secondElement, firstTile.type, secondTile.type);
         await delay(SWAP_MS);
         if (activeSession !== session) return;
 
         let matches = findMatches();
         if (matches.size === 0) {
+          playInvalid();
+          rumble([16, 22, 16]);
           [board[first], board[second]] = [board[second], board[first]];
           renderBoard();
+          const restoredFirst = elements.get(firstTile.id);
+          const restoredSecond = elements.get(secondTile.id);
+          pulseClass(restoredFirst, "is-rejected", 320);
+          pulseClass(restoredSecond, "is-rejected", 320);
+          burstAt(restoredFirst, firstTile.type, 5, 0.55);
+          burstAt(restoredSecond, secondTile.type, 5, 0.55);
+          impactScreen("rgba(255,58,84,.22)", 1, true);
           boardElement.classList.remove("is-shaking");
           void boardElement.offsetWidth;
           boardElement.classList.add("is-shaking");
@@ -830,7 +1493,7 @@
       }
 
       function showCombo(chain, points) {
-        comboToast.textContent = chain > 1 ? `Cascade ×${chain}  +${format(points)}` : `+${format(points)}`;
+        comboToast.textContent = chain > 1 ? `CASCADE ×${chain}  +${format(points)}` : `MATCH!  +${format(points)}`;
         comboToast.classList.remove("show");
         void comboToast.offsetWidth;
         comboToast.classList.add("show");
@@ -838,6 +1501,7 @@
 
       function collapseAndRefill() {
         const spawnRows = new Map();
+        const landingIds = new Set();
 
         for (let col = 0; col < COLS; col++) {
           let writeRow = ROWS - 1;
@@ -845,7 +1509,10 @@
             const tile = board[indexOf(row, col)];
             if (tile) {
               board[indexOf(writeRow, col)] = tile;
-              if (writeRow !== row) board[indexOf(row, col)] = null;
+              if (writeRow !== row) {
+                board[indexOf(row, col)] = null;
+                landingIds.add(tile.id);
+              }
               writeRow -= 1;
             }
           }
@@ -855,10 +1522,11 @@
             const tile = makeTile();
             board[indexOf(row, col)] = tile;
             spawnRows.set(tile.id, row - missing);
+            landingIds.add(tile.id);
           }
         }
 
-        return spawnRows;
+        return { spawnRows, landingIds };
       }
 
       async function resolveMatches(matches, activeSession) {
@@ -868,14 +1536,34 @@
           chain += 1;
           const count = matches.size;
           const points = (count * 100 + Math.max(0, count - 3) * 75) * chain;
+          const matchedRecords = [...matches].map(index => ({
+            index,
+            tile: board[index],
+            element: board[index] ? elements.get(board[index].id) : null
+          })).filter(record => record.tile && record.element);
+          const primaryType = matchedRecords[0]?.tile.type ?? 0;
+          const center = matchedRecords.reduce((total, record) => {
+            const point = effectPoint(record.element);
+            return { x: total.x + point.x, y: total.y + point.y };
+          }, { x: 0, y: 0 });
+          center.x /= Math.max(1, matchedRecords.length);
+          center.y /= Math.max(1, matchedRecords.length);
+
           score += points;
           updateHud();
+          punchHud();
           showCombo(chain, points);
           statusElement.textContent = chain > 1 ? `Cascade ${chain}!` : `${count} gems matched.`;
 
-          for (const index of matches) {
-            const tile = board[index];
-            if (tile) elements.get(tile.id)?.classList.add("is-matched");
+          playMatch(primaryType, count, chain);
+          rumble(chain > 1 ? [12, 16, Math.min(60, 22 + chain * 8)] : 15);
+          impactScreen(GEM_TYPES[primaryType].glow, chain);
+          shockwaveAt(center, GEM_TYPES[primaryType].color);
+          scoreAt(center, points, GEM_TYPES[primaryType].color, chain);
+
+          for (const record of matchedRecords) {
+            burstAt(record.element, record.tile.type, 7 + Math.min(chain * 2, 7), 0.85 + chain * 0.12);
+            record.element.classList.add("is-matched");
           }
           await delay(CLEAR_MS);
           if (activeSession !== session) return;
@@ -888,10 +1576,12 @@
             board[index] = null;
           }
 
-          const spawnRows = collapseAndRefill();
-          renderBoard(spawnRows);
+          const collapse = collapseAndRefill();
+          renderBoard(collapse.spawnRows);
+          markLanding(collapse.landingIds);
           await delay(FALL_MS);
           if (activeSession !== session) return;
+          playLanding(chain);
           matches = findMatches();
         }
 
@@ -936,18 +1626,32 @@
 
       function finishGame(won) {
         gameOver = true;
+        const activeSession = session;
         document.querySelector("#endKicker").textContent = won ? "Target cleared" : "Round complete";
         document.querySelector("#endTitle").textContent = won ? "Goal reached!" : "Out of moves";
         document.querySelector("#endCopy").textContent = won
           ? `You scored ${format(score)} with ${moves} move${moves === 1 ? "" : "s"} left.`
           : `Final score: ${format(score)}. The target was ${format(TARGET_SCORE)}.`;
         statusElement.textContent = won ? "You reached the goal." : "Round complete.";
-        endDialog.showModal();
+        if (won) {
+          celebrate();
+        } else {
+          playLose();
+          rumble([35, 55, 25]);
+          impactScreen("rgba(110,132,168,.18)", 1);
+        }
+        setTimeout(() => {
+          if (activeSession === session && !endDialog.open) endDialog.showModal();
+        }, won ? 720 : 320);
       }
 
       function startGame() {
         session += 1;
+        resetDragEffects();
+        gesture = null;
         if (endDialog.open) endDialog.close();
+        for (const effect of [...fxLayer.children]) effect.remove();
+        activeParticles = 0;
         score = 0;
         moves = STARTING_MOVES;
         selectedIndex = null;
@@ -960,12 +1664,43 @@
         statusElement.textContent = "Make a line of three or more.";
         updateHud();
         renderBoard();
+        requestAnimationFrame(() => markLanding(new Set(board.map(tile => tile.id))));
       }
 
-      document.querySelector("#newButton").addEventListener("click", startGame);
-      document.querySelector("#helpButton").addEventListener("click", () => helpDialog.showModal());
+      function toggleSound() {
+        audioEnabled = !audioEnabled;
+        if (audioEnabled) {
+          ensureAudio();
+          if (audioMaster && audioContext) audioMaster.gain.setTargetAtTime(0.25, audioContext.currentTime, 0.015);
+          soundIcon.textContent = "♪";
+          soundButton.setAttribute("aria-label", "Mute sound effects");
+          soundButton.setAttribute("aria-pressed", "false");
+          playPick(5);
+        } else {
+          if (audioMaster && audioContext) audioMaster.gain.setTargetAtTime(0.0001, audioContext.currentTime, 0.015);
+          soundIcon.textContent = "×";
+          soundButton.setAttribute("aria-label", "Turn on sound effects");
+          soundButton.setAttribute("aria-pressed", "true");
+        }
+      }
+
+      soundButton.addEventListener("click", toggleSound);
+      document.querySelector("#newButton").addEventListener("click", () => {
+        ensureAudio();
+        tone(220, 440, 0.11, 0.045, "triangle");
+        startGame();
+      });
+      document.querySelector("#helpButton").addEventListener("click", () => {
+        ensureAudio();
+        playPick(3);
+        helpDialog.showModal();
+      });
       document.querySelector("#closeHelp").addEventListener("click", () => helpDialog.close());
-      document.querySelector("#playAgain").addEventListener("click", startGame);
+      document.querySelector("#playAgain").addEventListener("click", () => {
+        ensureAudio();
+        tone(220, 440, 0.11, 0.045, "triangle");
+        startGame();
+      });
 
       helpDialog.addEventListener("click", event => {
         if (event.target === helpDialog) helpDialog.close();
