@@ -133,7 +133,12 @@
     let width = 1, height = 1, dpr = 1;
     let paused = false, showRig = false, lastTime = performance.now(), elapsed = 0;
     let decor = [];
-    const state = { x: 220, y: 250, vx: -35, vy: 0, tx: 90, ty: 250, wait: 0, facing: -1, distance: 0 };
+    // Character 7 is an asymmetric 3/4 design: the scythe forearm, the ear
+    // blades, and the cloak all read from one side only. Mirroring it would
+    // expose it as a flat cutout, so the art NEVER flips — the puppet always
+    // faces screen-left, and travelling right is a back-pedal.
+    const FORWARD = -1;
+    const state = { x: 220, y: 250, vx: -35, vy: 0, tx: 90, ty: 250, wait: 0, distance: 0, settle: 1 };
 
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const mix = (a, b, t) => a + (b - a) * t;
@@ -165,10 +170,20 @@
      * ------------------------------------------------------------------ */
 
     const REST = {
-      lean: 0, crouch: 0, dash: 0, hop: 0, turn: 0, cloak: 0, cross: 0,
+      lean: 0, crouch: 0, dash: 0, hop: 0, cloak: 0, cross: 0,
       rArm: 2.44, rLen: 41, rBlade: .30,
       fArm: 1.14, fLen: 33, fBlade: -.10,
       rFootX: -20, rFootY: 0, fFootX: 18, fFootY: 0
+    };
+
+    // The stance the concept sheet is drawn in: hips low, legs splayed wide,
+    // scythe swept out low and forward, talon-blade hanging between the legs.
+    // Stored as offsets from REST and eased in whenever the puppet stands still.
+    const IDLE = {
+      lean: -.05, crouch: 14, cloak: .42,
+      rArm: 3.05, rLen: 34, rBlade: .05,
+      fArm: 1.60, fLen: 34, fBlade: -.55,
+      rFootX: -58, fFootX: 52
     };
 
     function sampleTrack(keys, t) {
@@ -209,29 +224,30 @@
           cloak:  [[0,0],[.30,.5],[.50,1],[.72,.4],[.94,0]]
         }
       },
-      // Flat spin: the paper doll turns edge-on like a card, both blades out.
+      // Both blade-arms windmill through two full revolutions in the picture
+      // plane. Nothing mirrors — the whirl is sold by the arcs, not by turning
+      // the cutout around.
       cyclone: {
-        label: 'Cyclone', dur: 1.28,
-        trails: [['rear', .30, .90], ['front', .30, .90]],
-        impacts: [[.40, 'slice'], [.66, 'slice'], [.90, 'dust']],
+        label: 'Cyclone', dur: 1.30,
+        trails: [['rear', .30, 1.00], ['front', .30, 1.00]],
+        impacts: [[.42, 'slice'], [.70, 'slice'], [.98, 'dust']],
         tracks: {
-          turn:   [[0,0],[.24,0],[.52,Math.PI*2],[.80,Math.PI*4],[.94,Math.PI*4],[1.28,Math.PI*4]],
-          lean:   [[0,0],[.18,.16],[.32,-.10],[.86,-.10],[.98,.06],[1.28,0]],
-          crouch: [[0,0],[.18,11],[.32,0],[.84,0],[.94,13],[1.28,0]],
-          hop:    [[0,0],[.22,0],[.38,-17],[.72,-17],[.88,0],[1.28,0]],
-          dash:   [[0,0],[.24,0],[.88,56],[1.28,56]],
-          cross:  [[0,0],[.30,1],[.88,1],[.94,0],[1.28,0]],
-          rArm:   [[0,2.44],[.20,1.60],[.34,3.12],[.84,3.12],[.98,2.90],[1.28,2.44]],
-          rLen:   [[0,41],[.20,36],[.34,53],[.84,53],[1.28,41]],
-          rBlade: [[0,.30],[.20,-1.20],[.34,.80],[.84,.80],[1.28,.30]],
-          fArm:   [[0,1.14],[.20,1.60],[.34,-.05],[.84,-.05],[1.28,1.14]],
-          fLen:   [[0,33],[.34,45],[.84,45],[1.28,33]],
-          fBlade: [[0,-.10],[.20,-1.10],[.34,-2.25],[.84,-2.25],[1.28,-.10]],
-          rFootX: [[0,-20],[.20,-4],[.38,-15],[.84,-15],[1.00,-24],[1.28,-20]],
-          rFootY: [[0,0],[.38,-22],[.84,-22],[.96,0],[1.28,0]],
-          fFootX: [[0,18],[.20,6],[.38,15],[.84,15],[1.28,18]],
-          fFootY: [[0,0],[.38,-18],[.84,-18],[.96,0],[1.28,0]],
-          cloak:  [[0,0],[.32,1],[.84,1],[1.02,0],[1.28,0]]
+          lean:   [[0,0],[.18,.16],[.32,-.09],[.92,-.09],[1.04,.05],[1.30,0]],
+          crouch: [[0,0],[.18,12],[.32,0],[.90,0],[1.00,14],[1.30,0]],
+          hop:    [[0,0],[.22,0],[.38,-15],[.86,-15],[.98,0],[1.30,0]],
+          dash:   [[0,0],[.24,0],[.96,60],[1.30,60]],
+          cross:  [[0,0],[.28,1],[.98,1],[1.04,0],[1.30,0]],
+          rArm:   [[0,2.44],[.20,1.04],[.30,1.04],[.96,1.04+Math.PI*4],[1.14,2.44+Math.PI*4],[1.30,2.44+Math.PI*4]],
+          rLen:   [[0,41],[.20,36],[.32,53],[.96,53],[1.30,41]],
+          rBlade: [[0,.30],[.20,-.90],[.30,-.90],[.96,-.90+Math.PI*4],[1.14,.30+Math.PI*4],[1.30,.30+Math.PI*4]],
+          fArm:   [[0,1.14],[.20,1.60],[.30,1.04+Math.PI],[.96,1.04+Math.PI*5],[1.14,1.14+Math.PI*6],[1.30,1.14+Math.PI*6]],
+          fLen:   [[0,33],[.32,45],[.96,45],[1.30,33]],
+          fBlade: [[0,-.10],[.20,-1.10],[.30,-1.10+Math.PI],[.96,-1.10+Math.PI*5],[1.14,-.10+Math.PI*6],[1.30,-.10+Math.PI*6]],
+          rFootX: [[0,-20],[.20,-4],[.38,-16],[.86,-16],[1.04,-26],[1.30,-20]],
+          rFootY: [[0,0],[.38,-20],[.86,-20],[1.00,0],[1.30,0]],
+          fFootX: [[0,18],[.20,6],[.38,16],[.86,16],[1.30,18]],
+          fFootY: [[0,0],[.38,-17],[.86,-17],[1.00,0],[1.30,0]],
+          cloak:  [[0,0],[.32,1],[.90,1],[1.08,0],[1.30,0]]
         }
       },
       // Raptor identity: coil, leap, then drop talons-first behind a double chop.
@@ -262,13 +278,19 @@
     // Snap every track to the rest pose at both ends and to the attack's exact
     // duration, so a move always blends in and out without a pop. `dash` and
     // `turn` are cumulative, so they keep whatever value they finish on.
-    const HELD_CHANNELS = new Set(['dash', 'turn']);
+    const HELD_CHANNELS = new Set(['dash']);
+    // Arm and blade channels are angles, so a move that spins them through whole
+    // revolutions must land on a value congruent to rest, not on rest itself.
+    const ANGLE_CHANNELS = new Set(['rArm', 'fArm', 'rBlade', 'fBlade']);
     for (const def of Object.values(ATTACKS)) {
       for (const [name, keys] of Object.entries(def.tracks)) {
         keys[0][0] = 0; keys[0][1] = REST[name];
         const last = keys[keys.length - 1];
         last[0] = def.dur;
-        if (!HELD_CHANNELS.has(name)) last[1] = REST[name];
+        if (HELD_CHANNELS.has(name)) continue;
+        last[1] = ANGLE_CHANNELS.has(name)
+          ? REST[name] + Math.PI * 2 * Math.round((last[1] - REST[name]) / (Math.PI * 2))
+          : REST[name];
       }
     }
     const ATTACK_ORDER = ['slash', 'cyclone', 'dive'];
@@ -280,9 +302,13 @@
     // Tracks, trail windows, and impact marks are all authored in seconds, so
     // every lookup takes elapsed attack time rather than a normalised 0..1.
     function channel(name, t) {
-      if (!attack.active) return REST[name];
-      const track = ATTACKS[attack.name].tracks[name];
-      return track ? sampleTrack(track, t) : REST[name];
+      const base = attack.active
+        ? (ATTACKS[attack.name].tracks[name] ? sampleTrack(ATTACKS[attack.name].tracks[name], t) : REST[name])
+        : REST[name];
+      // The concept stance rides on top as an offset, easing away the moment the
+      // puppet starts walking or an attack takes the body over.
+      const pose = IDLE[name] === undefined ? 0 : (IDLE[name] - REST[name]) * state.settle * gaitWeight(t);
+      return base + pose;
     }
 
     // Walk oscillation is layered back on with this weight, so the gait eases
@@ -332,13 +358,19 @@
 
     function chooseTarget() {
       const mx = Math.min(112, width * .25), my = Math.min(74, height * .18);
-      state.tx = mx + Math.random() * Math.max(1, width - mx * 2);
+      // Since it cannot turn around, the puppet mostly walks the way it faces
+      // and only backs up once it runs out of field on the left.
+      const room = state.x - mx;
+      if (room > width * .2 && Math.random() < .72) state.tx = mx + Math.random() * room;
+      else state.tx = state.x + Math.random() * Math.max(1, (width - mx) - state.x);
       state.ty = my + Math.random() * Math.max(1, height - my * 2);
     }
 
     function update(dt) {
       if (paused) return;
       elapsed += dt;
+      const still = 1 - clamp(len(state.vx, state.vy) / 34, 0, 1);
+      state.settle = mix(state.settle, still, 1 - Math.pow(.02, dt));
 
       for (let i = trails.length - 1; i >= 0; i--) { trails[i].age += dt; if (trails[i].age > trails[i].life) trails.splice(i, 1); }
       for (let i = sparks.length - 1; i >= 0; i--) {
@@ -352,7 +384,7 @@
         // The lunge is authored in body units; convert to field pixels so the
         // shadow, decor sorting, and edge clamping all stay in agreement.
         const dash = channel('dash', attack.t) * bodyScale();
-        state.x = clamp(state.x + (dash - attack.dash) * state.facing, 40, Math.max(41, width - 40));
+        state.x = clamp(state.x + (dash - attack.dash) * FORWARD, 40, Math.max(41, width - 40));
         attack.dash = dash;
         state.vx *= Math.pow(.02, dt); state.vy *= Math.pow(.02, dt);
         const marks = ATTACKS[attack.name].impacts;
@@ -388,13 +420,13 @@
       const steer = 1 - Math.pow(.00045, dt);
       state.vx = mix(state.vx, desiredX, steer); state.vy = mix(state.vy, desiredY, steer);
       state.x += state.vx * dt; state.y += state.vy * dt;
-      state.distance += len(state.vx, state.vy) * dt;
-      if (Math.abs(state.vx) > 8) state.facing = state.vx < 0 ? -1 : 1;
+      // Signed, so the gait runs in reverse when the puppet backs up.
+      state.distance += len(state.vx, state.vy) * dt * (state.vx > 6 ? -1 : 1);
     }
 
     function spawnImpact(kind) {
       const scale = bodyScale();
-      const forward = state.facing;
+      const forward = FORWARD;
       if (kind === 'dust') {
         sparks.push({ x: state.x, y: state.y, r: 8 * scale, grow: 168 * scale, age: 0, life: .55, ring: true, vx: 0, vy: 0 });
         sparks.push({ x: state.x, y: state.y, r: 4 * scale, grow: 96 * scale, age: 0, life: .34, ring: true, vx: 0, vy: 0 });
@@ -496,7 +528,6 @@
       const bob = Math.sin(phase * 2) * 3 * moving;
       const speedLean = clamp(state.vy / 140, -.09, .09);
       const overall = bodyScale();
-      const mirror = state.facing === 1 ? -1 : 1;
 
       const hop = channel('hop', u), crouch = channel('crouch', u);
       const airborne = clamp(-hop / 70, 0, 1);
@@ -507,22 +538,23 @@
       ctx.beginPath(); ctx.ellipse(0, 2, (70 - airborne * 22) * overall, (14 - airborne * 4) * overall, 0, 0, Math.PI*2); ctx.fill();
       ctx.translate(0, bob - 3 + (crouch + hop) * overall);
 
-      // A flat cutout can only spin by turning edge-on like a card, so the
-      // cyclone drives the body's own x-scale through cos(turn).
-      const turn = channel('turn', u);
-      const card = Math.cos(turn);
-      const cardScale = Math.abs(card) < .1 ? .1 * (card < 0 ? -1 : 1) : card;
-
-      ctx.scale(mirror * overall * cardScale, overall);
-      ctx.rotate((speedLean + channel('lean', u) + moving * -.05) * mirror * (card < 0 ? -1 : 1));
+      ctx.scale(overall, overall);
+      // Negative tips the shoulders toward the way it faces, so walking forward
+      // leans into the stride and backing up rocks the weight onto the heels.
+      const travelLean = clamp(state.vx / 190, -.09, .07);
+      ctx.rotate(speedLean + channel('lean', u) + travelLean);
 
       const neck = point(0,-126), cloakRoot = point(-1,-122);
       const hipRear = point(-10,-76), hipFront = point(8,-75);
       const stepRear = Math.sin(phase), stepFront = Math.sin(phase + Math.PI);
       const liftRear = Math.max(0, -Math.cos(phase)) * 11 * moving;
       const liftFront = Math.max(0, -Math.cos(phase + Math.PI)) * 11 * moving;
-      const footRear = point(channel('rFootX', u) + stepRear*27*moving, channel('rFootY', u) - liftRear);
-      const footFront = point(channel('fFootX', u) + stepFront*27*moving, channel('fFootY', u) - liftFront);
+      // Crouching and bobbing move the body origin, so the feet are pushed back
+      // up by the same amount to stay planted on the ground. A hop is exempt —
+      // that one is meant to take the talons off the dirt.
+      const plant = crouch + bob / overall;
+      const footRear = point(channel('rFootX', u) + stepRear*27*moving, channel('rFootY', u) - liftRear - plant);
+      const footFront = point(channel('fFootX', u) + stepFront*27*moving, channel('fFootY', u) - liftFront - plant);
       const kneeRear = solveLeg(hipRear, footRear, 52, 48, KNEE_FORWARD);
       const kneeFront = solveLeg(hipFront, footFront, 51, 48, KNEE_FORWARD);
 
@@ -543,7 +575,7 @@
       };
 
       // Rear mechanisms.
-      drawAnchored('ear_back', point(-10,-153), .42, [.50,.91], Math.sin(phase*.5)*.025*moving - .04 - cloakFlare * .10);
+      drawAnchored('ear_back', point(-10,-165), .42, [.50,.91], Math.sin(phase*.5)*.025*moving - .04 - cloakFlare * .10);
       drawBone('leg_left_upper', hipRear, kneeRear, [.76,.10], [.55,.88]);
       drawBone('leg_left_lower', kneeRear, footRear, [.72,.10], [.57,.79]);
       // The scythe arm crosses in front of the torso once a swing carries it
@@ -564,10 +596,13 @@
       drawBone('arm_right_upper', shoulderFront, elbowFront, [.78,.12], [.27,.88]);
       drawAnchored('arm_right_lower', elbowFront, BLADE_TIPS.front.scale, [.79,.11], fBlade);
 
-      // Head stack: ears sit behind the face; the scarf hides the neck seam.
-      drawAnchored('ear_front', point(5,-154), .42, [.14,.84], -.05 + Math.sin(phase*.55+.8)*.028*moving - cloakFlare * .12);
-      drawAnchored('head', point(-3,-119), .38, [.54,.84], Math.sin(phase*2)*.015*moving);
-      drawAnchored('scarf', point(1,-120), .225, [.50,.48], .03 + Math.sin(phase*.8)*.025*moving + cloakFlare * .2);
+      // Head stack, matching the concept sheet: the thin ear blade is pinned
+      // behind the helmet (drawn back with the rear mechanisms), the big curved
+      // one mounts on a hub that sits ON the helmet, so it goes in front of the
+      // head — and the collar then wraps across the bottom of that hub.
+      drawAnchored('head', point(-3,-133), .38, [.54,.84], Math.sin(phase*2)*.015*moving);
+      drawAnchored('ear_front', point(7,-166), .42, [.14,.84], -.05 + Math.sin(phase*.55+.8)*.028*moving - cloakFlare * .12);
+      drawAnchored('scarf', point(1,-125), .225, [.50,.48], .03 + Math.sin(phase*.8)*.025*moving + cloakFlare * .2);
 
       if (scytheInFront) drawScythe();
 
@@ -590,7 +625,7 @@
           [neck,hipRear],[hipRear,kneeRear],[kneeRear,footRear],[neck,hipFront],[hipFront,kneeFront],[kneeFront,footFront]];
         ctx.strokeStyle = '#27dcf0'; ctx.lineWidth = 2.2/overall; ctx.beginPath();
         for (const [a,b] of bones) { ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); } ctx.stroke();
-        const joints = [neck,shoulderRear,elbowRear,shoulderFront,elbowFront,hipRear,kneeRear,footRear,hipFront,kneeFront,footFront,point(-10,-153),point(5,-154)];
+        const joints = [neck,shoulderRear,elbowRear,shoulderFront,elbowFront,hipRear,kneeRear,footRear,hipFront,kneeFront,footFront,point(-10,-165),point(7,-166)];
         for (const p of joints) { ctx.fillStyle = '#ff5477'; ctx.strokeStyle = 'white'; ctx.lineWidth=1.4/overall; ctx.beginPath(); ctx.arc(p.x,p.y,4/overall,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
       }
       ctx.restore();
@@ -698,7 +733,6 @@
       const scale = bodyScale();
       const hitX = (px - state.x) / (98 * scale), hitY = (py - state.y + 62 * scale) / (88 * scale);
       if (hitX * hitX + hitY * hitY < 1) {
-        if (Math.abs(px - state.x) > 6) state.facing = px < state.x ? -1 : 1;
         startAttack(ATTACK_ORDER[Math.floor(Math.random() * ATTACK_ORDER.length)]);
       } else {
         state.tx = px; state.ty = py; state.wait = 0;
