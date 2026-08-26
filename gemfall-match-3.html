@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090d17">
+  <title>Gemfall — 6 × 10 Match-3</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --ink: #f7f5ef;
+      --muted: #9ca7b8;
+      --panel: rgba(18, 24, 38, 0.84);
+      --line: rgba(255, 255, 255, 0.11);
+      --accent: #f6ca64;
+      --gap: 5px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 5%, rgba(61, 112, 164, 0.22), transparent 30rem),
+        radial-gradient(circle at 90% 85%, rgba(111, 67, 151, 0.18), transparent 28rem),
+        #090d17;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.2;
+      background-image: repeating-linear-gradient(118deg, transparent 0 28px, rgba(255,255,255,0.018) 29px 30px);
+    }
+
+    button, a { font: inherit; }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 31rem);
+      min-height: 100svh;
+      margin: 0 auto;
+      padding: max(0.7rem, env(safe-area-inset-top)) 0.8rem max(0.7rem, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .topbar {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 2.55rem 1fr auto;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .back,
+    .icon-button {
+      width: 2.55rem;
+      height: 2.55rem;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 0.8rem;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.055);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    .back:hover,
+    .back:focus-visible,
+    .icon-button:hover,
+    .icon-button:focus-visible {
+      border-color: rgba(246, 202, 100, 0.65);
+      background: rgba(246, 202, 100, 0.1);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .brand { min-width: 0; }
+
+    .eyebrow {
+      margin-bottom: 0.08rem;
+      color: var(--accent);
+      font-size: 0.61rem;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.55rem, 7vw, 2.05rem);
+      font-weight: 500;
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+    }
+
+    .actions { display: flex; gap: 0.42rem; }
+
+    .icon-button { border: 1px solid var(--line); }
+
+    .icon-button span { font-size: 1.08rem; line-height: 1; }
+
+    .hud {
+      width: min(100%, 26rem);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 0.9rem;
+      overflow: hidden;
+      background: var(--panel);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(12px);
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 0.42rem 0.65rem 0.48rem;
+      text-align: center;
+    }
+
+    .metric + .metric { border-left: 1px solid var(--line); }
+
+    .metric span {
+      display: block;
+      margin-bottom: 0.08rem;
+      color: var(--muted);
+      font-size: 0.58rem;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      overflow: hidden;
+      font-size: 1.06rem;
+      line-height: 1.1;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .goal-track {
+      position: relative;
+      width: min(calc(100% - 1.6rem), 24.4rem);
+      height: 0.32rem;
+      margin: -1px auto 0.35rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .goal-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #eaa752, #fff0a6);
+      box-shadow: 0 0 14px rgba(246, 202, 100, 0.6);
+      transition: width 300ms ease;
+    }
+
+    .game-shell {
+      position: relative;
+      display: grid;
+      justify-items: center;
+    }
+
+    .status {
+      width: 100%;
+      min-height: 1.45rem;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+      text-align: center;
+    }
+
+    .board {
+      position: relative;
+      width: min(94vw, 25rem, calc((100svh - 10.8rem) * 0.6));
+      min-width: 16.8rem;
+      aspect-ratio: 6 / 10;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 1.15rem;
+      background:
+        linear-gradient(rgba(255,255,255,0.018), rgba(255,255,255,0.018)),
+        #101725;
+      box-shadow:
+        0 26px 55px rgba(0, 0, 0, 0.34),
+        inset 0 0 0 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px rgba(255,255,255,0.06);
+      touch-action: none;
+      isolation: isolate;
+    }
+
+    .board::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(90deg, transparent calc(100% - 1px), rgba(255,255,255,0.035) 0) 0 0 / calc(100% / 6) 100%,
+        linear-gradient(transparent calc(100% - 1px), rgba(255,255,255,0.035) 0) 0 0 / 100% calc(100% / 10);
+    }
+
+    .board.is-shaking { animation: board-shake 280ms ease; }
+
+    .tile {
+      --col: 0;
+      --row: 0;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: calc(100% / 6);
+      height: calc(100% / 10);
+      margin: 0;
+      padding: calc(var(--gap) / 2);
+      border: 0;
+      outline: 0;
+      color: white;
+      background: transparent;
+      cursor: grab;
+      transform: translate(calc(var(--col) * 100%), calc(var(--row) * 100%));
+      transition: transform 210ms cubic-bezier(.2,.8,.2,1), opacity 160ms ease;
+      will-change: transform;
+    }
+
+    .tile:active { cursor: grabbing; }
+
+    .gem {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.34);
+      filter: saturate(0.94);
+      box-shadow:
+        inset 0 1px rgba(255,255,255,0.52),
+        inset 0 -5px 9px rgba(0,0,0,0.24),
+        0 3px 5px rgba(0,0,0,0.26);
+      transition: transform 150ms ease, filter 150ms ease, opacity 150ms ease, box-shadow 150ms ease;
+    }
+
+    .gem::before {
+      content: "";
+      position: absolute;
+      inset: 7% 12% 46% 18%;
+      border-radius: 50%;
+      background: linear-gradient(145deg, rgba(255,255,255,0.68), rgba(255,255,255,0));
+      opacity: 0.6;
+      transform: rotate(-9deg);
+    }
+
+    .gem::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 22%, rgba(255,255,255,0.14) 23% 35%, transparent 36% 68%, rgba(0,0,0,0.13) 69%);
+      mix-blend-mode: soft-light;
+    }
+
+    .mark {
+      position: relative;
+      z-index: 1;
+      color: rgba(255,255,255,0.88);
+      font-size: clamp(0.68rem, 3.4vw, 1rem);
+      line-height: 1;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+      opacity: 0.72;
+    }
+
+    .ruby .gem {
+      clip-path: polygon(50% 3%, 94% 35%, 78% 91%, 22% 91%, 6% 35%);
+      background: linear-gradient(145deg, #ff7478, #b51f45 68%, #671126);
+    }
+
+    .amber .gem {
+      clip-path: polygon(26% 5%, 74% 5%, 97% 50%, 74% 95%, 26% 95%, 3% 50%);
+      background: linear-gradient(145deg, #ffd56f, #d17a22 68%, #7a3712);
+    }
+
+    .jade .gem {
+      border-radius: 50%;
+      background: linear-gradient(145deg, #7ce9a8, #20895e 68%, #0f4937);
+    }
+
+    .sapphire .gem {
+      border-radius: 25%;
+      background: linear-gradient(145deg, #74d8ff, #2476c2 68%, #173a78);
+    }
+
+    .amethyst .gem {
+      clip-path: polygon(50% 0, 63% 25%, 91% 18%, 78% 48%, 98% 71%, 66% 73%, 50% 100%, 34% 73%, 2% 71%, 22% 48%, 9% 18%, 37% 25%);
+      background: linear-gradient(145deg, #dca0ff, #8545b4 68%, #452066);
+    }
+
+    .pearl .gem {
+      border-radius: 36% 58% 43% 55%;
+      background: linear-gradient(145deg, #fffde7, #9bc4d1 68%, #536d87);
+    }
+
+    .tile:hover .gem,
+    .tile:focus-visible .gem {
+      filter: saturate(1.12) brightness(1.1);
+      transform: scale(1.045);
+      box-shadow:
+        inset 0 1px rgba(255,255,255,0.62),
+        inset 0 -5px 9px rgba(0,0,0,0.22),
+        0 0 0 2px rgba(255,255,255,0.28),
+        0 5px 9px rgba(0,0,0,0.32);
+    }
+
+    .tile.is-selected .gem {
+      filter: brightness(1.18) saturate(1.18);
+      transform: scale(1.08);
+      box-shadow:
+        inset 0 1px rgba(255,255,255,0.7),
+        0 0 0 3px rgba(255, 237, 162, 0.9),
+        0 0 18px rgba(246, 202, 100, 0.78);
+    }
+
+    .tile.is-matched .gem { animation: gem-pop 240ms ease forwards; }
+
+    .combo-toast {
+      position: absolute;
+      top: 49%;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0;
+      color: #fff3b1;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.3rem, 7vw, 2rem);
+      font-style: italic;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      text-shadow: 0 3px 14px rgba(0,0,0,0.9), 0 0 18px rgba(246,202,100,0.7);
+    }
+
+    .combo-toast.show { animation: combo-rise 720ms ease both; }
+
+    .hint {
+      margin: 0.46rem 0 0;
+      color: #778397;
+      font-size: 0.66rem;
+      text-align: center;
+    }
+
+    dialog {
+      width: min(calc(100% - 2rem), 25rem);
+      padding: 0;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 1.15rem;
+      color: var(--ink);
+      background: #141b29;
+      box-shadow: 0 28px 90px rgba(0,0,0,0.65);
+    }
+
+    dialog::backdrop {
+      background: rgba(4, 7, 13, 0.72);
+      backdrop-filter: blur(5px);
+    }
+
+    .dialog-body { padding: 1.35rem; }
+
+    .dialog-kicker {
+      margin: 0 0 0.28rem;
+      color: var(--accent);
+      font-size: 0.63rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    dialog h2 {
+      margin: 0 0 0.68rem;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.75rem;
+      font-weight: 500;
+      letter-spacing: -0.035em;
+    }
+
+    dialog p {
+      margin: 0 0 0.72rem;
+      color: #b9c2d0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    dialog p:last-of-type { margin-bottom: 1.1rem; }
+
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 0.55rem; }
+
+    .dialog-button {
+      min-height: 2.65rem;
+      padding: 0 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.78rem;
+      color: var(--ink);
+      background: rgba(255,255,255,0.06);
+      cursor: pointer;
+    }
+
+    .dialog-button.primary {
+      border-color: #e7bd59;
+      color: #171208;
+      background: #f1c964;
+      font-weight: 800;
+    }
+
+    .dialog-button:focus-visible { outline: 2px solid #fff1aa; outline-offset: 2px; }
+
+    @keyframes gem-pop {
+      0% { transform: scale(1); filter: brightness(1); opacity: 1; }
+      48% { transform: scale(1.22); filter: brightness(1.75); opacity: 1; }
+      100% { transform: scale(0.08); filter: brightness(2); opacity: 0; }
+    }
+
+    @keyframes combo-rise {
+      0% { opacity: 0; transform: translateY(18px) scale(0.82); }
+      22% { opacity: 1; transform: translateY(0) scale(1.06); }
+      72% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-30px) scale(1); }
+    }
+
+    @keyframes board-shake {
+      0%, 100% { transform: translateX(0); }
+      24% { transform: translateX(-6px); }
+      48% { transform: translateX(5px); }
+      72% { transform: translateX(-3px); }
+    }
+
+    @media (max-height: 650px) {
+      .app { padding-top: 0.35rem; }
+      .topbar { margin-bottom: 0.32rem; }
+      .back, .icon-button { width: 2.2rem; height: 2.2rem; border-radius: 0.7rem; }
+      .topbar { grid-template-columns: 2.2rem 1fr auto; }
+      .metric { padding-block: 0.3rem 0.34rem; }
+      .hint { display: none; }
+      .board { width: min(90vw, 22rem, calc((100svh - 8.75rem) * 0.6)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <a class="back" href="index.html" aria-label="Back to Playground index">←</a>
+      <div class="brand">
+        <div class="eyebrow">Playground / Match 3</div>
+        <h1>Gemfall</h1>
+      </div>
+      <div class="actions">
+        <button class="icon-button" id="helpButton" type="button" aria-label="How to play"><span aria-hidden="true">?</span></button>
+        <button class="icon-button" id="newButton" type="button" aria-label="Start a new game"><span aria-hidden="true">↻</span></button>
+      </div>
+    </header>
+
+    <section class="hud" aria-label="Game status">
+      <div class="metric"><span>Score</span><strong id="score">0</strong></div>
+      <div class="metric"><span>Moves</span><strong id="moves">30</strong></div>
+      <div class="metric"><span>Goal</span><strong id="goal">9,000</strong></div>
+    </section>
+    <div class="goal-track" role="progressbar" aria-label="Score progress" aria-valuemin="0" aria-valuemax="9000" aria-valuenow="0">
+      <div class="goal-fill" id="goalFill"></div>
+    </div>
+
+    <section class="game-shell" aria-label="Gemfall game">
+      <div class="status" id="status" role="status" aria-live="polite">Make a line of three or more.</div>
+      <div class="board" id="board" role="grid" aria-label="6 column by 10 row match-3 board"></div>
+      <div class="combo-toast" id="comboToast" aria-hidden="true"></div>
+    </section>
+    <p class="hint">Swipe a gem, or tap two neighbors. Only matching swaps use a move.</p>
+  </main>
+
+  <dialog id="helpDialog">
+    <div class="dialog-body">
+      <div class="dialog-kicker">How to play</div>
+      <h2>Line up the gems.</h2>
+      <p>Swipe a gem toward a neighbor—or tap two adjacent gems—to trade their places. A swap must create a row or column of at least three.</p>
+      <p>Cascades multiply their points. Reach 9,000 before your 30 moves run out.</p>
+      <div class="dialog-actions">
+        <button class="dialog-button primary" id="closeHelp" type="button">Got it</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="endDialog">
+    <div class="dialog-body">
+      <div class="dialog-kicker" id="endKicker">Round complete</div>
+      <h2 id="endTitle">Goal reached!</h2>
+      <p id="endCopy">You cleared the target.</p>
+      <div class="dialog-actions">
+        <button class="dialog-button primary" id="playAgain" type="button">Play again</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const COLS = 6;
+      const ROWS = 10;
+      const STARTING_MOVES = 30;
+      const TARGET_SCORE = 9000;
+      const SWAP_MS = 225;
+      const CLEAR_MS = 245;
+      const FALL_MS = 285;
+
+      const GEM_TYPES = [
+        { key: "ruby", label: "Ruby", mark: "◆" },
+        { key: "amber", label: "Amber", mark: "⬡" },
+        { key: "jade", label: "Jade", mark: "●" },
+        { key: "sapphire", label: "Sapphire", mark: "■" },
+        { key: "amethyst", label: "Amethyst", mark: "✦" },
+        { key: "pearl", label: "Pearl", mark: "✚" }
+      ];
+
+      const boardElement = document.querySelector("#board");
+      const scoreElement = document.querySelector("#score");
+      const movesElement = document.querySelector("#moves");
+      const goalElement = document.querySelector("#goal");
+      const goalFill = document.querySelector("#goalFill");
+      const goalTrack = document.querySelector(".goal-track");
+      const statusElement = document.querySelector("#status");
+      const comboToast = document.querySelector("#comboToast");
+      const helpDialog = document.querySelector("#helpDialog");
+      const endDialog = document.querySelector("#endDialog");
+
+      let board = [];
+      let elements = new Map();
+      let nextId = 1;
+      let score = 0;
+      let moves = STARTING_MOVES;
+      let selectedIndex = null;
+      let busy = false;
+      let gameOver = false;
+      let gesture = null;
+      let suppressClickUntil = 0;
+      let session = 0;
+
+      const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
+      const format = (value) => value.toLocaleString("en-US");
+      const indexOf = (row, col) => row * COLS + col;
+      const rowOf = (index) => Math.floor(index / COLS);
+      const colOf = (index) => index % COLS;
+
+      function randomType() {
+        return Math.floor(Math.random() * GEM_TYPES.length);
+      }
+
+      function makeTile(type = randomType()) {
+        return { id: nextId++, type };
+      }
+
+      function findMatches(source = board) {
+        const matched = new Set();
+
+        for (let row = 0; row < ROWS; row++) {
+          let runStart = 0;
+          for (let col = 1; col <= COLS; col++) {
+            const startTile = source[indexOf(row, runStart)];
+            const currentTile = col < COLS ? source[indexOf(row, col)] : null;
+            if (!startTile || !currentTile || currentTile.type !== startTile.type) {
+              if (startTile && col - runStart >= 3) {
+                for (let x = runStart; x < col; x++) matched.add(indexOf(row, x));
+              }
+              runStart = col;
+            }
+          }
+        }
+
+        for (let col = 0; col < COLS; col++) {
+          let runStart = 0;
+          for (let row = 1; row <= ROWS; row++) {
+            const startTile = source[indexOf(runStart, col)];
+            const currentTile = row < ROWS ? source[indexOf(row, col)] : null;
+            if (!startTile || !currentTile || currentTile.type !== startTile.type) {
+              if (startTile && row - runStart >= 3) {
+                for (let y = runStart; y < row; y++) matched.add(indexOf(y, col));
+              }
+              runStart = row;
+            }
+          }
+        }
+
+        return matched;
+      }
+
+      function hasPossibleMove(source = board) {
+        for (let index = 0; index < source.length; index++) {
+          const row = rowOf(index);
+          const col = colOf(index);
+          const candidates = [];
+          if (col + 1 < COLS) candidates.push(index + 1);
+          if (row + 1 < ROWS) candidates.push(index + COLS);
+
+          for (const neighbor of candidates) {
+            [source[index], source[neighbor]] = [source[neighbor], source[index]];
+            const works = findMatches(source).size > 0;
+            [source[index], source[neighbor]] = [source[neighbor], source[index]];
+            if (works) return true;
+          }
+        }
+        return false;
+      }
+
+      function makeFreshBoard() {
+        let candidate;
+        do {
+          candidate = [];
+          for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+              const forbidden = new Set();
+              if (col >= 2) {
+                const left = candidate[indexOf(row, col - 1)];
+                const farLeft = candidate[indexOf(row, col - 2)];
+                if (left.type === farLeft.type) forbidden.add(left.type);
+              }
+              if (row >= 2) {
+                const above = candidate[indexOf(row - 1, col)];
+                const farAbove = candidate[indexOf(row - 2, col)];
+                if (above.type === farAbove.type) forbidden.add(above.type);
+              }
+
+              const choices = GEM_TYPES.map((_, type) => type).filter(type => !forbidden.has(type));
+              candidate.push(makeTile(choices[Math.floor(Math.random() * choices.length)]));
+            }
+          }
+        } while (!hasPossibleMove(candidate));
+        return candidate;
+      }
+
+      function isAdjacent(first, second) {
+        const rowDistance = Math.abs(rowOf(first) - rowOf(second));
+        const colDistance = Math.abs(colOf(first) - colOf(second));
+        return rowDistance + colDistance === 1;
+      }
+
+      function createTileElement(tile) {
+        const element = document.createElement("button");
+        element.type = "button";
+        element.className = "tile";
+        element.setAttribute("role", "gridcell");
+        element.innerHTML = '<span class="gem"><span class="mark" aria-hidden="true"></span></span>';
+
+        element.addEventListener("pointerdown", event => {
+          if (busy || gameOver) return;
+          gesture = { id: tile.id, x: event.clientX, y: event.clientY };
+          element.setPointerCapture?.(event.pointerId);
+        });
+
+        element.addEventListener("pointerup", event => {
+          if (!gesture || gesture.id !== tile.id || busy || gameOver) return;
+          const deltaX = event.clientX - gesture.x;
+          const deltaY = event.clientY - gesture.y;
+          const distance = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+          gesture = null;
+
+          if (distance < 16) return;
+          suppressClickUntil = performance.now() + 320;
+
+          const currentIndex = board.findIndex(current => current && current.id === tile.id);
+          if (currentIndex < 0) return;
+          let target = currentIndex;
+
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            target += deltaX > 0 ? 1 : -1;
+            if (rowOf(target) !== rowOf(currentIndex)) return;
+          } else {
+            target += deltaY > 0 ? COLS : -COLS;
+            if (target < 0 || target >= board.length) return;
+          }
+          attemptSwap(currentIndex, target);
+        });
+
+        element.addEventListener("pointercancel", () => { gesture = null; });
+
+        element.addEventListener("click", () => {
+          if (performance.now() < suppressClickUntil || busy || gameOver) return;
+          const index = board.findIndex(current => current && current.id === tile.id);
+          if (index < 0) return;
+          selectOrSwap(index);
+        });
+
+        element.addEventListener("keydown", event => {
+          const index = board.findIndex(current => current && current.id === tile.id);
+          if (index < 0) return;
+          let next = null;
+          if (event.key === "ArrowLeft" && colOf(index) > 0) next = index - 1;
+          if (event.key === "ArrowRight" && colOf(index) < COLS - 1) next = index + 1;
+          if (event.key === "ArrowUp" && rowOf(index) > 0) next = index - COLS;
+          if (event.key === "ArrowDown" && rowOf(index) < ROWS - 1) next = index + COLS;
+          if (next !== null) {
+            event.preventDefault();
+            elements.get(board[next].id)?.focus();
+          }
+        });
+
+        return element;
+      }
+
+      function renderBoard(spawnRows = new Map()) {
+        const liveIds = new Set();
+
+        board.forEach((tile, index) => {
+          if (!tile) return;
+          liveIds.add(tile.id);
+          let element = elements.get(tile.id);
+          const isNew = !element;
+          if (isNew) {
+            element = createTileElement(tile);
+            elements.set(tile.id, element);
+            boardElement.appendChild(element);
+          }
+
+          const gemType = GEM_TYPES[tile.type];
+          element.className = `tile ${gemType.key}`;
+          element.dataset.id = String(tile.id);
+          element.dataset.index = String(index);
+          element.querySelector(".mark").textContent = gemType.mark;
+          element.setAttribute("aria-label", `${gemType.label}, row ${rowOf(index) + 1}, column ${colOf(index) + 1}`);
+          element.setAttribute("aria-selected", index === selectedIndex ? "true" : "false");
+          element.classList.toggle("is-selected", index === selectedIndex);
+          element.style.setProperty("--col", colOf(index));
+
+          if (isNew && spawnRows.has(tile.id)) {
+            element.style.setProperty("--row", spawnRows.get(tile.id));
+            element.getBoundingClientRect();
+            requestAnimationFrame(() => element.style.setProperty("--row", rowOf(index)));
+          } else {
+            element.style.setProperty("--row", rowOf(index));
+          }
+        });
+
+        for (const [id, element] of elements) {
+          if (!liveIds.has(id)) {
+            element.remove();
+            elements.delete(id);
+          }
+        }
+      }
+
+      function selectOrSwap(index) {
+        if (selectedIndex === null) {
+          selectedIndex = index;
+          statusElement.textContent = "Choose a neighboring gem.";
+          renderBoard();
+          return;
+        }
+
+        if (selectedIndex === index) {
+          selectedIndex = null;
+          statusElement.textContent = "Make a line of three or more.";
+          renderBoard();
+          return;
+        }
+
+        if (!isAdjacent(selectedIndex, index)) {
+          selectedIndex = index;
+          statusElement.textContent = "Choose a neighboring gem.";
+          renderBoard();
+          return;
+        }
+
+        const first = selectedIndex;
+        selectedIndex = null;
+        attemptSwap(first, index);
+      }
+
+      async function attemptSwap(first, second) {
+        if (busy || gameOver || !isAdjacent(first, second)) return;
+        const activeSession = session;
+        busy = true;
+        selectedIndex = null;
+        boardElement.setAttribute("aria-busy", "true");
+
+        [board[first], board[second]] = [board[second], board[first]];
+        renderBoard();
+        await delay(SWAP_MS);
+        if (activeSession !== session) return;
+
+        let matches = findMatches();
+        if (matches.size === 0) {
+          [board[first], board[second]] = [board[second], board[first]];
+          renderBoard();
+          boardElement.classList.remove("is-shaking");
+          void boardElement.offsetWidth;
+          boardElement.classList.add("is-shaking");
+          statusElement.textContent = "That swap doesn't make a match.";
+          await delay(SWAP_MS + 70);
+          if (activeSession !== session) return;
+          busy = false;
+          boardElement.setAttribute("aria-busy", "false");
+          return;
+        }
+
+        moves -= 1;
+        updateHud();
+        await resolveMatches(matches, activeSession);
+      }
+
+      function showCombo(chain, points) {
+        comboToast.textContent = chain > 1 ? `Cascade ×${chain}  +${format(points)}` : `+${format(points)}`;
+        comboToast.classList.remove("show");
+        void comboToast.offsetWidth;
+        comboToast.classList.add("show");
+      }
+
+      function collapseAndRefill() {
+        const spawnRows = new Map();
+
+        for (let col = 0; col < COLS; col++) {
+          let writeRow = ROWS - 1;
+          for (let row = ROWS - 1; row >= 0; row--) {
+            const tile = board[indexOf(row, col)];
+            if (tile) {
+              board[indexOf(writeRow, col)] = tile;
+              if (writeRow !== row) board[indexOf(row, col)] = null;
+              writeRow -= 1;
+            }
+          }
+
+          const missing = writeRow + 1;
+          for (let row = writeRow; row >= 0; row--) {
+            const tile = makeTile();
+            board[indexOf(row, col)] = tile;
+            spawnRows.set(tile.id, row - missing);
+          }
+        }
+
+        return spawnRows;
+      }
+
+      async function resolveMatches(matches, activeSession) {
+        let chain = 0;
+
+        while (matches.size > 0) {
+          chain += 1;
+          const count = matches.size;
+          const points = (count * 100 + Math.max(0, count - 3) * 75) * chain;
+          score += points;
+          updateHud();
+          showCombo(chain, points);
+          statusElement.textContent = chain > 1 ? `Cascade ${chain}!` : `${count} gems matched.`;
+
+          for (const index of matches) {
+            const tile = board[index];
+            if (tile) elements.get(tile.id)?.classList.add("is-matched");
+          }
+          await delay(CLEAR_MS);
+          if (activeSession !== session) return;
+
+          for (const index of matches) {
+            const tile = board[index];
+            if (!tile) continue;
+            elements.get(tile.id)?.remove();
+            elements.delete(tile.id);
+            board[index] = null;
+          }
+
+          const spawnRows = collapseAndRefill();
+          renderBoard(spawnRows);
+          await delay(FALL_MS);
+          if (activeSession !== session) return;
+          matches = findMatches();
+        }
+
+        busy = false;
+        boardElement.setAttribute("aria-busy", "false");
+
+        if (score >= TARGET_SCORE) {
+          finishGame(true);
+          return;
+        }
+
+        if (moves <= 0) {
+          finishGame(false);
+          return;
+        }
+
+        if (!hasPossibleMove(board)) {
+          statusElement.textContent = "No moves left—reshuffling.";
+          busy = true;
+          await delay(500);
+          if (activeSession !== session) return;
+          board = makeFreshBoard();
+          for (const element of elements.values()) element.remove();
+          elements.clear();
+          renderBoard();
+          busy = false;
+          statusElement.textContent = "Fresh board. Keep matching.";
+          return;
+        }
+
+        statusElement.textContent = chain > 1 ? `Cascade ×${chain}. Your move.` : "Your move.";
+      }
+
+      function updateHud() {
+        scoreElement.textContent = format(score);
+        movesElement.textContent = String(moves);
+        goalElement.textContent = format(TARGET_SCORE);
+        const progress = Math.min(100, (score / TARGET_SCORE) * 100);
+        goalFill.style.width = `${progress}%`;
+        goalTrack.setAttribute("aria-valuenow", String(Math.min(score, TARGET_SCORE)));
+      }
+
+      function finishGame(won) {
+        gameOver = true;
+        document.querySelector("#endKicker").textContent = won ? "Target cleared" : "Round complete";
+        document.querySelector("#endTitle").textContent = won ? "Goal reached!" : "Out of moves";
+        document.querySelector("#endCopy").textContent = won
+          ? `You scored ${format(score)} with ${moves} move${moves === 1 ? "" : "s"} left.`
+          : `Final score: ${format(score)}. The target was ${format(TARGET_SCORE)}.`;
+        statusElement.textContent = won ? "You reached the goal." : "Round complete.";
+        endDialog.showModal();
+      }
+
+      function startGame() {
+        session += 1;
+        if (endDialog.open) endDialog.close();
+        score = 0;
+        moves = STARTING_MOVES;
+        selectedIndex = null;
+        busy = false;
+        gameOver = false;
+        board = makeFreshBoard();
+        for (const element of elements.values()) element.remove();
+        elements.clear();
+        boardElement.setAttribute("aria-busy", "false");
+        statusElement.textContent = "Make a line of three or more.";
+        updateHud();
+        renderBoard();
+      }
+
+      document.querySelector("#newButton").addEventListener("click", startGame);
+      document.querySelector("#helpButton").addEventListener("click", () => helpDialog.showModal());
+      document.querySelector("#closeHelp").addEventListener("click", () => helpDialog.close());
+      document.querySelector("#playAgain").addEventListener("click", startGame);
+
+      helpDialog.addEventListener("click", event => {
+        if (event.target === helpDialog) helpDialog.close();
+      });
+
+      startGame();
+    })();
+  </script>
+</body>
+</html>
