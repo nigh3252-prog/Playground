@@ -271,7 +271,7 @@
           calc(var(--row) * 100% + var(--drag-y) + var(--nudge-y))
         )
         rotate(var(--tilt));
-      transition: transform 210ms cubic-bezier(.2,.8,.2,1), opacity 160ms ease;
+      transition: transform 300ms cubic-bezier(.16,1.08,.28,1), opacity 220ms ease;
       will-change: transform;
     }
 
@@ -398,15 +398,15 @@
         0 0 18px rgba(246, 202, 100, 0.78);
     }
 
-    .tile.is-matched .gem { animation: gem-pop 240ms ease forwards; }
+    .tile.is-matched .gem { animation: gem-pop 420ms cubic-bezier(.16,.9,.25,1) forwards; }
 
     .tile.is-swapping { z-index: 7; }
 
-    .tile.is-swapping .gem { animation: swap-punch 230ms cubic-bezier(.2,.9,.2,1); }
+    .tile.is-swapping .gem { animation: swap-punch 320ms cubic-bezier(.2,.9,.2,1); }
 
-    .tile.is-rejected .gem { animation: reject-squash 300ms ease; }
+    .tile.is-rejected .gem { animation: reject-squash 420ms ease; }
 
-    .tile.is-landing .gem { animation: landing-squash 320ms cubic-bezier(.16,1.25,.35,1); }
+    .tile.is-landing .gem { animation: landing-squash 480ms cubic-bezier(.16,1.25,.35,1); }
 
     .fx-layer {
       position: absolute;
@@ -506,7 +506,7 @@
       text-shadow: 0 3px 14px rgba(0,0,0,0.9), 0 0 18px rgba(246,202,100,0.7);
     }
 
-    .combo-toast.show { animation: combo-rise 720ms ease both; }
+    .combo-toast.show { animation: combo-rise 1100ms ease both; }
 
     .hint {
       margin: 0.46rem 0 0;
@@ -559,6 +559,8 @@
     dialog p:last-of-type { margin-bottom: 1.1rem; }
 
     .dialog-actions { display: flex; justify-content: flex-end; gap: 0.55rem; }
+
+    .dialog-actions.split { justify-content: space-between; }
 
     .dialog-button {
       min-height: 2.65rem;
@@ -704,13 +706,15 @@
       .board { width: min(90vw, 22rem, calc((100svh - 8.75rem) * 0.6)); }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        scroll-behavior: auto !important;
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
+    .app.motion-reduced,
+    .app.motion-reduced *,
+    .app.motion-reduced *::before,
+    .app.motion-reduced *::after,
+    .screen-flash.motion-reduced {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
     }
   </style>
 </head>
@@ -755,7 +759,9 @@
       <h2>Line up the gems.</h2>
       <p>Swipe a gem toward a neighbor—or tap two adjacent gems—to trade their places. A swap must create a row or column of at least three.</p>
       <p>Cascades multiply their points. Reach 9,000 before your 30 moves run out.</p>
-      <div class="dialog-actions">
+      <p>Full animation is on by default. You can reduce it here if needed.</p>
+      <div class="dialog-actions split">
+        <button class="dialog-button" id="motionButton" type="button" aria-pressed="false">Reduce motion</button>
         <button class="dialog-button primary" id="closeHelp" type="button">Got it</button>
       </div>
     </div>
@@ -780,9 +786,9 @@
       const ROWS = 10;
       const STARTING_MOVES = 30;
       const TARGET_SCORE = 9000;
-      const SWAP_MS = 225;
-      const CLEAR_MS = 245;
-      const FALL_MS = 285;
+      const SWAP_MS = 320;
+      const CLEAR_MS = 430;
+      const FALL_MS = 480;
 
       const GEM_TYPES = [
         { key: "ruby", label: "Ruby", mark: "◆", color: "#ff5c78", glow: "rgba(255,64,105,.85)", pitch: 262 },
@@ -807,9 +813,10 @@
       const comboToast = document.querySelector("#comboToast");
       const soundButton = document.querySelector("#soundButton");
       const soundIcon = document.querySelector("#soundIcon");
+      const motionButton = document.querySelector("#motionButton");
       const helpDialog = document.querySelector("#helpDialog");
       const endDialog = document.querySelector("#endDialog");
-      const reduceMotion = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+      let reduceMotion = false;
 
       let board = [];
       let elements = new Map();
@@ -1095,7 +1102,7 @@
       }
 
       function markLanding(ids) {
-        for (const id of ids) pulseClass(elements.get(id), "is-landing", 340);
+        for (const id of ids) pulseClass(elements.get(id), "is-landing", 520);
       }
 
       function celebrate() {
@@ -1471,8 +1478,8 @@
           renderBoard();
           const restoredFirst = elements.get(firstTile.id);
           const restoredSecond = elements.get(secondTile.id);
-          pulseClass(restoredFirst, "is-rejected", 320);
-          pulseClass(restoredSecond, "is-rejected", 320);
+          pulseClass(restoredFirst, "is-rejected", 460);
+          pulseClass(restoredSecond, "is-rejected", 460);
           burstAt(restoredFirst, firstTile.type, 5, 0.55);
           burstAt(restoredSecond, secondTile.type, 5, 0.55);
           impactScreen("rgba(255,58,84,.22)", 1, true);
@@ -1667,6 +1674,18 @@
         requestAnimationFrame(() => markLanding(new Set(board.map(tile => tile.id))));
       }
 
+      function toggleMotion() {
+        reduceMotion = !reduceMotion;
+        appElement.classList.toggle("motion-reduced", reduceMotion);
+        screenFlash.classList.toggle("motion-reduced", reduceMotion);
+        motionButton.setAttribute("aria-pressed", reduceMotion ? "true" : "false");
+        motionButton.textContent = reduceMotion ? "Use full motion" : "Reduce motion";
+        if (!reduceMotion) {
+          playPick(4);
+          markLanding(new Set(board.map(tile => tile.id)));
+        }
+      }
+
       function toggleSound() {
         audioEnabled = !audioEnabled;
         if (audioEnabled) {
@@ -1685,6 +1704,7 @@
       }
 
       soundButton.addEventListener("click", toggleSound);
+      motionButton.addEventListener("click", toggleMotion);
       document.querySelector("#newButton").addEventListener("click", () => {
         ensureAudio();
         tone(220, 440, 0.11, 0.045, "triangle");
