@@ -141,7 +141,9 @@
         <ul>
           <li><b>The bellows is now real geometry.</b> Twenty-seven cross-section rings are lofted along a bowed 3D spine and skinned with ~340 quads — ridge rings swell, valley rings pinch, and the whole tube is closed, so there is a genuine back wall behind the front pleats.</li>
           <li><b>Depth-sorted, back-face-culled, and lit</b> from upper-left by a real surface normal, so the top planes of every fold catch light and the valleys occlude properly as the body squeezes.</li>
-          <li><b>Limbs are socketed, not floated.</b> Hips are sampled off the actual underside of the bellows each frame and covered by a pelvis yoke; arms run housing socket → piston shaft → wrist ball → fist, with capping discs over every seam.</li>
+          <li><b>The operator is behind its own instrument.</b> The accordion is held out in front of a body you never see: the head sits up and back on a layer <em>behind</em> the bellows, so only the visor and the conductor's cap clear the top edge, and the cap is worn on that head rather than parked on the pleats.</li>
+          <li><b>Both hands grip the housings.</b> The fists close over the outer edge of each button board and travel with it — a thrust is the whole instrument being driven out, not a fist on a stick. Forearms run back to a chassis the bellows completely hides.</li>
+          <li><b>Limbs are socketed, not floated.</b> Hips sit just under the bellows on a pelvis yoke, thighs draw beneath the body and shins over it, and every joint pivot is read off the painted part — hip barrel, knee boss, sole — so the thigh and shin actually meet.</li>
           <li><b>The gait plants its feet.</b> Stance feet are locked to the ground in world space (no sliding), with heel-strike impact dip, weight roll onto the stance leg, and a squeeze of the bellows per stride — it plays itself as it marches.</li>
           <li><b>Three attacks</b> — Jab, Crush Chord, Reed Blast — all driven through the same bellows: air is the weapon, and the concept's orange sound arcs are the payload.</li>
         </ul>
@@ -234,13 +236,14 @@
       profileSegments: 16,
       caseScale: 0.47,
       caseOffset: 32,      // housing centre, outboard of the bellows end
-      sockX: -65.6, sockY: 22.4,  // wrist socket, in housing-sprite pixels
-      forearm: 18, fistOut: 34,   // also housing-sprite pixels
-      wristDrop: 46, fistDrop: 66,
-      hipX: 34, hipZ: 14,
-      thigh: 38, shin: 66,
+      // The hands grip the outer edge of each housing, in housing-sprite pixels.
+      gripOut: 104, gripDrop: 58,
+      hipX: 38, hipZ: 14,
+      thigh: 45, shin: 41,
+      // The operator stands behind its own instrument; only the head clears it.
+      headX: -11, headY: -189, headZ: -0.62,
       creamFrom: 4, creamTo: 8,
-      cycle: 104           // local units travelled per full gait cycle
+      cycle: 82            // local units travelled per full gait cycle
     };
 
     // Superellipse cross-section: boxy enough to read as an accordion, round
@@ -493,6 +496,7 @@
           p.punch[1] = -18 * smoothstep(wind) * (1 - fire) + 55 * easeOut(fire, 4) * (1 - smoothstep(back, 2));
           p.punch[0] = -9 * smoothstep(wind) * (1 - smoothstep(back));
           p.fistSpin = 2.1 * easeOut(fire, 3) * (1 - smoothstep(back));
+          p.lean = 26 * easeOut(fire, 3) * (1 - smoothstep(back)) - 10 * smoothstep(wind) * (1 - fire);
           p.eye = .35 + .65 * spike(seg(u, .18, .5));
           p.crouch = 5 * spike(seg(u, .0, .5));
           if (hold > 0 && !self.fired.hit) { self.fired.hit = true; return [p, 'impact']; }
@@ -513,6 +517,7 @@
           p.crouch = 22 * easeOut(drop, 4) * (1 - smoothstep(back, 2));
           p.stance = 16 * smoothstep(rear) * (1 - smoothstep(back));
           p.eye = .3 + .7 * clamp(smoothstep(rear) + spike(seg(u, .32, .7)), 0, 1);
+          p.lean = -14 * smoothstep(rear) * (1 - drop) + 20 * easeOut(drop, 3) * (1 - smoothstep(back));
           p.tremble = .55 * smoothstep(seg(u, .12, .32)) * (1 - drop);
           if (held > 0 && !self.fired.hit) { self.fired.hit = true; return [p, 'impact']; }
           return [p, null];
@@ -531,6 +536,7 @@
           p.punch[0] = p.punch[1] = -13 * smoothstep(charge) + 20 * easeOut(fire, 4) * (1 - smoothstep(back, 2));
           p.crouch = 8 * smoothstep(charge) * (1 - fire) + 12 * spike(fire);
           p.stance = 12 * smoothstep(charge) * (1 - smoothstep(back));
+          p.lean = -16 * smoothstep(charge) * (1 - fire) + 22 * easeOut(fire, 3) * (1 - smoothstep(back));
           p.tremble = .85 * easeOut(charge, 1.4) * (1 - easeIn(fire, 2));
           p.eye = .2 + .8 * (easeOut(charge, 1.4) * (1 - easeIn(fire, 4)) + spike(fire));
           if (fire > 0 && !self.fired.charge) { self.fired.charge = true; return [p, 'chargeTick']; }
@@ -541,7 +547,7 @@
     };
 
     function blankPose() {
-      return { open: 0, bias: 0, lunge: 0, rise: 0, roll: 0, pitch: 0, crouch: 0, stance: 0,
+      return { open: 0, bias: 0, lunge: 0, rise: 0, roll: 0, pitch: 0, crouch: 0, stance: 0, lean: 0,
         armLift: 0, punch: [0, 0], fistSpin: 0, charge: 0, tremble: 0, eye: 0 };
     }
 
@@ -977,13 +983,15 @@
       ctx.drawImage(image, -image.width * pivot[0], -image.height * pivot[1]); ctx.restore();
     }
 
-    function drawBone(name, from, to, root, tip, extra = 1) {
+    /* `girth` scales the sprite across the bone only, which is what lets a
+       thigh be long and lean while a foot stays short and broad. */
+    function drawBone(name, from, to, root, tip, extra = 1, girth = 1) {
       const image = images[name]; if (!image) return;
       const ix = image.width * (tip[0] - root[0]), iy = image.height * (tip[1] - root[1]);
       const tx = to.x - from.x, ty = to.y - from.y;
       const scale = len(tx, ty) / Math.max(.001, len(ix, iy)) * extra;
       const angle = Math.atan2(ty, tx) - Math.atan2(iy, ix);
-      ctx.save(); ctx.translate(from.x, from.y); ctx.rotate(angle); ctx.scale(scale, scale);
+      ctx.save(); ctx.translate(from.x, from.y); ctx.rotate(angle); ctx.scale(scale * girth, scale);
       ctx.drawImage(image, -image.width * root[0], -image.height * root[1]); ctx.restore();
     }
 
@@ -993,9 +1001,9 @@
       ctx.beginPath(); ctx.arc(at.x, at.y, r, 0, 6.2832);
       const g = ctx.createRadialGradient(at.x - r * .35, at.y - r * .4, r * .1, at.x, at.y, r);
       if (brass) { g.addColorStop(0, '#c99242'); g.addColorStop(.62, '#8d6224'); g.addColorStop(1, '#4a3416'); }
-      else { g.addColorStop(0, '#5a6167'); g.addColorStop(.6, '#3a4147'); g.addColorStop(1, '#20262b'); }
+      else { g.addColorStop(0, '#6d6c5e'); g.addColorStop(.55, '#42443c'); g.addColorStop(1, '#22241e'); }
       ctx.fillStyle = g; ctx.fill();
-      ctx.strokeStyle = 'rgba(18,22,26,.9)'; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.strokeStyle = 'rgba(20,20,16,.9)'; ctx.lineWidth = 1.6; ctx.stroke();
       ctx.restore();
     }
 
@@ -1008,34 +1016,60 @@
       return P(hip.x + ux * along - uy * h * bendSign, hip.y + uy * along + ux * h * bendSign);
     }
 
-    /* A telescoping ram: outer sleeve, brass gland, polished inner rod. It has
-       to survive being stretched to three times its rest length by a punch. */
-    function drawPiston(from, to, radius) {
+    /* The operator's head — a small dark shell carrying the visor. It lives
+       behind the accordion, so only its top third ever clears the pleats. */
+    function drawHead(at, tilt, eye) {
+      ctx.save(); ctx.translate(at.x, at.y); ctx.rotate(tilt * .5); ctx.scale(at.f, at.f);
+
+      // neck / shoulder mass, mostly buried behind the bellows
+      ctx.fillStyle = '#1b2024';
+      ctx.beginPath(); ctx.roundRect(-27, 2, 54, 62, 10); ctx.fill();
+
+      // head shell
+      const g = ctx.createLinearGradient(-24, -24, 24, 28);
+      g.addColorStop(0, '#3a4147'); g.addColorStop(.45, '#242a2f'); g.addColorStop(1, '#12171a');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.roundRect(-24, -23, 48, 50, 10); ctx.fill();
+      ctx.strokeStyle = 'rgba(10,13,16,.95)'; ctx.lineWidth = 2.2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(190,205,214,.16)'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(-19, -20); ctx.lineTo(17, -22); ctx.stroke();
+
+      // the reeds burning behind the visor
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const bloom = ctx.createRadialGradient(0, -6, 1, 0, -6, 34);
+      bloom.addColorStop(0, `rgba(255,192,84,${.30 * eye})`);
+      bloom.addColorStop(.55, `rgba(255,168,60,${.09 * eye})`);
+      bloom.addColorStop(1, 'rgba(255,150,40,0)');
+      ctx.fillStyle = bloom;
+      ctx.beginPath(); ctx.arc(0, -6, 34, 0, 6.2832); ctx.fill();
+      ctx.restore();
+
+      const image = images.face;
+      if (image) {
+        const fs = 43 / image.width;
+        ctx.drawImage(image, -image.width * fs * .5, -12 - image.height * fs * .5, image.width * fs, image.height * fs);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .5 * eye;
+        ctx.drawImage(image, -image.width * fs * .5, -12 - image.height * fs * .5, image.width * fs, image.height * fs);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    /* Forearm running from the hidden chassis out to a hand on the housing.
+       Most of it is behind the instrument; only the cuff end shows. */
+    function drawForearm(from, to, radius) {
       const a = Math.atan2(to.y - from.y, to.x - from.x);
       const l = Math.max(2, len(to.x - from.x, to.y - from.y));
-      const sleeve = Math.min(l * .55, radius * 3.2);
       ctx.save(); ctx.translate(from.x, from.y); ctx.rotate(a);
-
-      // inner rod, running the whole span
-      const rod = radius * .62;
-      const rg = ctx.createLinearGradient(0, -rod, 0, rod);
-      rg.addColorStop(0, '#8b939a'); rg.addColorStop(.34, '#5d666d'); rg.addColorStop(1, '#2b3236');
-      ctx.fillStyle = rg; ctx.fillRect(-1, -rod, l + 2, rod * 2);
-      ctx.strokeStyle = 'rgba(16,20,24,.85)'; ctx.lineWidth = 1.3; ctx.strokeRect(-1, -rod, l + 2, rod * 2);
-
-      // outer sleeve at the housing end
-      const sg = ctx.createLinearGradient(0, -radius, 0, radius);
-      sg.addColorStop(0, '#6b7278'); sg.addColorStop(.38, '#454c52'); sg.addColorStop(1, '#20262b');
-      ctx.fillStyle = sg;
-      ctx.beginPath(); ctx.roundRect(-radius * .5, -radius, sleeve + radius * .5, radius * 2, radius * .45); ctx.fill();
-      ctx.strokeStyle = 'rgba(14,18,22,.92)'; ctx.lineWidth = 1.6; ctx.stroke();
-
-      // brass gland where the rod leaves the sleeve
-      ctx.fillStyle = '#b1832f';
-      ctx.beginPath(); ctx.roundRect(sleeve - radius * .55, -radius * 1.06, radius * 1.1, radius * 2.12, radius * .3); ctx.fill();
-      ctx.strokeStyle = 'rgba(58,40,14,.9)'; ctx.lineWidth = 1.2; ctx.stroke();
-      ctx.fillStyle = 'rgba(255,232,178,.45)';
-      ctx.fillRect(sleeve - radius * .5, -radius * .95, radius, radius * .34);
+      const g = ctx.createLinearGradient(0, -radius, 0, radius);
+      g.addColorStop(0, '#5c646a'); g.addColorStop(.4, '#3a4146'); g.addColorStop(1, '#1a2024');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.roundRect(-radius * .6, -radius, l + radius, radius * 2, radius * .8); ctx.fill();
+      ctx.strokeStyle = 'rgba(12,16,19,.9)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#a87c2c';
+      ctx.beginPath(); ctx.roundRect(l * .62, -radius * .96, radius * 1.1, radius * 1.92, radius * .35); ctx.fill();
+      ctx.strokeStyle = 'rgba(58,40,14,.85)'; ctx.lineWidth = 1.1; ctx.stroke();
       ctx.restore();
     }
 
@@ -1085,7 +1119,7 @@
           return { x: mix(excursion * .5, -excursion * .5, s), lift: 0, stance: 1, land: s };
         }
         const s = (c - duty) / (1 - duty);    // swing: arc forward
-        return { x: mix(-excursion * .5, excursion * .5, smoothstep(s)), lift: Math.sin(Math.PI * s) * 26, stance: 0, land: s };
+        return { x: mix(-excursion * .5, excursion * .5, smoothstep(s)), lift: Math.sin(Math.PI * s) * 19, stance: 0, land: s };
       }
       const stepA = footFor(0), stepB = footFor(.5);
       // impact dip right after each plant, plus the standard two-per-cycle bob
@@ -1123,8 +1157,9 @@
       const openness = clamp(state.open, -1.3, 1.6);
       const crouch = pose.crouch;
       const halfSpan = RIG.restHalfSpan + openness * RIG.spanSwing;
-      const spanL = halfSpan * (1 - pose.bias * .30) + Math.max(0, -pose.bias) * 14;
-      const spanR = halfSpan * (1 + pose.bias * .30) + Math.max(0, pose.bias) * 14;
+      // A thrust is the whole instrument being driven out, not a fist on a stick.
+      const spanL = halfSpan * (1 - pose.bias * .30) + Math.max(0, -pose.bias) * 14 + pose.punch[0] * .95;
+      const spanR = halfSpan * (1 + pose.bias * .30) + Math.max(0, pose.bias) * 14 + pose.punch[1] * .95;
       const endDrop = pose.armLift * .82;
       const rings = buildBellows(-spanL, spanR, openness, pose.bias, pose.tremble, endDrop);
       const lastRing = rings.length - 1;
@@ -1132,7 +1167,7 @@
 
       /* Hips ride the underside of the bellows, tucked up inside its silhouette
          and forward of the spine, so the body always overlaps the socket. */
-      const hipY = RIG.axisY - RIG.arch * .5 + RIG.halfHeight * .90;
+      const hipY = RIG.axisY - RIG.arch * .5 + RIG.halfHeight * 1.03;
       const hip3D = [V(-RIG.hipX - pose.stance, hipY, -20 + RIG.hipZ),
                      V(RIG.hipX + pose.stance, hipY, 20 + RIG.hipZ)];
       const hipS = hip3D.map(project);
@@ -1140,12 +1175,15 @@
       /* Housings cap the bellows ends; everything on the arm hangs off the
          socket ring painted on the housing sprite, in that sprite's own pixels. */
       const caseRot = -.030 - .016 * openness + pose.pitch * .5 - endDrop * .0035;
-      const cL3 = V(-spanL - RIG.caseOffset - pose.punch[0] * .55, RIG.axisY + endDrop, 0);
-      const cR3 = V(spanR + RIG.caseOffset + pose.punch[1] * .55, RIG.axisY + endDrop, 0);
+      const cL3 = V(-spanL - RIG.caseOffset, RIG.axisY + endDrop, 0);
+      const cR3 = V(spanR + RIG.caseOffset, RIG.axisY + endDrop, 0);
       const cL = project(cL3), cR = project(cR3);
       const cases = [cL, cR];
       const armSwing = Math.sin(cyc * Math.PI * 2) * 4.5 * moving;
 
+      /* The robot is holding the accordion in front of itself: each hand grips
+         the outer edge of a housing and travels with it, and the forearm runs
+         back to a torso the instrument completely hides. */
       const arms = [0, 1].map(i => {
         const out = i === 0 ? -1 : 1;
         const seat = cases[i];
@@ -1154,21 +1192,21 @@
         const cos = Math.cos(rot), sin = Math.sin(rot);
         const local = (dx, dy) => P(seat.x + dx * ss * cos - dy * ss * sin,
                                     seat.y + dx * ss * sin + dy * ss * cos);
-        const push = pose.punch[i] + armSwing * out * .8;
-        const lift = pose.armLift * .55;
-        const socket = local(out * -RIG.sockX, RIG.sockY);
-        const wrist = local(out * (-RIG.sockX + RIG.forearm + push * 0.8), RIG.wristDrop + lift * .8);
-        const fist = local(out * (-RIG.sockX + RIG.forearm + RIG.fistOut + push * 1.7), RIG.fistDrop + lift * 1.2);
-        return { out, seat, ss, rot, socket, wrist, fist };
+        const swing = armSwing * out * .5;
+        const grip = local(out * (RIG.gripOut + swing), RIG.gripDrop + pose.armLift * .18);
+        const cuff = local(out * (RIG.gripOut - 34 + swing), RIG.gripDrop - 8 + pose.armLift * .18);
+        // shoulder sits behind the bellows, on the hidden chassis
+        const shoulder = project(V(out * 46, RIG.axisY - 14 + endDrop * .5, RIG.headZ * RIG.halfDepth * .7));
+        return { out, seat, ss, rot, grip, cuff, shoulder };
       });
 
       /* ---- legs ---- */
       const groundY = -(bob - 3 + pose.rise);
       const legs = [
         { hip: hipS[0], step: stepA, sign: 1, up: 'leg_left_upper', low: 'leg_left_lower',
-          upRoot: [.80, .15], upTip: [.72, .72], loRoot: [.38, .07], loTip: [.60, .94], base: -RIG.hipX - 6 },
+          upRoot: [.78, .13], upTip: [.72, .73], loRoot: [.52, .05], loTip: [.60, .86], base: -RIG.hipX - 6 },
         { hip: hipS[1], step: stepB, sign: -1, up: 'leg_right_upper', low: 'leg_right_lower',
-          upRoot: [.22, .15], upTip: [.30, .72], loRoot: [.55, .07], loTip: [.68, .92], base: RIG.hipX + 6 }
+          upRoot: [.17, .13], upTip: [.26, .73], loRoot: [.48, .05], loTip: [.60, .85], base: RIG.hipX + 6 }
       ];
       for (const leg of legs) {
         const gx = leg.base + leg.step.x * moving + (leg.sign > 0 ? -pose.stance : pose.stance);
@@ -1180,63 +1218,49 @@
       // Thighs are drawn under the bellows and shins over it, so the hip
       // sockets are always covered by the body they hang from.
       const drawThigh = leg => {
-        jointCap(leg.hip, 14, false);
-        drawBone(leg.up, leg.hip, leg.knee, leg.upRoot, leg.upTip, 1.08);
+        jointCap(leg.hip, 10, false);
+        drawBone(leg.up, leg.hip, leg.knee, leg.upRoot, leg.upTip, 1.10, .96);
       };
       const drawShin = leg => {
-        jointCap(leg.knee, 9, true);
-        drawBone(leg.low, leg.knee, leg.foot, leg.loRoot, leg.loTip, 1.06);
+        jointCap(leg.knee, 10, false);
+        drawBone(leg.low, leg.knee, leg.foot, leg.loRoot, leg.loTip, 1.04, 1.42);
       };
 
       /* ---- draw order: far thigh, pelvis, near thigh, body, arms, shins ---- */
       drawThigh(legs[0]);
       drawPelvis(hipS[0], hipS[1], 22 - crouch * .18);
       drawThigh(legs[1]);
-      drawBellows(rings, state.charge, state.facing);
 
-      // The ram leaves the housing from behind it, so no joint is ever exposed.
-      for (const arm of arms) drawPiston(arm.socket, arm.wrist, 11 * arm.seat.f);
+      /* ---- head and cap: they belong to the body BEHIND the instrument, so
+         they are laid down first and the bellows crops them at the top edge ---- */
+      const headTilt = state.headLag + Math.sin(cyc * Math.PI * 4 + .3) * .016 * moving + pose.pitch * .6;
+      const head3 = V(RIG.headX + pose.lean * .3, RIG.headY + pose.rise * .25 + endDrop * .18,
+                      RIG.headZ * RIG.halfDepth);
+      const headS = project(head3);
+      const eye = clamp(state.eye, 0, 1);
+      drawHead(headS, headTilt, eye);
+      drawAnchored('cap', P(headS.x - 3 * headS.f, headS.y - 23 * headS.f), .375 * headS.f, [.50, .76],
+        .11 + state.capLag + headTilt * .55);
+
+      // Forearms reach around the instrument; the bellows swallows the rest.
+      for (const arm of arms) drawForearm(arm.shoulder, arm.cuff, 13 * arm.seat.f);
+
+      drawBellows(rings, state.charge, state.facing);
 
       // Rigid end housings, seated over the last fold so no seam shows.
       drawAnchored('case_left', cL, RIG.caseScale * cL.f, [.50, .50], caseRot);
       drawAnchored('case_right', cR, RIG.caseScale * cR.f, [.50, .50], -caseRot);
 
-      // Arms: housing socket → piston ram → wrist ball → knuckle fist.
+      // Hands: a cuff tucked behind the knuckles, gripping the housing edge.
       for (const arm of arms) {
-        drawPiston(arm.wrist, arm.fist, 8.5 * arm.seat.f);
-        drawAnchored(arm.out < 0 ? 'wrist_left' : 'wrist_right', arm.wrist, .195 * arm.seat.f, [.50, .46],
-          arm.out * (Math.PI / 2) - arm.out * .06 - arm.out * armSwing * .014 + pose.fistSpin * arm.out * .12);
-        drawAnchored(arm.out < 0 ? 'fist_left' : 'fist_right', arm.fist, .315 * arm.seat.f, [.50, .50],
-          arm.out * (.10 + armSwing * .024) + pose.fistSpin * arm.out * .5);
+        drawAnchored(arm.out < 0 ? 'wrist_left' : 'wrist_right', arm.cuff, .15 * arm.seat.f, [.50, .46],
+          arm.out * (Math.PI / 2) - arm.out * .06 + pose.fistSpin * arm.out * .1);
+        drawAnchored(arm.out < 0 ? 'fist_left' : 'fist_right', arm.grip, .30 * arm.seat.f, [.50, .50],
+          arm.out * (.10 + armSwing * .022) + pose.fistSpin * arm.out * .38);
       }
 
       drawShin(legs[0]);
       drawShin(legs[1]);
-
-      /* ---- face and conductor's cap ---- */
-      const headZ = RIG.halfDepth * midRing.swell * .92;
-      const face3 = V(0, RIG.axisY - RIG.halfHeight * .77 - RIG.arch, headZ + RIG.bow * .96);
-      const cap3 = V(0, RIG.axisY - RIG.halfHeight * 1.25 - RIG.arch, headZ * .42 + RIG.bow * .96);
-      const faceS = project(face3), capS = project(cap3);
-      const headTilt = state.headLag + Math.sin(cyc * Math.PI * 4 + .3) * .016 * moving + pose.pitch * .6;
-
-      // amber bloom behind the visor — the reeds are lit from inside
-      const eye = clamp(state.eye, 0, 1);
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      const bloom = ctx.createRadialGradient(faceS.x, faceS.y, 2, faceS.x, faceS.y, 52 * faceS.f);
-      bloom.addColorStop(0, `rgba(255,196,86,${.30 * eye})`);
-      bloom.addColorStop(1, 'rgba(255,150,40,0)');
-      ctx.fillStyle = bloom;
-      ctx.beginPath(); ctx.arc(faceS.x, faceS.y, 52 * faceS.f, 0, 6.2832); ctx.fill();
-      ctx.restore();
-
-      drawAnchored('face', faceS, .34 * faceS.f, [.50, .50], headTilt * .55);
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .55 * eye;
-      drawAnchored('face', faceS, .34 * faceS.f, [.50, .50], headTilt * .55);
-      ctx.restore();
-      drawAnchored('cap', capS, .40 * capS.f, [.50, .78], .014 + state.capLag + headTilt * .5);
 
       /* ---- the concept sheet's sound arcs, driven by the squeeze ---- */
       const push = clamp(-state.squeezeRate * 26, 0, 1) * (0.35 + moving * .5) + state.charge * .55;
@@ -1245,7 +1269,7 @@
         for (const arm of arms) {
           const side = arm.out;
           ctx.save();
-          ctx.translate(arm.fist.x + side * 46 * arm.seat.f, arm.fist.y - 12 * arm.seat.f);
+          ctx.translate(arm.grip.x + side * 44 * arm.seat.f, arm.grip.y - 10 * arm.seat.f);
           ctx.scale(side, 1);
           for (let k = 0; k < 3; k++) {
             ctx.globalAlpha = clamp(push, 0, 1) * (.62 - k * .16);
@@ -1263,9 +1287,9 @@
         const body = P(0, RIG.axisY);
         const bones = [[body, hipS[0]], [hipS[0], legs[0].knee], [legs[0].knee, legs[0].foot],
           [body, hipS[1]], [hipS[1], legs[1].knee], [legs[1].knee, legs[1].foot],
-          [body, cL], [cL, arms[0].socket], [arms[0].socket, arms[0].wrist], [arms[0].wrist, arms[0].fist],
-          [body, cR], [cR, arms[1].socket], [arms[1].socket, arms[1].wrist], [arms[1].wrist, arms[1].fist],
-          [body, faceS], [faceS, capS]];
+          [body, cL], [arms[0].shoulder, arms[0].cuff], [arms[0].cuff, arms[0].grip],
+          [body, cR], [arms[1].shoulder, arms[1].cuff], [arms[1].cuff, arms[1].grip],
+          [body, headS], [headS, arms[0].shoulder], [headS, arms[1].shoulder]];
         ctx.save();
         ctx.strokeStyle = 'rgba(39,220,240,.32)'; ctx.lineWidth = 1.1 / overall;
         ctx.beginPath();
@@ -1281,8 +1305,8 @@
         for (const [a, b] of bones) { ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
         ctx.stroke();
         const joints = [body, hipS[0], legs[0].knee, legs[0].foot, hipS[1], legs[1].knee, legs[1].foot,
-          cL, arms[0].socket, arms[0].wrist, arms[0].fist,
-          cR, arms[1].socket, arms[1].wrist, arms[1].fist, faceS, capS];
+          cL, arms[0].shoulder, arms[0].cuff, arms[0].grip,
+          cR, arms[1].shoulder, arms[1].cuff, arms[1].grip, headS];
         for (const p of joints) {
           ctx.fillStyle = '#ff5477'; ctx.strokeStyle = 'white'; ctx.lineWidth = 1.4 / overall;
           ctx.beginPath(); ctx.arc(p.x, p.y, 4 / overall, 0, 6.2832); ctx.fill(); ctx.stroke();
