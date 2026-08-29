@@ -214,11 +214,15 @@
       pivot: -32,           // the shell leans and squashes about its base, not its middle
       legLen: 24, splay: .30, ankle: 15.2, swing: .48, stance: .62,
       hipL: -19, hipR: 17,
-      shoulderL: point(-58, -112), shoulderR: point(58, -100),
-      armLen: 40, armRestL: HALF_PI + .05, armRestR: HALF_PI - .07,
+      // Sockets sit on the bowl itself, at the joint the body art already has
+      // painted on its right flank (measured centre: fx .897, fy .45).
+      shoulderL: point(-57, -83), shoulderR: point(57, -82),
+      // Arms hang OUT from the sides, not straight down — that splay is most
+      // of what makes the little guy read as top-heavy and wobbly.
+      armLen: 38, armRestL: HALF_PI + .30, armRestR: HALF_PI - .32,
       antenna: point(10, -250),   // gold float bead above the crown
       spearLength: 210,
-      spearGripAlong: 0.63,       // hand sits 63% of the way down from the tip
+      spearGripAlong: 0.74,       // hand sits 74% of the way down from the tip
       spearFerrule: 0.22          // head socket, measured from the point
     };
     // Rest stance: both legs splayed by the same angle, so both soles sit flat.
@@ -566,7 +570,7 @@
         squashX: 1, squashY: 1,
         legL: RIG.legRestL, legR: RIG.legRestR,
         armL: RIG.armRestL, armR: RIG.armRestR,
-        spearAngle: -2.19,         // butt-to-tip heading, up and to the left
+        spearAngle: -2.10,         // butt-to-tip heading, up and to the left
         spearAlong: 0,             // slide along its own axis (thrust)
         antennaTilt: 0,
         flash: 0
@@ -667,9 +671,9 @@
 
       // Arms swing as pendulums; the spear arm only breathes.
       const swing = Math.sin(state.gait * Math.PI * 2) * moving;
-      p.armL = RIG.armRestL - swing * .07 + Math.sin(elapsed * 1.4) * .02 * idle;
-      p.armR = RIG.armRestR + swing * .30;
-      p.spearAngle = -2.19 + swing * .05 + Math.sin(elapsed * 1.4) * .025 * idle;
+      p.armL = RIG.armRestL - swing * .07 + Math.sin(elapsed * 1.7) * .055 * idle;
+      p.armR = RIG.armRestR + swing * .30 - Math.sin(elapsed * 1.7 + .4) * .06 * idle;
+      p.spearAngle = -2.10 + swing * .05 + Math.sin(elapsed * 1.4) * .025 * idle;
 
       // Kick a little dust each time a foot lands.
       const landed = Math.floor(state.gait * 2);
@@ -704,7 +708,7 @@
                          [.54, RIG.armRestL - .38], [1, RIG.armRestL]]);
       p.armR = track(t, [[0, RIG.armRestR], [.24, RIG.armRestR - .34], [.34, RIG.armRestR + .46, 'snap'],
                          [.54, RIG.armRestR + .40], [1, RIG.armRestR]]);
-      p.spearAngle = track(t, [[0, -2.19], [.24, -1.98], [.34, -2.86, 'snap'], [.54, -2.84], [1, -2.19]]);
+      p.spearAngle = track(t, [[0, -2.10], [.24, -1.98], [.34, -2.86, 'snap'], [.54, -2.84], [1, -2.10]]);
       p.spearAlong = track(t, [[0, 0], [.24, -18], [.34, 44, 'snap'], [.54, 40], [1, 0]]);
       p.antennaTilt = drive * .18;
 
@@ -744,13 +748,14 @@
       p.legL = RIG.legRestL - rise * .22 + slam * .42;
       p.legR = RIG.legRestR + rise * .20 - slam * .30;
 
-      // The spear arm swings the long way — up past the crown, then down
-      // through — so the shaft never scythes across the shell.
-      p.armL = track(t, [[0, RIG.armRestL], [.30, -.95, 'out'], [.44, -1.02], [.60, 1.94, 'in'], [.78, 1.90], [1, RIG.armRestL]]);
+      // The spear arm swings up and over on the LEFT side and chops back down
+      // the same side. Now that the harpoon is drawn behind the shell, a swing
+      // across the body would simply vanish for the length of the chop.
+      p.armL = track(t, [[0, RIG.armRestL], [.30, 3.88, 'out'], [.44, 3.95], [.60, 2.10, 'in'], [.78, 2.14], [1, RIG.armRestL]]);
       p.armR = track(t, [[0, RIG.armRestR], [.30, RIG.armRestR + .40, 'out'], [.44, RIG.armRestR + .42],
                          [.60, RIG.armRestR - .62, 'in'], [.78, RIG.armRestR - .56], [1, RIG.armRestR]]);
-      p.spearAngle = track(t, [[0, -2.19], [.30, -1.52, 'out'], [.44, -1.40], [.60, -3.78, 'in'], [.78, -3.75], [1, -2.19]]);
-      p.spearAlong = track(t, [[0, 0], [.30, -12], [.60, 14, 'in'], [.78, 12], [1, 0]]);
+      p.spearAngle = track(t, [[0, -2.10], [.30, -1.52, 'out'], [.44, -1.40], [.60, -3.75, 'in'], [.78, -3.72], [1, -2.10]]);
+      p.spearAlong = track(t, [[0, 0], [.30, -12], [.60, -50, 'in'], [.78, -48], [1, 0]]);
       p.antennaTilt = -rise * .34 + slam * .55;
 
       const scale = overallScale();
@@ -789,7 +794,7 @@
       p.armL = RIG.armRestL + back * .16 - fore * .10;
       p.armR = track(t, [[0, RIG.armRestR], [.26, RIG.armRestR - .95, 'out'], [.40, RIG.armRestR + .55, 'snap'],
                          [.70, RIG.armRestR + .30], [1, RIG.armRestR]]);
-      p.spearAngle = -2.19 + back * .16 - fore * .10;
+      p.spearAngle = -2.10 + back * .16 - fore * .10;
       p.antennaTilt = back * .62 - fore * .86 - yank * .34;
 
       const scale = overallScale();
@@ -857,7 +862,7 @@
       hookScale: .420, hookPivot: [.032, .373], hookAt: point(12, -266),
       // Art-space headings and lengths, so a spear angle is authored as a real
       // world angle and the two pieces always meet at the head socket.
-      shaftArtAngle: -2.254, shaftArtLen: 290.6, shaftPivot: [.517, .494],
+      shaftArtAngle: -2.254, shaftArtLen: 290.6, shaftPivot: [.626, .618],
       headArtAngle: -2.121, headArtLen: 202.5, headPivot: [.800, .890],
       // One rigid piece per limb: forearm-and-hand off the shoulder, shin-and-
       // foot off the hip. girth trims them across the bone, since a piece that
@@ -894,11 +899,21 @@
       const gripL = handL(p), gripR = handR(p);
       const spear = spearPoints(p);
 
-      // 1 · legs, hung straight off hips hidden inside the bowl
+      // 1 · far side. In this three-quarter view the harpoon and the arm
+      //     carrying it are on the side turned away from us, so they go behind
+      //     everything. The arm still draws over the shaft, so the hand reads
+      //     as a grip rather than a piece floating near one.
+      const shaftScale = RIG.spearLength * (1 - RIG.spearFerrule) / SHELL.shaftArtLen;
+      const headScale = RIG.spearLength * RIG.spearFerrule / SHELL.headArtLen;
+      drawAnchored('spear_shaft', spear.grip, shaftScale, SHELL.shaftPivot, p.spearAngle - SHELL.shaftArtAngle);
+      drawAnchored('spearhead', spear.ferrule, headScale, SHELL.headPivot, p.spearAngle - SHELL.headArtAngle);
+      drawBone('arm_left_lower', shoulderLeft, gripL, SHELL.armRoot, SHELL.armTip, SHELL.armGirth);
+
+      // 2 · legs, hung straight off hips hidden inside the bowl
       drawBone('leg_right_lower', hipRight, soleR, SHELL.legRootR, SHELL.legTipR, SHELL.legGirth);
       drawBone('leg_left_lower', hipLeft, soleL, SHELL.legRoot, SHELL.legTip, SHELL.legGirth);
 
-      // 2 · shell stack, drawn as one rigid body. The ring goes down first and
+      // 3 · shell stack, drawn as one rigid body. The ring goes down first and
       //     the bowl covers all but its two socket ears; then the dome lands on
       //     top of both, so the seam reads as one closed sphere. The bead is
       //     under the dome too, hiding the long end of its stalk.
@@ -914,7 +929,7 @@
       drawAnchored('visor', SHELL.visorAt, SHELL.visorScale, SHELL.visorPivot, SHELL.visorTilt);
       ctx.restore();
 
-      // 3 · the hook, wherever its own physics has put it, on a line that sags
+      // 4 · the hook, wherever its own physics has put it, on a line that sags
       //     with whatever slack is left on the spool
       const lure = point(bead.x + hook.x, bead.y + hook.y);
       const flown = len(hook.x, hook.y);
@@ -929,15 +944,8 @@
       drawAnchored('hook_wire', add(lure, SHELL.hookAt.x - RIG.antenna.x, SHELL.hookAt.y - RIG.antenna.y),
         SHELL.hookScale, SHELL.hookPivot, hook.mode === 'rest' ? wobble.hook + hook.rot : hook.rot);
 
-      // 4 · free arm, in front of the shell like the concept sheet
+      // 5 · near arm, over the shell
       drawBone('arm_right_lower', shoulderRight, gripR, SHELL.armRootR, SHELL.armTipR, SHELL.armGirth);
-
-      // 5 · harpoon, then the gripping arm over it so the hand reads as a grip
-      const shaftScale = RIG.spearLength * (1 - RIG.spearFerrule) / SHELL.shaftArtLen;
-      const headScale = RIG.spearLength * RIG.spearFerrule / SHELL.headArtLen;
-      drawAnchored('spear_shaft', spear.grip, shaftScale, SHELL.shaftPivot, p.spearAngle - SHELL.shaftArtAngle);
-      drawAnchored('spearhead', spear.ferrule, headScale, SHELL.headPivot, p.spearAngle - SHELL.headArtAngle);
-      drawBone('arm_left_lower', shoulderLeft, gripL, SHELL.armRoot, SHELL.armTip, SHELL.armGirth);
 
       if (p.flash > 0) {
         const fx = spear.tip.x, r = 34 + (1 - p.flash) * 46;
