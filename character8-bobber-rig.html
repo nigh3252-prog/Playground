@@ -118,7 +118,7 @@
       <figure><img id="sourceImage" alt="Character 8 source crop"><figcaption><b>1 · Source reference</b>The circled Character 8 design isolated from the original concept sheet. The rig is measured against this crop: dome crown, equator seam, bowl base, and ground line.</figcaption></figure>
       <figure><img id="jointImage" alt="Coded joint map"><figcaption><b>2 · Coded joint map</b>Shoulders, elbows, hips, knees, ankles, neck, and both ear pivots plotted in source pixels.</figcaption></figure>
       <figure><img id="roughImage" alt="Rough crop atlas"><figcaption><b>3 · Rough crop atlas</b>Sixteen overlapping crops test the shell, tiny elbow and knee chains, hook antenna, and carried spear.</figcaption></figure>
-      <figure><img id="cleanImage" alt="Generated clean paper doll atlas"><figcaption><b>4 · Generated clean-piece atlas</b>Hidden shell and joint attachments were reconstructed from the original reference, then the painted checkerboard was removed for real transparency.</figcaption></figure>
+      <figure><img id="cleanImage" alt="Generated clean paper doll atlas"><figcaption><b>4 · Generated clean-piece atlas</b>Hidden shell and joint attachments were reconstructed from the original reference, then the painted checkerboard was removed for real transparency. The rig draws twelve of these: the upper-arm and thigh pieces are deliberately unused, so each limb is one rigid part hung straight off the body.</figcaption></figure>
     </div>
   </aside>
 
@@ -195,25 +195,43 @@
      * Rig constants — local puppet units, ground at y = 0, +x is behind the
      * character. Every number below was measured off the concept crop
      * (dome crown, equator seam, bowl base, sole line) and scaled by 1.6.
-     * The puppet is NEVER mirrored: it always faces the way it does on the
-     * concept sheet, toward -x.
+     *
+     * The shell is ONE rigid body: dome, ring, bowl and visor never move
+     * relative to each other, so the puppet reads as a character rather than
+     * a cut-out that hinges at the waist. And it is never mirrored — it always
+     * faces the way it does on the concept sheet, toward -x.
+     *
+     * Limbs are single rigid pieces: the forearm-and-hand hangs straight off
+     * the shoulder socket and the shin-and-foot straight off the hip. No
+     * elbows, no knees. Each limb is authored as an ANGLE and swings at a
+     * fixed length — stretching a forearm to reach a target is the same
+     * cut-out tell the shell had.
      * ------------------------------------------------------------------ */
+    const HALF_PI = Math.PI / 2;
+
     const RIG = {
       equator: -110,        // seam where the red dome meets the cream bowl
-      hipX: 18, hipY: -38,
-      thigh: 17, shin: 16,
-      ankle: 10,            // sole sits this far below the ankle pin
-      standL: -30, standR: 26,
-      // Spear-side shoulder (viewer left) and the free hand (viewer right).
-      shoulderL: point(-56, -104), upperL: 24, foreL: 21,
-      shoulderR: point(56, -100), upperR: 33, foreR: 27,
+      pivot: -32,           // the shell leans and squashes about its base, not its middle
+      legLen: 24, splay: .30, ankle: 15.2, swing: .48, stance: .62,
+      hipL: -19, hipR: 17,
+      shoulderL: point(-58, -112), shoulderR: point(58, -100),
+      armLen: 40, armRestL: HALF_PI + .05, armRestR: HALF_PI - .07,
       antenna: point(10, -250),   // gold float bead above the crown
       spearLength: 210,
       spearGripAlong: 0.63,       // hand sits 63% of the way down from the tip
       spearFerrule: 0.22          // head socket, measured from the point
     };
+    // Rest stance: both legs splayed by the same angle, so both soles sit flat.
+    RIG.legRestL = HALF_PI + RIG.splay;
+    RIG.legRestR = HALF_PI - RIG.splay;
+    RIG.hipY = -(RIG.ankle + RIG.legLen * Math.cos(RIG.splay));
+    const REST_REACH = Math.cos(RIG.splay);
 
-    const STRIDE = 31;    // world px covered per full stride cycle at scale 1
+    // A rigid leg can only carry the body as far as its own sweep: one stance
+    // sweep moves the hip by 2·L·sin(swing), and that sweep occupies `stance`
+    // of the cycle. So the stride falls out of the rig rather than being tuned
+    // against it, and a planted sole cannot skate.
+    const STRIDE = 2 * RIG.legLen * Math.sin(RIG.swing) / RIG.stance;
 
     /* ------------------------------------------------------------------ *
      * Sim state
@@ -239,8 +257,58 @@
     let lastPose = null, blendFrom = null, blendLeft = 0;
     function crossFade() { if (lastPose) { blendFrom = lastPose; blendLeft = BLEND; } }
 
-    // Secondary motion springs for the antenna bead and the hook on its line.
+    // Secondary motion springs for the antenna bead and the hook at rest.
     const wobble = { antenna: 0, antennaV: 0, hook: 0, hookV: 0 };
+
+    /* ------------------------------------------------------------------ *
+     * The hook is a real projectile, not a tween: the cast throws it with a
+     * velocity, gravity arcs it, the line stops it when the spool runs out,
+     * and the reel drags it home. Position is an offset from the bead, in
+     * puppet units.
+     * ------------------------------------------------------------------ */
+    const hook = { x: 0, y: 0, vx: 0, vy: 0, rot: 0, mode: 'rest', flightTime: 0 };
+    const HOOK_LINE = 300;    // units of line on the spool
+    const HOOK_GRAVITY = 1250;
+    const HOOK_ART_LEAD = -.34;   // art already points a little off its own axis
+
+    function launchHook(vx, vy) { hook.mode = 'flight'; hook.vx = vx; hook.vy = vy; hook.flightTime = 0; }
+    function reelHook() { if (hook.mode === 'flight') hook.mode = 'reel'; }
+
+    function updateHook(dt) {
+      if (hook.mode === 'rest') {
+        // Settle onto the bead and hand the sway back to the spring.
+        const k = 1 - Math.pow(.0004, dt);
+        hook.x = mix(hook.x, 0, k); hook.y = mix(hook.y, 0, k);
+        hook.rot = mix(hook.rot, 0, k);
+        hook.vx = hook.vy = 0;
+        return;
+      }
+
+      hook.flightTime += dt;
+      hook.vy += HOOK_GRAVITY * dt;
+
+      if (hook.mode === 'reel') {
+        const d = Math.max(1, len(hook.x, hook.y));
+        hook.vx -= hook.x / d * 3000 * dt; hook.vy -= hook.y / d * 3000 * dt;
+        hook.vx *= Math.pow(.05, dt); hook.vy *= Math.pow(.05, dt);
+        if (d < 16) { hook.mode = 'rest'; return; }
+      } else if (hook.flightTime > 1.4) {
+        reelHook();   // never leave a hook dangling if a cast gets interrupted
+      }
+
+      hook.x += hook.vx * dt; hook.y += hook.vy * dt;
+
+      // The line is finite: once it runs out the hook swings on it rather than
+      // flying on, which is what gives the cast its whip at full extension.
+      const d = len(hook.x, hook.y);
+      if (d > HOOK_LINE) {
+        const nx = hook.x / d, ny = hook.y / d;
+        hook.x = nx * HOOK_LINE; hook.y = ny * HOOK_LINE;
+        const radial = hook.vx * nx + hook.vy * ny;
+        if (radial > 0) { hook.vx -= nx * radial * 1.6; hook.vy -= ny * radial * 1.6; }
+      }
+      hook.rot = Math.atan2(hook.vy, hook.vx) + HOOK_ART_LEAD;
+    }
 
     /* ------------------------------------------------------------------ *
      * Field
@@ -370,6 +438,7 @@
       elapsed += dt;
       shake = Math.max(0, shake - dt * 5.5);
       updateEffects(dt);
+      updateHook(dt);
 
       if (state.action) {
         const a = state.action;
@@ -408,7 +477,8 @@
       state.x += state.vx * dt; state.y += state.vy * dt;
 
       // Stride phase advances with ground covered, so planted feet never skate.
-      state.gait += len(state.vx, state.vy) * dt / (STRIDE * overallScale());
+      // Depth motion is flattened: a step across the field covers less screen.
+      state.gait += len(state.vx, state.vy * .45) * dt / (STRIDE * overallScale());
     }
 
     /* ------------------------------------------------------------------ *
@@ -476,47 +546,70 @@
       ctx.restore();
     }
 
-    // Two-bone IK. bendSign picks which way the joint buckles.
-    function solveLimb(root, endPoint, upper, lower, bendSign) {
-      const dx = endPoint.x - root.x, dy = endPoint.y - root.y;
-      const distance = clamp(len(dx, dy), Math.abs(upper - lower) + .01, upper + lower - .01);
-      const ux = dx / distance, uy = dy / distance;
-      const along = (upper * upper - lower * lower + distance * distance) / (2 * distance);
-      const off = Math.sqrt(Math.max(0, upper * upper - along * along));
-      return point(root.x + ux * along - uy * off * bendSign, root.y + uy * along + ux * off * bendSign);
-    }
-
     /* ------------------------------------------------------------------ *
      * Pose assembly
      *
      * Every clip writes into one plain pose object, then a single draw pass
-     * consumes it. Walk and the three attacks therefore share one stacking
-     * order, one IK solver, and one set of secondary-motion springs.
+     * consumes it. Walk and the three attacks therefore share one shell
+     * transform, one ground lock, and one set of secondary-motion springs.
+     *
+     * Limbs are angles, not targets. The shell's height is not authored at
+     * all — it is DERIVED from the leg angles, so a rigid leg that swings out
+     * lowers the body exactly as far as its own geometry demands and the sole
+     * stays on the ground. Crouches and lunges come for free; `lift` is only
+     * for genuinely leaving the ground.
      * ------------------------------------------------------------------ */
     function blankPose() {
       return {
-        shellX: 0, shellY: 0,      // shell offset from the hips (crouch, lunge, hop)
-        lean: 0, rollShell: 0,
+        shellX: 0, lift: 0,
+        lean: 0, roll: 0,
         squashX: 1, squashY: 1,
-        capLift: 0, capTilt: 0,
-        footL: point(RIG.standL, -RIG.ankle), footR: point(RIG.standR, -RIG.ankle),
-        hipShift: 0,
-        handL: point(-60, -70), handR: point(62, -48),
-        elbowL: 1, elbowR: -1,
+        legL: RIG.legRestL, legR: RIG.legRestR,
+        armL: RIG.armRestL, armR: RIG.armRestR,
         spearAngle: -2.19,         // butt-to-tip heading, up and to the left
         spearAlong: 0,             // slide along its own axis (thrust)
-        hook: point(0, 0),         // hook offset from the antenna bead
-        hookRot: 0, hookScale: 1, lineSlack: 0,
         antennaTilt: 0,
         flash: 0
       };
     }
 
-    // Where the spear hand must be for a given spear pose, and where the point,
-    // butt and head socket land. Everything downstream reads off these three.
+    // Height the shell must sit at for the most upright leg to keep its sole
+    // on the ground. The other foot may float a hair; at this scale it reads
+    // as weight rolling from one leg to the other.
+    function groundedShell(p) {
+      const reach = Math.max(Math.sin(p.legL), Math.sin(p.legR));
+      return RIG.legLen * (REST_REACH - reach) + p.lift;
+    }
+
+    // The shell's lean and squash, applied to a rigged point so limbs stay
+    // welded to sockets that are themselves moving. Everything pivots about
+    // the base of the bowl, which is how a body leans.
+    function shellPoint(p, q) {
+      const angle = p.lean + p.roll;
+      const c = Math.cos(angle), s = Math.sin(angle);
+      const x = q.x * p.squashX, y = (q.y - RIG.pivot) * p.squashY;
+      return point(p.shellX + x * c - y * s, p.shellY + RIG.pivot + x * s + y * c);
+    }
+
+    // End of a rigid limb: the socket rides the shell, and the limb angle is
+    // measured against the shell so the arm leans with the body.
+    function limbEnd(p, socket, angle, length) {
+      const root = shellPoint(p, socket);
+      const a = angle + p.lean + p.roll;
+      return point(root.x + Math.cos(a) * length, root.y + Math.sin(a) * length);
+    }
+
+    const handL = p => limbEnd(p, RIG.shoulderL, p.armL, RIG.armLen);
+    const handR = p => limbEnd(p, RIG.shoulderR, p.armR, RIG.armLen);
+    const footL = p => limbEnd(p, point(RIG.hipL, RIG.hipY), p.legL, RIG.legLen);
+    const footR = p => limbEnd(p, point(RIG.hipR, RIG.hipY), p.legR, RIG.legLen);
+
+    // Where the harpoon's point, butt and head socket land. The grip is not a
+    // channel: it is wherever the spear hand actually is.
     function spearPoints(p) {
       const c = Math.cos(p.spearAngle), s = Math.sin(p.spearAngle);
-      const grip = point(p.handL.x + c * p.spearAlong, p.handL.y + s * p.spearAlong);
+      const hand = handL(p);
+      const grip = point(hand.x + c * p.spearAlong, hand.y + s * p.spearAlong);
       const L = RIG.spearLength;
       const toTip = L * RIG.spearGripAlong;
       const toButt = L * (1 - RIG.spearGripAlong);
@@ -529,77 +622,67 @@
       };
     }
 
-    /* --- locomotion ---------------------------------------------------- */
+    /* --- locomotion ---------------------------------------------------- *
+     * A compass gait. During stance the leg's cosine sweeps linearly, which
+     * is exactly the hip's ground speed, so the planted sole cannot skate;
+     * the body then arcs over each leg on its own, the way a stiff-legged
+     * walk actually works.
+     * ------------------------------------------------------------------ */
     function poseLocomotion(p) {
-      const speed = len(state.vx, state.vy);
-      const moving = clamp(speed / 46, 0, 1);
-      const scale = overallScale();
+      const speed = len(state.vx, state.vy * .45);
+      const moving = clamp(speed / 42, 0, 1);
+      // -1 is the way it faces; walking the other way back-pedals rather than
+      // flipping the sprite.
+      const heading = Math.abs(state.vx) > 5 ? Math.sign(state.vx) : -1;
+      // The planted foot sweeps against the direction of travel, which is what
+      // carries the body forward.
+      const reach = Math.sin(RIG.swing * moving) * -heading;
+      const stance = RIG.stance;
 
-      // Stride axis follows the travel direction, with depth motion flattened
-      // so walking "into" the field still reads as steps rather than a squat.
-      let ax = -1, ay = 0;
-      if (speed > 3) { ax = state.vx / speed; ay = state.vy / speed * .42; }
-      const axisLen = Math.max(.2, len(ax, ay));
-      ax /= axisLen; ay /= axisLen;
+      const sweep = phase => {
+        if (phase < stance) return { offset: -reach + (phase / stance) * 2 * reach, swing: 0 };
+        const u = (phase - stance) / (1 - stance);
+        return { offset: reach - smooth(u) * 2 * reach, swing: bell(u) };
+      };
 
-      const half = STRIDE * .5;
-      const legs = [
-        { key: 'footL', base: RIG.standL, phase: state.gait % 1 },
-        { key: 'footR', base: RIG.standR, phase: (state.gait + .5) % 1 }
-      ];
-      const STANCE = .62;
+      const left = sweep(state.gait % 1);
+      const right = sweep((state.gait + .5) % 1);
+      p.legL = Math.acos(clamp(Math.cos(RIG.legRestL) + left.offset, -1, 1));
+      p.legR = Math.acos(clamp(Math.cos(RIG.legRestR) + right.offset, -1, 1));
 
-      for (const leg of legs) {
-        let along, lift;
-        if (leg.phase < STANCE) {
-          // Planted: the foot slides backwards exactly as fast as the body advances.
-          const u = leg.phase / STANCE;
-          along = half - u * STRIDE;
-          lift = 0;
-        } else {
-          // Swing: ease forward through a lifted arc.
-          const u = (leg.phase - STANCE) / (1 - STANCE);
-          along = -half + smooth(u) * STRIDE;
-          lift = bell(u) * 15;
-        }
-        along *= moving; lift *= moving;
-        p[leg.key] = point(leg.base + ax * along, -RIG.ankle + ay * along - lift);
-      }
-
-      // Weight: the shell drops onto each planted foot and rises through the pass.
-      const bounce = Math.cos(state.gait * Math.PI * 4);
-      p.shellY = (-bounce * 2.6 - 1.4) * moving;
-      p.hipShift = Math.sin(state.gait * Math.PI * 2) * 2.4 * moving;
-      p.rollShell = Math.sin(state.gait * Math.PI * 2) * .022 * moving;
-
-      // Lean into travel; back-pedalling leans the other way instead of flipping.
-      p.lean = clamp(state.vx / 620, -.075, .075) + clamp(state.vy / 900, -.04, .04);
-      p.shellX = clamp(state.vx / 26, -5, 5);
+      // A knee-less leg is at its longest as it passes under the hip, so the
+      // body rises onto the stance foot to give the swing foot its clearance.
+      p.lift = -(left.swing + right.swing) * 3.4 * moving;
 
       // Idle float — the bobber never sits perfectly still.
       const idle = 1 - moving;
-      p.shellY += Math.sin(elapsed * 1.9) * 2.1 * idle;
-      p.capLift = Math.sin(elapsed * 1.9 + .5) * 1.2 * idle;
-      p.squashY = 1 + Math.sin(elapsed * 1.9) * .012 * idle;
-      p.squashX = 1 - Math.sin(elapsed * 1.9) * .012 * idle;
+      p.lift += Math.sin(elapsed * 1.9) * 2.1 * idle;
+      p.squashY = 1 + Math.sin(elapsed * 1.9) * .014 * idle;
+      p.squashX = 1 - Math.sin(elapsed * 1.9) * .014 * idle;
 
-      // Arms: the spear hand stays welded to the shaft, the free hand swings.
+      // Lean into travel, and roll a little with the weight shift.
+      p.lean = clamp(state.vx / 620, -.075, .075) + clamp(state.vy / 900, -.04, .04);
+      p.roll = Math.sin(state.gait * Math.PI * 2) * .024 * moving;
+      p.shellX = clamp(state.vx / 26, -5, 5);
+
+      // Arms swing as pendulums; the spear arm only breathes.
       const swing = Math.sin(state.gait * Math.PI * 2) * moving;
-      p.handL = point(-60 + swing * 3, -70 + Math.abs(swing) * 4);
-      p.handR = point(62 + swing * 6, -48 - swing * 6 + Math.abs(swing) * 3);
-      p.spearAngle = -2.19 + swing * .045 + Math.sin(elapsed * 1.4) * .02 * idle;
+      p.armL = RIG.armRestL - swing * .07 + Math.sin(elapsed * 1.4) * .02 * idle;
+      p.armR = RIG.armRestR + swing * .30;
+      p.spearAngle = -2.19 + swing * .05 + Math.sin(elapsed * 1.4) * .025 * idle;
 
       // Kick a little dust each time a foot lands.
       const landed = Math.floor(state.gait * 2);
       if (moving > .35 && landed !== state.lastLand) {
         state.lastLand = landed;
-        const foot = (landed % 2 === 0) ? p.footL : p.footR;
+        const scale = overallScale();
+        const foot = (landed % 2 === 0) ? footL(p) : footR(p);
         puff(state.x + foot.x * scale, state.y + 1, 2, 16, 'rgba(126,122,104,');
       }
     }
 
     /* --- harpoon thrust ------------------------------------------------- *
-     * Coil back onto the rear foot, then drive the whole shell and the shaft
+     * Coil back onto the rear foot, then drive the whole body and the shaft
      * out along one line. The concept sheet reads as a lean, wiry hunter, so
      * this is a single committed lunge rather than a wind-up-and-swing.
      * -------------------------------------------------------------------- */
@@ -608,23 +691,22 @@
       const drive = track(t, [[0, 0], [.24, -.34, 'out'], [.34, 1, 'snap'], [.54, .94], [1, 0]]);
       const lunge = Math.max(0, drive), coil = Math.max(0, -drive);
 
-      p.shellX = drive * -34;
-      p.shellY = track(t, [[0, 0], [.24, 6], [.34, -2, 'snap'], [.54, 2], [1, 0]]);
-      p.lean = drive * -.15;
+      p.shellX = drive * -32;
+      p.lean = drive * -.17;
       p.squashX = 1 + lunge * .05 - coil * .03; p.squashY = 1 - lunge * .05 + coil * .03;
-      p.capTilt = drive * -.12;
 
-      // Front foot skates out into the lunge; the rear foot stays pinned and
-      // rolls onto its toe, which is what sells the reach.
-      const step = bell(clamp((t - .24) / .16, 0, 1));
-      p.footL = point(RIG.standL - lunge * 30 - coil * 6, -RIG.ankle - step * 8);
-      p.footR = point(RIG.standR + coil * 8 + lunge * 12, -RIG.ankle);
+      // Front leg reaches out, rear leg rakes back and pins — which drops the
+      // shell into the lunge without anyone authoring a crouch.
+      p.legL = RIG.legRestL + lunge * .52 + coil * .10;
+      p.legR = RIG.legRestR - lunge * .34 - coil * .12;
 
-      p.handL = point(-60 + drive * -30, -70 + lunge * 10 + coil * 10);
-      p.handR = point(62 - drive * 24, -48 - drive * 16);
-      p.spearAngle = track(t, [[0, -2.19], [.24, -1.98], [.34, -2.80, 'snap'], [.54, -2.78], [1, -2.19]]);
-      p.spearAlong = track(t, [[0, 0], [.24, -18], [.34, 46, 'snap'], [.54, 42], [1, 0]]);
-      p.antennaTilt = drive * .16;
+      p.armL = track(t, [[0, RIG.armRestL], [.24, RIG.armRestL + .22], [.34, RIG.armRestL - .40, 'snap'],
+                         [.54, RIG.armRestL - .38], [1, RIG.armRestL]]);
+      p.armR = track(t, [[0, RIG.armRestR], [.24, RIG.armRestR - .34], [.34, RIG.armRestR + .46, 'snap'],
+                         [.54, RIG.armRestR + .40], [1, RIG.armRestR]]);
+      p.spearAngle = track(t, [[0, -2.19], [.24, -1.98], [.34, -2.86, 'snap'], [.54, -2.84], [1, -2.19]]);
+      p.spearAlong = track(t, [[0, 0], [.24, -18], [.34, 44, 'snap'], [.54, 40], [1, 0]]);
+      p.antennaTilt = drive * .18;
 
       const scale = overallScale();
       const sp = spearPoints(p);
@@ -635,46 +717,39 @@
         shake = .34;
       });
       if (t > .27 && t < .48) {
-        const c = Math.cos(p.spearAngle) * scale, s2 = Math.sin(p.spearAngle) * scale;
-        slash([point(tipX, tipY), point(tipX - c * 46, tipY - s2 * 46)], .13);
+        const c = Math.cos(p.spearAngle) * scale, s = Math.sin(p.spearAngle) * scale;
+        slash([point(tipX, tipY), point(tipX - c * 46, tipY - s * 46)], .13);
       }
     }
 
     /* --- overhead skewer ------------------------------------------------ *
-     * Rear back onto the hind leg, run the harpoon up to full vertical, then
-     * drop the whole shell behind it and spike the ground. One-handed, because
-     * these arms are short: the free hand counterweights instead of gripping.
-     * Each channel is its own dope sheet so the raise, the chop and the
-     * recovery never fight each other over the same joint.
+     * Tuck the legs to stand tall, run the harpoon up past vertical, then
+     * throw the whole body down behind it and spike the ground. One-handed:
+     * these arms are short, so the free hand counterweights instead.
      * -------------------------------------------------------------------- */
     function poseSkewer(p, a) {
       const t = a.t / a.dur;
-      const hop = track(t, [[0, 0], [.16, 4], [.34, -13, 'out'], [.52, -3, 'in'], [.62, 0], [1, 0]]);
-      const slam = track(t, [[0, 0], [.44, 0], [.60, 1, 'in'], [.78, .94], [.92, .18], [1, 0]]);
       const rise = track(t, [[0, 0], [.30, 1, 'out'], [.44, 1], [.60, 0, 'in'], [1, 0]]);
+      const slam = track(t, [[0, 0], [.44, 0], [.60, 1, 'in'], [.78, .94], [.92, .18], [1, 0]]);
+      const hop = track(t, [[0, 0], [.16, 3], [.34, -12, 'out'], [.52, -3, 'in'], [.62, 0], [1, 0]]);
 
-      p.shellY = hop + slam * 11;
-      p.shellX = rise * 12 - slam * 22;
-      p.lean = rise * .13 - slam * .20;
+      p.lift = hop;
+      p.shellX = rise * 10 - slam * 20;
+      p.lean = rise * .15 - slam * .26;
       p.squashY = 1 + rise * .05 - slam * .09;
       p.squashX = 1 - rise * .04 + slam * .08;
-      p.capTilt = rise * .14 - slam * .20;
 
-      const lift = clamp(track(t, [[0, 0], [.30, 1], [.48, 1], [.60, 0, 'in'], [1, 0]]), 0, 1);
-      p.footL = point(RIG.standL + rise * 6 - slam * 14, -RIG.ankle + hop * .5 - lift * 11);
-      p.footR = point(RIG.standR + rise * 10 + slam * 8, -RIG.ankle + hop * .4);
+      // Legs gather under the body on the rise, then brace wide on the slam,
+      // which is what plants the shell low over the strike.
+      p.legL = RIG.legRestL - rise * .22 + slam * .42;
+      p.legR = RIG.legRestR + rise * .20 - slam * .30;
 
-      // Spear hand: up beside the crown so the shaft silhouettes clear of the
-      // shell, then down and through into the dirt.
-      p.handL = point(
-        track(t, [[0, -60], [.30, -48, 'out'], [.44, -48], [.60, -34, 'in'], [.78, -36], [1, -60]]),
-        track(t, [[0, -70], [.30, -128, 'out'], [.44, -130], [.60, -86, 'in'], [.78, -84], [1, -70]]));
-      p.handR = point(
-        track(t, [[0, 62], [.30, 80, 'out'], [.44, 80], [.60, 36, 'in'], [.78, 40], [1, 62]]),
-        track(t, [[0, -48], [.30, -26, 'out'], [.44, -26], [.60, -64, 'in'], [.78, -60], [1, -48]]));
-      // The sweep goes the long way round — past straight up, over the front —
-      // so the shaft never scythes through the shell.
-      p.spearAngle = track(t, [[0, -2.19], [.30, -1.52, 'out'], [.44, -1.40], [.60, -3.95, 'in'], [.78, -3.92], [1, -2.19]]);
+      // The spear arm swings the long way — up past the crown, then down
+      // through — so the shaft never scythes across the shell.
+      p.armL = track(t, [[0, RIG.armRestL], [.30, -.95, 'out'], [.44, -1.02], [.60, 1.94, 'in'], [.78, 1.90], [1, RIG.armRestL]]);
+      p.armR = track(t, [[0, RIG.armRestR], [.30, RIG.armRestR + .40, 'out'], [.44, RIG.armRestR + .42],
+                         [.60, RIG.armRestR - .62, 'in'], [.78, RIG.armRestR - .56], [1, RIG.armRestR]]);
+      p.spearAngle = track(t, [[0, -2.19], [.30, -1.52, 'out'], [.44, -1.40], [.60, -3.78, 'in'], [.78, -3.75], [1, -2.19]]);
       p.spearAlong = track(t, [[0, 0], [.30, -12], [.60, 14, 'in'], [.78, 12], [1, 0]]);
       p.antennaTilt = -rise * .34 + slam * .55;
 
@@ -684,64 +759,55 @@
         const gx = state.x + sp.tip.x * scale;
         ring(gx, state.y + 2, 66); ring(gx, state.y + 2, 36);
         puff(gx, state.y + 2, 18, 58, 'rgba(134,128,110,');
-        spark(gx, state.y, -Math.PI * .5, 16);
+        spark(gx, state.y, -HALF_PI, 16);
         shake = .95;
       });
       p.flash = t > .59 && t < .69 ? 1 - (t - .59) / .10 : 0;
     }
 
     /* --- hook cast ------------------------------------------------------- *
-     * The bobber's own lure, used as a weapon: the antenna whips back, flings
-     * the hook out on its line, snags, and reels in hard enough to drag the
-     * shell a step forward. This is the move the concept sheet is really about.
+     * The bobber's own lure, used as a weapon. The whole body rocks back and
+     * whips forward — one rigid shell, no nodding head — and that whip throws
+     * the hook. From there the hook is on its own: gravity arcs it, the line
+     * catches it at full extension, and the reel drags it home hard enough to
+     * pull the shell a step forward.
      * -------------------------------------------------------------------- */
     function poseCast(p, a) {
       const t = a.t / a.dur;
-      const wind = track(t, [[0, 0], [.24, 1, 'out'], [.34, 0, 'snap'], [1, 0]]);
-      const fly = track(t, [[0, 0], [.26, 0], [.42, 1, 'out'], [.60, 1], [.80, 0, 'in'], [1, 0]]);
+      const rock = track(t, [[0, 0], [.26, 1, 'out'], [.30, 1], [.40, -1, 'snap'], [.62, -.5], [.86, .12], [1, 0]]);
+      const back = Math.max(0, rock), fore = Math.max(0, -rock);
       const yank = track(t, [[0, 0], [.62, 0], [.74, 1, 'snap'], [.88, 0], [1, 0]]);
 
-      p.shellX = wind * 18 - fly * 10 - yank * 26;
-      p.shellY = -wind * 4 + yank * 6;
-      p.lean = -wind * .11 + fly * .06 - yank * .14;
-      p.capTilt = wind * .26 - fly * .30;
+      p.lean = back * .28 - fore * .34 - yank * .12;
+      p.shellX = back * 16 - fore * 14 - yank * 24;
       p.squashX = 1 + yank * .06; p.squashY = 1 - yank * .06;
 
-      p.footL = point(RIG.standL - fly * 10 - yank * 18, -RIG.ankle);
-      p.footR = point(RIG.standR + wind * 12 + yank * 8, -RIG.ankle);
+      p.legL = RIG.legRestL + back * .10 + fore * .26 + yank * .34;
+      p.legR = RIG.legRestR + back * .26 - fore * .16 - yank * .12;
 
-      // The harpoon tucks back out of the way; the free hand snaps like a rod.
-      p.handL = point(-56 + wind * 12 - yank * 6, -68 + wind * 6);
-      p.handR = point(mix(62, 80, wind) - fly * 58 - yank * 14, mix(-48, -112, wind) + fly * 30);
-      p.spearAngle = -2.19 + wind * .18 - fly * .10;
-      p.antennaTilt = wind * .60 - fly * .82 - yank * .34;
-
-      // Hook flight: out and slightly down, so it sails at head height rather
-      // than climbing off the top of the field.
-      p.hook = point(mix(0, -272, fly) + wind * 30, mix(0, 104, fly) + wind * -18 + Math.sin(t * 26) * 4 * fly);
-      p.hookRot = mix(0, .62, fly) + wind * -.4 + Math.sin(t * 19) * .1 * fly;
-      p.hookScale = mix(1, 1.1, fly);
-      p.lineSlack = 1;
+      // The harpoon tucks aside; the free arm snaps over like a rod.
+      p.armL = RIG.armRestL + back * .16 - fore * .10;
+      p.armR = track(t, [[0, RIG.armRestR], [.26, RIG.armRestR - .95, 'out'], [.40, RIG.armRestR + .55, 'snap'],
+                         [.70, RIG.armRestR + .30], [1, RIG.armRestR]]);
+      p.spearAngle = -2.19 + back * .16 - fore * .10;
+      p.antennaTilt = back * .62 - fore * .86 - yank * .34;
 
       const scale = overallScale();
-      const hx = state.x + (RIG.antenna.x + p.hook.x) * scale, hy = state.y + (RIG.antenna.y + p.hook.y) * scale;
-      if (t > .42) once(a, 'snag', () => { spark(hx, hy, .6, 10); shake = .34; });
-      if (t > .74) once(a, 'reel', () => {
+      // The whip hands the hook its velocity, and then lets go of it entirely.
+      if (t > .34) once(a, 'whip', () => launchHook(-600, -470));
+      if (t > .70) once(a, 'reel', () => {
+        reelHook();
         puff(state.x - 26 * scale, state.y, 7, 30, 'rgba(130,126,108,');
         shake = .5;
       });
+      if (t > .40 && hook.mode === 'flight') once(a, 'snag', () => { shake = .3; });
     }
 
-    // Blends two poses channel by channel; anything that is not a number or a
-    // point (nothing, today) is taken from the destination pose.
+    // Blends two poses channel by channel; anything that is not a number is
+    // taken from the destination pose.
     function lerpPose(a, b, k) {
       const out = {};
-      for (const key in b) {
-        const va = a[key], vb = b[key];
-        if (typeof vb === 'number') out[key] = mix(va, vb, k);
-        else if (vb && typeof vb === 'object') out[key] = point(mix(va.x, vb.x, k), mix(va.y, vb.y, k));
-        else out[key] = vb;
-      }
+      for (const key in b) out[key] = typeof b[key] === 'number' ? mix(a[key], b[key], k) : b[key];
       return out;
     }
 
@@ -749,7 +815,7 @@
       let p = blankPose();
       if (state.action) {
         // Attacks still inherit the idle float so the shell keeps its buoyancy.
-        p.shellY += Math.sin(elapsed * 1.9) * 1.1;
+        p.lift += Math.sin(elapsed * 1.9) * 1.1;
         const name = state.action.name;
         if (name === 'thrust') poseThrust(p, state.action);
         else if (name === 'skewer') poseSkewer(p, state.action);
@@ -761,8 +827,12 @@
         blendLeft = Math.max(0, blendLeft - dt);
         p = lerpPose(blendFrom, p, 1 - blendLeft / BLEND);
       }
+      // Derived last, from the blended legs, so soles stay planted even
+      // through a cross-fade.
+      p.shellY = groundedShell(p);
 
-      // Springs: the bead on top and the hook on its line lag behind the shell.
+      // Springs: the bead on top lags behind the shell, and the hook sways on
+      // its line whenever it is not busy being a projectile.
       const drive = p.shellX + p.lean * 60;
       const stiff = 62, damp = 9.5;
       wobble.antennaV += ((-drive * .012 + p.antennaTilt) - wobble.antenna) * stiff * dt - wobble.antennaV * damp * dt;
@@ -775,8 +845,8 @@
     /* ------------------------------------------------------------------ *
      * Shell placement — every anchor below is a measured landmark, not a
      * magic number: the cap hangs from its rim, the bowl stands on its base,
-     * so the two always meet cleanly at the equator no matter how the shell
-     * leans, squashes, or hops.
+     * so the two always meet cleanly at the equator. Nothing here is animated
+     * independently; the shell moves only as one body.
      * ------------------------------------------------------------------ */
     const SHELL = {
       bodyScale: .518, bodyPivot: [.498, .958], bodyAt: point(0, -35), bodySquash: .84,
@@ -788,26 +858,23 @@
       // Art-space headings and lengths, so a spear angle is authored as a real
       // world angle and the two pieces always meet at the head socket.
       shaftArtAngle: -2.254, shaftArtLen: 290.6, shaftPivot: [.517, .494],
-      headArtAngle: -2.121, headArtLen: 202.5, headPivot: [.800, .890]
+      headArtAngle: -2.121, headArtLen: 202.5, headPivot: [.800, .890],
+      // One rigid piece per limb: forearm-and-hand off the shoulder, shin-and-
+      // foot off the hip. girth trims them across the bone, since a piece that
+      // now spans a whole limb would otherwise scale up thick as well as long.
+      armRoot: [.20, .13], armTip: [.53, .62], armGirth: .70,
+      armRootR: [.63, .12], armTipR: [.48, .62],
+      legRoot: [.55, .30], legTip: [.38, .68], legGirth: .78,
+      legRootR: [.52, .32], legTipR: [.40, .70]
     };
-
-    // Apply the shell's lean / squash to a rigged point so limbs stay welded
-    // to sockets that are themselves moving.
-    function shellPoint(p, q) {
-      const angle = p.lean + p.rollShell;
-      const c = Math.cos(angle), s = Math.sin(angle);
-      const x = q.x * p.squashX, y = (q.y - RIG.equator) * p.squashY;
-      return point(p.shellX + x * c - y * s, p.shellY + RIG.equator + x * s + y * c);
-    }
 
     function drawCharacter(p) {
       const overall = overallScale();
-      const groundY = state.y;
 
-      // Contact shadow: tightens and darkens as the shell settles.
-      const airborne = clamp(-p.shellY / 26, 0, 1);
+      // Contact shadow: tightens and lightens as the shell leaves the ground.
+      const airborne = clamp(-p.shellY / 22, 0, 1);
       ctx.save();
-      ctx.translate(state.x, groundY);
+      ctx.translate(state.x, state.y);
       ctx.fillStyle = 'rgba(31,36,34,' + (.24 - airborne * .11).toFixed(3) + ')';
       ctx.beginPath();
       ctx.ellipse(p.shellX * .35 * overall, 2, (54 - airborne * 12) * overall, (11 - airborne * 3) * overall, 0, 0, Math.PI * 2);
@@ -815,66 +882,62 @@
       ctx.restore();
 
       ctx.save();
-      ctx.translate(state.x, groundY);
+      ctx.translate(state.x, state.y);
       ctx.scale(overall, overall);   // uniform — the puppet is never mirrored
 
-      const hipL = add(shellPoint(p, point(-RIG.hipX, RIG.hipY)), p.hipShift, 0);
-      const hipR = add(shellPoint(p, point(RIG.hipX, RIG.hipY)), p.hipShift, 0);
-      const shoulderL = shellPoint(p, RIG.shoulderL);
-      const shoulderR = shellPoint(p, RIG.shoulderR);
+      const hipLeft = shellPoint(p, point(RIG.hipL, RIG.hipY));
+      const hipRight = shellPoint(p, point(RIG.hipR, RIG.hipY));
+      const shoulderLeft = shellPoint(p, RIG.shoulderL);
+      const shoulderRight = shellPoint(p, RIG.shoulderR);
       const bead = shellPoint(p, RIG.antenna);
-
-      const kneeL = solveLimb(hipL, p.footL, RIG.thigh, RIG.shin, 1);
-      const kneeR = solveLimb(hipR, p.footR, RIG.thigh, RIG.shin, -1);
-      const elbowL = solveLimb(shoulderL, p.handL, RIG.upperL, RIG.foreL, p.elbowL);
-      const elbowR = solveLimb(shoulderR, p.handR, RIG.upperR, RIG.foreR, p.elbowR);
+      const soleL = footL(p), soleR = footR(p);
+      const gripL = handL(p), gripR = handR(p);
       const spear = spearPoints(p);
 
-      // 1 · legs, tucked under the bowl so the hips stay hidden
-      drawBone('leg_right_upper', hipR, kneeR, [.45, .15], [.60, .62], 1.15);
-      drawBone('leg_right_lower', kneeR, p.footR, [.52, .32], [.40, .70], 1.15);
-      drawBone('leg_left_upper', hipL, kneeL, [.44, .15], [.34, .64], 1.15);
-      drawBone('leg_left_lower', kneeL, p.footL, [.55, .30], [.38, .68], 1.15);
+      // 1 · legs, hung straight off hips hidden inside the bowl
+      drawBone('leg_right_lower', hipRight, soleR, SHELL.legRootR, SHELL.legTipR, SHELL.legGirth);
+      drawBone('leg_left_lower', hipLeft, soleL, SHELL.legRoot, SHELL.legTip, SHELL.legGirth);
 
-      // 2 · shell stack. The ring goes down first and the bowl covers all but
-      //     its two socket ears; then the dome lands on top of both, so the
-      //     seam reads as one closed sphere exactly like the concept crop.
-      //     The bead is under the dome too, hiding the long end of its stalk.
+      // 2 · shell stack, drawn as one rigid body. The ring goes down first and
+      //     the bowl covers all but its two socket ears; then the dome lands on
+      //     top of both, so the seam reads as one closed sphere. The bead is
+      //     under the dome too, hiding the long end of its stalk.
       ctx.save();
-      ctx.translate(p.shellX, p.shellY + RIG.equator);
-      ctx.rotate(p.lean + p.rollShell);
+      ctx.translate(p.shellX, p.shellY + RIG.pivot);
+      ctx.rotate(p.lean + p.roll);
       ctx.scale(p.squashX, p.squashY);
-      ctx.translate(0, -RIG.equator);
+      ctx.translate(0, -RIG.pivot);
       drawAnchored('belt', SHELL.beltAt, SHELL.beltScale, SHELL.beltPivot, 0, SHELL.beltSquash);
       drawAnchored('body', SHELL.bodyAt, SHELL.bodyScale, SHELL.bodyPivot, 0, SHELL.bodySquash);
       drawAnchored('antenna_stem', RIG.antenna, SHELL.stemScale, SHELL.stemPivot, wobble.antenna);
-      drawAnchored('cap', add(SHELL.capAt, 0, -p.capLift), SHELL.capScale, SHELL.capPivot, p.capTilt + p.rollShell * .4, SHELL.capSquash);
-      drawAnchored('visor', add(SHELL.visorAt, 0, -p.capLift * .8), SHELL.visorScale, SHELL.visorPivot, SHELL.visorTilt + p.capTilt * .9);
+      drawAnchored('cap', SHELL.capAt, SHELL.capScale, SHELL.capPivot, 0, SHELL.capSquash);
+      drawAnchored('visor', SHELL.visorAt, SHELL.visorScale, SHELL.visorPivot, SHELL.visorTilt);
       ctx.restore();
 
-      // 3 · the hook rides on its line above the crown
-      const hookAnchor = point(bead.x + p.hook.x, bead.y + p.hook.y);
-      if (p.lineSlack && (Math.abs(p.hook.x) > 2 || Math.abs(p.hook.y) > 2)) {
+      // 3 · the hook, wherever its own physics has put it, on a line that sags
+      //     with whatever slack is left on the spool
+      const lure = point(bead.x + hook.x, bead.y + hook.y);
+      const flown = len(hook.x, hook.y);
+      if (flown > 3) {
+        const sag = (1 - clamp(flown / HOOK_LINE, 0, 1)) * 26 + 4;
         ctx.save();
         ctx.strokeStyle = 'rgba(58,62,60,.85)'; ctx.lineWidth = 1.7; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(bead.x, bead.y);
-        ctx.quadraticCurveTo((bead.x + hookAnchor.x) * .5, Math.min(bead.y, hookAnchor.y) - 34, hookAnchor.x, hookAnchor.y);
+        ctx.quadraticCurveTo((bead.x + lure.x) * .5, (bead.y + lure.y) * .5 + sag, lure.x, lure.y);
         ctx.stroke(); ctx.restore();
       }
-      drawAnchored('hook_wire', add(hookAnchor, SHELL.hookAt.x - RIG.antenna.x, SHELL.hookAt.y - RIG.antenna.y),
-        SHELL.hookScale * p.hookScale, SHELL.hookPivot, wobble.hook + p.hookRot);
+      drawAnchored('hook_wire', add(lure, SHELL.hookAt.x - RIG.antenna.x, SHELL.hookAt.y - RIG.antenna.y),
+        SHELL.hookScale, SHELL.hookPivot, hook.mode === 'rest' ? wobble.hook + hook.rot : hook.rot);
 
       // 4 · free arm, in front of the shell like the concept sheet
-      drawBone('arm_right_upper', shoulderR, elbowR, [.72, .16], [.30, .57]);
-      drawBone('arm_right_lower', elbowR, p.handR, [.63, .12], [.48, .62]);
+      drawBone('arm_right_lower', shoulderRight, gripR, SHELL.armRootR, SHELL.armTipR, SHELL.armGirth);
 
       // 5 · harpoon, then the gripping arm over it so the hand reads as a grip
       const shaftScale = RIG.spearLength * (1 - RIG.spearFerrule) / SHELL.shaftArtLen;
       const headScale = RIG.spearLength * RIG.spearFerrule / SHELL.headArtLen;
       drawAnchored('spear_shaft', spear.grip, shaftScale, SHELL.shaftPivot, p.spearAngle - SHELL.shaftArtAngle);
       drawAnchored('spearhead', spear.ferrule, headScale, SHELL.headPivot, p.spearAngle - SHELL.headArtAngle);
-      drawBone('arm_left_upper', shoulderL, elbowL, [.75, .17], [.28, .55]);
-      drawBone('arm_left_lower', elbowL, p.handL, [.20, .13], [.53, .62]);
+      drawBone('arm_left_lower', shoulderLeft, gripL, SHELL.armRoot, SHELL.armTip, SHELL.armGirth);
 
       if (p.flash > 0) {
         const fx = spear.tip.x, r = 34 + (1 - p.flash) * 46;
@@ -886,16 +949,13 @@
       }
 
       if (showRig) {
-        const bones = [
-          [shoulderL, elbowL], [elbowL, p.handL], [shoulderR, elbowR], [elbowR, p.handR],
-          [hipL, kneeL], [kneeL, p.footL], [hipR, kneeR], [kneeR, p.footR],
-          [shoulderL, shoulderR], [hipL, hipR], [shoulderL, hipL], [shoulderR, hipR],
-          [bead, hookAnchor], [spear.butt, spear.tip]
-        ];
+        const bones = [[shoulderLeft, gripL], [shoulderRight, gripR], [hipLeft, soleL], [hipRight, soleR],
+          [shoulderLeft, shoulderRight], [hipLeft, hipRight], [shoulderLeft, hipLeft], [shoulderRight, hipRight],
+          [bead, lure], [spear.butt, spear.tip]];
         ctx.strokeStyle = '#27dcf0'; ctx.lineWidth = 2.2 / overall;
         ctx.beginPath(); for (const [a, b] of bones) { ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); } ctx.stroke();
-        const joints = [shoulderL, elbowL, p.handL, shoulderR, elbowR, p.handR,
-          hipL, kneeL, p.footL, hipR, kneeR, p.footR, bead, hookAnchor, spear.grip, spear.tip];
+        const joints = [shoulderLeft, gripL, shoulderRight, gripR, hipLeft, soleL, hipRight, soleR,
+          bead, lure, spear.grip, spear.tip];
         for (const q of joints) {
           ctx.fillStyle = '#ff5477'; ctx.strokeStyle = 'white'; ctx.lineWidth = 1.4 / overall;
           ctx.beginPath(); ctx.arc(q.x, q.y, 4 / overall, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
