@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#202727">
+  <title>Character 10 — Umbrella Crab</title>
+  <style>
+    :root { color-scheme: light; --ink:#202727; --paper:#e9e3d7; --panel:#f7f3ea; --gold:#d29b17; --cyan:#27dcef; --pink:#ff4169; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:var(--paper); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); }
+    body { display:grid; grid-template-rows:auto 1fr; }
+    header { min-height:62px; display:flex; align-items:center; gap:12px; padding:9px max(12px,env(safe-area-inset-right)) 9px max(12px,env(safe-area-inset-left)); background:rgba(248,244,235,.94); border-bottom:1px solid rgba(32,39,39,.18); backdrop-filter:blur(12px); z-index:5; }
+    h1 { margin:0; min-width:0; font-size:17px; line-height:1.05; letter-spacing:.01em; }
+    h1 .sub { display:block; color:#6c706b; font-size:10px; font-weight:650; letter-spacing:.12em; text-transform:uppercase; margin-top:4px; }
+    .controls { margin-left:auto; display:flex; gap:6px; }
+    button { border:1px solid rgba(32,39,39,.26); border-radius:999px; background:#fffaf0; color:var(--ink); padding:8px 11px; min-height:36px; font:700 12px/1 system-ui,sans-serif; cursor:pointer; box-shadow:0 1px 0 rgba(255,255,255,.8) inset; }
+    button:hover { background:#fff; }
+    button[aria-pressed="true"] { color:#fff; background:#283130; border-color:#283130; }
+    main { position:relative; min-height:0; }
+    canvas { display:block; width:100%; height:100%; touch-action:none; }
+    .loading,.hint { position:absolute; left:50%; transform:translateX(-50%); pointer-events:none; transition:opacity .3s ease; }
+    .loading { top:44%; padding:9px 14px; border-radius:999px; background:rgba(247,243,234,.88); box-shadow:0 8px 24px rgba(32,39,39,.12); font-size:12px; font-weight:750; }
+    .loading.hidden { opacity:0; }
+    .hint { bottom:calc(max(15px,env(safe-area-inset-bottom)) + 52px); font-size:11px; font-weight:750; letter-spacing:.04em; color:rgba(32,39,39,.58); background:rgba(247,243,234,.68); border-radius:999px; padding:7px 11px; }
+    .dock { position:absolute; z-index:6; left:50%; transform:translateX(-50%); bottom:max(11px,env(safe-area-inset-bottom)); display:flex; gap:6px; padding:6px; border-radius:999px; background:rgba(247,243,234,.9); border:1px solid rgba(32,39,39,.16); box-shadow:0 6px 22px rgba(32,39,39,.14); backdrop-filter:blur(10px); }
+    .dock button { min-height:34px; padding:8px 13px; }
+    .dock .sep { width:1px; margin:4px 2px; background:rgba(32,39,39,.16); }
+    .process { position:absolute; z-index:8; inset:auto 0 0 0; max-height:calc(100dvh - 62px); overflow:auto; padding:14px max(14px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left)); background:rgba(32,39,39,.97); color:#f8f3e9; border-radius:18px 18px 0 0; transform:translateY(105%); transition:transform .24s ease; box-shadow:0 -18px 54px rgba(18,23,23,.28); }
+    .process.open { transform:translateY(0); }
+    .process-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    .process h2 { margin:0; font-size:15px; }
+    .process-head p { margin:2px 0 0; color:#bfc5bf; font-size:11px; }
+    .process-head button { margin-left:auto; background:#3c4544; color:white; border-color:#56605e; }
+    .steps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    figure { min-width:0; margin:0; background:#131818; border:1px solid #454d4b; border-radius:12px; overflow:hidden; }
+    figure img { display:block; width:100%; aspect-ratio:4/3; object-fit:contain; background:#d8d1c4; }
+    figcaption { padding:9px 10px 11px; color:#bfc5bf; font-size:10px; line-height:1.35; }
+    figcaption b { display:block; color:white; font-size:11px; margin-bottom:3px; }
+    @media (max-width:700px) {
+      header { gap:7px; min-height:58px; padding-top:7px; padding-bottom:7px; }
+      h1 { font-size:15px; }
+      h1 .sub { font-size:8px; }
+      button { min-height:34px; padding:7px 9px; font-size:11px; }
+      .dock button { padding:7px 10px; }
+      .steps { grid-template-columns:1fr 1fr; }
+      .process { max-height:calc(100dvh - 58px); }
+    }
+    @media (max-width:410px) {
+      h1 .sub { display:none; }
+      .controls { gap:4px; }
+      button { padding-inline:8px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Character 10 <span class="sub">umbrella-crab · walk &amp; combat</span></h1>
+    <div class="controls">
+      <button id="pause" aria-pressed="false">Pause</button>
+      <button id="rig" aria-pressed="false">Rig</button>
+      <button id="build" aria-pressed="false">Build</button>
+    </div>
+  </header>
+  <main>
+    <canvas id="stage" aria-label="Character 10 scuttling and attacking across a two-dimensional field"></canvas>
+    <div class="loading" id="loading">Assembling 20 puppet pieces…</div>
+    <div class="hint" id="hint">Tap far to move · tap close to strike</div>
+    <div class="dock">
+      <button id="thrust">Thrust</button>
+      <button id="slash">Slash</button>
+      <button id="slam">Slam</button>
+      <div class="sep"></div>
+      <button id="auto" aria-pressed="true">Auto</button>
+    </div>
+    <section class="process" id="process" aria-hidden="true">
+      <div class="process-head">
+        <div><h2>How the puppet was built</h2><p>Source → coded joints → overlapping crops → clean generated atlas</p></div>
+        <button id="close">Close</button>
+      </div>
+      <div class="steps">
+        <figure><img id="sourceImage" alt="Character 10 source crop"><figcaption><b>1 · Source reference</b>The numbered umbrella-crab design isolated from the original concept sheet.</figcaption></figure>
+        <figure><img id="jointImage" alt="Character 10 coded joint overlay"><figcaption><b>2 · Joint map</b>Canopy post, elbows, wrists, hips, knees, feet, and blade directions plotted in code.</figcaption></figure>
+        <figure><img id="roughImage" alt="Character 10 rough overlapping crop atlas"><figcaption><b>3 · Rough crops</b>Twenty overlapping regions expose the sockets and hidden metal needed for rotation.</figcaption></figure>
+        <figure><img id="cleanImage" alt="Character 10 clean transparent modular atlas"><figcaption><b>4 · Generated atlas</b>Reference-guided pieces with reconstructed joints and true transparent backgrounds.</figcaption></figure>
+      </div>
+    </section>
+  </main>
+  <script>
+    const EMBEDDED = __EMBEDDED__;
+    const canvas=document.getElementById('stage'), ctx=canvas.getContext('2d');
+    const loading=document.getElementById('loading'), hint=document.getElementById('hint');
+    const pauseButton=document.getElementById('pause'), rigButton=document.getElementById('rig'), buildButton=document.getElementById('build');
+    const autoButton=document.getElementById('auto');
+    const processPanel=document.getElementById('process'), closeButton=document.getElementById('close');
+    for(const [element,asset] of Object.entries({sourceImage:'source',jointImage:'joints',roughImage:'rough',cleanImage:'clean'})) document.getElementById(element).src=EMBEDDED.process[asset];
+
+    const images={};
+    const loadPromises=Object.entries(EMBEDDED.parts).map(([name,src])=>new Promise((resolve,reject)=>{
+      const image=new Image(); image.onload=()=>{images[name]=image;resolve();}; image.onerror=reject; image.src=src;
+    }));
+
+    /* ---------------------------------------------------------------- utils */
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mix=(a,b,t)=>a+(b-a)*t, len=(x,y)=>Math.hypot(x,y), point=(x,y)=>({x,y});
+    const frac=v=>v-Math.floor(v);
+    const seg=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+    const easeOut=t=>1-Math.pow(1-t,3), easeIn=t=>t*t*t;
+    const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    const pulse=t=>Math.sin(t*Math.PI);
+    function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+    const supportsFilter=(()=>{const c=document.createElement('canvas').getContext('2d');try{c.filter='brightness(0.5)';return c.filter==='brightness(0.5)';}catch(e){return false;}})();
+
+    /* ------------------------------------------------------------- rig spec */
+    // Local character space: origin at the ground contact point, -y is up.
+    // Nothing is ever mirrored -- the art keeps its authored 3/4 orientation and
+    // direction is expressed as yaw (part offsets + lean), never as a flip.
+    const RIG={
+      corePos:point(0,-82),          // head / body drum
+      coreScale:.43,
+      canopyPos:point( -8,-182),     // canopy hub -- pulled DOWN over the head
+      canopyStretch:.80,
+      undercarriagePos:point(0,-68),
+      shoulderL:point(-46,-88), shoulderR:point(46,-87),
+      upperLen:40, lowerLen:37,
+      // arms are polar: an angle + extension around the shoulder, so a strike
+      // is authored as a swing rather than as a stretched cutout
+      armUpper:29, armLower:28, armDist:52,
+      armAngL:Math.atan2(15,-51), armAngR:Math.atan2(15,51)
+    };
+
+    // Six legs, three a side, reusing the four authored leg sets.
+    // depth -1 = far side (drawn behind the body and darkened), +1 = near side.
+    // Gait phases follow an alternating-tripod pattern: L1,L3,R2 / L2,R1,R3.
+    const LEGS=[
+      {name:'L1',hip:point(-15,-58),base:point(-30,-15),depth:-1,bend: 1,phase:.00,up:'leg_back_left_upper',  lo:'leg_back_left_lower',  ur:[.36,.16],ut:[.62,.82],lr:[.43,.10],lt:[.54,.88],size:.82},
+      {name:'L2',hip:point(-33,-55),base:point(-63, 1),depth: 1,bend: 1,phase:.50,up:'leg_front_left_upper', lo:'leg_front_left_lower', ur:[.34,.16],ut:[.65,.82],lr:[.44,.10],lt:[.53,.88],size:1.0},
+      {name:'L3',hip:point(-45,-59),base:point(-90,-6),depth:-1,bend: 1,phase:.00,up:'leg_back_left_upper',  lo:'leg_back_left_lower',  ur:[.36,.16],ut:[.62,.82],lr:[.43,.10],lt:[.54,.88],size:.95},
+      {name:'R1',hip:point( 15,-58),base:point( 30,-15),depth:-1,bend:-1,phase:.50,up:'leg_back_right_upper', lo:'leg_back_right_lower', ur:[.34,.16],ut:[.64,.82],lr:[.43,.10],lt:[.55,.88],size:.82},
+      {name:'R2',hip:point( 33,-55),base:point( 64, 1),depth: 1,bend:-1,phase:.00,up:'leg_front_right_upper',lo:'leg_front_right_lower',ur:[.34,.16],ut:[.65,.82],lr:[.44,.10],lt:[.53,.88],size:1.0},
+      {name:'R3',hip:point( 45,-59),base:point( 92,-6),depth:-1,bend:-1,phase:.50,up:'leg_back_right_upper', lo:'leg_back_right_lower', ur:[.34,.16],ut:[.64,.82],lr:[.43,.10],lt:[.55,.88],size:.95}
+    ];
+
+    const STRIDE=54, DUTY=.62, SWING=STRIDE*DUTY, LIFT=13;
+
+    /* ----------------------------------------------------------- world state */
+    let width=1,height=1,dpr=1,paused=false,showRig=false,auto=true;
+    let lastTime=performance.now(),elapsed=0,decor=[],fx=[],trail=[];
+
+    const state={
+      x:220,y:250,vx:-30,vy:0,tx:90,ty:250,wait:0,
+      yaw:-1, speed:0, moving:0,
+      gait:0, land:0, squash:1,
+      attack:null, cooldown:2.6,
+      canopy:{a:0,v:0}, canopyPitch:{a:0,v:0},
+      lastU:LEGS.map(()=>0)
+    };
+
+    function charScale(){ return clamp(width/560,.60,.84)*(1+state.y/Math.max(1,height)*.045); }
+
+    /* ------------------------------------------------------------- attacks */
+    // Each attack returns additive offsets on top of the locomotion pose, so an
+    // attack can fire mid-stride without the walk cycle popping.
+    const ATTACKS={
+      // Right arm: cock the spear back, then drive it out to screen-right on a
+      // body lunge. The reach comes from the lunge, not from a stretched arm.
+      thrust:{dur:.80,build:(t,P)=>{
+        const wind=easeOut(seg(t,0,.28))*(1-seg(t,.28,.38));
+        const push=easeOut(seg(t,.30,.44));
+        const rec=easeInOut(seg(t,.54,1));
+        const live=push-rec;
+        P.armR.ang   += .32*wind - .38*live;
+        P.armR.ext   += -13*wind + 17*live;
+        P.armR.twist += .22*wind - .30*live;
+        P.rootX      += -9*wind + 34*live;
+        P.rootY      += 5*wind - 3*live;
+        P.rootRot    += .05*wind - .07*live;
+        P.canopyRot  += .07*wind - .10*live;
+        P.canopyX    += 5*wind - 8*live;
+        P.canopyY    += 2*wind - 3*live;
+        P.brace      += wind*.6 + Math.abs(live);
+        P.squash     *= 1-.05*Math.max(0,live);
+      }},
+      // Left arm: haul the cleaver up and back, then sweep it down and across
+      // to screen-left through roughly ninety degrees.
+      slash:{dur:.90,build:(t,P)=>{
+        const wind=easeOut(seg(t,0,.30))*(1-seg(t,.30,.40));
+        const sweep=easeIn(seg(t,.32,.52));
+        const rec=easeInOut(seg(t,.56,1));
+        const live=sweep-rec;
+        P.armL.ang   += .62*wind - 1.45*live;
+        P.armL.ext   += -7*wind + 12*live;
+        P.armL.twist += .30*wind - .55*live;
+        P.rootRot    += .10*wind - .15*live;
+        P.rootX      += 9*wind - 22*live;
+        P.rootY      += -4*wind + 6*live;
+        P.canopyRot  += -.10*wind + .14*live;
+        P.canopyX    += -7*wind + 11*live;
+        P.brace      += wind*.5 + Math.abs(live);
+        P.squash     *= 1-.06*Math.max(0,live);
+      }},
+      // Whole body: rear up on the legs, then drop the canopy like a shell.
+      slam:{dur:1.10,build:(t,P)=>{
+        const rear=easeOut(seg(t,0,.34))*(1-seg(t,.34,.44));
+        const rec=easeInOut(seg(t,.58,1));
+        const hold=easeIn(seg(t,.34,.46))*(1-rec);   // the drop has to unwind, or the pose sticks
+        const settle=pulse(seg(t,.46,.70));
+        P.rootY      += -14*rear + 22*hold - 8*settle;
+        P.footPull   += .28*rear;
+        P.canopyY    += -11*rear + 15*hold - 4*settle;
+        P.canopyRot  += -.14*rear + .18*hold - .07*settle;
+        P.canopyOpen += .18*rear - .11*hold;
+        P.armL.ang   += .52*rear - .30*hold;
+        P.armR.ang   += .52*rear - .30*hold;
+        P.armL.ext   += -8*rear;  P.armR.ext += -8*rear;
+        P.brace      += rear + hold*1.7 + settle*.8;
+        P.squash     *= 1-.17*hold - .06*settle;
+        P.rootRot    += .03*rear - .04*hold;
+      }}
+    };
+
+    function fire(name){
+      if(!ATTACKS[name] || (state.attack && state.attack.t<.72)) return;
+      state.attack={name,t:0,dur:ATTACKS[name].dur,hit:false};
+      state.cooldown=1.5+Math.random()*2.2;
+      trail.length=0;
+    }
+
+    /* ---------------------------------------------------------------- setup */
+    function resize(){
+      const rect=canvas.getBoundingClientRect();
+      width=Math.max(1,rect.width); height=Math.max(1,rect.height);
+      dpr=Math.min(2,devicePixelRatio||1);
+      canvas.width=Math.round(width*dpr); canvas.height=Math.round(height*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      if(!Number.isFinite(state.x)||state.x>width)state.x=width*.58;
+      if(!Number.isFinite(state.y)||state.y>height)state.y=height*.58;
+      buildDecor();
+    }
+    function buildDecor(){
+      const random=seeded(Math.round(width*11+height*29)); decor=[];
+      const count=Math.max(18,Math.round(width*height/26000));
+      for(let i=0;i<count;i++)decor.push({x:18+random()*Math.max(1,width-36),y:20+random()*Math.max(1,height-40),size:4+random()*9,type:random()>.34?'grass':'stone',tone:random()});
+    }
+    function chooseTarget(){
+      const mx=Math.min(150,width*.28),my=Math.min(90,height*.22);
+      state.tx=mx+Math.random()*Math.max(1,width-mx*2);
+      state.ty=my+Math.random()*Math.max(1,height-my*2);
+    }
+
+    /* --------------------------------------------------------------- update */
+    function update(dt){
+      if(paused) return;
+      elapsed+=dt;
+
+      // ---- attack timeline
+      if(state.attack){
+        state.attack.t+=dt/state.attack.dur;
+        if(state.attack.t>=1) state.attack=null;
+      } else {
+        state.cooldown-=dt;
+      }
+      const busy=!!state.attack;
+
+      // ---- steering (arrival, with turn-rate damping so it leans into corners)
+      if(busy){
+        state.vx*=Math.pow(.02,dt); state.vy*=Math.pow(.02,dt);
+      } else if(state.wait>0){
+        state.wait-=dt;
+        state.vx*=Math.pow(.004,dt); state.vy*=Math.pow(.004,dt);
+        if(state.wait<=0) chooseTarget();
+      } else {
+        const dx=state.tx-state.x, dy=state.ty-state.y, d=len(dx,dy);
+        if(d<20){ state.wait=.35+Math.random()*.9; }
+        else{
+          const cruise=clamp(40+d*.06,40,66);
+          const speed=cruise*clamp(d/70,.35,1);           // ease in on arrival
+          const turn=1-clamp(Math.abs(state.vx*dy-state.vy*dx)/Math.max(1,d*46),0,.55); // slow through turns
+          const desiredX=dx/d*speed*turn, desiredY=dy/d*speed*turn;
+          const k=1-Math.pow(.0009,dt);
+          state.vx=mix(state.vx,desiredX,k);
+          state.vy=mix(state.vy,desiredY,k);
+        }
+      }
+      state.x+=state.vx*dt; state.y+=state.vy*dt;
+      state.x=clamp(state.x,30,Math.max(31,width-30));
+      state.y=clamp(state.y,40,Math.max(41,height-24));
+
+      // ---- yaw: smoothed heading, used instead of a horizontal flip
+      state.speed=len(state.vx,state.vy);
+      state.moving=mix(state.moving,clamp(state.speed/44,0,1),1-Math.pow(.002,dt));
+      if(Math.abs(state.vx)>6) state.yaw=mix(state.yaw,clamp(state.vx/38,-1,1),1-Math.pow(.02,dt));
+      else state.yaw=mix(state.yaw,0,1-Math.pow(.4,dt));
+
+      // ---- gait clock, in local units so it is scale independent
+      const scale=Math.max(.001,charScale());
+      state.gait += (state.speed/scale)*dt;
+
+      // ---- footfall detection -> body impulse + dust
+      for(let i=0;i<LEGS.length;i++){
+        const u=frac(state.gait/STRIDE+LEGS[i].phase);
+        if(state.lastU[i]>u && state.moving>.25){          // wrapped: swing -> stance
+          state.land=Math.min(1,state.land+.42*state.moving);
+          if(LEGS[i].depth>0&&Math.random()<.7) puff(state.x+LEGS[i].base.x*scale*.9, state.y, .5+Math.random()*.4);
+        }
+        state.lastU[i]=u;
+      }
+      state.land*=Math.pow(.02,dt);
+
+      // ---- springs: the canopy trails the body and settles after it stops
+      const accel=(state.vx-(state.pvx||0))/Math.max(dt,.001); state.pvx=state.vx;
+      springStep(state.canopy, clamp(-state.vx*.10-clamp(accel,-900,900)*.004,-9,9), 150, 13, dt);
+      springStep(state.canopyPitch, clamp(state.speed*.0013+state.land*.10,0,.16), 120, 11, dt);
+
+      // ---- autonomous combat
+      if(auto && !busy && state.cooldown<=0 && state.moving<.55){
+        const roll=Math.random();
+        fire(roll<.42?'thrust':roll<.78?'slash':'slam');
+      }
+
+      // ---- fx
+      for(const f of fx){ f.t+=dt; }
+      fx=fx.filter(f=>f.t<f.life);
+      if(trail.length && (!state.attack || state.attack.t>.66)) trail.shift();
+    }
+    function springStep(s,target,stiff,damp,dt){
+      const a=(target-s.a)*stiff - s.v*damp;
+      s.v+=a*dt; s.a+=s.v*dt;
+    }
+
+    /* ------------------------------------------------------------------ fx */
+    function puff(x,y,scale){ fx.push({type:'dust',x,y,t:0,life:.55+Math.random()*.25,s:scale,r:Math.random()*6.28}); }
+    function ring(x,y,scale){ fx.push({type:'ring',x,y,t:0,life:.5,s:scale}); }
+    function drawFx(f){
+      const k=f.t/f.life;
+      ctx.save();
+      if(f.type==='dust'){
+        const r=(5+k*17)*f.s;
+        ctx.globalAlpha=(1-k)*.34;
+        ctx.fillStyle='#9a9482';
+        ctx.beginPath(); ctx.ellipse(f.x,f.y-k*7*f.s,r,r*.42,f.r,0,Math.PI*2); ctx.fill();
+      } else if(f.type==='ring'){
+        ctx.globalAlpha=(1-k)*.5;
+        ctx.strokeStyle='#8a8574'; ctx.lineWidth=(1-k)*4+.6;
+        ctx.beginPath(); ctx.ellipse(f.x,f.y,(14+k*98)*f.s,(5+k*34)*f.s,0,0,Math.PI*2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function drawTrail(){
+      if(trail.length<3) return;
+      ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+      for(let i=1;i<trail.length;i++){
+        const k=i/trail.length;
+        ctx.globalAlpha=k*.34; ctx.strokeStyle='#f4f1e6'; ctx.lineWidth=1+k*7;
+        ctx.beginPath(); ctx.moveTo(trail[i-1].x,trail[i-1].y); ctx.lineTo(trail[i].x,trail[i].y); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    /* --------------------------------------------------------------- field */
+    function drawField(){
+      const gradient=ctx.createRadialGradient(width*.45,height*.36,20,width*.5,height*.55,Math.max(width,height));
+      gradient.addColorStop(0,'#eee9dd'); gradient.addColorStop(1,'#d8d1c2');
+      ctx.fillStyle=gradient; ctx.fillRect(0,0,width,height);
+      ctx.strokeStyle='rgba(82,91,83,.055)'; ctx.lineWidth=1;
+      const grid=54; ctx.beginPath();
+      for(let x=(width%grid)*.5;x<width;x+=grid){ctx.moveTo(x,0);ctx.lineTo(x,height);}
+      for(let y=(height%grid)*.5;y<height;y+=grid){ctx.moveTo(0,y);ctx.lineTo(width,y);}
+      ctx.stroke();
+      ctx.fillStyle='rgba(87,92,76,.05)';
+      for(let i=0;i<120;i++){const x=(i*197.3)%width,y=(i*83.7)%height;ctx.fillRect(x,y,1.2,1.2);}
+    }
+    function drawDecoration(item){
+      ctx.save(); ctx.translate(item.x,item.y);
+      if(item.type==='stone'){
+        ctx.rotate(item.tone*2.4); ctx.fillStyle=item.tone>.5?'#aaa798':'#98988d';
+        ctx.beginPath(); ctx.ellipse(0,0,item.size*1.25,item.size*.63,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='rgba(43,48,45,.25)'; ctx.lineWidth=1; ctx.stroke();
+      } else {
+        ctx.strokeStyle=item.tone>.5?'#7f8c4d':'#92945a'; ctx.lineWidth=1.4; ctx.lineCap='round';
+        ctx.beginPath();
+        ctx.moveTo(0,2); ctx.quadraticCurveTo(-item.size*.25,-item.size*.7,-item.size*.65,-item.size);
+        ctx.moveTo(0,2); ctx.quadraticCurveTo(item.size*.15,-item.size*.65,item.size*.45,-item.size*.9);
+        ctx.moveTo(0,2); ctx.quadraticCurveTo(item.size*.45,-item.size*.3,item.size*.78,-item.size*.5);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    /* -------------------------------------------------------------- drawing */
+    function drawAnchored(name,anchor,scale,pivot,rotation=0,alpha=1,stretchY=1){
+      const image=images[name]; if(!image) return;
+      ctx.save(); ctx.translate(anchor.x,anchor.y); ctx.rotate(rotation);
+      ctx.scale(scale,scale*stretchY); ctx.globalAlpha*=alpha;
+      ctx.drawImage(image,-image.width*pivot[0],-image.height*pivot[1]); ctx.restore();
+    }
+    // Fixed-length bones: the sprite is scaled once from its own root->tip span,
+    // so a limb never stretches to reach. Pose comes from IK, not from scaling.
+    function drawBone(name,from,to,root,tip,boneLen,extra=1){
+      const image=images[name]; if(!image) return;
+      const ix=image.width*(tip[0]-root[0]), iy=image.height*(tip[1]-root[1]);
+      const scale=boneLen/Math.max(.001,len(ix,iy))*extra;
+      const angle=Math.atan2(to.y-from.y,to.x-from.x)-Math.atan2(iy,ix);
+      ctx.save(); ctx.translate(from.x,from.y); ctx.rotate(angle); ctx.scale(scale,scale);
+      ctx.drawImage(image,-image.width*root[0],-image.height*root[1]); ctx.restore();
+    }
+    function solveLeg(hip,foot,upper,lower,bendSign){
+      const dx=foot.x-hip.x, dy=foot.y-hip.y;
+      const distance=clamp(len(dx,dy),Math.abs(upper-lower)+.01,upper+lower-.01);
+      const ux=dx/Math.max(.001,len(dx,dy)), uy=dy/Math.max(.001,len(dx,dy));
+      const along=(upper*upper-lower*lower+distance*distance)/(2*distance);
+      const h=Math.sqrt(Math.max(0,upper*upper-along*along));
+      return point(hip.x+ux*along-uy*h*bendSign, hip.y+uy*along+ux*h*bendSign);
+    }
+    // Pull a target inside the limb's reach so the bones never have to stretch.
+    function reachTarget(root,target,maxLen){
+      const dx=target.x-root.x, dy=target.y-root.y, d=len(dx,dy);
+      if(d<=maxLen||d<.001) return target;
+      return point(root.x+dx/d*maxLen, root.y+dy/d*maxLen);
+    }
+    function gaitFoot(u,dir,amp){
+      if(u<DUTY){ const t=u/DUTY; return {x:SWING*(.5-t)*dir*amp, y:0}; }
+      const t=(u-DUTY)/(1-DUTY);
+      return {x:SWING*(-.5+easeInOut(t))*dir*amp, y:-pulse(t)*LIFT*amp};
+    }
+
+    function buildPose(){
+      const m=state.moving, yaw=state.yaw;
+      const P={
+        rootX:0, rootY:0, rootRot:0, squash:1, brace:0, footPull:0,
+        canopyX:0, canopyY:0, canopyRot:0, canopyOpen:0, headX:0, leadLean:0,
+        armL:{ang:0,ext:0,twist:0}, armR:{ang:0,ext:0,twist:0}
+      };
+      // locomotion
+      const cyc=state.gait/STRIDE*Math.PI*2;
+      P.rootY   += -Math.abs(Math.sin(cyc))*2.6*m + state.land*3.4;
+      P.rootRot += Math.sin(cyc*2)*.008*m + yaw*.055;
+      P.squash  *= 1-state.land*.045;
+      // idle breathing so it never sits perfectly still
+      P.rootY   += Math.sin(elapsed*1.5)*1.1*(1-m);
+      // Direction is expressed as yaw -- part offsets, a lean, and the head
+      // peeking toward the heading -- never as a horizontal flip. Mirroring would
+      // swap the cleaver and the spear into the wrong arms and flip the lighting.
+      P.canopyX += yaw*16 + state.canopy.a;
+      P.canopyRot += yaw*.075 + state.canopy.a*.006 - state.canopyPitch.a;
+      P.rootX   += yaw*6;
+      P.headX   += yaw*5;
+      P.leadLean = yaw;
+      // attack layer
+      if(state.attack) ATTACKS[state.attack.name].build(state.attack.t,P);
+      return P;
+    }
+
+    function drawCharacter(){
+      const P=buildPose(), scale=charScale(), m=state.moving, yaw=state.yaw;
+      const dir=Math.abs(yaw)>.05?Math.sign(yaw):1, amp=clamp(Math.abs(yaw),.25,1)*m;
+      const PIVOT=point(0,-58);
+
+      // The body carries the root offset and the lean; the feet do NOT. Raising
+      // the body therefore straightens the legs instead of levitating the whole
+      // creature, and a lunge drags the hips over planted feet.
+      const bodyXf=q=>{
+        const x=q.x+P.rootX, y=q.y+P.rootY;
+        const dx=x-PIVOT.x, dy=y-PIVOT.y, c=Math.cos(P.rootRot), sn=Math.sin(P.rootRot);
+        return point(PIVOT.x+dx*c-dy*sn, PIVOT.y+dx*sn+dy*c);
+      };
+      const applyBody=()=>{
+        ctx.translate(PIVOT.x,PIVOT.y); ctx.rotate(P.rootRot); ctx.translate(-PIVOT.x,-PIVOT.y);
+        ctx.translate(P.rootX,P.rootY);
+      };
+
+      // ---- legs: hips ride the body, feet stay on the ground
+      const feet=[],hips=[],knees=[];
+      const spread=1+P.brace*.16-P.footPull*.30;
+      for(let i=0;i<LEGS.length;i++){
+        const leg=LEGS[i];
+        const u=frac(state.gait/STRIDE+leg.phase);
+        const g=gaitFoot(u,dir,amp);
+        const hip=bodyXf(leg.hip);
+        const lead=1+P.leadLean*Math.sign(leg.base.x)*.07;
+        const want=point(leg.base.x*spread*lead+g.x, leg.base.y+g.y);
+        const foot=reachTarget(hip,want,(RIG.upperLen+RIG.lowerLen)*leg.size*.995);
+        feet.push(foot); hips.push(hip);
+        knees.push(solveLeg(hip,foot,RIG.upperLen*leg.size,RIG.lowerLen*leg.size,leg.bend));
+      }
+
+      // ---- contact shadow, tightening as the body drops toward the ground
+      const lift=clamp(1-P.rootY*.011,.80,1.24);
+      ctx.save(); ctx.translate(state.x,state.y);
+      ctx.fillStyle='rgba(31,36,34,.19)';
+      ctx.beginPath(); ctx.ellipse(0,1,88*scale/lift,13*scale/lift,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(31,36,34,.15)';
+      ctx.beginPath(); ctx.ellipse(0,1,45*scale/lift,8*scale/lift,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(state.x,state.y);
+      ctx.scale(scale,scale);
+      ctx.scale(1/Math.sqrt(P.squash),P.squash);   // volume-preserving squash on the ground plane
+
+      const drawLegs=near=>{
+        for(let i=0;i<LEGS.length;i++){
+          const leg=LEGS[i]; if((leg.depth>0)!==near) continue;
+          drawBone(leg.up,hips[i],knees[i],leg.ur,leg.ut,RIG.upperLen*leg.size);
+          drawBone(leg.lo,knees[i],feet[i],leg.lr,leg.lt,RIG.lowerLen*leg.size);
+        }
+      };
+
+      // ---- far side, knocked back in value so it reads as depth not a flat cutout
+      if(supportsFilter) ctx.filter='brightness(.62) saturate(.76) contrast(1.04)';
+      drawLegs(false);
+      if(supportsFilter) ctx.filter='none';
+
+      // ---- body group ------------------------------------------------------
+      const swing=Math.sin(state.gait/STRIDE*Math.PI*2)*m*dir;
+      const aL=P.armL, aR=P.armR;
+      const maxArm=(RIG.armUpper+RIG.armLower)*.995;
+      const shoulderL=point(RIG.shoulderL.x+yaw*2, RIG.shoulderL.y);
+      const shoulderR=point(RIG.shoulderR.x+yaw*2, RIG.shoulderR.y);
+      const angL=RIG.armAngL+aL.ang-swing*.05, angR=RIG.armAngR+aR.ang+swing*.05;
+      const distL=clamp(RIG.armDist+aL.ext+swing*3,24,maxArm);
+      const distR=clamp(RIG.armDist+aR.ext-swing*3,24,maxArm);
+      const wristL=point(shoulderL.x+Math.cos(angL)*distL, shoulderL.y+Math.sin(angL)*distL);
+      const wristR=point(shoulderR.x+Math.cos(angR)*distR, shoulderR.y+Math.sin(angR)*distR);
+      const elbowL=solveLeg(shoulderL,wristL,RIG.armUpper,RIG.armLower,-1);
+      const elbowR=solveLeg(shoulderR,wristR,RIG.armUpper,RIG.armLower, 1);
+      const hub=point(RIG.canopyPos.x+P.canopyX, RIG.canopyPos.y+P.canopyY);
+      const core=point(RIG.corePos.x+P.headX,RIG.corePos.y);
+
+      ctx.save(); applyBody();
+      drawAnchored('undercarriage',RIG.undercarriagePos,.36,[.50,.50],Math.sin(state.gait/STRIDE*Math.PI*4)*.012*m);
+
+      drawBone('arm_left_upper', shoulderL,elbowL,[.78,.18],[.30,.80],RIG.armUpper);
+      drawBone('arm_left_lower', elbowL,wristL,[.25,.18],[.72,.80],RIG.armLower);
+      drawBone('arm_right_upper',shoulderR,elbowR,[.28,.18],[.74,.82],RIG.armUpper);
+      drawBone('arm_right_lower',elbowR,wristR,[.09,.42],[.80,.44],RIG.armLower);
+
+      drawAnchored('core',core,RIG.coreScale,[.50,.50],Math.sin(state.gait/STRIDE*Math.PI*4+.4)*.01*m);
+
+      // canopy shade cast onto the head, so the eyes read as the one glowing thing
+      ctx.save();
+      const shadeY=core.y-6+P.canopyY*.4;
+      const grad=ctx.createLinearGradient(0,shadeY-26,0,shadeY+16);
+      grad.addColorStop(0,'rgba(14,18,20,.62)'); grad.addColorStop(1,'rgba(14,18,20,0)');
+      ctx.globalCompositeOperation='multiply'; ctx.fillStyle=grad;
+      ctx.beginPath(); ctx.ellipse(core.x+P.canopyX*.25,shadeY-8,46,26,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      const bladeSway=-.03+Math.sin(state.gait/STRIDE*Math.PI*2+.5)*.045*m+aL.twist+aL.ang;
+      drawAnchored('blade_left',wristL,.34,[.91,.50],bladeSway);
+      const swordSway=.03-Math.sin(state.gait/STRIDE*Math.PI*2+.5)*.04*m+aR.twist+aR.ang;
+      drawAnchored('sword_right',wristR,.39,[.13,.22],swordSway);
+      ctx.restore();
+
+      // ---- near-side legs sit in front of the drum
+      drawLegs(true);
+
+      // ---- canopy last: it is the shell, it covers everything
+      ctx.save(); applyBody();
+      const open=RIG.canopyStretch*(1+P.canopyOpen), sway=P.canopyRot;
+      drawAnchored('canopy_left',  hub,                     .55,[.96,.06],sway-.018,1,open);
+      drawAnchored('canopy_center',point(hub.x-13,hub.y+1), .55,[.06,.06],sway-.005,1,open);
+      drawAnchored('canopy_right', point(hub.x+38,hub.y+1), .52,[.06,.06],sway+.013,1,open);
+      drawAnchored('finial',       point(hub.x-1,hub.y-3),  .20,[.50,.84],sway*.4);
+      ctx.restore();
+
+      // ---- weapon-tip tracking for the swing arc (world space)
+      if(state.attack){
+        const t=state.attack.t, a=state.attack.name;
+        const tipL=bodyXf(point(wristL.x-52*Math.cos(-bladeSway)-6, wristL.y+52*Math.sin(-bladeSway)+4));
+        const tipR=bodyXf(point(wristR.x+58*Math.cos(swordSway), wristR.y+58*Math.sin(swordSway)-10));
+        if(a==='slash'&&t>.30&&t<.62) trail.push(toWorld(tipL.x,tipL.y));
+        if(a==='thrust'&&t>.28&&t<.58) trail.push(toWorld(tipR.x,tipR.y));
+        if(!state.attack.hit){
+          if(a==='slam'&&t>.46){ state.attack.hit=true; ring(state.x,state.y,1); for(let i=0;i<10;i++) puff(state.x+(Math.random()-.5)*140,state.y+(Math.random()-.5)*16,.7+Math.random()*.7); }
+          if(a==='thrust'&&t>.42){ state.attack.hit=true; for(let i=0;i<4;i++) puff(state.x+66+Math.random()*46,state.y-Math.random()*10,.5+Math.random()*.4); }
+          if(a==='slash'&&t>.48){ state.attack.hit=true; for(let i=0;i<5;i++) puff(state.x-74-Math.random()*46,state.y-Math.random()*10,.5+Math.random()*.5); }
+        }
+      }
+
+      if(showRig){
+        const bodyPts=[point(0,-62),core,hub,shoulderL,elbowL,wristL,shoulderR,elbowR,wristR].map(bodyXf);
+        const [body,coreW,hubW,shL,elL,wrL,shR,elR,wrR]=bodyPts;
+        const bones=[[body,coreW],[coreW,hubW],[coreW,shL],[shL,elL],[elL,wrL],[coreW,shR],[shR,elR],[elR,wrR]];
+        for(let i=0;i<LEGS.length;i++) bones.push([body,hips[i]],[hips[i],knees[i]],[knees[i],feet[i]]);
+        ctx.strokeStyle='#27dcef'; ctx.lineWidth=2.2/scale; ctx.beginPath();
+        for(const[u,v]of bones){ctx.moveTo(u.x,u.y);ctx.lineTo(v.x,v.y);} ctx.stroke();
+        for(const q of [...bodyPts,...hips,...knees,...feet]){ctx.fillStyle='#ff4169';ctx.strokeStyle='white';ctx.lineWidth=1.4/scale;ctx.beginPath();ctx.arc(q.x,q.y,4/scale,0,Math.PI*2);ctx.fill();ctx.stroke();}
+      }
+      ctx.restore();
+    }
+    // local character space -> world, for fx that must not follow the body
+    function toWorld(lx,ly){ const s=charScale(); return {x:state.x+lx*s, y:state.y+ly*s}; }
+
+    /* ---------------------------------------------------------------- frame */
+    function render(now){
+      const dt=Math.min(.035,(now-lastTime)/1000||0); lastTime=now;
+      update(dt);
+      ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,width,height);
+      drawField();
+      const sorted=[...decor].sort((a,b)=>a.y-b.y);
+      for(const item of sorted) if(item.y<state.y) drawDecoration(item);
+      for(const f of fx) if(f.y<state.y) drawFx(f);
+      drawCharacter();
+      drawTrail();
+      for(const f of fx) if(f.y>=state.y) drawFx(f);
+      for(const item of sorted) if(item.y>=state.y) drawDecoration(item);
+      requestAnimationFrame(render);
+    }
+
+    /* ------------------------------------------------------------------- ui */
+    function setToggle(button,value){ button.setAttribute('aria-pressed',String(value)); }
+    pauseButton.addEventListener('click',()=>{paused=!paused;setToggle(pauseButton,paused);pauseButton.textContent=paused?'Resume':'Pause';});
+    rigButton.addEventListener('click',()=>{showRig=!showRig;setToggle(rigButton,showRig);});
+    autoButton.addEventListener('click',()=>{auto=!auto;setToggle(autoButton,auto);});
+    document.getElementById('thrust').addEventListener('click',()=>fire('thrust'));
+    document.getElementById('slash').addEventListener('click',()=>fire('slash'));
+    document.getElementById('slam').addEventListener('click',()=>fire('slam'));
+    function setBuild(open){processPanel.classList.toggle('open',open);processPanel.setAttribute('aria-hidden',String(!open));setToggle(buildButton,open);}
+    buildButton.addEventListener('click',()=>setBuild(!processPanel.classList.contains('open')));
+    closeButton.addEventListener('click',()=>setBuild(false));
+    addEventListener('keydown',event=>{
+      if(event.key==='Escape')setBuild(false);
+      if(event.key===' '){event.preventDefault();pauseButton.click();}
+      if(event.key==='1')fire('thrust'); if(event.key==='2')fire('slash'); if(event.key==='3')fire('slam');
+    });
+    // Tap far away to walk there; tap close in to strike toward that side.
+    // Direction comes from which arm is used, never from mirroring the sprite.
+    canvas.addEventListener('pointerdown',event=>{
+      const rect=canvas.getBoundingClientRect();
+      const px=event.clientX-rect.left, py=event.clientY-rect.top;
+      const d=len(px-state.x,py-state.y);
+      if(d<120){ fire(px>state.x?'thrust':'slash'); }
+      else { state.tx=px; state.ty=py; state.wait=0; }
+      hint.style.opacity='0';
+    });
+    addEventListener('resize',resize,{passive:true});
+
+    Promise.all(loadPromises).then(()=>{
+      resize();
+      state.x=width*.62; state.y=height*.60; state.tx=width*.30; state.ty=height*.52;
+      loading.classList.add('hidden');
+      requestAnimationFrame(render);
+      setTimeout(()=>hint.style.opacity='.18',6500);
+    }).catch(()=>{ loading.textContent='The embedded puppet art could not be loaded.'; });
+  </script>
+</body>
+</html>
