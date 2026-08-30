@@ -143,8 +143,9 @@
           <li><b>Depth-sorted, back-face-culled, and lit</b> from upper-left by a real surface normal, so the top planes of every fold catch light and the valleys occlude properly as the body squeezes.</li>
           <li><b>The operator is behind its own instrument.</b> The accordion is held out in front of a body you never see: the head sits up and back on a layer <em>behind</em> the bellows, so only the visor and the conductor's cap clear the top edge, and the cap is worn on that head rather than parked on the pleats.</li>
           <li><b>Both hands grip the housings.</b> The fists close over the outer edge of each button board and travel with it — a thrust is the whole instrument being driven out, not a fist on a stick. Forearms run back to a chassis the bellows completely hides.</li>
-          <li><b>Limbs are socketed, not floated.</b> Hips sit just under the bellows on a pelvis yoke, thighs draw beneath the body and shins over it, and every joint pivot is read off the painted part — hip barrel, knee boss, sole — so the thigh and shin actually meet.</li>
-          <li><b>The gait plants its feet.</b> Stance feet are locked to the ground in world space (no sliding), with heel-strike impact dip, weight roll onto the stance leg, and a squeeze of the bellows per stride — it plays itself as it marches.</li>
+          <li><b>The joint map was rebuilt, not inherited.</b> Rather than pinning bones to painted bosses, each leg pivot is now the sprite's own <em>mass centreline</em>, measured from its alpha: a straightened leg reads as one continuous limb instead of a dog-leg. The chain ends at the ankle, and a short solve places it so the sole lands flat on the ground line at whatever angle the shin happens to sit.</li>
+          <li><b>Nothing is ever mirrored.</b> The puppet keeps one build and simply works to whichever side it needs — so no painted highlight, no housing grille and no fold ever jumps sides on a turn. Direction is carried by the stride, a few degrees of real yaw on the bellows, and which arm throws the punch.</li>
+          <li><b>The gait plants its feet.</b> Stance feet are locked to the ground in world space (no sliding), with heel-strike impact dip, weight roll onto the stance leg, and a squeeze of the bellows per stride — it plays itself as it marches, out of and back into the concept's wide planted stance.</li>
           <li><b>Three attacks</b> — Jab, Crush Chord, Reed Blast — all driven through the same bellows: air is the weapon, and the concept's orange sound arcs are the payload.</li>
         </ul>
       </div>
@@ -238,8 +239,11 @@
       caseOffset: 32,      // housing centre, outboard of the bellows end
       // The hands grip the outer edge of each housing, in housing-sprite pixels.
       gripOut: 104, gripDrop: 58,
-      hipX: 38, hipZ: 14,
-      thigh: 45, shin: 41,
+      // Joint map re-derived from each sprite's own mass centreline, so a
+      // straightened leg reads as one continuous limb instead of a dog-leg.
+      hipX: 41, hipZ: 14, stanceX: 54,
+      thigh: 37, shin: 30,
+      soleAlong: .842, solePerp: -.168,   // sole, in the shin bone's own frame
       // The operator stands behind its own instrument; only the head clears it.
       headX: -11, headY: -189, headZ: -0.62,
       creamFrom: 4, creamTo: 8,
@@ -297,7 +301,7 @@
 
     const state = {
       x: 220, y: 250, vx: -35, vy: 0, tx: 90, ty: 250, wait: 0,
-      facing: -1, turn: 0, turnFrom: -1, distance: 0,
+      facing: -1, dir: -1, look: -1, distance: 0,
       target: null, cooldown: 1.4, mode: 'wander',
       // bellows breath, springs, and secondary motion
       open: 0, openVel: 0, breath: 0,
@@ -487,16 +491,16 @@
         pose(u, side, self) {
           const wind = seg(u, 0, .20), fire = seg(u, .20, .33), hold = seg(u, .33, .46), back = seg(u, .46, 1);
           const p = blankPose();
-          const s = smoothstep(wind) - smoothstep(fire) * 0 ;
+          const hit = side > 0 ? 1 : 0, off = 1 - hit;   // which arm throws it
           p.open = -0.92 * smoothstep(wind) * (1 - fire) + 0.88 * easeOut(fire, 4) * (1 - smoothstep(back) * .96);
-          p.bias = 0.45 * easeOut(fire, 3) * (1 - smoothstep(back)) - 0.18 * smoothstep(wind) * (1 - fire);
+          p.bias = side * (0.45 * easeOut(fire, 3) * (1 - smoothstep(back)) - 0.18 * smoothstep(wind) * (1 - fire));
           p.lunge = side * (-9 * smoothstep(wind) * (1 - fire) + 30 * easeOut(fire, 4) * (1 - smoothstep(back, 1)));
           p.rise = -4 * smoothstep(wind) + 5 * spike(fire);
-          p.roll = -0.05 * smoothstep(wind) + 0.075 * easeOut(fire, 3) * (1 - smoothstep(back));
-          p.punch[1] = -18 * smoothstep(wind) * (1 - fire) + 55 * easeOut(fire, 4) * (1 - smoothstep(back, 2));
-          p.punch[0] = -9 * smoothstep(wind) * (1 - smoothstep(back));
-          p.fistSpin = 2.1 * easeOut(fire, 3) * (1 - smoothstep(back));
-          p.lean = 26 * easeOut(fire, 3) * (1 - smoothstep(back)) - 10 * smoothstep(wind) * (1 - fire);
+          p.roll = side * (-0.05 * smoothstep(wind) + 0.075 * easeOut(fire, 3) * (1 - smoothstep(back)));
+          p.punch[hit] = -18 * smoothstep(wind) * (1 - fire) + 55 * easeOut(fire, 4) * (1 - smoothstep(back, 2));
+          p.punch[off] = -9 * smoothstep(wind) * (1 - smoothstep(back));
+          p.fistSpin = side * 2.1 * easeOut(fire, 3) * (1 - smoothstep(back));
+          p.lean = side * (26 * easeOut(fire, 3) * (1 - smoothstep(back)) - 10 * smoothstep(wind) * (1 - fire));
           p.eye = .35 + .65 * spike(seg(u, .18, .5));
           p.crouch = 5 * spike(seg(u, .0, .5));
           if (hold > 0 && !self.fired.hit) { self.fired.hit = true; return [p, 'impact']; }
@@ -510,14 +514,14 @@
           const p = blankPose();
           p.open = 1.22 * smoothstep(rear) * (1 - easeIn(drop, 2)) - 1.05 * easeOut(drop, 4) * (1 - smoothstep(back) * .95);
           p.rise = -26 * smoothstep(rear) * (1 - easeIn(drop, 2)) + 30 * easeOut(drop, 4) * (1 - smoothstep(back, 2));
-          p.lunge = state.facing * (-6 * smoothstep(rear) + 16 * easeOut(drop, 3) * (1 - smoothstep(back)));
+          p.lunge = side * (-6 * smoothstep(rear) + 16 * easeOut(drop, 3) * (1 - smoothstep(back)));
           p.pitch = -0.11 * smoothstep(rear) * (1 - drop) + 0.16 * easeOut(drop, 3) * (1 - smoothstep(back, 2));
           p.armLift = -78 * smoothstep(rear) * (1 - easeIn(drop, 2)) + 62 * easeOut(drop, 4) * (1 - smoothstep(back, 2));
           p.punch[0] = p.punch[1] = -26 * smoothstep(rear) + 44 * easeOut(drop, 4) * (1 - smoothstep(back, 2));
           p.crouch = 22 * easeOut(drop, 4) * (1 - smoothstep(back, 2));
           p.stance = 16 * smoothstep(rear) * (1 - smoothstep(back));
           p.eye = .3 + .7 * clamp(smoothstep(rear) + spike(seg(u, .32, .7)), 0, 1);
-          p.lean = -14 * smoothstep(rear) * (1 - drop) + 20 * easeOut(drop, 3) * (1 - smoothstep(back));
+          p.lean = side * (-14 * smoothstep(rear) * (1 - drop) + 20 * easeOut(drop, 3) * (1 - smoothstep(back)));
           p.tremble = .55 * smoothstep(seg(u, .12, .32)) * (1 - drop);
           if (held > 0 && !self.fired.hit) { self.fired.hit = true; return [p, 'impact']; }
           return [p, null];
@@ -530,13 +534,14 @@
           const p = blankPose();
           p.open = 1.55 * easeOut(charge, 1.6) * (1 - easeIn(fire, 2)) - 1.15 * easeOut(fire, 4) * (1 - smoothstep(back) * .95);
           p.charge = easeOut(charge, 1.5) * (1 - easeIn(fire, 3)) + .45 * (1 - vent) * (fire >= 1 ? 1 : 0);
-          p.lunge = state.facing * (-13 * smoothstep(charge) * (1 - fire) + 26 * easeOut(fire, 4) * (1 - smoothstep(back)));
+          p.bias = side * .3 * easeOut(fire, 3) * (1 - smoothstep(back));
+          p.lunge = side * (-13 * smoothstep(charge) * (1 - fire) + 26 * easeOut(fire, 4) * (1 - smoothstep(back)));
           p.rise = -9 * smoothstep(charge) * (1 - fire) + 7 * spike(fire);
           p.pitch = -0.075 * smoothstep(charge) * (1 - fire) + 0.1 * easeOut(fire, 3) * (1 - smoothstep(back));
           p.punch[0] = p.punch[1] = -13 * smoothstep(charge) + 20 * easeOut(fire, 4) * (1 - smoothstep(back, 2));
           p.crouch = 8 * smoothstep(charge) * (1 - fire) + 12 * spike(fire);
           p.stance = 12 * smoothstep(charge) * (1 - smoothstep(back));
-          p.lean = -16 * smoothstep(charge) * (1 - fire) + 22 * easeOut(fire, 3) * (1 - smoothstep(back));
+          p.lean = side * (-16 * smoothstep(charge) * (1 - fire) + 22 * easeOut(fire, 3) * (1 - smoothstep(back)));
           p.tremble = .85 * easeOut(charge, 1.4) * (1 - easeIn(fire, 2));
           p.eye = .2 + .8 * (easeOut(charge, 1.4) * (1 - easeIn(fire, 4)) + spike(fire));
           if (fire > 0 && !self.fired.charge) { self.fired.charge = true; return [p, 'chargeTick']; }
@@ -703,16 +708,20 @@
       clampStage();
       state.distance += len(state.vx, state.vy) * dt;
 
-      // Smooth about-face rather than an instant mirror.
-      let wantFacing = state.facing;
-      if (locked) wantFacing = act.side;
-      else if (Math.abs(state.vx) > 10) wantFacing = state.vx < 0 ? -1 : 1;
-      else if (state.target) wantFacing = state.target.x < state.x ? -1 : 1;
-      if (wantFacing !== state.facing && state.turn <= 0) { state.turnFrom = state.facing; state.facing = wantFacing; state.turn = 1; }
-      if (state.turn > 0) state.turn = Math.max(0, state.turn - dt / .22);
+      /* The rig is never mirrored — the puppet keeps one build and simply
+         works to whichever side it needs, so no painted highlight ever jumps.
+         `facing` is only which side it is addressing; `dir` is which way the
+         feet are carrying it; `look` is a soft blend used for the head and a
+         few degrees of real yaw on the bellows. */
+      if (locked) state.facing = act.side;
+      else if (Math.abs(state.vx) > 10) state.facing = state.vx < 0 ? -1 : 1;
+      else if (state.target) state.facing = state.target.x < state.x ? -1 : 1;
+      const travel = Math.abs(state.vx) > 6 ? Math.sign(state.vx) : state.dir;
+      state.dir = mix(state.dir, travel, 1 - Math.pow(.004, dt));
+      state.look = mix(state.look, state.facing, 1 - Math.pow(.02, dt));
 
       // Springs: the head and cap trail the chassis by a couple of frames.
-      const drive = clamp(state.vx / 70, -1, 1);
+      const drive = clamp(state.vx / 70, -1, 1);   // rig space == screen space now
       const springTo = (value, vel, target, k, d) => {
         vel += (target - value) * k * dt; vel *= Math.pow(d, dt); return [value + vel * dt, vel];
       };
@@ -1007,6 +1016,22 @@
       ctx.restore();
     }
 
+    /* The lower sprite is shin AND foot, so the chain ends at the ankle and the
+       sole hangs off it. This solves for the ankle that puts the sole exactly
+       on the ground line at the wanted contact point, whatever the shin angle. */
+    function plantLeg(hip, contactX, ground, upper, lower, bendSign, girth) {
+      let ax = contactX, ay = ground - lower * RIG.soleAlong, knee = null;
+      for (let i = 0; i < 3; i++) {
+        knee = solveLeg(hip, P(ax, ay), upper, lower, bendSign);
+        let ux = ax - knee.x, uy = ay - knee.y;
+        const m = len(ux, uy) || 1; ux /= m; uy /= m;
+        const sx = ax + ux * lower * RIG.soleAlong - uy * lower * RIG.solePerp * girth;
+        const sy = ay + uy * lower * RIG.soleAlong + ux * lower * RIG.solePerp * girth;
+        ax += contactX - sx; ay += ground - sy;
+      }
+      return { ankle: P(ax, ay), knee };
+    }
+
     function solveLeg(hip, foot, upper, lower, bendSign) {
       const dx = foot.x - hip.x, dy = foot.y - hip.y;
       const distance = clamp(len(dx, dy), Math.abs(upper - lower) + .01, upper + lower - .01);
@@ -1137,11 +1162,8 @@
       state.charge = mix(state.charge, pose.charge, .35);
       state.eye = mix(state.eye, Math.max(pose.eye, .18 + .16 * Math.sin(elapsed * 2.1) + .2 * moving), .3);
 
-      // turn: the rig spins through the about-face instead of snapping
-      const turnBlend = spike(1 - Math.abs(state.turn * 2 - 1));
-      const turnAmt = spike(state.turn);
-      bodyYaw = (-0.145 + turnAmt * 0.60) * (state.facing);
-      const xSquash = mix(1, .58, turnAmt);
+      // A few degrees of genuine yaw let it address a side without mirroring.
+      bodyYaw = state.look * 0.13 + pose.bias * .06;
 
       /* ---- world transform ---- */
       ctx.save();
@@ -1149,8 +1171,8 @@
       ctx.fillStyle = 'rgba(31,36,34,.22)';
       const shadowSquash = 1 - pose.crouch * .004;
       ctx.beginPath(); ctx.ellipse(0, 4, Math.max(8, (150 + Math.abs(state.open) * 26) * overall * shadowSquash), 17 * overall, 0, 0, 6.2832); ctx.fill();
-      ctx.translate(pose.lunge * overall + sway * overall * state.facing, (bob - 3 + pose.rise) * overall);
-      ctx.scale(state.facing * overall * xSquash, overall);
+      ctx.translate(pose.lunge * overall + sway * overall * state.dir, (bob - 3 + pose.rise) * overall);
+      ctx.scale(overall, overall);
       ctx.rotate(roll + pose.roll + pose.pitch * .55);
 
       /* ---- bellows geometry, and the sockets everything else hangs off ---- */
@@ -1167,7 +1189,7 @@
 
       /* Hips ride the underside of the bellows, tucked up inside its silhouette
          and forward of the spine, so the body always overlaps the socket. */
-      const hipY = RIG.axisY - RIG.arch * .5 + RIG.halfHeight * 1.03;
+      const hipY = RIG.axisY - RIG.arch * .5 + RIG.halfHeight * 1.01;
       const hip3D = [V(-RIG.hipX - pose.stance, hipY, -20 + RIG.hipZ),
                      V(RIG.hipX + pose.stance, hipY, 20 + RIG.hipZ)];
       const hipS = hip3D.map(project);
@@ -1204,26 +1226,27 @@
       const groundY = -(bob - 3 + pose.rise);
       const legs = [
         { hip: hipS[0], step: stepA, sign: 1, up: 'leg_left_upper', low: 'leg_left_lower',
-          upRoot: [.78, .13], upTip: [.72, .73], loRoot: [.52, .05], loTip: [.60, .86], base: -RIG.hipX - 6 },
-        { hip: hipS[1], step: stepB, sign: -1, up: 'leg_right_upper', low: 'leg_right_lower',
-          upRoot: [.17, .13], upTip: [.26, .73], loRoot: [.48, .05], loTip: [.60, .85], base: RIG.hipX + 6 }
+          upRoot: [.51, .06], upTip: [.46, .88], loRoot: [.37, .02], loTip: [.47, .52], base: -RIG.stanceX },
+        { hip: hipS[1], step: stepB, sign: 1, up: 'leg_right_upper', low: 'leg_right_lower',
+          upRoot: [.46, .06], upTip: [.51, .88], loRoot: [.34, .02], loTip: [.46, .52], base: RIG.stanceX }
       ];
       for (const leg of legs) {
-        const gx = leg.base + leg.step.x * moving + (leg.sign > 0 ? -pose.stance : pose.stance);
+        const gx = leg.base + leg.step.x * moving * state.dir + (leg.base < 0 ? -pose.stance : pose.stance);
         // The chassis bobs, rears and drops; the soles stay on the ground line.
-        leg.foot = P(gx, groundY - leg.step.lift * moving);
-        leg.knee = solveLeg(leg.hip, leg.foot, RIG.thigh, RIG.shin, leg.sign);
+        const planted = plantLeg(leg.hip, gx, groundY - leg.step.lift * moving,
+                                 RIG.thigh, RIG.shin, leg.sign, 1.18);
+        leg.foot = planted.ankle; leg.knee = planted.knee;
       }
 
       // Thighs are drawn under the bellows and shins over it, so the hip
       // sockets are always covered by the body they hang from.
       const drawThigh = leg => {
         jointCap(leg.hip, 10, false);
-        drawBone(leg.up, leg.hip, leg.knee, leg.upRoot, leg.upTip, 1.10, .96);
+        drawBone(leg.up, leg.hip, leg.knee, leg.upRoot, leg.upTip, 1.06, 1.14);
       };
       const drawShin = leg => {
-        jointCap(leg.knee, 10, false);
-        drawBone(leg.low, leg.knee, leg.foot, leg.loRoot, leg.loTip, 1.04, 1.42);
+        jointCap(leg.knee, 11, false);
+        drawBone(leg.low, leg.knee, leg.foot, leg.loRoot, leg.loTip, 1.03, 1.18);
       };
 
       /* ---- draw order: far thigh, pelvis, near thigh, body, arms, shins ---- */
@@ -1245,7 +1268,7 @@
       // Forearms reach around the instrument; the bellows swallows the rest.
       for (const arm of arms) drawForearm(arm.shoulder, arm.cuff, 13 * arm.seat.f);
 
-      drawBellows(rings, state.charge, state.facing);
+      drawBellows(rings, state.charge, 1);
 
       // Rigid end housings, seated over the last fold so no seam shows.
       drawAnchored('case_left', cL, RIG.caseScale * cL.f, [.50, .50], caseRot);
@@ -1405,7 +1428,8 @@
         state.vx = state.vy = 0; state.tx = state.x; state.ty = state.y;
         state.wait = 1e9; if (facing) state.facing = facing;
         act.name = null; act.t = 0; fx.length = 0; shake = 0;
-        state.open = 0; state.charge = 0; state.turn = 0; state.headLag = state.capLag = 0;
+        state.open = 0; state.charge = 0; state.headLag = state.capLag = 0;
+        state.dir = state.look = state.facing;
       },
       step(seconds) { const back = paused; paused = false; update(seconds); paused = back; },
       // Deterministic playback: run a move forward `seconds` in fixed steps,
