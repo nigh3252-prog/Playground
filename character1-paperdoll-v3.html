@@ -122,20 +122,27 @@
       R:{sh:BIND.armR.sh,u:bone(BIND.armR.sh,BIND.armR.el),f:bone(BIND.armR.el,BIND.armR.wr),h:bone(BIND.armR.wr,BIND.armR.gr)}
     };
 
-    /* Attachment fractions measured on each cut cell: where the joint sits
-       inside its own image. `flip` mirrors a cell whose art faces the wrong
-       way — the screen-left claw and the screen-right boot. */
+    /* Attachment fractions: where each joint sits inside its own cut cell.
+       Socket values come from the alpha centroid of the cell's end band, not
+       from eyeballing, because a few degrees of error there shows up as a
+       visibly offset wrist or knee.
+       `bulk` enlarges a cell past what its bone length asks for. It is only
+       ever used on a LEAF cell (hands, boots): on a cell that carries a child
+       it would push the drawn socket past the joint the child anchors to,
+       which is exactly what made the wrists look disconnected.
+       `flip` mirrors a cell whose art faces the wrong way — the screen-left
+       claw and the screen-right boot. */
     const ART={
-      arm_left_upper   :{root:[.87,.42],tip:[.12,.60],bulk:1.06},
-      arm_left_forearm :{root:[.06,.35],tip:[.93,.66],bulk:1.16},
-      hand_left        :{root:[.09,.24],tip:[.62,.80],bulk:1.14,flip:true},
-      arm_right_upper  :{root:[.13,.44],tip:[.90,.58],bulk:1.06},
-      arm_right_forearm:{root:[.07,.30],tip:[.93,.53],bulk:1.14},
-      hand_right       :{root:[.10,.26],tip:[.72,.72],bulk:1.12},
-      leg_left_upper   :{root:[.52,.05],tip:[.50,.76]},
-      leg_left_lower   :{root:[.55,.06],tip:[.45,.88],bulk:1.06},
-      leg_right_upper  :{root:[.60,.05],tip:[.55,.79]},
-      leg_right_lower  :{root:[.47,.06],tip:[.45,.90],bulk:1.06,flip:true}
+      arm_left_upper   :{root:[.902,.443],tip:[.095,.645]},
+      arm_left_forearm :{root:[.104,.368],tip:[.890,.584]},
+      hand_left        :{root:[.106,.258],tip:[.620,.800],bulk:1.10,flip:true},
+      arm_right_upper  :{root:[.094,.458],tip:[.902,.639]},
+      arm_right_forearm:{root:[.098,.316],tip:[.897,.629]},
+      hand_right       :{root:[.101,.270],tip:[.720,.720],bulk:1.08},
+      leg_left_upper   :{root:[.585,.101],tip:[.500,.760]},
+      leg_left_lower   :{root:[.529,.104],tip:[.491,.889],bulk:1.05},
+      leg_right_upper  :{root:[.625,.097],tip:[.550,.790]},
+      leg_right_lower  :{root:[.534,.102],tip:[.416,.893],bulk:1.05,flip:true}
     };
 
     /* ---------------- world state ---------------- */
@@ -475,11 +482,13 @@
       ctx.translate(0,-2);
       ctx.scale(overall,overall);
 
+      // Thighs stay behind the shell (they live up inside the bell mouth);
+      // the shins and boots draw over it, so nothing clips them.
       drawBone('leg_right_upper',legR.hip,legR.knee);
-      drawBone('leg_right_lower',legR.knee,legR.foot);
       drawBone('leg_left_upper',legL.hip,legL.knee);
-      drawBone('leg_left_lower',legL.knee,legL.foot);
       drawBody(P);
+      drawBone('leg_right_lower',legR.knee,legR.foot);
+      drawBone('leg_left_lower',legL.knee,legL.foot);
       drawBone('arm_right_upper',armR.sh,armR.el);
       drawBone('arm_right_forearm',armR.el,armR.wr);
       drawBone('hand_right',armR.wr,armR.gr);
