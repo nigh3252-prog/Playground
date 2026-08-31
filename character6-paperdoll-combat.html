@@ -70,7 +70,7 @@ button{font:inherit}
       <div class="rule"><b>SAFE CLOSED LOOP</b><span>The circular guard is never split into front/back arcs. It is one real front occluder with transparent holes.</span></div>
       <div class="rule"><b>ONE SEGMENT PER LEG</b><span>The middle strut is gone. Each pointed foot piece mounts straight onto its hip socket and pivots rigidly — no stretching, no knee.</span></div>
       <div class="rule"><b>NO MIRROR FLIP</b><span>The doll never flips left-for-right. Heading is read as body lean and gait bias, so the painted side lighting stays put.</span></div>
-      <div class="rule"><b>DEPTH ORDER</b><span>Rear legs → motor/base → rotor → whole guard → center leg. A sweeping leg promotes to the front layer for the duration of its arc.</span></div>
+      <div class="rule"><b>DEPTH ORDER</b><span>Motor/base → rotor → whole guard → all three legs. Legs sit above the sockets they plug into, and a sweeping leg rides above the other two for the length of its arc.</span></div>
       <div class="rule"><b>GUST BLAST</b><span>Rotor overspins, body rears and thrusts. Pressure rings expand toward camera and scour ground dust outward.</span></div>
       <div class="rule"><b>PILE STOMP · LEG SWEEP</b><span>The center leg retracts into its socket and drives down for the stomp; the left leg lifts wide and chops across for the sweep.</span></div>
     </div>
@@ -97,13 +97,21 @@ const seg=(t,a,b)=>clamp((t-a)/(b-a),0,1);
 
 /* Body sits at BODY_Y above the ground contact point. Each leg is now a single
    rigid piece: the pointed foot sprite mounts directly on its hip socket and
-   pivots there. `rest` is the socket-out angle, `len` the hip-to-tip distance
-   the old two-segment chain used to reach, so the silhouette height is kept. */
+   pivots there.
+
+   `hip` is measured off the core sprite's own artwork: the three socket mouths
+   sit at (-91.8,37.0), (86.9,28.9) and (19.7,50.5) in body space, and each hip
+   is that mouth pushed 7px back up its own axis so the collar seats inside the
+   housing instead of butting against it. The centre socket is drawn ~20px
+   right of the body axis by the 3/4 perspective, which is why mounting that
+   leg at x=0 left it visibly unplugged. `len` is then set so the feet still
+   land on the old ground line and the silhouette height is unchanged.
+   `z` is the draw order: higher is nearer the camera. */
 const BODY_Y=-166, ROTOR_AT={x:1,y:-112};
 const LEGS=[
-  {key:'left_lower',  a:{x:167,y:34}, b:{x:22,y:270},  hip:{x:-88,y:21}, rest:108, len:131, mir: 1, front:false},
-  {key:'right_lower', a:{x:46,y:31},  b:{x:189,y:286}, hip:{x:88,y:21},  rest:72,  len:131, mir:-1, front:false},
-  {key:'center_lower',a:{x:52,y:30},  b:{x:52,y:276},  hip:{x:0,y:46},   rest:90,  len:120, mir: 1, front:true}
+  {key:'left_lower',  a:{x:167,y:34}, b:{x:22,y:270},  hip:{x:-89.6,y:30.3}, rest:108, len:121.6, mir: 1, z:0},
+  {key:'right_lower', a:{x:46,y:31},  b:{x:189,y:286}, hip:{x:84.7,y:22.2},  rest:72,  len:130.2, mir:-1, z:1},
+  {key:'center_lower',a:{x:52,y:30},  b:{x:52,y:276},  hip:{x:19.7,y:43.5},  rest:90,  len:122.5, mir: 1, z:2}
 ];
 for(const L of LEGS){L.slen=Math.hypot(L.b.x-L.a.x,L.b.y-L.a.y);L.scale=L.len/L.slen}
 const GAIT=[0,2.0944,4.1888];
@@ -124,7 +132,7 @@ function limb(c,img,L,ang,retract){
 function anchor(c,img,a,A,s,r){c.save();c.translate(A.x,A.y);c.rotate(r||0);c.scale(s,s);c.translate(-a.x,-a.y);c.drawImage(img,0,0);c.restore()}
 
 /* -------------------------------------------------------------- poses ---- */
-function basePose(){return{dx:0,dy:BODY_Y,rot:0,scale:1,rotorMul:1,legs:LEGS.map(L=>({ang:L.rest,retract:0,front:L.front}))}}
+function basePose(){return{dx:0,dy:BODY_Y,rot:0,scale:1,rotorMul:1,legs:LEGS.map(L=>({ang:L.rest,retract:0,z:L.z}))}}
 
 /* One stroll pose covers standing and walking. `amp` (0..1) cross-fades the
    wave gait in and out so stopping at a target eases down instead of popping.
@@ -174,7 +182,7 @@ function applyAttack(po,t){
     const w=smooth(seg(t,0,.36)),s=easeOut(seg(t,.36,.6)),k=1-easeOut(seg(t,.6,1));
     po.legs[0].ang+=(88*w-156*s)*k;
     po.legs[0].retract+=(18*w-18*s)*k;
-    po.legs[0].front=w>.04;
+    if(w>.04)po.legs[0].z=3;
     po.rot+=(-.16*w+.21*s)*k;
     po.dy+=(-7*w+7*s)*k;
     po.legs[1].ang+=(-7*w+9*s)*k;
@@ -291,13 +299,13 @@ function attackFx(prevT,t,cx,cy,sc){
 /* ---------------------------------------------------------------- draw ---- */
 function puppet(c,po,r,rig){
   c.save();c.translate(po.dx,po.dy);c.rotate(po.rot);c.scale(po.scale,po.scale);
-  const back=[],front=[];
-  po.legs.forEach((l,i)=>(l.front?front:back).push(i));
-  for(const i of back)limb(c,imgs[LEGS[i].key],LEGS[i],po.legs[i].ang,po.legs[i].retract);
   anchor(c,imgs.core,{x:392,y:620},{x:0,y:0},.27,0);
   anchor(c,imgs.rotor,{x:151,y:165},ROTOR_AT,.54,r);
   anchor(c,imgs.cage,{x:179,y:202},ROTOR_AT,.61,0);
-  for(const i of front)limb(c,imgs[LEGS[i].key],LEGS[i],po.legs[i].ang,po.legs[i].retract);
+  /* Legs go on last: the collars have to read as gripping the socket stubs,
+     which are painted into the core, so nothing may draw over them. */
+  const order=po.legs.map((l,i)=>i).sort((i,j)=>po.legs[i].z-po.legs[j].z);
+  for(const i of order)limb(c,imgs[LEGS[i].key],LEGS[i],po.legs[i].ang,po.legs[i].retract);
   if(rig){
     c.strokeStyle='#19cbe8';c.fillStyle='#ffab17';c.lineWidth=3;
     const pts=[ROTOR_AT];
