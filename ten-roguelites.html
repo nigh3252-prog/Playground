@@ -140,8 +140,15 @@ function audioInit(){
     SND.master.connect(SND.ctx.destination);
   }catch(e){ SND.on = false; }
 }
+function audioResume(){
+  audioInit();
+  try{ if(SND.ctx && SND.ctx.state !== 'running') SND.ctx.resume(); }catch(e){}
+}
 function sfx(type){
   if(!SND.on || !SND.ctx) return;
+  try{ sfxRaw(type); }catch(e){ /* a suspended or interrupted context must never kill a frame */ }
+}
+function sfxRaw(type){
   const t = SND.ctx.currentTime, o = SND.ctx.createOscillator(), g = SND.ctx.createGain();
   o.connect(g); g.connect(SND.master);
   let f0=440, f1=220, dur=0.09, wave='square', vol=0.5;
@@ -172,7 +179,7 @@ const BTN = ['cross','circle','square','triangle','l1','r1','l2','r2','share','o
 const IN = {
   lx:0, ly:0, rx:0, ry:0,
   cur:{}, prev:{}, pad:false, padName:'',
-  anyTouch:false, showTouch:false
+  anyTouch:false, showTouch:false, padGesture:false
 };
 BTN.forEach(b => { IN.cur[b] = false; IN.prev[b] = false; });
 
@@ -265,6 +272,11 @@ function pollInput(){
     for(let i=0;i<BTN.length;i++){ if(bs[i] && (bs[i].pressed || bs[i].value > 0.4)) now[BTN[i]] = true; }
   }
   IN.pad = found; if(found) IN.showTouch = false;
+  /* a pad press counts as the gesture that unlocks audio — otherwise a player who
+     never taps the screen gets a completely silent game */
+  if(found && !IN.padGesture){
+    for(const b of BTN) if(now[b]){ IN.padGesture = true; audioResume(); break; }
+  }
 
   /* keyboard */
   if(keys._up) ly -= 1; if(keys._down) ly += 1;
@@ -399,13 +411,13 @@ const perkMul = {
 
 /* ---------- run state shared by every game ---------- */
 const RUN = {
-  g: null, score: 0, depth: 1, alive: true, time: 0,
+  g: null, score: 0, depth: 1, alive: true, time: 0, legendT: 0,
   revives: 0, pendingDrafts: 0, statLabel: '', bank: 0
 };
 function startRun(game){
-  RUN.g = game; RUN.score = 0; RUN.depth = 1; RUN.alive = true; RUN.time = 0;
+  RUN.g = game; RUN.score = 0; RUN.depth = 1; RUN.alive = true; RUN.time = 0; RUN.legendT = 7;
   RUN.revives = META.perks.wind; RUN.pendingDrafts = 0; RUN.bank = 0;
-  FX.clear(); DRAFT.open = false; SCENE.overlayT = 0;
+  FX.clear(); DRAFT.open = false; STAGE.active = false; STAGE.onDone = null; SCENE.overlayT = 0;
   META.plays[game.id] = (META.plays[game.id] || 0) + 1;
   game.start();
   SCENE.set('play');
@@ -494,6 +506,105 @@ function wrapText(s, cx, y, maxw, lh, size, col){
   return lines.length;
 }
 
+/* ---------- stage clear: hit-stop, a card that lands, then whatever comes next ----------
+   Every game routes its "wave / room / floor / duel cleared" moment through this so the
+   whole pack shares one rhythm instead of snapping straight into the draft screen. */
+const STAGE = {
+  active:false, t:0, dur:1.6, title:'', sub:'', col:'#fde68a', onDone:null, skipped:false,
+  start(title, sub, col, onDone, dur){
+    this.active = true; this.t = 0; this.title = title; this.sub = sub || '';
+    this.col = col || '#fde68a'; this.onDone = onDone || null;
+    this.dur = dur || 1.6; this.skipped = false;
+    FX.shakeAdd(6); sfx('level');
+  },
+  /* how fast the game world should run right now (0.10 = hit-stop, 1 = normal) */
+  timeScale(){
+    if(!this.active) return 1;
+    if(this.t < 0.30) return 0.10;
+    if(this.t < 0.50) return lerp(0.10, 0.6, (this.t - 0.30) / 0.20);
+    return 0.6;
+  },
+  update(dt){
+    if(!this.active) return;
+    this.t += dt;
+    if(this.t > 0.45 && (hit('cross') || hit('circle') || hit('options'))) this.skipped = true;
+    if(this.t >= this.dur || this.skipped){
+      this.active = false;
+      const cb = this.onDone; this.onDone = null;
+      if(cb) cb();
+    }
+  },
+  draw(){
+    if(!this.active) return;
+    const t = this.t;
+    /* the card rises and settles */
+    const inT = cl(t / 0.34, 0, 1);
+    const ease = 1 - Math.pow(1 - inT, 3);
+    const outT = cl((t - (this.dur - 0.22)) / 0.22, 0, 1);
+    const alpha = cl(ease - outT, 0, 1);
+    if(alpha <= 0) return;
+    c.save(); c.globalAlpha = alpha;
+    const cy = VH/2 - 34 + (1 - ease) * 26;
+    c.globalAlpha = alpha * 0.55;
+    rect(0, cy - 62, VW, 132, 'rgba(5,6,12,.82)');
+    c.globalAlpha = alpha;
+    line(0, cy - 62, VW, cy - 62, this.col, 2);
+    line(0, cy + 70, VW, cy + 70, this.col, 2);
+    const scale = 0.92 + ease * 0.08;
+    c.save(); c.translate(VW/2, cy); c.scale(scale, scale);
+    txt(this.title, 0, 0, 42, this.col, 'center', 900);
+    if(this.sub) txt(this.sub, 0, 40, 16, '#cbd5e1', 'center', 700);
+    c.restore();
+    if(t > 0.6){
+      c.globalAlpha = alpha * (0.45 + Math.sin(t * 5) * 0.2);
+      glyph('cross', VW/2 - 34, cy + 96, 12);
+      txt('SKIP', VW/2 - 16, cy + 96, 12, '#94a3b8', 'left', 700);
+    }
+    c.restore();
+  }
+};
+function stageClear(title, sub, col, onDone, dur){ STAGE.start(title, sub, col, onDone, dur); }
+
+/* ---------- crowd separation: keep bodies from stacking into one blob ----------
+   Uniform-grid hashed so a couple of hundred enemies stays cheap. */
+const SEP_MAP = new Map();
+function separate(list, cellSize, strength, maxPush){
+  const n = list.length;
+  if(n < 2) return;
+  const cs = cellSize || 44, str = strength === undefined ? 0.5 : strength, mp = maxPush || 6;
+  SEP_MAP.clear();
+  for(let i=0;i<n;i++){
+    const e = list[i];
+    const key = ((e.x / cs) | 0) * 73856093 ^ ((e.y / cs) | 0) * 19349663;
+    let bucket = SEP_MAP.get(key);
+    if(!bucket){ bucket = []; SEP_MAP.set(key, bucket); }
+    bucket.push(e);
+  }
+  for(let i=0;i<n;i++){
+    const a = list[i];
+    const gx = (a.x / cs) | 0, gy = (a.y / cs) | 0;
+    for(let dx=-1; dx<=1; dx++) for(let dy=-1; dy<=1; dy++){
+      const bucket = SEP_MAP.get((gx+dx) * 73856093 ^ (gy+dy) * 19349663);
+      if(!bucket) continue;
+      for(let k=0;k<bucket.length;k++){
+        const b = bucket[k];
+        if(b === a) continue;
+        const ox = a.x - b.x, oy = a.y - b.y;
+        const rr = (a.r || 12) + (b.r || 12);
+        const d2 = ox*ox + oy*oy;
+        if(d2 >= rr*rr || d2 < 0.0001) continue;
+        const d = Math.sqrt(d2);
+        const push = Math.min((rr - d) * str, mp);
+        const nx = ox/d, ny = oy/d;
+        /* heavier bodies shove lighter ones; bosses barely budge */
+        const wa = a.boss ? 0.12 : 1, wb = b.boss ? 0.12 : 1;
+        a.x += nx * push * wa; a.y += ny * push * wa;
+        b.x -= nx * push * wb; b.y -= ny * push * wb;
+      }
+    }
+  }
+}
+
 /* ---------- shared HUD bits ---------- */
 function hpBar(x, y, w, h, hp, hpMax, col){
   rrect(x, y, w, h, h/2, 'rgba(15,23,42,.85)');
@@ -573,7 +684,7 @@ defGame({
   id:'vault', name:'VAULT RUNNER', tag:'Twin-stick arena purge', col:'#38bdf8',
   blurb:'Clear escalating waves in a sealed vault. Right stick aims, R2 burns ammo, X phases you through bullets.',
   controls:[
-    ['LSTICK','Move'], ['RSTICK','Aim'], ['r2','Fire (hold)'],
+    ['LSTICK','Move'], ['RSTICK','Aim'], ['r2','Fire (hold) \u2014 Square too'],
     ['cross','Dash — brief invulnerability'], ['circle','Shock nova (spends charge)'],
     ['triangle','Overdrive — 5s fire-rate surge'], ['l1','Snap-aim nearest'], ['options','Pause']
   ],
@@ -682,9 +793,9 @@ defGame({
     }
     /* fire */
     S.shot -= dt;
-    if((down('r2') || down('r1') || rm > .55) && S.shot <= 0) this.fire();
+    if((down('r2') || down('r1') || down('square') || rm > .55) && S.shot <= 0) this.fire();
     /* nova */
-    if(hit('circle') && S.nova > 0){
+    if((hit('circle') || hit('l2')) && S.nova > 0){
       S.nova--; S.novaFx = 0.4; sfx('boom'); FX.shakeAdd(14); FX.flash('#7dd3fc', .2);
       FX.burst(P.x, P.y, '#7dd3fc', 40, 420);
       for(const e of S.E) if(dist(P.x,P.y,e.x,e.y) < S.novaR + e.r) hurtEnt(e, S.novaDmg * perkMul.dmg());
@@ -793,15 +904,22 @@ defGame({
         sfx('pick'); S.drops.splice(i,1);
       }
     }
+    /* keep bodies from piling into a single blob */
+    separate(S.E, 46, 0.5, 6);
+    for(const e of S.E) clampArena(e, e.r);
     /* ---- wave flow ---- */
     S.waveT += dt; RUN.time += dt;
     if(S.state === 'fight' && S.E.length === 0){
       S.state = 'between';
-      RUN.score += 40 + S.wave * 10;
+      const bonus = 40 + S.wave * 10;
+      RUN.score += bonus;
       S.nova = Math.min(S.novaMax, S.nova + 1);
-      const self = this;
+      const self = this, w = S.wave;
       this.onDraftDone = () => { self.nextWave(); };
-      if(!openDraft(this, 'WAVE ' + S.wave + ' CLEARED', 'Vault deepens. Take a boon.')) this.nextWave();
+      stageClear(w % 5 === 0 ? 'WARDEN DOWN' : 'WAVE ' + w + ' CLEARED',
+                 '+' + bonus + ' points  \u00b7  nova recharged', '#38bdf8', () => {
+        if(!openDraft(self, 'WAVE ' + w + ' CLEARED', 'Vault deepens. Take a boon.')) self.nextWave();
+      });
     }
     RUN.depth = S.wave;
   },
@@ -861,9 +979,10 @@ defGame({
   id:'hollow', name:'HOLLOW DEPTHS', tag:'Melee crawler · parry & combo', col:'#a78bfa',
   blurb:'Descend room by room. Square chains a three-hit combo, Circle parries at the last instant, Triangle charges a wide sweep.',
   controls:[
-    ['LSTICK','Move'], ['square','Light attack — 3-hit chain'], ['triangle','Heavy sweep (hold to charge)'],
-    ['circle','Parry / block — perfect timing stuns'], ['cross','Dash — invulnerable'],
-    ['r1','Drink flask (heal)'], ['options','Pause']
+    ['LSTICK','Move'], ['r2','Light attack \u2014 3-hit chain (Square too)'],
+    ['triangle','Heavy sweep, hold to charge (L2 too)'],
+    ['circle','Parry / block \u2014 perfect timing stuns (L1 too)'],
+    ['cross','Dash \u2014 invulnerable'], ['r1','Drink flask (heal)'], ['options','Pause']
   ],
   S:null, pool:[
     { id:'edge',  name:'HONED EDGE',   max:6, desc:'+20% melee damage.',                     apply:S=>S.dmg *= 1.20 },
@@ -966,10 +1085,12 @@ defGame({
       S.dashA = moving ? Math.atan2(IN.ly,IN.lx) : P.face;
       S.dashT = 0.15; S.dashCd = S.dashCdMax; S.dashHits = []; sfx('dash');
     }
-    if(hit('square') && S.atkCd <= 0 && S.dashT <= 0) this.swingNow('light');
-    if(down('triangle') && S.atkCd <= 0 && S.dashT <= 0) S.heavyHold += dt;
-    if(up('triangle')){ if(S.heavyHold > 0 && S.atkCd <= 0) this.swingNow('heavy'); S.heavyHold = 0; }
-    if(hit('circle') && S.blockT <= 0 && S.dashT <= 0){ S.parryT = S.pwin; S.blockT = 0.5; }
+    /* the trigger is the attack button in six of the ten games, so it swings here too */
+    if((hit('square') || hit('r2')) && S.atkCd <= 0 && S.dashT <= 0) this.swingNow('light');
+    const heavyDown = down('triangle') || down('l2');
+    if(heavyDown && S.atkCd <= 0 && S.dashT <= 0) S.heavyHold += dt;
+    if(!heavyDown && S.heavyHold > 0){ if(S.atkCd <= 0) this.swingNow('heavy'); S.heavyHold = 0; }
+    if((hit('circle') || hit('l1')) && S.blockT <= 0 && S.dashT <= 0){ S.parryT = S.pwin; S.blockT = 0.5; }
     if(hit('r1') && S.flask > 0 && P.hp < P.hpMax){
       S.flask--; P.hp = Math.min(P.hpMax, P.hp + S.flaskHeal);
       FX.text(P.x, P.y-28, '+' + S.flaskHeal, '#4ade80', 18); sfx('pick');
@@ -1090,12 +1211,18 @@ defGame({
       }
       if(b.reflected) for(const e of S.E) if(dist(b.x,b.y,e.x,e.y) < e.r+b.r){ hurtEnt(e, b.dmg*perkMul.dmg()); S.EB.splice(i,1); break; }
     }
+    separate(S.E, 46, 0.5, 6);
+    for(const e of S.E) clampArena(e, e.r);
     /* room flow */
     if(!S.cleared && S.E.length === 0){
       S.cleared = true;
-      S.exit = { x:VW/2, y:AR.y + 44, r:26, t:0 };
-      RUN.score += 30 + S.room * 8;
-      sfx('level');
+      const bonus = 30 + S.room * 8;
+      RUN.score += bonus;
+      const self = this;
+      stageClear(S.room % 5 === 0 ? 'THE KNIGHT FALLS' : 'DEPTH ' + S.room + ' CLEARED',
+                 'The way down opens.  +' + bonus + ' points', '#a78bfa', () => {
+        self.S.exit = { x:VW/2, y:AR.y + 44, r:26, t:0 };
+      });
     }
     if(S.exit){
       S.exit.t += dt;
@@ -1179,8 +1306,8 @@ defGame({
   id:'skyfall', name:'SKYFALL LANCER', tag:'Vertical bullet hell', col:'#f472b6',
   blurb:'Thread descending curtains of fire. Circle focuses for precision, Cross detonates a bomb, grazing bullets charges it back.',
   controls:[
-    ['LSTICK','Fly'], ['r2','Fire (hold)'], ['circle','Focus — slow, precise, tight shot'],
-    ['cross','Bomb — clears bullets, big damage'], ['r1','Swap pod formation'], ['options','Pause']
+    ['LSTICK','Fly'], ['r2','Fire, hold (Square too)'], ['circle','Focus \u2014 slow and precise (L2 too)'],
+    ['cross','Bomb \u2014 clears bullets (Triangle too)'], ['r1','Swap pod formation (L1 too)'], ['options','Pause']
   ],
   S:null, pool:[
     { id:'pow',   name:'LANCE CORE',   max:6, desc:'+22% shot damage.',                    apply:S=>S.dmg *= 1.22 },
@@ -1255,15 +1382,15 @@ defGame({
     P.inv = Math.max(0, P.inv - dt);
     S.bombT = Math.max(0, S.bombT - dt);
     S.podA += dt * 2.2;
-    S.focus = down('circle');
+    S.focus = down('circle') || down('l2');
     const sp = P.spd * (S.focus ? 0.45 : 1);
     P.x += IN.lx * sp * dt; P.y += IN.ly * sp * dt;
     P.x = cl(P.x, AR.x+10, AR.r-10); P.y = cl(P.y, AR.y+10, AR.b-10);
     for(const s of S.stars){ s.y += (30 + s.s*70)*dt; if(s.y > AR.b) { s.y = AR.y; s.x = R(AR.x, AR.r); } }
 
-    if(hit('r1')) { S.podForm = (S.podForm+1)%2; sfx('ui'); }
+    if(hit('r1') || hit('l1')) { S.podForm = (S.podForm+1)%2; sfx('ui'); }
     S.shot -= dt;
-    if((down('r2') || down('square') || down('r1')) && S.shot <= 0) this.fireMain();
+    if((down('r2') || down('square')) && S.shot <= 0) this.fireMain();
     if(S.missile > 0){
       S.missileT -= dt;
       if(S.missileT <= 0){
@@ -1272,7 +1399,7 @@ defGame({
           S.B.push({x:P.x+(i?14:-14), y:P.y, vx:R(-90,90), vy:-160, r:4, dmg:S.dmg*1.6*perkMul.dmg(), pierce:0, hits:[], msl:1, life:3});
       }
     }
-    if(hit('cross') && S.bomb > 0 && S.bombT <= 0){
+    if((hit('cross') || hit('triangle')) && S.bomb > 0 && S.bombT <= 0){
       S.bomb--; S.bombT = 0.9; sfx('boom'); FX.flash('#fbcfe8', .34); FX.shakeAdd(20); P.inv = Math.max(P.inv, 1.1);
       for(const e of S.E) if(e.delay <= 0) hurtEnt(e, S.bombDmg * perkMul.dmg());
       for(const b of S.EB) FX.ps.push({x:b.x,y:b.y,vx:R(-60,60),vy:R(-60,60),t:.3,mt:.3,col:'#fbcfe8',r:3});
@@ -1378,11 +1505,15 @@ defGame({
       }
     }
     /* wave flow */
-    if(S.E.length === 0){
-      RUN.score += 60 + S.wave * 14;
-      const self = this;
+    if(S.E.length === 0 && !STAGE.active){
+      const bonus = 60 + S.wave * 14;
+      RUN.score += bonus;
+      const self = this, w = S.wave;
       this.onDraftDone = () => self.nextWave();
-      if(!openDraft(this, 'SORTIE ' + S.wave + ' CLEAR', 'Refit the lance.')) this.nextWave();
+      stageClear(w % 4 === 0 ? 'TYRANT DOWN' : 'SORTIE ' + w + ' CLEAR',
+                 'Sky is yours.  +' + bonus + ' points', '#f472b6', () => {
+        if(!openDraft(self, 'SORTIE ' + w + ' CLEAR', 'Refit the lance.')) self.nextWave();
+      });
     }
     RUN.depth = S.wave; RUN.time += dt;
   },
@@ -1458,8 +1589,9 @@ defGame({
   id:'grave', name:'GRAVE TIDE', tag:'Horde survival · auto-weapons', col:'#4ade80',
   blurb:'Outlive eight minutes of the dead. Your weapons swing on their own — you only steer, dash, and unleash.',
   controls:[
-    ['LSTICK','Move (weapons fire automatically)'], ['cross','Dash roll — brief invulnerability'],
-    ['circle','Soul magnet — pull every gem'], ['triangle','Unleash — spend the fury meter'], ['options','Pause']
+    ['LSTICK','Move (weapons fire automatically)'], ['cross','Dash roll, brief invulnerability (R2 too)'],
+    ['circle','Soul magnet \u2014 pull every gem (L1 too)'],
+    ['triangle','Unleash \u2014 spend the fury meter (R1 / Square too)'], ['options','Pause']
   ],
   S:null, pool:[
     { id:'bolt',  name:'SOUL BOLT',    max:5, desc:'Bolts: +1 projectile and more damage.',   apply:S=>{ S.w.bolt.n++; S.w.bolt.dmg *= 1.15; } },
@@ -1489,7 +1621,7 @@ defGame({
       },
       might:1, haste:1, regen:0, magnet:70, armor:1,
       lvl:1, xp:0, xpNext:8, fury:0, dashCd:0, dashT:0, dashA:0, magCd:0,
-      t:0, spawnT:0, bossT:120, E:[], B:[], gems:[], zaps:[], mines:[], slashes:[], winAt:480
+      t:0, spawnT:0, bossT:120, won:false, E:[], B:[], gems:[], zaps:[], mines:[], slashes:[], winAt:480
     };
   },
   dmgOf(v){ return v * this.S.might * perkMul.dmg(); },
@@ -1532,9 +1664,9 @@ defGame({
       P.x += Math.cos(S.dashA)*690*dt; P.y += Math.sin(S.dashA)*690*dt;
     } else { P.x += IN.lx*P.spd*dt; P.y += IN.ly*P.spd*dt; }
     clampArena(P, P.r);
-    if(hit('cross') && S.dashCd <= 0){ S.dashA = moving?Math.atan2(IN.ly,IN.lx):P.face; S.dashT = .16; S.dashCd = 1.6; sfx('dash'); }
-    if(hit('circle') && S.magCd <= 0){ S.magCd = 12; for(const g of S.gems) g.pull = 1; sfx('pick'); FX.flash('#4ade80',.14); }
-    if(hit('triangle') && S.fury >= 1){
+    if((hit('cross') || hit('r2')) && S.dashCd <= 0){ S.dashA = moving?Math.atan2(IN.ly,IN.lx):P.face; S.dashT = .16; S.dashCd = 1.6; sfx('dash'); }
+    if((hit('circle') || hit('l1') || hit('l2')) && S.magCd <= 0){ S.magCd = 12; for(const g of S.gems) g.pull = 1; sfx('pick'); FX.flash('#4ade80',.14); }
+    if((hit('triangle') || hit('r1') || hit('square')) && S.fury >= 1){
       S.fury = 0; sfx('boom'); FX.shakeAdd(22); FX.flash('#fde68a',.3);
       for(const e of S.E){ const d = dist(P.x,P.y,e.x,e.y);
         if(d < 340){ hurtEnt(e, this.dmgOf(150)); const a = ang(P.x,P.y,e.x,e.y); e.vx += Math.cos(a)*520; e.vy += Math.sin(a)*520; } }
@@ -1653,14 +1785,6 @@ defGame({
       const a = ang(e.x,e.y,P.x,P.y);
       e.x += (Math.cos(a)*e.spd + e.vx)*dt; e.y += (Math.sin(a)*e.spd + e.vy)*dt;
       e.vx *= 0.9; e.vy *= 0.9;
-      /* soft separation */
-      if((i & 3) === (Math.floor(S.t*10) & 3)){
-        for(let j=0;j<S.E.length;j+=3){
-          const o = S.E[j]; if(o===e) continue;
-          const dx = e.x-o.x, dy = e.y-o.y, d2 = dx*dx+dy*dy, rr = e.r+o.r;
-          if(d2 > 0.01 && d2 < rr*rr){ const d = Math.sqrt(d2); e.x += dx/d*1.4; e.y += dy/d*1.4; }
-        }
-      }
       if(dist(e.x,e.y,P.x,P.y) < e.r + P.r && P.inv <= 0){
         P.hp -= e.dmg * S.armor * dt * 3.2;
         if(Math.random()<.1) FX.spark(P.x,P.y,ang(e.x,e.y,P.x,P.y),'#f87171',3,120);
@@ -1673,11 +1797,14 @@ defGame({
         S.E.splice(i,1); RUN.score += e.val * 6;
         S.fury = Math.min(1, S.fury + (e.kind==='boss' ? .5 : .012));
         FX.burst(e.x,e.y,e.col, e.kind==='boss'?60:6, e.kind==='boss'?460:180);
-        if(e.kind==='boss'){ sfx('kill'); FX.shakeAdd(20); for(let k=0;k<12;k++) S.gems.push({x:e.x+R(-40,40),y:e.y+R(-40,40),r:6,v:5,pull:0}); }
+        if(e.kind==='boss'){ sfx('kill'); FX.shakeAdd(20); for(let k=0;k<12;k++) S.gems.push({x:e.x+R(-40,40),y:e.y+R(-40,40),r:6,v:5,pull:0});
+          stageClear('REVENANT PUT DOWN', 'The tide keeps rising.', '#4ade80', null, 1.2); }
         else if(Math.random()<.85) S.gems.push({ x:e.x, y:e.y, r:5, v:e.val, pull:0 });
         if(Math.random()<.02) S.gems.push({ x:e.x, y:e.y, r:8, v:0, heal:22, pull:0 });
       }
     }
+    /* full crowd separation — cheap enough for a couple of hundred bodies */
+    separate(S.E, 40, 0.45, 5);
     /* gems */
     for(let i=S.gems.length-1;i>=0;i--){
       const g = S.gems[i], d = dist(g.x,g.y,P.x,P.y);
@@ -1694,11 +1821,14 @@ defGame({
           P.hp = Math.min(P.hpMax, P.hp + 6);
           const self = this;
           this.onDraftDone = null;
-          openDraft(this, 'LEVEL ' + S.lvl, 'The tide rises. Grow stronger.');
+          stageClear('LEVEL ' + S.lvl, '', '#60a5fa', () => {
+            openDraft(self, 'LEVEL ' + self.S.lvl, 'The tide rises. Grow stronger.');
+          }, 0.72);
         } else if(Math.random()<.3) sfx('pick');
       }
     }
-    if(S.t >= S.winAt){ RUN.score += 1200; endRun(true); }
+    if(S.t >= S.winAt && !S.won){ S.won = true; RUN.score += 1200;
+      stageClear('YOU OUTLIVED THE NIGHT', 'Eight minutes. +1200 points', '#4ade80', () => endRun(true), 2.4); }
   },
   draw(){
     const S = this.S, P = S.P, W = S.w;
@@ -1757,9 +1887,9 @@ defGame({
   id:'spire', name:'SPIRE ASCENT', tag:'Platformer · climb the tower', col:'#fbbf24',
   blurb:'Climb a collapsing spire floor by floor. Cross jumps, Circle air-dashes, Triangle slams down through anything below you.',
   controls:[
-    ['LSTICK','Run left / right'], ['cross','Jump (tap again to double jump)'],
-    ['circle','Air dash — invulnerable, damages foes'], ['square','Shoot'],
-    ['triangle','Ground slam (in air)'], ['options','Pause']
+    ['LSTICK','Run left / right'], ['cross','Jump \u2014 hold for height, tap again to double jump'],
+    ['circle','Air dash \u2014 invulnerable, damages foes (L1 too)'],
+    ['r2','Shoot (Square too)'], ['triangle','Ground slam, in air (L2 too)'], ['options','Pause']
   ],
   S:null, pool:[
     { id:'jump',  name:'FEATHER STEP', max:3, desc:'+1 mid-air jump.',                      apply:S=>S.jumpMax++ },
@@ -1873,12 +2003,12 @@ defGame({
         FX.burst(AR.x+P.x, AR.y+P.y-S.cam+14, '#fde68a', 8, 140); }
     }
     if(up('cross') && P.vy < -140) P.vy = -140;
-    if(hit('circle') && S.dash > 0 && P.dashT <= 0){
+    if((hit('circle') || hit('l1')) && S.dash > 0 && P.dashT <= 0){
       S.dash--; P.dashT = 0.18; P.dashDir = ax !== 0 ? Math.sign(ax) : P.face;
       for(const e of S.E) e.dashed = 0; sfx('dash');
     }
-    if(hit('triangle') && !P.onGround && !P.slam){ P.slam = true; P.vy = 900; sfx('dash'); }
-    if(down('square') && S.gunT <= 0){
+    if((hit('triangle') || hit('l2')) && !P.onGround && !P.slam){ P.slam = true; P.vy = 900; sfx('dash'); }
+    if((down('square') || down('r2') || down('r1')) && S.gunT <= 0){
       S.gunT = S.gunCd;
       for(let i=0;i<S.gunN;i++){
         const spread = S.gunN>1 ? (i/(S.gunN-1)-.5)*0.34 : 0;
@@ -1978,12 +2108,14 @@ defGame({
     }
     /* exit */
     S.exit.t += dt;
-    if(dist(P.x,P.y,S.exit.x,S.exit.y) < S.exit.r + 12){
-      RUN.score += 150 + S.floor*40;
-      const self = this;
+    if(dist(P.x,P.y,S.exit.x,S.exit.y) < S.exit.r + 12 && !STAGE.active){
+      const bonus = 150 + S.floor*40;
+      RUN.score += bonus;
+      const self = this, f = S.floor;
       this.onDraftDone = () => self.buildFloor();
-      sfx('level');
-      if(!openDraft(this, 'FLOOR ' + S.floor + ' SCALED', 'The spire rewards the bold.')) this.buildFloor();
+      stageClear('FLOOR ' + f + ' SCALED', 'Higher still.  +' + bonus + ' points', '#fbbf24', () => {
+        if(!openDraft(self, 'FLOOR ' + f + ' SCALED', 'The spire rewards the bold.')) self.buildFloor();
+      });
     }
   },
   draw(){
@@ -2062,9 +2194,9 @@ defGame({
   id:'ion', name:'ION DRIFT', tag:'Inertia dogfight · asteroid belt', col:'#22d3ee',
   blurb:'Nothing stops you but thrust in the other direction. Left stick burns, right stick aims, and L1 blinks you out of trouble.',
   controls:[
-    ['LSTICK','Thrust (momentum carries)'], ['RSTICK','Aim turret'], ['r2','Fire'],
-    ['cross','Afterburner'], ['circle','Shield burst — deflects everything'],
-    ['l1','Blink jump'], ['options','Pause']
+    ['LSTICK','Thrust (momentum carries)'], ['RSTICK','Aim turret'], ['r2','Fire (Square too)'],
+    ['cross','Afterburner (L2 too)'], ['circle','Shield burst \u2014 deflects everything'],
+    ['l1','Blink jump (Triangle too)'], ['options','Pause']
   ],
   S:null, pool:[
     { id:'cannon',name:'ION CANNON',   max:6, desc:'+24% cannon damage.',                  apply:S=>S.dmg *= 1.24 },
@@ -2150,8 +2282,8 @@ defGame({
     if(rm > .25) P.aim = Math.atan2(IN.ry, IN.rx);
     else if(Math.hypot(P.vx,P.vy) > 30 && rm < .1 && !IN.pad) P.aim = Math.atan2(P.vy,P.vx);
     S.shot -= dt;
-    if((down('r2')||down('r1')||rm>.6) && S.shot <= 0) this.fire();
-    if(hit('cross')) { S.boost = 0.55; sfx('dash'); }
+    if((down('r2')||down('r1')||down('square')||rm>.6) && S.shot <= 0) this.fire();
+    if(hit('cross') || hit('l2')) { S.boost = 0.55; sfx('dash'); }
     if(hit('circle') && S.sh > 0){
       S.sh--; S.shT = 0.55; P.inv = Math.max(P.inv, 0.55); sfx('parry');
       FX.flash('#67e8f9',.16); FX.burst(P.x,P.y,'#67e8f9',26,340); FX.shakeAdd(8);
@@ -2159,7 +2291,7 @@ defGame({
       for(const a of S.A) if(dist(P.x,P.y,a.x,a.y) < 130){ const t = ang(P.x,P.y,a.x,a.y); a.vx += Math.cos(t)*220; a.vy += Math.sin(t)*220; }
       for(const d of S.D) if(dist(P.x,P.y,d.x,d.y) < 130){ hurtEnt(d, 30*perkMul.dmg()); const t = ang(P.x,P.y,d.x,d.y); d.vx += Math.cos(t)*260; d.vy += Math.sin(t)*260; }
     }
-    if(hit('l1') && S.blinkCd <= 0){
+    if((hit('l1') || hit('triangle')) && S.blinkCd <= 0){
       S.blinkCd = S.blinkCdMax;
       const a = rm > .25 ? P.aim : (Math.hypot(IN.lx,IN.ly)>.2 ? Math.atan2(IN.ly,IN.lx) : P.aim);
       FX.burst(P.x,P.y,'#a5f3fc',16,260);
@@ -2250,12 +2382,16 @@ defGame({
       if(d < S.magnet){ const a = ang(s.x,s.y,P.x,P.y); s.x += Math.cos(a)*300*dt; s.y += Math.sin(a)*300*dt; }
       if(d < P.r+s.r+4){ S.scrap.splice(i,1); RUN.score += s.v; if(Math.random()<.3) sfx('pick'); }
     }
-    if(S.A.length === 0 && S.D.length === 0){
-      RUN.score += 90 + S.sector*20;
+    separate(S.D, 44, 0.5, 5);
+    if(S.A.length === 0 && S.D.length === 0 && !STAGE.active){
+      const bonus = 90 + S.sector*20;
+      RUN.score += bonus;
       S.sh = S.shMax;
-      const self = this;
+      const self = this, sc = S.sector;
       this.onDraftDone = () => self.nextSector();
-      if(!openDraft(this, 'SECTOR ' + S.sector + ' CLEAR', 'Salvage installed.')) this.nextSector();
+      stageClear('SECTOR ' + sc + ' CLEAR', 'Shields restored.  +' + bonus + ' points', '#22d3ee', () => {
+        if(!openDraft(self, 'SECTOR ' + sc + ' CLEAR', 'Salvage installed.')) self.nextSector();
+      });
     }
   },
   draw(){
@@ -2308,269 +2444,342 @@ defGame({
 });
 
 /* =========================================================================
-   7. BLADE PARRY — duel by reading the tell, answer with the right button
+   7. BLADE PARRY — read the kata, then answer it from memory
+   The duelist demonstrates a sequence, then performs it for real with the tells
+   hidden. You answer it back on the beat. Simon says, with swords.
    ========================================================================= */
 defGame({
-  id:'blade', name:'BLADE PARRY', tag:'Duel · read the tell', col:'#f59e0b',
-  blurb:'Five duelists. Each strike shows a face-button tell — Triangle high, Cross low, Square left, Circle right. Answer it on time or bleed. Red strikes cannot be parried: dodge with L1.',
+  id:'blade', name:'BLADE PARRY', tag:'Duel · read it, then repeat it', col:'#f59e0b',
+  blurb:'The duelist shows you the kata first — Triangle high, Cross low, Square left, Circle right. Watching is free and safe. Then they do it again for real with the tells hidden, and you answer from memory, on the beat. Red beats cannot be parried: answer those with L1.',
   controls:[
-    ['triangle','Parry HIGH strike'], ['cross','Parry LOW strike'],
-    ['square','Parry LEFT strike'], ['circle','Parry RIGHT strike'],
-    ['l1','Dodge back — the only answer to red'], ['r2','Attack (during stagger or recovery)'],
+    ['triangle','Answer a HIGH beat'], ['cross','Answer a LOW beat'],
+    ['square','Answer a LEFT beat'], ['circle','Answer a RIGHT beat'],
+    ['l1','Guard / answer a RED beat'], ['r2','Strike while they are staggered'],
     ['options','Pause']
   ],
   S:null, pool:[
-    { id:'win',   name:'CLEAR EYE',    max:4, desc:'+22% parry timing window.',              apply:S=>S.win *= 1.22 },
-    { id:'ctr',   name:'RIPOSTE',      max:5, desc:'+40% counter damage after a parry.',     apply:S=>S.ctrDmg *= 1.4 },
-    { id:'atk',   name:'KEEN STEEL',   max:5, desc:'+30% attack damage.',                    apply:S=>S.atkDmg *= 1.3 },
-    { id:'heal',  name:'CALM BREATH',  max:4, desc:'Perfect parries heal 5 health.',         apply:S=>S.parryHeal += 5 },
-    { id:'post',  name:'CRUSHING GUARD',max:4,desc:'Parries break posture 45% faster.',      apply:S=>S.postureDmg *= 1.45 },
-    { id:'vit',   name:'THICK HIDE',   max:5, desc:'+22 max health, heal fully.',            apply:S=>{ S.P.hpMax += 22; S.P.hp = S.P.hpMax; } },
-    { id:'dodge', name:'FLEET FOOT',   max:3, desc:'Dodge window is far more forgiving.',    apply:S=>S.dodgeWin *= 1.4 },
-    { id:'chip',  name:'PRESSURE',     max:3, desc:'Attacks during recovery hit much harder.',apply:S=>S.chipMul += 0.6 },
-    { id:'stam',  name:'IRON WILL',    max:3, desc:'Whiff lockout is 30% shorter.',          apply:S=>S.lock *= 0.7 },
-    { id:'guard', name:'HALF GUARD',   max:2, desc:'Failed parries deal 35% less damage.',   apply:S=>S.mit *= 0.65 }
+    { id:'win',   name:'CLEAR EYE',     max:4, desc:'+22% timing window on every beat.',        apply:S=>S.win *= 1.22 },
+    { id:'ghost', name:'MUSCLE MEMORY', max:3, desc:'The remembered kata stays visible while you answer.', apply:S=>S.ghost += 0.28 },
+    { id:'twice', name:'SECOND SIGHT',  max:1, desc:'The kata is demonstrated twice before it lands.', apply:S=>S.demoReps = 2 },
+    { id:'ctr',   name:'RIPOSTE',       max:5, desc:'+40% damage from each correct beat.',      apply:S=>S.ctrDmg *= 1.4 },
+    { id:'atk',   name:'KEEN STEEL',    max:5, desc:'+30% damage striking a staggered duelist.',apply:S=>S.atkDmg *= 1.3 },
+    { id:'heal',  name:'CALM BREATH',   max:4, desc:'Each correct beat heals 4 health.',        apply:S=>S.healPerBeat += 4 },
+    { id:'post',  name:'CRUSHING GUARD',max:4, desc:'Completed katas break posture 50% faster.',apply:S=>S.postureDmg *= 1.5 },
+    { id:'vit',   name:'THICK HIDE',    max:5, desc:'+24 max health, heal fully.',              apply:S=>{ S.P.hpMax += 24; S.P.hp = S.P.hpMax; } },
+    { id:'guard', name:'HALF GUARD',    max:3, desc:'Missed beats deal 35% less damage.',       apply:S=>S.mit *= 0.65 },
+    { id:'iron',  name:'IRON WILL',     max:2, desc:'One more missed beat per kata is forgiven.',apply:S=>S.forgive++ },
+    { id:'slow',  name:'STILL MIND',    max:3, desc:'The beat runs 12% slower.',                apply:S=>S.beatMul *= 1.12 }
   ],
+  LEAD: 0.62,
   start(){
     const S = this.S = {
-      up:{}, P:{ hp:100*perkMul.hp(), hpMax:100*perkMul.hp(), x:VW/2-150, lunge:0, lockout:0, dodge:0, flash:0 },
-      win:0.19, dodgeWin:0.2, ctrDmg:26, atkDmg:22, parryHeal:0, postureDmg:1, chipMul:1, lock:0.42, mit:1,
-      duel:0, E:null, streak:0, best:0, msg:'', msgT:0, hitFx:0
+      up:{},
+      P:{ hp:110*perkMul.hp(), hpMax:110*perkMul.hp(), x:VW/2 - 168, lunge:0, guard:0, flash:0, lockout:0 },
+      win:0.20, ghost:0.16, demoReps:1, ctrDmg:22, atkDmg:26, healPerBeat:0,
+      postureDmg:1, mit:1, forgive:0, beatMul:1,
+      duel:0, round:0, E:null,
+      phase:'intro', pt:0, seq:[], marks:[], idx:0, misses:0,
+      beat:1, beatIdx:-1, demoRep:0, swing:0, swingDir:'',
+      msg:'', msgT:0, msgCol:'#fff', chain:0, best:0, strikeCd:0
     };
     this.newDuel();
   },
   newDuel(){
-    const S = this.S; S.duel++;
+    const S = this.S; S.duel++; S.round = 0;
     const d = S.duel;
     const names = ['THE APPRENTICE','THE TWIN BLADES','THE MASKED ONE','THE HOLLOW SAINT','THE FIRST BLADE','THE ENDLESS'];
     S.E = {
       name: names[Math.min(d-1, names.length-1)] + (d > names.length ? ' ' + (d - names.length + 1) : ''),
-      hp: 120 + d*95, hpMax: 120 + d*95,
-      posture: 3 + Math.floor(d/2), postureMax: 3 + Math.floor(d/2), postureCur: 3 + Math.floor(d/2),
-      x: VW/2 + 150, state:'idle', t:0, wait:R(0.8,1.4),
-      queue: [], atk:null, stagger:0, recover:0, dmg: 13 + d*4,
-      speed: cl(1 + (d-1)*0.16, 1, 2.4), combo: 1 + Math.floor(d/2),
-      unblockChance: cl(0.06 + d*0.055, 0, 0.42), flash:0
+      hp: 130 + d*100, hpMax: 130 + d*100,
+      postureMax: 3 + Math.floor(d/2), postureCur: 3 + Math.floor(d/2),
+      x: VW/2 + 168, dmg: 12 + d*4, flash:0, stagger:0,
+      redChance: cl(0.05 + d*0.05, 0, 0.4)
     };
-    S.P.hp = Math.min(S.P.hpMax, S.P.hp + 22);
-    FX.text(VW/2, 150, S.E.name, '#f59e0b', 26);
+    S.P.hp = Math.min(S.P.hpMax, S.P.hp + 24);
+    S.phase = 'intro'; S.pt = 0;
     RUN.depth = d;
   },
-  queueAttack(){
-    const S = this.S, E = S.E;
-    const n = RI(1, E.combo);
-    E.queue = [];
-    for(let i=0;i<n;i++){
-      const unb = Math.random() < E.unblockChance;
-      E.queue.push({
-        btn: pick(['triangle','cross','square','circle']),
-        tell: (unb ? 0.62 : R(0.44, 0.74)) / E.speed,
-        unblock: unb
-      });
+  rollKata(){
+    const S = this.S, d = S.duel;
+    /* longer the more rounds this duelist survives, so stalling costs you recall */
+    const len = cl(2 + Math.floor(d/2) + Math.floor(S.round/2), 2, 6);
+    S.seq = [];
+    for(let i=0;i<len;i++){
+      S.seq.push(Math.random() < S.E.redChance
+        ? { btn:'l1', red:true }
+        : { btn: pick(['triangle','cross','square','circle']), red:false });
     }
-    E.state = 'attack'; E.atk = E.queue.shift(); E.t = 0;
+    S.marks = S.seq.map(() => null);
+    S.idx = 0; S.misses = 0; S.beatIdx = -1; S.demoRep = 0;
+    S.beat = Math.max(0.5, 1.04 - (d-1)*0.075) * S.beatMul;
   },
-  say(s, col){ const S = this.S; S.msg = s; S.msgT = 0.9; S.msgCol = col || '#fff'; },
-  resolveHit(){
+  say(m, col){ const S = this.S; S.msg = m; S.msgT = 1.0; S.msgCol = col || '#fff'; },
+  strikePose(dir){ const S = this.S; S.swing = 0.22; S.swingDir = dir; },
+  beatHit(i){
     const S = this.S, E = S.E;
-    const dmg = E.dmg * S.mit;
-    S.P.hp -= dmg; S.P.flash = 0.25; S.streak = 0;
-    sfx('hurt'); FX.shakeAdd(14); FX.flash('#f43f5e',.2);
-    FX.burst(S.P.x, VH/2, '#f43f5e', 20, 320);
-    this.say('HIT', '#f87171');
-    if(S.P.hp <= 0){ if(tryRevive()) S.P.hp = S.P.hpMax*0.55; else { S.P.hp = 0; endRun(false); } }
-  },
-  parrySuccess(){
-    const S = this.S, E = S.E;
-    E.postureCur -= 1 * S.postureDmg;
+    S.marks[i] = 'ok'; S.chain++; if(S.chain > S.best) S.best = S.chain;
     hurtEnt(E, S.ctrDmg * perkMul.dmg());
-    S.streak++; if(S.streak > S.best) S.best = S.streak;
-    RUN.score += 25 + S.streak*5;
-    if(S.parryHeal) S.P.hp = Math.min(S.P.hpMax, S.P.hp + S.parryHeal);
-    sfx('parry'); FX.flash('#fde68a', .16); FX.shakeAdd(8);
-    FX.burst((S.P.x+E.x)/2, VH/2 - 10, '#fde68a', 22, 380);
-    this.say('PARRY  x' + S.streak, '#fde68a');
-    E.state = 'recover'; E.t = 0; E.recover = 0.5; E.atk = null; E.queue = [];
-    if(E.postureCur <= 0){
-      E.stagger = 1.9; E.state = 'stagger'; E.t = 0; E.postureCur = E.postureMax;
-      sfx('boom'); FX.shakeAdd(16); this.say('STAGGERED — ATTACK!', '#4ade80');
+    if(S.healPerBeat) S.P.hp = Math.min(S.P.hpMax, S.P.hp + S.healPerBeat);
+    RUN.score += 22 + S.chain * 4;
+    sfx('parry'); FX.flash('#fde68a', .10); FX.shakeAdd(5);
+    FX.burst((S.P.x + E.x)/2, VH/2 - 6, '#fde68a', 12, 300);
+  },
+  beatMiss(i){
+    const S = this.S, E = S.E;
+    S.marks[i] = 'miss'; S.misses++; S.chain = 0;
+    const dmg = E.dmg * S.mit * (S.P.guard > 0 ? 0.45 : 1);
+    S.P.hp -= dmg; S.P.flash = 0.28;
+    sfx('hurt'); FX.shakeAdd(12); FX.flash('#f43f5e', .16);
+    FX.burst(S.P.x, VH/2, '#f43f5e', 16, 280);
+    if(S.P.hp <= 0){
+      if(tryRevive()) S.P.hp = S.P.hpMax * 0.55;
+      else { S.P.hp = 0; endRun(false); }
     }
   },
-  whiff(reason){
-    const S = this.S;
-    S.P.lockout = S.lock; S.streak = 0; sfx('back');
-    this.say(reason, '#94a3b8');
+  finishKata(){
+    const S = this.S, E = S.E;
+    const clean = S.misses <= S.forgive;
+    if(clean){
+      E.postureCur -= 1 * S.postureDmg;
+      RUN.score += 90 + S.duel * 20;
+      this.say('KATA ANSWERED', '#4ade80');
+      sfx('level'); FX.flash('#fde68a', .2);
+      if(E.postureCur <= 0){
+        E.postureCur = E.postureMax; E.stagger = 2.3;
+        S.phase = 'stagger'; S.pt = 0;
+        this.say('POSTURE BROKEN — STRIKE', '#a3e635');
+        sfx('boom'); FX.shakeAdd(18);
+        return;
+      }
+    } else {
+      this.say(S.misses + ' MISSED', '#f87171');
+    }
+    S.phase = 'recover'; S.pt = 0;
   },
   update(dt){
     const S = this.S, P = S.P, E = S.E;
     RUN.time += dt;
-    P.lockout = Math.max(0, P.lockout - dt);
-    P.lunge = Math.max(0, P.lunge - dt);
-    P.dodge = Math.max(0, P.dodge - dt);
-    P.flash = Math.max(0, P.flash - dt);
+    S.pt += dt;
     S.msgT = Math.max(0, S.msgT - dt);
+    S.swing = Math.max(0, S.swing - dt);
+    P.lunge = Math.max(0, P.lunge - dt);
+    P.flash = Math.max(0, P.flash - dt);
+    P.lockout = Math.max(0, P.lockout - dt);
     E.flash = Math.max(0, E.flash - dt);
-    E.t += dt;
+    P.guard = down('l1') || down('l2') ? 0.1 : Math.max(0, P.guard - dt);
 
-    /* --- player inputs --- */
     const faces = ['triangle','cross','square','circle'];
     let pressed = null;
     for(const f of faces) if(hit(f)) pressed = f;
-    if(hit('l1') && P.lockout <= 0){ P.dodge = S.dodgeWin; sfx('dash'); }
+    if(hit('l1') || hit('l2')) pressed = 'l1';
 
-    if(pressed && P.lockout <= 0){
-      if(E.state === 'attack' && E.atk){
-        const dt0 = E.t - E.atk.tell;
-        if(E.atk.unblock){ this.whiff('RED — DODGE IT'); }
-        else if(pressed !== E.atk.btn){ this.whiff('WRONG READ'); }
-        else if(dt0 < -S.win){ this.whiff('TOO EARLY'); }
-        else if(dt0 <= S.win*0.7){ this.parrySuccess(); }
-        else { this.whiff('TOO LATE'); }
-      } else this.whiff('...');
+    /* ---------------- phases ---------------- */
+    if(S.phase === 'intro'){
+      if(S.pt >= 0.85){ this.rollKata(); S.phase = 'demo'; S.pt = 0; }
     }
-    /* attack button */
-    if(hit('r2') || hit('r1')){
-      if(E.state === 'stagger'){
-        hurtEnt(E, S.atkDmg * 2.2 * perkMul.dmg());
-        P.lunge = 0.2; RUN.score += 20; sfx('hit'); FX.shakeAdd(6);
-        FX.spark(E.x - 30, VH/2, 0, '#fde68a', 10, 300);
-      } else if(E.state === 'recover' || E.state === 'idle'){
-        hurtEnt(E, S.atkDmg * 0.55 * S.chipMul * perkMul.dmg());
-        P.lunge = 0.2; RUN.score += 6; sfx('hit');
-        FX.spark(E.x - 30, VH/2, 0, '#e2e8f0', 5, 220);
-        if(E.state === 'idle') E.wait = Math.max(0.2, E.wait - 0.25);
-      } else if(E.state === 'attack'){
-        this.whiff('OVEREXTENDED'); P.lockout = S.lock * 1.4;
+    else if(S.phase === 'demo'){
+      /* the duelist walks the sequence through, one beat at a time, tells shown */
+      const i = Math.floor((S.pt - 0.35) / S.beat);
+      if(i > S.beatIdx && i < S.seq.length){
+        S.beatIdx = i; this.strikePose(S.seq[i].btn);
+        sfx(S.seq[i].red ? 'boom' : 'ui');
+      }
+      if(S.pt >= 0.35 + S.seq.length * S.beat + 0.3){
+        S.demoRep++;
+        if(S.demoRep < S.demoReps){ S.beatIdx = -1; S.pt = 0; }
+        else { S.phase = 'set'; S.pt = 0; S.beatIdx = -1; this.say('NOW — ANSWER IT', '#fde68a'); }
       }
     }
-
-    /* --- enemy state machine --- */
-    if(E.state === 'idle'){
-      if(E.t >= E.wait) this.queueAttack();
-    } else if(E.state === 'attack' && E.atk){
-      const a = E.atk;
-      if(E.t >= a.tell + S.win*0.7){
-        /* strike resolves */
-        if(a.unblock && P.dodge > 0){
-          sfx('dash'); this.say('DODGED', '#93c5fd'); RUN.score += 18;
-          E.state = 'recover'; E.recover = 0.55; E.t = 0; E.atk = null; E.queue = [];
-        } else if(!a.unblock && P.dodge > 0){
-          sfx('dash'); this.say('EVADED', '#93c5fd'); RUN.score += 8;
-          E.state = 'recover'; E.recover = 0.4; E.t = 0; E.atk = null;
-          if(E.queue.length){ E.atk = E.queue.shift(); E.state = 'attack'; E.t = 0; }
+    else if(S.phase === 'set'){
+      if(S.pt >= 0.8){ S.phase = 'live'; S.pt = 0; S.idx = 0; }
+    }
+    else if(S.phase === 'live'){
+      const t = S.pt, lead = this.LEAD;
+      /* beats that pass unanswered land on you */
+      while(S.idx < S.seq.length && t > lead + S.idx * S.beat + S.win){
+        this.strikePose(S.seq[S.idx].btn);
+        this.beatMiss(S.idx);
+        S.idx++;
+        if(!RUN.alive) return;
+      }
+      if(pressed && S.idx < S.seq.length && P.lockout <= 0){
+        const T = lead + S.idx * S.beat, d = t - T;
+        if(d < -(S.win + 0.26)){
+          P.lockout = 0.26; sfx('back'); this.say('TOO EARLY', '#64748b');
         } else {
-          this.resolveHit();
-          E.t = 0;
-          if(E.queue.length && RUN.alive){ E.atk = E.queue.shift(); }
-          else { E.atk = null; E.state = 'recover'; E.recover = 0.75; }
+          const want = S.seq[S.idx].btn;
+          this.strikePose(want);
+          if(pressed === want && Math.abs(d) <= S.win) this.beatHit(S.idx);
+          else { this.beatMiss(S.idx); if(!RUN.alive) return; }
+          S.idx++;
         }
       }
-    } else if(E.state === 'recover'){
-      if(E.t >= E.recover){ E.state = 'idle'; E.t = 0; E.wait = R(0.5, 1.2)/E.speed; }
-    } else if(E.state === 'stagger'){
+      if(S.idx >= S.seq.length && t > lead + (S.seq.length - 1) * S.beat + S.win + 0.12) this.finishKata();
+    }
+    else if(S.phase === 'stagger'){
       E.stagger -= dt;
-      if(E.stagger <= 0){ E.state = 'recover'; E.recover = 0.4; E.t = 0; }
+      S.strikeCd = Math.max(0, S.strikeCd - dt);
+      if((hit('r2') || hit('r1') || pressed) && S.strikeCd <= 0){
+        S.strikeCd = 0.19;
+        hurtEnt(E, S.atkDmg * perkMul.dmg());
+        P.lunge = 0.22; RUN.score += 18; sfx('hit'); FX.shakeAdd(6);
+        FX.spark(E.x - 34, VH/2, 0, '#fde68a', 9, 280);
+      }
+      if(E.stagger <= 0){ S.phase = 'recover'; S.pt = 0; }
+    }
+    else if(S.phase === 'recover'){
+      if(S.pt >= 0.9){ S.round++; S.phase = 'intro'; S.pt = 0; }
     }
 
-    if(E.hp <= 0){
-      RUN.score += 400 + S.duel*120;
+    /* duel won */
+    if(E.hp <= 0 && !STAGE.active){
+      const bonus = 400 + S.duel * 120;
+      RUN.score += bonus;
       FX.burst(E.x, VH/2, '#f59e0b', 60, 480); sfx('kill'); FX.shakeAdd(20);
-      const self = this;
+      const self = this, d = S.duel;
       this.onDraftDone = () => self.newDuel();
-      if(S.duel >= 5 && S.duel % 5 === 0 && S.duel === 5){
-        /* victory over the five named duelists — keep going for score */
-        FX.text(VW/2, 200, 'THE FIVE ARE FALLEN — ENDLESS BEGINS', '#4ade80', 22);
-      }
-      if(!openDraft(this, 'DUEL ' + S.duel + ' WON', 'Sharpen something.')) this.newDuel();
+      stageClear(E.name + ' FALLS', 'Duel ' + d + ' won.  +' + bonus + ' points', '#f59e0b', () => {
+        if(!openDraft(self, 'DUEL ' + d + ' WON', 'Sharpen something.')) self.newDuel();
+      });
     }
+  },
+  /* ---------------- drawing ---------------- */
+  drawRail(){
+    const S = this.S, n = S.seq.length;
+    if(!n) return;
+    const w = 50, gap = 9;
+    const x0 = VW/2 - (n*w + (n-1)*gap)/2, y = 92;
+    const live = S.phase === 'live';
+    for(let i=0;i<n;i++){
+      const x = x0 + i*(w+gap), cx = x + w/2, cy = y + w/2;
+      const mark = S.marks[i];
+      const revealed = (S.phase === 'demo' && i <= S.beatIdx) || S.phase === 'intro';
+      const isCur = live && i === S.idx;
+      let bg = 'rgba(148,163,184,.07)', bd = 'rgba(148,163,184,.28)';
+      if(mark === 'ok'){ bg = 'rgba(74,222,128,.16)'; bd = '#4ade80'; }
+      else if(mark === 'miss'){ bg = 'rgba(244,63,94,.16)'; bd = '#f43f5e'; }
+      else if(isCur){ bg = 'rgba(253,230,138,.14)'; bd = '#fde68a'; }
+      else if(revealed){ bg = 'rgba(245,158,11,.12)'; bd = 'rgba(245,158,11,.6)'; }
+      rrect(x, cy - w/2, w, w, 11, bg);
+      rrectS(x, cy - w/2, w, w, 11, bd, isCur ? 3 : 1.6);
+      /* the glyph: full during the demo, a faint memory while you answer */
+      let a = 0;
+      if(revealed) a = 1;
+      else if(mark) a = 0.95;
+      else if(live || S.phase === 'set') a = cl(S.ghost, 0, 1);
+      if(a > 0.02){
+        if(S.seq[i].red){
+          c.save(); c.globalAlpha = a;
+          ring(cx, cy, 15, '#f43f5e', 2.6);
+          txt('L1', cx, cy, 15, '#fecaca', 'center', 900);
+          c.restore();
+        } else glyph(S.seq[i].btn, cx, cy, 16, a);
+      } else {
+        txt('?', cx, cy, 20, 'rgba(148,163,184,.35)', 'center', 900);
+      }
+      if(revealed && i === S.beatIdx){
+        ring(cx, cy, 30 - cl((S.pt - 0.35 - i*S.beat)/S.beat, 0, 1) * 6, 'rgba(253,230,138,.55)', 2);
+      }
+      if(isCur){
+        /* the beat closing in on this slot */
+        const T = this.LEAD + i * S.beat, left = T - S.pt;
+        const k = cl(left / S.beat, 0, 1);
+        ring(cx, cy, w/2 + 6 + k * 46, '#fde68a', 2.5);
+        if(Math.abs(left) <= S.win) ring(cx, cy, w/2 + 5, '#4ade80', 3);
+      }
+    }
+    const label = S.phase === 'demo' ? 'WATCH THE KATA'
+                : S.phase === 'set' ? 'READY'
+                : S.phase === 'live' ? 'ANSWER IT'
+                : S.phase === 'stagger' ? 'STRIKE!' : '';
+    if(label) txt(label, VW/2, y - 22, 14, S.phase === 'live' ? '#fde68a' : '#94a3b8', 'center', 800);
+  },
+  drawFighter(x, isPlayer, opts){
+    const S = this.S;
+    c.save(); c.translate(x, VH/2);
+    if(opts.ghostly) c.globalAlpha = 0.42;
+    const body = opts.col;
+    /* legs in a stance */
+    rect(-16, 26, 11, 30, body); rect(6, 26, 11, 30, body);
+    /* torso */
+    rrect(-15, -34, 30, 62, 7, body);
+    /* head */
+    circ(0, -48, 13, opts.head || body);
+    /* arm + blade */
+    c.save();
+    c.rotate(opts.arm);
+    const reach = isPlayer ? 1 : -1;
+    rect(reach > 0 ? 10 : -74, -6, 64, 6, opts.blade || '#f8fafc');
+    c.restore();
+    c.restore();
   },
   draw(){
     const S = this.S, P = S.P, E = S.E;
     /* stage */
     rect(AR.x, AR.y, AR.w, AR.h, '#100a04');
-    const gy = VH/2 + 96;
+    const gy = VH/2 + 92;
     c.save(); c.beginPath(); c.rect(AR.x,AR.y,AR.w,AR.h); c.clip();
-    for(let i=0;i<9;i++){ const rr = 60 + i*46;
-      ring(VW/2, gy, rr, 'rgba(245,158,11,.05)', 1.4); }
+    for(let i=0;i<9;i++) ring(VW/2, gy, 60 + i*46, 'rgba(245,158,11,.05)', 1.4);
     rect(AR.x, gy, AR.w, AR.b-gy, 'rgba(120,53,15,.25)');
     line(AR.x, gy, AR.r, gy, 'rgba(245,158,11,.3)', 2);
 
-    /* duelists */
-    const px = P.x + (P.lunge>0 ? 46 : 0) + (P.dodge>0 ? -34 : 0);
-    const ex = E.x + (E.state==='attack' && E.atk && E.t > E.atk.tell*0.75 ? -40 : 0);
-    /* player */
-    c.save(); c.translate(px, VH/2);
-    rect(-14, -46, 28, 84, P.flash>0 ? '#fecaca' : '#e2e8f0');
-    rect(-8, -60, 16, 16, '#cbd5e1');
-    c.save(); c.rotate(P.lunge>0 ? -0.6 : P.dodge>0 ? 0.5 : -0.15);
-    rect(12, -8, 62, 6, '#f8fafc'); c.restore();
-    c.restore();
-    if(P.dodge > 0) ring(px, VH/2, 54, 'rgba(147,197,253,.6)', 3);
-    if(P.lockout > 0){ txt('RECOVER', px, VH/2 + 76, 13, '#64748b', 'center', 800); }
-    /* enemy */
-    c.save(); c.translate(ex, VH/2);
-    const ecol = E.flash>0 ? '#fff' : E.state==='stagger' ? '#a3e635' : '#f59e0b';
-    rect(-16, -50, 32, 92, ecol);
-    rect(-10, -66, 20, 18, '#fbbf24');
-    c.save(); c.rotate(E.state==='attack' ? 0.5 : 0.1);
-    rect(-76, -6, 62, 7, '#fde68a'); c.restore();
-    c.restore();
-    if(E.state === 'stagger'){
-      txt('STAGGERED', ex, VH/2 - 96, 18, '#a3e635', 'center', 900);
-      ring(ex, VH/2, 62 + Math.sin(RUN.time*14)*4, 'rgba(163,230,53,.6)', 3);
+    /* the duelist's swing direction reads on the body as well as the rail */
+    const dir = S.swingDir, sw = cl(S.swing / 0.22, 0, 1);
+    let eArm = 0.2;
+    if(sw > 0){
+      if(dir === 'triangle') eArm = -1.1;
+      else if(dir === 'cross') eArm = 1.0;
+      else if(dir === 'square') eArm = -0.2;
+      else if(dir === 'circle') eArm = 0.5;
+      else eArm = 0;
+      eArm *= sw;
     }
+    const closing = (S.phase === 'live' || S.phase === 'stagger') ? 34 : 0;
+    const ex = E.x - closing - sw * 26;
+    const px = P.x + (P.lunge > 0 ? 44 : 0) + (P.guard > 0 ? -18 : 0);
 
-    /* telegraph */
-    if(E.state === 'attack' && E.atk){
-      const a = E.atk, prog = cl(E.t / a.tell, 0, 1.4);
-      const cx = ex, cy = VH/2 - 122;
-      const col = a.unblock ? '#f43f5e' : PSCOL[a.btn];
-      /* timing ring collapses onto the glyph */
-      ring(cx, cy, 30 + (1-cl(prog,0,1))*54, col, 3.5);
-      if(a.unblock){
-        c.save(); c.globalAlpha = .9; circ(cx, cy, 26, 'rgba(24,6,10,.9)');
-        c.restore();
-        ring(cx, cy, 26, '#f43f5e', 3);
-        txt('L1', cx, cy, 19, '#fecaca', 'center', 900);
-        txt('UNBLOCKABLE', cx, cy + 46, 12, '#f43f5e', 'center', 800);
-      } else {
-        glyph(a.btn, cx, cy, 26);
-        const lbl = a.btn==='triangle'?'HIGH':a.btn==='cross'?'LOW':a.btn==='square'?'LEFT':'RIGHT';
-        txt(lbl, cx, cy + 44, 12, col, 'center', 800);
-      }
-      /* window bar */
-      const bw = 210, bx = cx - bw/2, by = cy + 66;
-      rect(bx, by, bw, 8, 'rgba(15,23,42,.85)');
-      const wStart = (a.tell - S.win)/(a.tell*1.4), wEnd = (a.tell + S.win*0.7)/(a.tell*1.4);
-      rect(bx + bw*wStart, by, bw*(wEnd-wStart), 8, a.unblock ? 'rgba(244,63,94,.55)' : 'rgba(253,230,138,.6)');
-      const mark = cl(E.t/(a.tell*1.4), 0, 1);
-      rect(bx + bw*mark - 1.5, by - 4, 3, 16, '#fff');
-      rectS(bx, by, bw, 8, 'rgba(148,163,184,.35)', 1);
-      if(E.queue.length) txt('COMBO +' + E.queue.length, cx, by + 24, 12, '#fb923c', 'center', 800);
+    this.drawFighter(px, true, { col: P.flash > 0 ? '#fecaca' : '#e2e8f0', head:'#cbd5e1',
+      arm: P.lunge > 0 ? -0.7 : P.guard > 0 ? 0.55 : -0.12, blade:'#f8fafc' });
+    if(P.guard > 0){
+      c.save(); c.strokeStyle = '#93c5fd'; c.lineWidth = 5; c.globalAlpha = .75;
+      c.beginPath(); c.arc(px, VH/2, 46, -1.0, 1.0); c.stroke(); c.restore();
+    }
+    this.drawFighter(ex, false, {
+      col: E.flash > 0 ? '#fff' : S.phase === 'stagger' ? '#a3e635' : '#f59e0b',
+      head:'#fbbf24', arm: eArm, blade:'#fde68a',
+      ghostly: S.phase === 'demo' || S.phase === 'intro'
+    });
+    if(S.phase === 'demo') txt('SHADOW KATA', ex, VH/2 + 118, 13, 'rgba(245,158,11,.8)', 'center', 800);
+    if(S.phase === 'stagger'){
+      ring(ex, VH/2, 66 + Math.sin(RUN.time*14)*4, 'rgba(163,230,53,.6)', 3);
+      txt('STAGGERED', ex, VH/2 - 96, 17, '#a3e635', 'center', 900);
+      let bx = ex - 52;
+      const w = ctrlToken('r2', bx, VH/2 + 122, 20);
+      txt('STRIKE', bx + w, VH/2 + 122, 14, '#a3e635', 'left', 800);
     }
     c.restore();
 
+    this.drawRail();
     if(S.msgT > 0){
-      c.globalAlpha = cl(S.msgT/0.9, 0, 1);
-      txt(S.msg, VW/2, VH/2 + 150, 26, S.msgCol, 'center', 900);
+      c.globalAlpha = cl(S.msgT, 0, 1);
+      txt(S.msg, VW/2, VH/2 + 152, 25, S.msgCol, 'center', 900);
       c.globalAlpha = 1;
     }
     topBar('BLADE PARRY · DUEL ' + S.duel, 'BEST CHAIN ' + S.best);
     hpBar(16, 54, 210, 18, P.hp, P.hpMax);
-    /* enemy hp + posture */
     rect(VW-330, 54, 314, 18, 'rgba(15,23,42,.85)');
     rect(VW-328, 56, 310*cl(E.hp/E.hpMax,0,1), 14, '#f59e0b');
     rectS(VW-330, 54, 314, 18, 'rgba(148,163,184,.4)', 1.4);
     txt(E.name, VW-173, 63, 12, '#0b1020', 'center', 900);
     txt('POSTURE', VW-330, 84, 11, '#94a3b8', 'left', 800);
-    pips(VW-258, 84, E.postureMax, Math.max(0,Math.ceil(E.postureCur)), '#a3e635', 6);
+    pips(VW-258, 84, E.postureMax, Math.max(0, Math.ceil(E.postureCur)), '#a3e635', 6);
     /* legend */
-    const ly = VH - 26;
+    const ly = VH - 24;
     let lx = 18;
-    const legend = [['triangle','HIGH'],['cross','LOW'],['square','LEFT'],['circle','RIGHT']];
-    for(const [g0,l] of legend){ glyph(g0, lx, ly, 13); txt(l, lx+20, ly, 12, '#64748b', 'left', 800); lx += 84; }
-    pill('L1', lx, ly-13, 40, 26); txt('DODGE RED', lx+48, ly, 12, '#64748b', 'left', 800); lx += 150;
-    pill('R2', lx, ly-13, 40, 26); txt('STRIKE', lx+48, ly, 12, '#64748b', 'left', 800);
+    for(const [g0,l] of [['triangle','HIGH'],['cross','LOW'],['square','LEFT'],['circle','RIGHT']]){
+      glyph(g0, lx, ly, 13); txt(l, lx+20, ly, 12, '#64748b', 'left', 800); lx += 82;
+    }
+    pill('L1', lx, ly-13, 40, 26); txt('RED / GUARD', lx+48, ly, 12, '#64748b', 'left', 800);
   }
 });
 
@@ -2578,12 +2787,12 @@ defGame({
    8. BOMB WARREN — grid bombing dive
    ========================================================================= */
 defGame({
-  id:'warren', name:'BOMB WARREN', tag:'Grid bomber · blow open the floor', col:'#fb923c',
-  blurb:'Blast the warren apart to find the hatch. Cross drops a bomb, Square kicks one down a corridor, Triangle detonates on command.',
+  id:'warren', name:'BOMB WARREN', tag:'Grid bomber · dig out the hatch', col:'#fb923c',
+  blurb:'The way out is a hatch buried under one of the brown blocks \u2014 bomb your way to it. Kill every critter and it reveals itself. Cross drops a bomb, Square kicks one down a corridor, Triangle detonates on command.',
   controls:[
-    ['LSTICK','Move'], ['cross','Drop bomb'], ['square','Kick bomb (needs BOOT)'],
-    ['triangle','Remote detonate (needs TRIGGER)'], ['r1','Scramble — quick burst of speed'],
-    ['options','Pause']
+    ['LSTICK','Move'], ['cross','Drop bomb (R2 too)'], ['square','Kick bomb, needs BOOT (L1 too)'],
+    ['triangle','Remote detonate, needs TRIGGER (Circle too)'],
+    ['r1','Scramble \u2014 burst of speed (L2 too)'], ['options','Pause']
   ],
   S:null, pool:[
     { id:'fire',  name:'BIGGER CHARGE',max:5, desc:'+1 blast tile in every direction.',   apply:S=>S.blast++ },
@@ -2605,7 +2814,8 @@ defGame({
       up:{}, P:{ x:0, y:0, r:13, hp:100*perkMul.hp(), hpMax:100*perkMul.hp(), spd:190*perkMul.spd(), inv:0, face:0, dashT:0 },
       blast:2, bombMax:1, kick:0, remote:0, selfMit:1, fuse:2.2, pierce:0, scan:0,
       dashCd:0, dashCdMax:2.4,
-      floor:0, cols:23, rows:11, grid:[], bombs:[], flames:[], E:[], items:[], hatch:null, hatchOpen:false,
+      floor:0, floorT:0, hatchMarked:false, revealAt:45,
+      cols:23, rows:11, grid:[], bombs:[], flames:[], E:[], items:[], hatch:null, hatchOpen:false,
       ox:0, oy:0
     };
     S.ox = AR.x + (AR.w - S.cols*this.T)/2;
@@ -2615,7 +2825,7 @@ defGame({
   buildFloor(){
     const S = this.S, T = this.T; S.floor++;
     S.grid = []; S.bombs.length = 0; S.flames.length = 0; S.E.length = 0; S.items.length = 0;
-    S.hatchOpen = false;
+    S.hatchOpen = false; S.floorT = 0; S.hatchMarked = !!S.scan;
     for(let r=0;r<S.rows;r++){
       const row = [];
       for(let ccc=0;ccc<S.cols;ccc++){
@@ -2649,7 +2859,9 @@ defGame({
       e.hpMax = e.hp; e.r = 13; e.flash = 0; e.dir = pick([[1,0],[-1,0],[0,1],[0,-1]]); e.t = R(0,3);
       S.E.push(e);
     }
-    FX.text(VW/2, 130, 'WARREN ' + S.floor, '#fb923c', 26);
+    FX.text(VW/2, 118, 'WARREN ' + S.floor, '#fb923c', 26);
+    FX.text(VW/2, 150, 'BLAST THE WALLS \u2014 FIND THE HATCH', '#fdba74', 15);
+    FX.text(VW/2, 176, 'kill every critter and it shows itself', '#94a3b8', 12);
     RUN.depth = S.floor;
   },
   cellAt(x, y){
@@ -2723,17 +2935,17 @@ defGame({
     if(Math.hypot(mx,my) > .2) P.face = Math.atan2(my,mx);
     P.x += mx*spd*dt; this.collide(P);
     P.y += my*spd*dt; this.collide(P);
-    if(hit('r1') && S.dashCd <= 0){ S.dashT = 0.25; S.dashCd = S.dashCdMax; sfx('dash'); }
+    if((hit('r1') || hit('l2')) && S.dashCd <= 0){ S.dashT = 0.25; S.dashCd = S.dashCdMax; sfx('dash'); }
     /* bomb */
-    if(hit('cross') && S.bombs.length < S.bombMax){
+    if((hit('cross') || hit('r2')) && S.bombs.length < S.bombMax){
       const cel = this.cellAt(P.x, P.y);
       if(!S.bombs.some(b => { const bc = this.cellAt(b.x,b.y); return bc.r===cel.r && bc.c===cel.c; })){
         S.bombs.push({ x:S.ox+cel.c*T+T/2, y:S.oy+cel.r*T+T/2, fuse:S.fuse, r:14, vx:0, vy:0, t:0 });
         sfx('ui');
       }
     }
-    if(hit('triangle') && S.remote && S.bombs.length) this.boom(S.bombs[0]);
-    if(hit('square') && S.kick){
+    if((hit('triangle') || hit('circle')) && S.remote && S.bombs.length) this.boom(S.bombs[0]);
+    if((hit('square') || hit('l1')) && S.kick){
       let best = null, bd = 46;
       for(const b of S.bombs){ const d = dist(P.x,P.y,b.x,b.y); if(d < bd){ bd = d; best = b; } }
       if(best){
@@ -2800,14 +3012,35 @@ defGame({
         else RUN.score += 30;
       }
     }
+    /* keep critters out of each other, then push them back out of the walls */
+    separate(S.E, 40, 0.5, 5);
+    for(const e of S.E) this.collide(e, e.kind === 'ghost');
+    /* --- finding the hatch ---
+       Killing everything reveals where it is buried, so clearing the floor is never
+       a dead end; a slow floor gives it up on its own after a while. */
+    S.floorT += dt;
+    if(!S.hatchMarked && !S.hatchOpen){
+      if(S.E.length === 0){
+        S.hatchMarked = true; sfx('level'); FX.flash('#4ade80', .2);
+        const hx = S.ox + S.hatch.c*T + T/2, hy = S.oy + S.hatch.r*T + T/2;
+        FX.burst(hx, hy, '#4ade80', 26, 240);
+        FX.text(VW/2, 150, 'WARREN SILENT \u2014 THE HATCH SHOWS ITSELF', '#4ade80', 17);
+      } else if(S.floorT > S.revealAt){
+        S.hatchMarked = true; sfx('pick');
+        FX.text(VW/2, 150, 'YOU SMELL IT \u2014 HATCH MARKED', '#4ade80', 16);
+      }
+    }
     /* hatch */
     if(S.hatchOpen){
       const hx = S.ox + S.hatch.c*T + T/2, hy = S.oy + S.hatch.r*T + T/2;
-      if(dist(P.x,P.y,hx,hy) < 22){
-        RUN.score += 120 + S.floor*30;
-        const self = this;
+      if(dist(P.x,P.y,hx,hy) < 22 && !STAGE.active){
+        const bonus = 120 + S.floor*30;
+        RUN.score += bonus;
+        const self = this, f = S.floor;
         this.onDraftDone = () => self.buildFloor();
-        if(!openDraft(this, 'WARREN ' + S.floor + ' CLEARED', 'Scavenged from the rubble.')) this.buildFloor();
+        stageClear('WARREN ' + f + ' CLEARED', 'Down the hatch.  +' + bonus + ' points', '#fb923c', () => {
+          if(!openDraft(self, 'WARREN ' + f + ' CLEARED', 'Scavenged from the rubble.')) self.buildFloor();
+        });
       }
     }
   },
@@ -2820,8 +3053,12 @@ defGame({
       else if(g === 2){ rect(x+1,y+1,T-2,T-2,'#78350f'); rect(x+1,y+1,T-2,3,'#a16207');
         rect(x+4,y+8,T-8,2,'rgba(0,0,0,.3)'); rect(x+4,y+18,T-8,2,'rgba(0,0,0,.3)'); }
       else { rect(x,y,T,T,'#141017'); rectS(x+.5,y+.5,T-1,T-1,'rgba(251,146,60,.05)',1); }
-      if(S.scan && S.hatch && S.hatch.r===r && S.hatch.c===cc && !S.hatchOpen)
-        ring(x+T/2, y+T/2, 9, 'rgba(74,222,128,.7)', 2);
+      if((S.scan || S.hatchMarked) && S.hatch && S.hatch.r===r && S.hatch.c===cc && !S.hatchOpen){
+        const pu = 1 + Math.sin(RUN.time*6)*0.18;
+        ring(x+T/2, y+T/2, 13*pu, 'rgba(74,222,128,.9)', 2.5);
+        ring(x+T/2, y+T/2, 20*pu, 'rgba(74,222,128,.35)', 1.6);
+        txt('\u25bc', x+T/2, y+T/2, 15, '#4ade80', 'center', 900);
+      }
     }
     if(S.hatchOpen){
       const x = S.ox + S.hatch.c*T, y = S.oy + S.hatch.r*T;
@@ -2862,7 +3099,13 @@ defGame({
       c.save(); c.translate(P.x,P.y); c.rotate(P.face); rect(6,-3,10,6,'#fff7ed'); c.restore();
       if(S.dashT>0) ring(P.x,P.y,P.r+6,'rgba(251,191,36,.6)',2);
     }
-    topBar('BOMB WARREN · FLOOR ' + S.floor, S.hatchOpen ? 'HATCH OPEN ▼' : 'FOES ' + S.E.length);
+    topBar('BOMB WARREN \u00b7 FLOOR ' + S.floor,
+      S.hatchOpen ? 'HATCH OPEN \u2014 GO' : S.hatchMarked ? 'HATCH MARKED \u2014 BLAST IT' : 'FIND THE HATCH');
+    if(!S.hatchOpen){
+      const hint = S.hatchMarked ? 'Blow the marked block open'
+        : 'Bomb the brown blocks \u00b7 ' + S.E.length + ' critters left (clear them to reveal it)';
+      txt(hint, VW/2, 84, 12, S.hatchMarked ? '#4ade80' : '#94a3b8', 'center', 700);
+    }
     hpBar(16, 54, 190, 18, P.hp, P.hpMax);
     txt('BOMBS', 220, 63, 11, '#94a3b8', 'left', 800);
     pips(272, 63, S.bombMax, S.bombMax - S.bombs.length, '#f87171', 6);
@@ -2883,8 +3126,8 @@ defGame({
   blurb:'The rail never stops. Slide the D-Pad between lanes, Cross to vault, Circle to duck, R2 to clear what you cannot dodge.',
   controls:[
     ['LSTICK','Change lane (D-Pad works too)'], ['cross','Vault over low barriers'],
-    ['circle','Slide under high barriers'], ['r2','Fire down the lane'],
-    ['l1','Ward — brief invulnerable burst'], ['options','Pause']
+    ['circle','Slide under high barriers (L2 too)'], ['r2','Fire down the lane (Square too)'],
+    ['l1','Ward \u2014 brief invulnerable burst (Triangle too)'], ['options','Pause']
   ],
   S:null, pool:[
     { id:'rate',  name:'CYCLE FEED',   max:5, desc:'+22% fire rate.',                       apply:S=>S.gunCd *= 0.8 },
@@ -2970,11 +3213,11 @@ defGame({
     S.laneX = lerp(S.laneX, this.laneOf(S.lane), cl(dt*13,0,1));
 
     if(hit('cross') && S.jump <= 0 && S.slide <= 0){ S.jump = S.jumpDur; sfx('dash'); }
-    if(hit('circle') && S.slide <= 0 && S.jump <= 0){ S.slide = S.slideDur; sfx('dash'); }
+    if((hit('circle') || hit('l2')) && S.slide <= 0 && S.jump <= 0){ S.slide = S.slideDur; sfx('dash'); }
     S.jump = Math.max(0, S.jump - dt);
     S.slide = Math.max(0, S.slide - dt);
-    if(hit('l1') && S.ward > 0){ S.ward--; S.wardT = 1.6; sfx('parry'); FX.flash('#7dd3fc',.2); }
-    if((down('r2') || down('square') || S.auto) && S.gunT <= 0) this.fire();
+    if((hit('l1') || hit('triangle')) && S.ward > 0){ S.ward--; S.wardT = 1.6; sfx('parry'); FX.flash('#7dd3fc',.2); }
+    if((down('r2') || down('square') || down('r1') || S.auto) && S.gunT <= 0) this.fire();
 
     /* spawn */
     S.spawnZ -= S.spd * dt;
@@ -3057,12 +3300,14 @@ defGame({
       }
     }
     /* upgrade milestones */
-    if(S.dist >= S.nextUp){
+    if(S.dist >= S.nextUp && !STAGE.active){
       S.nextUp += 800; S.tier++;
       S.ward = S.wardMax;
-      const self = this;
+      const self = this, d = Math.floor(S.dist);
       this.onDraftDone = null;
-      openDraft(this, Math.floor(S.dist) + ' METRES', 'Rail checkpoint — bolt something on.');
+      stageClear(d + ' METRES', 'Checkpoint. Wards restored.', '#38bdf8', () => {
+        openDraft(self, d + ' METRES', 'Rail checkpoint \u2014 bolt something on.');
+      }, 1.15);
     }
     RUN.score += S.spd * dt * 0.06 * S.scoreMul;
   },
@@ -3160,11 +3405,12 @@ defGame({
     txt('WARD', 190, 63, 11, '#94a3b8', 'left', 800);
     pips(236, 63, S.wardMax, S.ward, '#7dd3fc', 7);
     meter(340, 57, 140, 11, (S.dist % 800)/800, '#38bdf8', 'NEXT REFIT');
-    /* lane indicator */
+    /* lane indicator — lifted clear of the opening control legend */
+    const ly2 = VH - 34 - legendHeight();
     for(let i=0;i<3;i++){
       const x = VW/2 - 50 + i*50;
-      if(i === S.lane) rrect(x-16, VH-34, 32, 16, 5, '#38bdf8');
-      else rrectS(x-16, VH-34, 32, 16, 5, 'rgba(56,189,248,.4)', 1.4);
+      if(i === S.lane) rrect(x-16, ly2, 32, 16, 5, '#38bdf8');
+      else rrectS(x-16, ly2, 32, 16, 5, 'rgba(56,189,248,.4)', 1.4);
     }
   }
 });
@@ -3178,7 +3424,7 @@ defGame({
   controls:[
     ['LSTICK','Move'], ['RSTICK','Move the command marker'], ['r2','Drain beam — damage and harvest souls'],
     ['cross','Raise a minion (costs souls)'], ['r1','Cycle minion type'],
-    ['circle','Order minions to the marker'], ['l1','Recall minions to you'],
+    ['circle','Order minions to the marker'], ['l1','Recall minions to you (L2 too)'],
     ['triangle','Corpse detonation'], ['options','Pause']
   ],
   S:null, pool:[
@@ -3263,7 +3509,7 @@ defGame({
     if(hit('r1')){ S.tIdx = (S.tIdx+1) % S.types.length; sfx('ui'); }
     if(hit('cross')) this.summon();
     if(hit('circle')){ S.stance = 'order'; sfx('ui'); FX.burst(S.mark.x, S.mark.y, '#c084fc', 12, 180); }
-    if(hit('l1')){ S.stance = 'follow'; sfx('ui'); }
+    if(hit('l1') || hit('l2')){ S.stance = 'follow'; sfx('ui'); }
     if(hit('triangle')){
       let n = 0;
       for(let i=S.corpses.length-1;i>=0;i--){
@@ -3400,13 +3646,22 @@ defGame({
       }
       if(co.t > 26) S.corpses.splice(i,1);
     }
+    /* the dead should not stand inside one another */
+    separate(S.E, 46, 0.5, 6);
+    separate(S.M, 40, 0.45, 5);
+    for(const e of S.E) clampArena(e, e.r);
+    for(const m of S.M) clampArena(m, m.r);
     /* wave flow */
-    if(S.E.length === 0){
-      RUN.score += 50 + S.wave*12;
+    if(S.E.length === 0 && !STAGE.active){
+      const bonus = 50 + S.wave*12;
+      RUN.score += bonus;
       S.souls += 6;
-      const self = this;
+      const self = this, w = S.wave;
       this.onDraftDone = () => self.nextWave();
-      if(!openDraft(this, 'WAVE ' + S.wave + ' SURVIVED', 'The pact deepens.')) this.nextWave();
+      stageClear(w % 4 === 0 ? 'TYRANT UNMADE' : 'WAVE ' + w + ' SURVIVED',
+                 '+6 souls  \u00b7  +' + bonus + ' points', '#c084fc', () => {
+        if(!openDraft(self, 'WAVE ' + w + ' SURVIVED', 'The pact deepens.')) self.nextWave();
+      });
     }
   },
   draw(){
@@ -3750,6 +4005,48 @@ function overDraw(){
   }
 }
 
+/* ---------- the controls, shown for the opening seconds of every run ---------- */
+function legendHeight(){
+  if(!RUN.g || RUN.legendT <= 0) return 0;
+  return 12 + legendRows().length * 24;
+}
+/* pack the control list into rows that actually fit, measuring as we go */
+function legendRows(){
+  const list = RUN.g.controls.filter(e => e[0] !== 'options');
+  c.font = '700 12px ui-sans-serif,system-ui,sans-serif';
+  const rows = [[]];
+  let w = 0;
+  for(const e of list){
+    const label = e[1].replace(/\s*\([^)]*\)\s*/g, '');   /* aliases live on the controls card */
+    const tokenW = PSCOL[e[0]] ? 26 : 26 + (LABEL[e[0]] || e[0]).length * 8.8;
+    const itemW = tokenW + c.measureText(label).width + 24;
+    if(w + itemW > VW - 24 && rows[rows.length-1].length){ rows.push([]); w = 0; }
+    rows[rows.length-1].push({ tok:e[0], label, w:itemW });
+    w += itemW;
+    if(rows.length >= 3) break;
+  }
+  return rows;
+}
+function drawLegend(){
+  if(!RUN.g || RUN.legendT <= 0 || RUN.g.id === 'blade') return;
+  const a = cl(RUN.legendT / 1.6, 0, 1);
+  const rows = legendRows();
+  const h = 12 + rows.length * 24;
+  c.save(); c.globalAlpha = a;
+  rect(0, VH - h, VW, h, 'rgba(5,6,12,.9)');
+  line(0, VH - h, VW, VH - h, 'rgba(148,163,184,.25)', 1);
+  for(let r=0;r<rows.length;r++){
+    let x = 16;
+    const y = VH - h + 14 + r * 24;
+    for(const it of rows[r]){
+      const tw = ctrlToken(it.tok, x, y, 19);
+      txt(it.label, x + tw, y, 12, '#94a3b8', 'left', 700);
+      x += it.w;
+    }
+  }
+  c.restore();
+}
+
 /* ---------- touch overlay ---------- */
 function drawTouch(){
   if(!IN.showTouch || IN.pad) return;
@@ -3789,7 +4086,53 @@ function drawTouch(){
 
 /* ---------- main loop ---------- */
 let last = performance.now();
+let CRASH = null;
+
+/* The loop re-arms itself BEFORE doing any work, and everything below runs inside a
+   try/catch. Previously a single exception anywhere left the last requestAnimationFrame
+   call unreached, which froze the entire game with no message — every button appeared
+   dead. Now a fault shows itself and you can walk back to the hub. */
 function frame(now){
+  requestAnimationFrame(frame);
+  try{
+    if(CRASH){ crashStep(); return; }
+    step(now);
+  }catch(err){
+    CRASH = {
+      msg: String((err && err.message) || err),
+      where: ((err && err.stack) || '').split('\n')[1] || '',
+      scene: SCENE.cur,
+      game: (RUN.g && RUN.g.name) || '(none)'
+    };
+    try{ console.error('DECAPACK fault:', err); }catch(e){}
+  }
+}
+function crashStep(){
+  pollInput();
+  if(hit('cross') || hit('options') || hit('circle')){
+    CRASH = null; FX.clear(); DRAFT.open = false; STAGE.active = false; STAGE.onDone = null;
+    RUN.alive = false; SCENE.set('hub'); return;
+  }
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  c.fillStyle = '#0b0509'; c.fillRect(0, 0, cv.width/DPR, cv.height/DPR);
+  c.save(); c.translate(OX, OY); c.scale(SCALE, SCALE);
+  c.beginPath(); c.rect(0,0,VW,VH); c.clip();
+  rect(0,0,VW,VH,'#0b0509');
+  txt('SOMETHING BROKE', VW/2, 150, 34, '#f87171', 'center', 900);
+  txt('The run hit a fault. Nothing is lost — your shards are saved.', VW/2, 190, 15, '#94a3b8', 'center', 600);
+  rrect(80, 226, VW-160, 122, 12, 'rgba(148,163,184,.07)');
+  rrectS(80, 226, VW-160, 122, 12, 'rgba(248,113,113,.4)', 1.5);
+  txt(CRASH.game + '  ·  scene: ' + CRASH.scene, 104, 254, 13, '#64748b', 'left', 700);
+  wrapText(CRASH.msg, VW/2, 288, VW-220, 20, 15, '#fecaca');
+  txt(CRASH.where.trim().slice(0, 96), VW/2, 330, 11, '#475569', 'center', 600);
+  let bx = VW/2 - 108;
+  const w = ctrlToken('cross', bx, 396, 20);
+  txt('BACK TO THE HUB', bx + w, 396, 15, '#e2e8f0', 'left', 700);
+  txt('If you can, tell me what this said — it names the exact fault.', VW/2, 442, 12, '#475569', 'center', 600);
+  drawTouch();
+  c.restore();
+}
+function step(now){
   let dt = (now - last) / 1000; last = now;
   if(dt > 0.05) dt = 0.05;
   pollInput();
@@ -3804,7 +4147,13 @@ function frame(now){
   else if(SCENE.cur === 'pausectrl') pausectrlUpdate(dt);
   else if(SCENE.cur === 'over') overUpdate(dt);
   else if(SCENE.cur === 'play'){
+    if(RUN.legendT > 0) RUN.legendT -= dt;
     if(DRAFT.open) draftUpdate(dt);
+    else if(STAGE.active){
+      /* the world keeps breathing in slow motion under the card */
+      if(RUN.alive) RUN.g.update(dt * STAGE.timeScale());
+      STAGE.update(dt);
+    }
     else if(hit('options')){ SCENE.pauseI = 0; SCENE.set('pause'); sfx('ui'); }
     else if(RUN.alive) RUN.g.update(dt);
   }
@@ -3830,6 +4179,8 @@ function frame(now){
   else if(SCENE.cur === 'play'){
     RUN.g.draw();
     FX.draw();
+    STAGE.draw();
+    drawLegend();
     if(DRAFT.open) draftDraw();
   }
   if(SCENE.cur !== 'play') FX.draw();
@@ -3838,8 +4189,6 @@ function frame(now){
   if(SCENE.cur === 'play' && !DRAFT.open) drawTouch();
   else if(SCENE.cur !== 'play') drawTouch();
   c.restore();
-
-  requestAnimationFrame(frame);
 }
 resize();
 requestAnimationFrame(frame);
