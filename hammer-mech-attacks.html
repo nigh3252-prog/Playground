@@ -11,10 +11,10 @@
 @media(max-width:600px){header{padding:calc(18px + env(safe-area-inset-top)) 18px 18px}.eyebrow{font-size:10px;letter-spacing:1.7px}h1{font-size:24px}.top-actions{gap:6px}.icon-button{width:44px;padding:0;justify-content:center;font-size:21px}.icon-button span:not(.sliders){display:none}.motion-status{left:19px;top:calc(88px + env(safe-area-inset-top))}.mode-bar{bottom:calc(19px + env(safe-area-inset-bottom));width:calc(100% - 38px);max-width:370px;justify-content:stretch}.mode-bar button{padding:0 13px;flex:1}.bottom-ui{left:24px;right:24px;bottom:calc(93px + env(safe-area-inset-bottom))}#joystick{width:108px;height:108px}.home-button{width:75px;height:75px;align-self:center}.hint{bottom:158px;font-size:12px;opacity:.8}.hint span{display:none}#settings{right:18px;top:calc(83px + env(safe-area-inset-top));width:min(310px,calc(100vw - 36px));max-height:calc(100dvh - 180px);overflow:auto}}
 @media(max-height:510px) and (min-width:601px){header{padding:14px 24px}.eyebrow{font-size:10px}h1{font-size:22px}.motion-status{top:77px}.bottom-ui{bottom:22px}#joystick{width:94px;height:94px}.mode-bar{bottom:22px}.hint{bottom:74px}#settings{top:76px;max-height:calc(100dvh - 93px);overflow:auto}}
 @media(prefers-reduced-motion:reduce){.spinner{animation:none}}
-.attack-pad{pointer-events:auto;display:grid;grid-template-columns:72px 72px;justify-content:center;gap:7px 10px;margin-bottom:5px}.attack-button{width:72px;height:72px;border-radius:50%;background:#26312eee;border:1px solid #d2bd786e;position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;touch-action:manipulation;box-shadow:0 4px 16px #0003;user-select:none}.attack-button strong{font-size:12px;font-weight:550;line-height:1.2}.attack-button .ps-button{font-size:22px;line-height:1;color:#e5d49f}.attack-button kbd{position:absolute;right:-3px;bottom:6px;width:19px;height:19px;border-radius:5px;background:#313c3b;font:11px/19px ui-monospace,monospace;color:#e4dbbc;border:1px solid #6c7b72}.attack-main{grid-column:1/3;justify-self:center;width:84px;height:84px;background:#665125d9;border-color:#e0b8519e}.attack-main .ps-button{color:#f4d37d}.attack-button.firing{background:#e9bc4c;color:#1c2421;border-color:#ffdf82;box-shadow:0 0 0 4px #e9bc4c21,0 4px 20px #0004}.attack-button.firing .ps-button{color:#34402c}.attack-button.queued{border-color:#f7e4a3;box-shadow:0 0 0 3px #e9bc4c35}.attack-readout{position:absolute;left:50%;top:calc(103px + env(safe-area-inset-top));transform:translateX(-50%);text-align:center;pointer-events:none;min-width:168px}.attack-readout>span{font-size:13px;letter-spacing:1.2px;color:#f0d186;text-shadow:0 2px 5px #000}#attackProgress{height:3px;width:130px;margin:8px auto 4px;background:#d7d9c423;border-radius:2px;overflow:hidden}#attackProgress i{display:block;width:var(--progress,0%);height:100%;background:#eac45d}.attack-readout small{font-size:11px;letter-spacing:1px;color:#b9c4bd}#settings .check-setting{align-items:center;margin:12px 0}input[type=checkbox]{width:20px;height:20px;accent-color:#e9bc4c;margin:0}.attack-pad+*{pointer-events:none}
-@media(max-width:600px){.attack-pad{grid-template-columns:65px 65px;gap:5px 7px;margin-bottom:5px}.attack-button{width:65px;height:65px}.attack-main{width:76px;height:76px}.attack-button kbd{display:none}.attack-readout{top:calc(114px + env(safe-area-inset-top))}.hint{display:none}}
-@media(max-width:360px){.bottom-ui{left:18px;right:18px}#joystick{width:94px;height:94px}.attack-pad{grid-template-columns:61px 61px}.attack-button{width:61px;height:61px}.attack-main{width:72px;height:72px}}
-@media(max-height:510px) and (min-width:601px){.attack-pad{grid-template-columns:63px 63px;gap:5px 8px}.attack-button{width:63px;height:63px}.attack-main{width:70px;height:70px}.attack-readout{top:77px}.attack-readout>span{font-size:12px}}
+.attack-pad{pointer-events:auto;display:grid;grid-template-columns:repeat(3,72px);justify-content:center;gap:7px 10px;margin-bottom:5px}.attack-button{width:72px;height:72px;border-radius:50%;background:#26312eee;border:1px solid #d2bd786e;position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;touch-action:manipulation;box-shadow:0 4px 16px #0003;user-select:none}.attack-button strong{font-size:12px;font-weight:550;line-height:1.2}.attack-button .ps-button{font-size:22px;line-height:1;color:#e5d49f}.attack-button .ps-button.shoulder{font-size:13px;letter-spacing:.5px;font-weight:650}.attack-button kbd{position:absolute;right:-3px;bottom:6px;width:19px;height:19px;border-radius:5px;background:#313c3b;font:11px/19px ui-monospace,monospace;color:#e4dbbc;border:1px solid #6c7b72}.attack-main{background:#665125d9;border-color:#e0b8519e}.attack-main .ps-button{color:#f4d37d}.attack-button.firing{background:#e9bc4c;color:#1c2421;border-color:#ffdf82;box-shadow:0 0 0 4px #e9bc4c21,0 4px 20px #0004}.attack-button.firing .ps-button{color:#34402c}.attack-button.queued{border-color:#f7e4a3;box-shadow:0 0 0 3px #e9bc4c35}.attack-readout{position:absolute;left:50%;top:calc(103px + env(safe-area-inset-top));transform:translateX(-50%);text-align:center;pointer-events:none;min-width:168px}.attack-readout>span{font-size:13px;letter-spacing:1.2px;color:#f0d186;text-shadow:0 2px 5px #000}#attackProgress{height:3px;width:130px;margin:8px auto 4px;background:#d7d9c423;border-radius:2px;overflow:hidden}#attackProgress i{display:block;width:var(--progress,0%);height:100%;background:#eac45d}.attack-readout small{font-size:11px;letter-spacing:1px;color:#b9c4bd}#settings .check-setting{align-items:center;margin:12px 0}input[type=checkbox]{width:20px;height:20px;accent-color:#e9bc4c;margin:0}.attack-pad+*{pointer-events:none}
+@media(max-width:600px){.attack-pad{grid-template-columns:repeat(3,65px);gap:5px 7px;margin-bottom:5px}.attack-button{width:65px;height:65px}.attack-button kbd{display:none}.attack-readout{top:calc(114px + env(safe-area-inset-top))}.hint{display:none}}
+@media(max-width:360px){.bottom-ui{left:18px;right:18px}#joystick{width:94px;height:94px}.attack-pad{grid-template-columns:repeat(3,61px)}.attack-button{width:61px;height:61px}}
+@media(max-height:510px) and (min-width:601px){.attack-pad{grid-template-columns:repeat(3,63px);gap:5px 8px}.attack-button{width:63px;height:63px}.attack-readout{top:77px}.attack-readout>span{font-size:12px}}
 </style>
 </head>
 <body>
@@ -58,10 +58,7 @@
       </div>
       <div id="hint" class="hint">Drag to look around<span>Pinch to zoom</span></div>
       <div class="attack-pad" role="group" aria-label="Hammer attacks">
-        <button class="attack-button attack-main" data-attack="smash" aria-label="Overhead hammer smash; keyboard J or controller triangle"><span class="ps-button" aria-hidden="true">△</span><strong>Smash</strong><kbd>J</kbd></button>
-        <button class="attack-button" data-attack="sweep" aria-label="Wide hammer sweep; keyboard K or controller square"><span class="ps-button" aria-hidden="true">□</span><strong>Sweep</strong><kbd>K</kbd></button>
-        <button class="attack-button" data-attack="lunge" aria-label="Lunging hammer strike; keyboard L or controller cross"><span class="ps-button" aria-hidden="true">✕</span><strong>Lunge</strong><kbd>L</kbd></button>
-      </div>
+        <button class="attack-button" data-attack="lift" aria-label="Rising hammer uppercut; keyboard U or controller R1"><span class="ps-button shoulder" aria-hidden="true">R1</span><strong>Lift</strong><kbd>U</kbd></button><button class="attack-button" data-attack="jab" aria-label="Quick haft thrust with the shaft butt; keyboard I or controller circle"><span class="ps-button" aria-hidden="true">○</span><strong>Jab</strong><kbd>I</kbd></button><button class="attack-button" data-attack="forge" aria-label="Heavy overhead chop into the ground; keyboard O or controller L1"><span class="ps-button shoulder" aria-hidden="true">L1</span><strong>Forge</strong><kbd>O</kbd></button><button class="attack-button attack-main" data-attack="smash" aria-label="Overhead hammer smash; keyboard J or controller triangle"><span class="ps-button" aria-hidden="true">△</span><strong>Smash</strong><kbd>J</kbd></button><button class="attack-button" data-attack="sweep" aria-label="Wide hammer sweep; keyboard K or controller square"><span class="ps-button" aria-hidden="true">□</span><strong>Sweep</strong><kbd>K</kbd></button><button class="attack-button" data-attack="lunge" aria-label="Lunging hammer strike; keyboard L or controller cross"><span class="ps-button" aria-hidden="true">✕</span><strong>Lunge</strong><kbd>L</kbd></button></div>
     </div>
     <div id="attackReadout" class="attack-readout" hidden><span id="attackName" role="status"></span><div id="attackProgress" role="progressbar" aria-label="Attack progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div><small id="queuedAttack"></small></div>
     <div class="motion-status" aria-live="polite"><span id="modeLabel">AUTO WALK</span><span id="controllerLabel" hidden>CONTROLLER</span></div>
@@ -54657,7 +54654,7 @@ const SWING_HOME = [.40, -.014, .02];
 const SLIDE_HOME = .29, STANDOFF_HOME = .95, ROLL_HOME = -.40;
 const GRIP_HOME = [-1.24, .70];
 // Shaft runs from x=-1.53 (butt cap) to the head at x=1.97. Hands stay on it.
-const GRIP_MIN = -1.36, GRIP_MAX = 1.22, GRIP_GAP = .42;
+const GRIP_MIN = -1.36, GRIP_MAX = 1.02, GRIP_GAP = .42;
 const ARM_REACH = 1.15;
 const HEAD_HALF = [.50, .82, .51];
 
@@ -55056,7 +55053,8 @@ function createMech() {
   const spin = new THREE.Vector3(), twist = new THREE.Quaternion(), aim = new THREE.Quaternion();
   // A two-bone solve fixes only where a segment points, never how it is rolled
   // about its own length. Left free, the forearms corkscrew at the wrist, so
-  // roll each segment until its front plate faces a shared reference.
+  // roll each segment until its front plate faces away from the elbow, the way
+  // the inside of an arm faces opposite the way the joint bends.
   function rollSegment(segment, start, end, face) {
     boneAxis.copy(end).sub(start); if (boneAxis.lengthSq() < 1e-8) return; boneAxis.normalize();
     faceGoal.copy(face).addScaledVector(boneAxis, -face.dot(boneAxis));
@@ -55069,9 +55067,10 @@ function createMech() {
   }
 
   const hammerFrame = new THREE.Matrix4(), hammerInverse = new THREE.Matrix4(), hammerSpin = new THREE.Quaternion();
-  const shaftOrigin = new THREE.Vector3(), shaftAxis = new THREE.Vector3(), shaftFace = new THREE.Vector3();
+  const shaftOrigin = new THREE.Vector3(), shaftAxis = new THREE.Vector3();
   const armDelta = new THREE.Vector3(), probe = new THREE.Vector3(), standoffDir = new THREE.Vector3();
-  const headPoint = new THREE.Vector3(), hullOut = new THREE.Vector3(), armPole = new THREE.Vector3(), hipOffset = new THREE.Vector3();
+  const armFace = new THREE.Vector3();
+  const hullOut = new THREE.Vector3(), armPole = new THREE.Vector3(), hipOffset = new THREE.Vector3();
   const CORNERS = [];
   for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) CORNERS.push([sx, sy, sz]);
 
@@ -55169,34 +55168,37 @@ function createMech() {
       shaftOrigin.set(0, .04, -.12).applyMatrix4(hammerFrame);
     }
     hammerInverse.copy(hammerFrame).invert();
-    shaftFace.set(0, 0, -1).applyQuaternion(hammerSpin);
     // Hands settle where each shoulder projects onto the shaft, so they cannot
     // be keyed past the arm's reach; a key only nudges them along it.
-    const slide = [];
+    const slide = [], low = [], high = [];
     for (let i=0;i<arms.length;i++) {
       const arm=arms[i];
       armDelta.copy(arm.shoulderPoint).sub(shaftOrigin);
       const along=armDelta.dot(shaftAxis), perpendicular=armDelta.lengthSq()-along*along;
       const reach=Math.sqrt(Math.max(0, ARM_REACH * ARM_REACH - perpendicular));
-      let grip=along+(attack&&attack.g?attack.g[i]:0);
-      slide[i]=THREE.MathUtils.clamp(grip, Math.max(GRIP_MIN, along-reach), Math.min(GRIP_MAX, along+reach));
+      low[i]=Math.max(GRIP_MIN, along-reach); high[i]=Math.min(GRIP_MAX, along+reach);
+      slide[i]=THREE.MathUtils.clamp(along+(attack&&attack.g?attack.g[i]:0), low[i], high[i]);
     }
+    // Prising the fists apart so they don't overlap must not drag either of
+    // them out of its arm's reach: a hand off the shaft reads far worse than
+    // two hands sitting close together on it.
     if (slide[1]-slide[0] < GRIP_GAP) {
       const middle=(slide[0]+slide[1])/2;
-      slide[0]=THREE.MathUtils.clamp(middle-GRIP_GAP/2, GRIP_MIN, GRIP_MAX-GRIP_GAP);
-      slide[1]=slide[0]+GRIP_GAP;
+      slide[0]=THREE.MathUtils.clamp(middle-GRIP_GAP/2, low[0], high[0]);
+      slide[1]=THREE.MathUtils.clamp(Math.max(slide[0]+GRIP_GAP, middle+GRIP_GAP/2), low[1], high[1]);
     }
-    // With the head this close to a shoulder, an elbow that bulges along the
-    // shaft ends up buried inside it; steer the pole back down the handle.
-    headPoint.set(1.97, -.03, 0).applyMatrix4(hammerFrame);
     for (let i=0;i<arms.length;i++) {
       const arm=arms[i];
-      const crowd=THREE.MathUtils.clamp((1.75 - headPoint.distanceTo(arm.shoulderPoint)) / .55, 0, 1);
-      const pole=armPole.set(arm.side, attack?.12:-.1, attack?.65:-.8).normalize().addScaledVector(shaftAxis, -.95 * crowd);
       grips[i].position.x=slide[i];
+      hand.set(slide[i], .04, -.12).applyMatrix4(hammerFrame);
+      // The elbow bulges outward, away from the chest, the way anyone holding a
+      // bar across their body carries them. Outward is also the one direction
+      // the shoulder-to-hand line never takes, and a pole lying along that line
+      // snaps the elbow across to the far side: down looks tempting, but the
+      // arms hang straight down at rest, within two degrees of it.
+      const pole=armPole.set(arm.side, -.25, 0).normalize();
       // Solve once to find the elbow, roll the wrist to meet it, then solve
       // again against the hand's new seat on the shaft.
-      hand.set(slide[i], .04, -.12).applyMatrix4(hammerFrame);
       solveTwoBone(arm.shoulderPoint, hand, .60, .58, pole, elbow);
       probe.copy(elbow).applyMatrix4(hammerInverse);
       const roll=THREE.MathUtils.clamp(Math.atan2(probe.y, -probe.z), -.85, .85) * .8;
@@ -55204,11 +55206,12 @@ function createMech() {
       const c=Math.cos(roll), n=Math.sin(roll);
       hand.set(slide[i], .04 * c + .12 * n, .04 * n - .12 * c).applyMatrix4(hammerFrame);
       solveTwoBone(arm.shoulderPoint, hand, .60, .58, pole, elbow);
+      armFace.copy(bend).negate();
       orient(arm.upper, arm.shoulderPoint, elbow);
       aim.copy(arm.upper.quaternion);
-      rollSegment(arm.upper, arm.shoulderPoint, elbow, shaftFace);
+      rollSegment(arm.upper, arm.shoulderPoint, elbow, armFace);
       orient(arm.forearm, elbow, hand);
-      rollSegment(arm.forearm, elbow, hand, shaftFace);
+      rollSegment(arm.forearm, elbow, hand, armFace);
       // The pauldron takes a little over half the upper arm's swing, so the arm
       // turns inside its shell instead of tearing out of a welded-on plate.
       arm.shoulder.quaternion.set(0, 0, 0, 1).slerp(aim, .45);
@@ -55389,15 +55392,15 @@ const ATTACKS={
       key(1.3,[-1.1645,.0983,-.4143],[.1514,1.042,.2808],[.14,-.7,0],[.01,-.12,.06]),
       key(1.6,[-.5016,.1288,-.3993],[.2726,.862,-.0187],[.04,-.2,0],[0,-.03,0]),key(1.9)],
     steps:[{i:0,a:.05,b:.26,x:-.76,z:-.22},{i:1,a:.28,b:.5,x:.74,z:.26}]},
-  sweep:{name:'Wrecking sweep',button:'Sweep',duration:1.5,hit:.6,hold:.03,trail:[.4,.74],ground:false,strength:.55,
-    keys:[key(0),key(.11,[-1.2489,.1396,-.0719],[.3542,1.097,-.2168],[-.01,.3,.03],[-.045,-.055,-.025]),
-      key(.22,[-2.0572,-.1669,.3473],[.3372,1.152,-.09],[-.02,.6,.06],[-.09,-.11,-.05]),
-      key(.4,[-2.3259,-.0811,.3031],[-.0151,1.115,.0109],[-.04,.8,.08],[-.1,-.12,-.06]),
-      key(.5,[-2.0476,-.3661,.2502],[.3571,1.16,-.0066],[.03,.07,-.005],[0,-.125,.02]),
-      key(.6,[-1.2314,.1871,-.3483],[.2054,.964,-.0738],[.1,-.66,-.09],[.1,-.13,.1]),key(.628,[-1.0312,.285,-.4095],[.3254,1.161,-.1226]),
-      key(.69,[-.9003,.1332,-.2589],[.3188,1.213,-.2977]),key(.8,[-1.1221,.0557,-.3755],[.0276,1.066,-.6177],[.09,-1.15,-.08],[.08,-.1,.08]),
-      key(.92,[-1.1261,.0969,-.4955],[.326,1.111,-.822],[.07,-.875,-.045],[.06,-.075,.05]),
-      key(1.05,[-.6883,.1426,-.3296],[.0491,.911,-.8016],[.05,-.6,-.01],[.04,-.05,.02]),key(1.5)],
+  sweep:{name:'Wrecking sweep',button:'Sweep',duration:1.5,hit:.6,hold:.03,trail:[.36,.86],ground:false,strength:.55,
+    keys:[key(0),key(.11,[-1.2489,.1396,-.0719],[.3542,1.097,-.2214],[-.01,.3,.03],[-.045,-.055,-.025]),
+      key(.22,[-2.0572,-.1669,.3473],[.3372,1.152,-.0897],[-.02,.6,.06],[-.09,-.11,-.05]),
+      key(.4,[-2.3259,-.0811,.3031],[-.0151,1.115,.0451],[-.04,.8,.08],[-.1,-.12,-.06]),
+      key(.5,[-2.0476,-.3661,.2502],[.3571,1.16,.0436],[.03,.07,-.005],[0,-.125,.02]),
+      key(.6,[-1.0312,.285,-.4095],[.3254,1.161,-.0719],[.1,-.66,-.09],[.1,-.13,.1]),key(.69,[-.9003,.1332,-.2589],[.3188,1.213,-.2917]),
+      key(.8,[-1.1221,.0557,-.3755],[.0276,1.066,-.6003],[.09,-1.15,-.08],[.08,-.1,.08]),
+      key(.92,[-1.1261,.0969,-.4955],[.326,1.111,-.8057],[.07,-.875,-.045],[.06,-.075,.05]),
+      key(1.05,[-.6883,.1426,-.3296],[.0491,.911,-.789],[.05,-.6,-.01],[.04,-.05,.02]),key(1.5)],
     steps:[{i:0,a:.05,b:.25,x:-.79,z:-.2},{i:1,a:.27,b:.4,x:.74,z:.18}]},
   lunge:{name:'Breaching strike',button:'Lunge',duration:1.65,hit:.6,hold:.05,trail:[.4,.72],ground:false,strength:.8,
     keys:[key(0),key(.1,[-.4343,.2673,-.1256],[.2406,.851,-.1775],[-.025,.17,.01],[-.015,-.065,-.045]),
@@ -55409,6 +55412,28 @@ const ATTACKS={
       key(.9,[-1.1077,.2396,-.7227],[.25,1.083,.6582],[.17,-.34,-.015],[0,-.12,.075]),
       key(1.1,[-.685,.1411,-.3287],[.046,.945,.4361],[.09,-.18,0],[0,-.09,.04]),key(1.65)],
     steps:[{i:0,a:.06,b:.28,x:-.7,z:-.22},{i:1,a:.34,b:.57,x:.69,z:.68},{i:0,a:.58,b:.84,x:-.7,z:.4}]},
+  lift:{name:'Anvil lift',button:'Lift',duration:1.55,hit:.62,hold:.055,trail:[.34,.72],ground:false,strength:.85,
+    keys:[key(0),key(.2,[-2.0853,-.4361,.644],[.101,1.162,.8263],[.1,.4,.04],[-.05,-.26,-.1]),
+      key(.38,[-2.279,-.0921,.3945],[.2834,1.137,1.8927],[.12,.52,.05],[-.06,-.32,-.12]),key(.444,[-2.131,-.1255,.3952],[.3413,1.252,2.2168]),
+      key(.5,[-1.1968,-.1375,.4505],[.4842,1.035,2.4358]),key(.62,[-.844,-.0256,.0342],[-.0478,1.28,2.8381],[-.1,-.5,-.04],[.02,-.06,.06]),
+      key(.689,[-1.0075,-.1821,.2144],[.3581,1.272,3.0639]),key(.78,[-.5428,-.2737,.799],[.3247,.952,3.3576],[-.22,-.28,-.02],[.02,.04,.02]),
+      key(.849,[-.493,-.1961,.3974],[.5199,.913,3.5088]),key(.988,[-.9188,.2324,-.1126],[.3649,1.167,3.5284]),
+      key(1.05,[-1.2692,.0731,-.0766],[.2388,1.003,3.2155],[-.08,-.1,0],[0,-.05,0]),key(1.55)],
+    steps:[{i:0,a:.04,b:.26,x:-.92,z:-.34},{i:1,a:.3,b:.52,x:.86,z:.3},{i:0,a:.95,b:1.25,x:-.72,z:.02}]},
+  jab:{name:'Haft jab',button:'Jab',duration:.85,hit:.3,hold:.03,trail:[.18,.42],ground:false,strength:.4,
+    keys:[key(0),key(.12,[-1.9733,.513,-.5493],[.2065,1.225,.2256],[.02,.26,.02],[-.02,-.12,-.06]),
+      key(.188,[-2.0657,.0707,-.2416],[.4348,1.188,.398]),key(.3,[-.7322,-.1593,.6195],[.1775,1.098,.4508],[.06,-.26,-.02],[.02,-.1,.1]),
+      key(.4,[-.8217,-.1953,.7766],[.0823,1.08,.3633],[.07,-.3,-.02],[.02,-.08,.11]),
+      key(.6,[-.554,-.2565,.0803],[.3215,.917,.0469],[.03,-.1,0],[0,-.05,.03]),key(.85)],
+    steps:[{i:1,a:.04,b:.2,x:.74,z:.3},{i:0,a:.34,b:.52,x:-.7,z:-.05}]},
+  forge:{name:'Drop forge',button:'Forge',duration:2.1,hit:.95,hold:.1,trail:[.68,1.02],ground:true,strength:1,
+    keys:[key(0),key(.3,[-.9126,-.3106,.7837],[.3393,1.078,-.1211],[-.18,.28,.04],[-.03,-.12,-.05]),
+      key(.5,[-.751,-.3238,.7968],[.4038,1.039,-.0017],[-.2,.22,.04],[-.03,-.14,-.05]),
+      key(.95,[-.2895,-.2051,.2151],[.2531,.789,.1612],[.3,-.6,-.05],[.02,-.34,.1]),
+      key(1.1,[-.2895,-.2051,.2151],[.2531,.789,.1612],[.3,-.6,-.05],[.02,-.34,.1]),
+      key(1.45,[-1.0072,-.1068,-.0426],[.1662,1.122,.1567],[.16,-.35,-.02],[.01,-.2,.05]),
+      key(1.8,[-1.182,.1402,-.3044],[.1661,1.007,-.0838],[.05,-.12,0],[0,-.06,.01]),key(2.1)],
+    steps:[{i:0,a:.06,b:.3,x:-.98,z:-.1},{i:1,a:.32,b:.56,x:.95,z:.14},{i:1,a:1.45,b:1.75,x:.74,z:.06},{i:0,a:1.6,b:1.9,x:-.74,z:0}]},
 };
 
 // Easing each segment on its own brings the hammer to a dead stop at every key,
@@ -55747,7 +55772,7 @@ function start() {
     if(movementKeys.includes(e.code)){e.preventDefault();keys.add(e.code);setMode('manual');}
     if(e.code==='Escape')settings(false);
     if(e.code==='KeyR')resetPosition();
-    const attacks={KeyJ:'smash',KeyK:'sweep',KeyL:'lunge'};
+    const attacks={KeyJ:'smash',KeyK:'sweep',KeyL:'lunge',KeyU:'lift',KeyI:'jab',KeyO:'forge'};
     if(attacks[e.code]&&!e.repeat){e.preventDefault();requestAttack(attacks[e.code]);}
   });
   window.addEventListener('keyup',e=>keys.delete(e.code));
@@ -55765,7 +55790,7 @@ function start() {
     function axis(i){const a=found.axes[i]??0;return Math.abs(a)<.16?0:Math.sign(a)*(Math.abs(a)-.16)/.84;}
     const x=axis(0),y=axis(1);azimuth-=axis(2)*dt*1.8;elevation=THREE.MathUtils.clamp(elevation+axis(3)*dt*1.2,.07,1.10);
     if(Math.hypot(x,y)>.03)setMode('manual');
-    for(const [i,fn] of [[9,()=>settings($('settings').hidden)],[10,resetPosition],[3,()=>requestAttack('smash')],[2,()=>requestAttack('sweep')],[0,()=>requestAttack('lunge')]]) {
+    for(const [i,fn] of [[9,()=>settings($('settings').hidden)],[10,resetPosition],[3,()=>requestAttack('smash')],[2,()=>requestAttack('sweep')],[0,()=>requestAttack('lunge')],[1,()=>requestAttack('jab')],[5,()=>requestAttack('lift')],[4,()=>requestAttack('forge')]]) {
       const down=!!found.buttons[i]?.pressed;if(down&&!pressed.has(i))fn();if(down)pressed.add(i);else pressed.delete(i);
     }
     return {x,y};
