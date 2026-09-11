@@ -5,39 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Procedural City Lab — Terrain + Roads</title>
   <style>
-    :root {
-      color-scheme: dark;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #101712;
-      color: #f5f4ea;
-    }
-    * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #101712; }
-    canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-    .hud {
-      position: fixed;
-      inset: max(12px, env(safe-area-inset-top)) 12px auto 12px;
-      z-index: 10;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      pointer-events: none;
-    }
-    .title-card, .controls {
-      pointer-events: auto;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(18,25,20,.84);
-      box-shadow: 0 14px 40px rgba(0,0,0,.24);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-    }
-    .title-card { border-radius: 18px; padding: 12px 14px; max-width: 340px; }
-    .eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #b9c9b8; }
-    h1 { margin: 3px 0 3px; font-size: clamp(18px,4vw,24px); line-height: 1.05; letter-spacing: -.03em; }
-    .subtitle { margin: 0; color: #cbd4c8; font-size: 12px; line-height: 1.35; }
-    .controls { width: min(306px,calc(100vw - 24px)); border-radius: 18px; padding: 12px; }
-    .controls.collapsed .control-body { display: none; }
+    :root { color-scheme:dark; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#101712; color:#f5f4ea; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:#101712; }
+    canvas { display:block; width:100%; height:100%; touch-action:none; }
+    .hud { position:fixed; inset:max(12px,env(safe-area-inset-top)) 12px auto 12px; z-index:10; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; pointer-events:none; }
+    .title-card,.controls { pointer-events:auto; border:1px solid rgba(255,255,255,.12); background:rgba(18,25,20,.84); box-shadow:0 14px 40px rgba(0,0,0,.24); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+    .title-card { border-radius:18px; padding:12px 14px; max-width:340px; }
+    .eyebrow { font-size:11px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#b9c9b8; }
+    h1 { margin:3px 0; font-size:clamp(18px,4vw,24px); line-height:1.05; letter-spacing:-.03em; }
+    .subtitle { margin:0; color:#cbd4c8; font-size:12px; line-height:1.35; }
+    .controls { width:min(306px,calc(100vw - 24px)); border-radius:18px; padding:12px; max-height:calc(100dvh - 28px); overflow:auto; }
+    .controls.collapsed .control-body { display:none; }
     .control-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
     .controls.collapsed .control-head { margin-bottom:0; }
     .control-head strong { font-size:13px; }
@@ -56,8 +35,8 @@
     .meta { margin-top:9px; display:grid; gap:4px; font-size:11px; color:#a9b5a7; font-variant-numeric:tabular-nums; }
     .meta strong { color:#e7eadf; font-weight:700; }
     .hint { position:fixed; left:50%; bottom:max(14px,env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:8; padding:8px 12px; border-radius:999px; background:rgba(15,21,17,.74); border:1px solid rgba(255,255,255,.1); color:#d5ddd2; font-size:11px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); pointer-events:none; white-space:nowrap; }
-    @media (max-width:680px) {
-      .hud { align-items:flex-start; }
+    #loadError { display:none; position:fixed; inset:35% 8% auto; z-index:20; padding:20px; background:#182018; border-radius:14px; font-size:14px; }
+    @media(max-width:680px) {
       .title-card { max-width:58vw; padding:10px 12px; }
       .subtitle { display:none; }
       .controls { width:auto; min-width:52px; padding:8px; }
@@ -67,12 +46,10 @@
     }
   </style>
   <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-    }
-  }
+  { "imports": {
+    "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  } }
   </script>
 </head>
 <body>
@@ -83,157 +60,136 @@
       <p class="subtitle">A quarter-mile test area. Roads seek gentler grades, avoid water, and locally cut/fill the land before later lots and buildings arrive.</p>
     </section>
     <section class="controls collapsed" id="controls">
-      <div class="control-head">
-        <strong>Generation controls</strong>
-        <button class="icon-btn" id="togglePanel" aria-label="Toggle controls">☰</button>
-      </div>
+      <div class="control-head"><strong>Generation controls</strong><button class="icon-btn" id="togglePanel" aria-label="Toggle controls" aria-expanded="false">☰</button></div>
       <div class="control-body">
-        <div class="row">
-          <label for="hillHeight"><span>Hill height</span><output id="hillHeightOut">12</output></label>
-          <input id="hillHeight" type="range" min="0" max="24" step="1" value="12" />
-        </div>
-        <div class="row">
-          <label for="roughness"><span>Roughness</span><output id="roughnessOut">0.45</output></label>
-          <input id="roughness" type="range" min="0" max="1" step="0.05" value="0.45" />
-        </div>
-        <div class="row">
-          <label for="waterLevel"><span>Water level</span><output id="waterLevelOut">-5</output></label>
-          <input id="waterLevel" type="range" min="-12" max="4" step="1" value="-5" />
-        </div>
+        <div class="row"><label for="hillHeight"><span>Hill height</span><output id="hillHeightOut">12</output></label><input id="hillHeight" type="range" min="0" max="24" step="1" value="12" /></div>
+        <div class="row"><label for="roughness"><span>Roughness</span><output id="roughnessOut">0.45</output></label><input id="roughness" type="range" min="0" max="1" step="0.05" value="0.45" /></div>
+        <div class="row"><label for="waterLevel"><span>Water level</span><output id="waterLevelOut">-5</output></label><input id="waterLevel" type="range" min="-12" max="4" step="1" value="-5" /></div>
         <label class="check-row" for="showRoads"><span>Show road layer</span><input id="showRoads" type="checkbox" checked /></label>
         <div class="button-row"><button id="newSeed">New seed</button><button class="primary" id="regenerate">Regenerate</button></div>
         <div class="meta">
-          <div><span>Area</span> <strong>410 m × 410 m (~0.25 mi)</strong></div>
-          <div><span>Scale</span> <strong>1 world unit = 1 meter</strong></div>
-          <div><span>Roads</span> <strong id="roadStats">—</strong></div>
-          <div><span>Seed</span> <strong id="seedLabel">—</strong></div>
+          <div>Area <strong>410 m × 410 m (~0.25 mi)</strong></div>
+          <div>Scale <strong>1 world unit = 1 meter</strong></div>
+          <div>Roads <strong id="roadStats">—</strong></div>
+          <div>Seed <strong id="seedLabel">—</strong></div>
+          <div>Surface <strong>Joined surface · r2</strong></div>
         </div>
       </div>
     </section>
   </div>
   <div class="hint">Drag to orbit · pinch / wheel to zoom</div>
+  <div id="loadError" role="alert"></div>
+  <script>
+    // Module fetch errors should never leave a silently blank viewport.
+    function showLoadError(){
+      if(document.querySelector('body > canvas')) return;
+      const el=document.getElementById('loadError');
+      el.textContent='The 3D renderer did not load. Reload this hosted page with a connection. If it persists, please send the error from the browser console.';
+      el.style.display='block';
+    }
+    addEventListener('error',showLoadError);
+    addEventListener('unhandledrejection',showLoadError);
+  </script>
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { createRoadField, paintRoadSurface } from './assets/city-lab/road-surface.mjs';
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xb9c8bd);
-    scene.fog = new THREE.Fog(0xb9c8bd,360,760);
-
-    const camera = new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,1600);
+    const scene=new THREE.Scene();
+    scene.background=new THREE.Color(0xb9c8bd);
+    scene.fog=new THREE.Fog(0xb9c8bd,360,760);
+    const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.5,1600);
     camera.position.set(260,205,275);
-
-    const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+    const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
     renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     renderer.setSize(innerWidth,innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
     document.body.prepend(renderer.domElement);
-
-    const controls = new OrbitControls(camera,renderer.domElement);
+    const controls=new OrbitControls(camera,renderer.domElement);
     controls.target.set(0,0,0);
-    controls.enableDamping = true;
-    controls.dampingFactor = .08;
-    controls.minDistance = 70;
-    controls.maxDistance = 650;
-    controls.maxPolarAngle = Math.PI*.49;
-    controls.minPolarAngle = Math.PI*.06;
-
+    controls.enableDamping=true; controls.dampingFactor=.08;
+    controls.minDistance=70; controls.maxDistance=650;
+    controls.maxPolarAngle=Math.PI*.49; controls.minPolarAngle=Math.PI*.06;
     scene.add(new THREE.HemisphereLight(0xf1f4e8,0x556253,2.15));
-    const sun = new THREE.DirectionalLight(0xfff2cf,3.2);
-    sun.position.set(-180,260,130);
-    sun.castShadow = true;
+    const sun=new THREE.DirectionalLight(0xfff2cf,3.2);
+    sun.position.set(-180,260,130); sun.castShadow=true;
     sun.shadow.mapSize.set(2048,2048);
-    sun.shadow.camera.left = -260;
-    sun.shadow.camera.right = 260;
-    sun.shadow.camera.top = 260;
-    sun.shadow.camera.bottom = -260;
-    sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 650;
+    sun.shadow.camera.left=-260; sun.shadow.camera.right=260;
+    sun.shadow.camera.top=260; sun.shadow.camera.bottom=-260;
+    sun.shadow.camera.near=1; sun.shadow.camera.far=650;
+    sun.shadow.bias=-.0002; sun.shadow.normalBias=.25;
     scene.add(sun);
-
-    const terrainGroup = new THREE.Group();
-    const roadGroup = new THREE.Group();
-    const guideGroup = new THREE.Group();
-    scene.add(terrainGroup,roadGroup,guideGroup);
-
-    const worldSize = 410;
-    const segments = 164;
-    const plannerCells = 32;
-    const plannerStep = worldSize/plannerCells;
-    const halfWorld = worldSize/2;
-    let seed = Math.floor(Math.random()*1_000_000_000);
-    let currentParams = {hillHeight:12,roughness:.45,waterLevel:-5};
-    let roads = [];
-
-    const ui = {
-      controls:document.getElementById('controls'), toggle:document.getElementById('togglePanel'),
-      hillHeight:document.getElementById('hillHeight'), roughness:document.getElementById('roughness'), waterLevel:document.getElementById('waterLevel'),
-      showRoads:document.getElementById('showRoads'), hillHeightOut:document.getElementById('hillHeightOut'), roughnessOut:document.getElementById('roughnessOut'),
-      waterLevelOut:document.getElementById('waterLevelOut'), seedLabel:document.getElementById('seedLabel'), roadStats:document.getElementById('roadStats'),
-      newSeed:document.getElementById('newSeed'), regenerate:document.getElementById('regenerate')
+    const terrainGroup=new THREE.Group(),guideGroup=new THREE.Group();
+    scene.add(terrainGroup,guideGroup);
+    const worldSize=410,segments=256,plannerCells=32;
+    const plannerStep=worldSize/plannerCells,halfWorld=worldSize/2;
+    const query=new URLSearchParams(location.search),givenSeed=query.get('seed');
+    let seed=givenSeed!==null && /^\d+$/.test(givenSeed) ? Number(givenSeed)>>>0 : Math.floor(Math.random()*1_000_000_000);
+    let currentParams={hillHeight:12,roughness:.45,waterLevel:-5};
+    let roads=[],roadField=null,groundTexture=null,roadTexture=null,terrainMaterial=null,terrainMesh=null;
+    const ui={
+      controls:document.getElementById('controls'),toggle:document.getElementById('togglePanel'),
+      hillHeight:document.getElementById('hillHeight'),roughness:document.getElementById('roughness'),waterLevel:document.getElementById('waterLevel'),
+      showRoads:document.getElementById('showRoads'),hillHeightOut:document.getElementById('hillHeightOut'),roughnessOut:document.getElementById('roughnessOut'),
+      waterLevelOut:document.getElementById('waterLevelOut'),seedLabel:document.getElementById('seedLabel'),roadStats:document.getElementById('roadStats'),
+      newSeed:document.getElementById('newSeed'),regenerate:document.getElementById('regenerate')
     };
-
     function hash2(x,y,s=seed){
       let n=Math.imul((x|0)^s,374761393)+Math.imul((y|0)^(s>>>7),668265263);
       n^=n>>>13; n=Math.imul(n,1274126177); n^=n>>>16;
-      return (n>>>0)/4294967295;
+      return(n>>>0)/4294967295;
     }
     function seededRandom(salt=0){
       let state=(seed+salt*1013904223)>>>0;
-      return()=>{ state+=0x6D2B79F5; let t=state; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return((t^(t>>>14))>>>0)/4294967296; };
+      return()=>{state+=0x6D2B79F5;let t=state;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
     }
-    const smooth=t=>t*t*(3-2*t);
-    const smoother=t=>t*t*t*(t*(t*6-15)+10);
-    const lerp=(a,b,t)=>a+(b-a)*t;
-
+    const smooth=t=>t*t*(3-2*t),lerp=(a,b,t)=>a+(b-a)*t;
     function valueNoise(x,y,scale,salt=0){
-      x/=scale; y/=scale;
-      const x0=Math.floor(x), y0=Math.floor(y), tx=smooth(x-x0), ty=smooth(y-y0);
-      const a=hash2(x0,y0,seed+salt), b=hash2(x0+1,y0,seed+salt), c=hash2(x0,y0+1,seed+salt), d=hash2(x0+1,y0+1,seed+salt);
+      x/=scale;y/=scale;
+      const x0=Math.floor(x),y0=Math.floor(y),tx=smooth(x-x0),ty=smooth(y-y0);
+      const a=hash2(x0,y0,seed+salt),b=hash2(x0+1,y0,seed+salt),c=hash2(x0,y0+1,seed+salt),d=hash2(x0+1,y0+1,seed+salt);
       return lerp(lerp(a,b,tx),lerp(c,d,tx),ty)*2-1;
     }
     function fbm(x,y,roughness){
       let value=0,amplitude=1,total=0;
-      const persistence=.32+roughness*.34, scales=[118,59,29.5,14.75];
-      for(let i=0;i<scales.length;i++){ value+=valueNoise(x,y,scales[i],i*9137)*amplitude; total+=amplitude; amplitude*=persistence; }
+      const persistence=.32+roughness*.34,scales=[118,59,29.5,14.75];
+      for(let i=0;i<scales.length;i++){value+=valueNoise(x,y,scales[i],i*9137)*amplitude;total+=amplitude;amplitude*=persistence;}
       return value/total;
     }
     function baseTerrainHeight(x,z){
-      const {hillHeight,roughness}=currentParams;
-      const broad=fbm(x,z,roughness), micro=valueNoise(x+31,z-17,20,771)*roughness, longSlope=(x/worldSize)*2.4;
+      const{hillHeight,roughness}=currentParams;
+      const broad=fbm(x,z,roughness),micro=valueNoise(x+31,z-17,20,771)*roughness,longSlope=(x/worldSize)*2.4;
       const bx=72,bz=-58,basinR=Math.hypot(x-bx,z-bz)/72;
       const basin=-Math.max(0,1-basinR*basinR)*hillHeight*.42;
       const ridgeDistance=Math.abs((z+.28*x)-82)/62;
       const ridge=Math.max(0,1-ridgeDistance)**2*hillHeight*.36;
       return broad*hillHeight*.64+micro*hillHeight*.08+basin+ridge+longSlope;
     }
-
-    function plannerNode(ix,iz){ return {ix,iz,x:-halfWorld+ix*plannerStep,z:-halfWorld+iz*plannerStep}; }
+    function plannerNode(ix,iz){return{ix,iz,x:-halfWorld+ix*plannerStep,z:-halfWorld+iz*plannerStep};}
     const nodeKey=(ix,iz)=>`${ix},${iz}`;
-
     function aStar(start,goal){
       const open=new Map(),closed=new Set(),gScore=new Map(),cameFrom=new Map();
       const startKey=nodeKey(start.ix,start.iz),goalKey=nodeKey(goal.ix,goal.iz);
       const heuristic=(a,b)=>Math.hypot(a.ix-b.ix,a.iz-b.iz)*plannerStep;
-      open.set(startKey,{...start,f:heuristic(start,goal)}); gScore.set(startKey,0);
+      open.set(startKey,{...start,f:heuristic(start,goal)});gScore.set(startKey,0);
       const dirs=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
       while(open.size){
         let currentKey=null,current=null;
-        for(const [key,item] of open){ if(!current||item.f<current.f){ current=item; currentKey=key; } }
+        for(const[key,item]of open){if(!current||item.f<current.f){current=item;currentKey=key;}}
         if(currentKey===goalKey){
-          const path=[plannerNode(current.ix,current.iz)]; let key=currentKey;
-          while(cameFrom.has(key)){ key=cameFrom.get(key); const [ix,iz]=key.split(',').map(Number); path.push(plannerNode(ix,iz)); }
-          path.reverse(); return path;
+          const path=[plannerNode(current.ix,current.iz)];let key=currentKey;
+          while(cameFrom.has(key)){key=cameFrom.get(key);const[ix,iz]=key.split(',').map(Number);path.push(plannerNode(ix,iz));}
+          path.reverse();return path;
         }
-        open.delete(currentKey); closed.add(currentKey);
-        const cw=plannerNode(current.ix,current.iz), currentH=baseTerrainHeight(cw.x,cw.z);
-        for(const [dx,dz] of dirs){
+        open.delete(currentKey);closed.add(currentKey);
+        const cw=plannerNode(current.ix,current.iz),currentH=baseTerrainHeight(cw.x,cw.z);
+        for(const[dx,dz]of dirs){
           const nx=current.ix+dx,nz=current.iz+dz;
-          if(nx<0||nz<0||nx>plannerCells||nz>plannerCells) continue;
-          const key=nodeKey(nx,nz); if(closed.has(key)) continue;
-          const nw=plannerNode(nx,nz), nextH=baseTerrainHeight(nw.x,nw.z), horizontal=Math.hypot(dx,dz)*plannerStep;
+          if(nx<0||nz<0||nx>plannerCells||nz>plannerCells)continue;
+          const key=nodeKey(nx,nz);if(closed.has(key))continue;
+          const nw=plannerNode(nx,nz),nextH=baseTerrainHeight(nw.x,nw.z),horizontal=Math.hypot(dx,dz)*plannerStep;
           const slope=Math.abs(nextH-currentH)/horizontal;
           const slopePenalty=horizontal*Math.min(6,slope*16);
           const waterDepth=currentParams.waterLevel+.8-nextH;
@@ -241,167 +197,161 @@
           const edgePenalty=(nx===0||nz===0||nx===plannerCells||nz===plannerCells)?2:0;
           const tentative=(gScore.get(currentKey)??Infinity)+horizontal+slopePenalty+waterPenalty+edgePenalty;
           if(tentative<(gScore.get(key)??Infinity)){
-            cameFrom.set(key,currentKey); gScore.set(key,tentative);
+            cameFrom.set(key,currentKey);gScore.set(key,tentative);
             open.set(key,{ix:nx,iz:nz,f:tentative+heuristic({ix:nx,iz:nz},goal)});
           }
         }
       }
-      return [plannerNode(start.ix,start.iz),plannerNode(goal.ix,goal.iz)];
+      return[plannerNode(start.ix,start.iz),plannerNode(goal.ix,goal.iz)];
     }
-
     function roadFromPlannerPath(name,type,width,plannerPath){
       const controlPoints=plannerPath.map(p=>new THREE.Vector3(p.x,baseTerrainHeight(p.x,p.z),p.z));
       const curve=new THREE.CatmullRomCurve3(controlPoints,false,'catmullrom',.18);
       const approxLength=controlPoints.reduce((sum,p,i)=>i?sum+p.distanceTo(controlPoints[i-1]):0,0);
-      const count=Math.max(10,Math.ceil(approxLength/4));
-      const points=curve.getPoints(count), rawY=points.map(p=>baseTerrainHeight(p.x,p.z));
+      // Equal-distance dense samples avoid faceted edges and uneven dash spacing.
+      curve.arcLengthDivisions=Math.max(200,plannerPath.length*30);
+      curve.updateArcLengths();
+      const count=Math.max(10,Math.ceil(approxLength/1.5));
+      const points=curve.getSpacedPoints(count),rawY=points.map(p=>baseTerrainHeight(p.x,p.z));
       const filtered=rawY.map((_,i)=>{
         let total=0,weight=0;
-        for(let k=-3;k<=3;k++){ const j=THREE.MathUtils.clamp(i+k,0,rawY.length-1),w=4-Math.abs(k); total+=rawY[j]*w; weight+=w; }
+        for(let k=-8;k<=8;k++){const j=THREE.MathUtils.clamp(i+k,0,rawY.length-1),w=9-Math.abs(k);total+=rawY[j]*w;weight+=w;}
         return total/weight;
       });
       for(let i=1;i<filtered.length;i++){
-        const d=Math.hypot(points[i].x-points[i-1].x,points[i].z-points[i-1].z), maxRise=d*.08;
+        const d=Math.hypot(points[i].x-points[i-1].x,points[i].z-points[i-1].z),maxRise=d*.08;
         filtered[i]=THREE.MathUtils.clamp(filtered[i],filtered[i-1]-maxRise,filtered[i-1]+maxRise);
       }
       for(let i=filtered.length-2;i>=0;i--){
-        const d=Math.hypot(points[i].x-points[i+1].x,points[i].z-points[i+1].z), maxRise=d*.08;
+        const d=Math.hypot(points[i].x-points[i+1].x,points[i].z-points[i+1].z),maxRise=d*.08;
         filtered[i]=THREE.MathUtils.clamp(filtered[i],filtered[i+1]-maxRise,filtered[i+1]+maxRise);
       }
       points.forEach((p,i)=>p.y=filtered[i]);
-      return {name,type,width,points,plannerPath};
+      return{name,type,width,points,plannerPath};
     }
-
     function generateRoadPlan(){
       const rnd=seededRandom(77);
       const sideZ=()=>THREE.MathUtils.clamp(Math.floor(7+rnd()*(plannerCells-14)),2,plannerCells-2);
-      const west={ix:0,iz:sideZ()}, east={ix:plannerCells,iz:sideZ()};
+      const west={ix:0,iz:sideZ()},east={ix:plannerCells,iz:sideZ()};
       const arterialPath=aStar(west,east);
       const arterial=roadFromPlannerPath('Arterial','arterial',12,arterialPath);
       const branchNode=fraction=>arterialPath[Math.floor((arterialPath.length-1)*fraction)];
-      const northStart=branchNode(.34), southStart=branchNode(.67);
+      const northStart=branchNode(.34),southStart=branchNode(.67);
       const northGoal={ix:THREE.MathUtils.clamp(northStart.ix+Math.round((rnd()-.5)*8),2,plannerCells-2),iz:0};
       const southGoal={ix:THREE.MathUtils.clamp(southStart.ix+Math.round((rnd()-.5)*8),2,plannerCells-2),iz:plannerCells};
-      const northPath=aStar(northStart,northGoal), southPath=aStar(southStart,southGoal);
+      const northPath=aStar(northStart,northGoal),southPath=aStar(southStart,southGoal);
       const result=[arterial,roadFromPlannerPath('North collector','collector',8,northPath),roadFromPlannerPath('South collector','collector',8,southPath)];
       const sources=[arterialPath,northPath,southPath,arterialPath];
       for(let i=0;i<4;i++){
-        const source=sources[i], startIndex=Math.floor((.24+rnd()*.52)*(source.length-1)), start=source[startIndex], angle=rnd()*Math.PI*2, reach=5+Math.floor(rnd()*4);
+        const source=sources[i],startIndex=Math.floor((.24+rnd()*.52)*(source.length-1)),start=source[startIndex],angle=rnd()*Math.PI*2,reach=5+Math.floor(rnd()*4);
         const goal={ix:THREE.MathUtils.clamp(start.ix+Math.round(Math.cos(angle)*reach),2,plannerCells-2),iz:THREE.MathUtils.clamp(start.iz+Math.round(Math.sin(angle)*reach),2,plannerCells-2)};
-        if(goal.ix===start.ix&&goal.iz===start.iz) goal.ix=THREE.MathUtils.clamp(goal.ix+3,2,plannerCells-2);
+        if(goal.ix===start.ix&&goal.iz===start.iz)goal.ix=THREE.MathUtils.clamp(goal.ix+3,2,plannerCells-2);
         result.push(roadFromPlannerPath(`Local ${i+1}`,'local',6.5,aStar(start,goal)));
       }
       return result;
     }
-
-    function gradedTerrainHeight(x,z){
-      const base=baseTerrainHeight(x,z); let blend=0,target=base;
-      for(const road of roads){
-        const shoulder=road.width*.5+(road.type==='arterial'?11:road.type==='collector'?8:6);
-        let bestD2=Infinity,roadY=base;
-        for(const p of road.points){ const dx=x-p.x,dz=z-p.z,d2=dx*dx+dz*dz; if(d2<bestD2){ bestD2=d2; roadY=p.y; } }
-        const d=Math.sqrt(bestD2);
-        if(d<shoulder){
-          const flatRadius=road.width*.62;
-          const t=d<=flatRadius?1:1-smoother(THREE.MathUtils.clamp((d-flatRadius)/(shoulder-flatRadius),0,1));
-          if(t>blend){ blend=t; target=roadY; }
-        }
-      }
-      return lerp(base,target,blend);
-    }
-
+    function gradedTerrainHeight(x,z){return roadField?roadField.height(x,z):baseTerrainHeight(x,z);}
     function terrainColor(height,waterLevel){
       const deep=new THREE.Color(0x61735c),grass=new THREE.Color(0x82906b),high=new THREE.Color(0xa9aa83),rocky=new THREE.Color(0x8a8878),shore=new THREE.Color(0xa8a17d);
-      if(height<waterLevel+1.1) return shore;
-      if(height<8) return deep.clone().lerp(grass,THREE.MathUtils.clamp((height-waterLevel)/10,0,1));
-      if(height<16) return grass.clone().lerp(high,(height-8)/8);
+      if(height<waterLevel+1.1)return shore;
+      if(height<8)return deep.clone().lerp(grass,THREE.MathUtils.clamp((height-waterLevel)/10,0,1));
+      if(height<16)return grass.clone().lerp(high,(height-8)/8);
       return high.clone().lerp(rocky,THREE.MathUtils.clamp((height-16)/14,0,1));
     }
-
     function disposeGroup(group){
       while(group.children.length){
-        const child=group.children.pop();
-        child.traverse?.(obj=>{ obj.geometry?.dispose?.(); if(Array.isArray(obj.material)) obj.material.forEach(m=>m.dispose?.()); else obj.material?.dispose?.(); });
+        const child=group.children[0];group.remove(child);
+        child.traverse(obj=>{
+          obj.geometry?.dispose();
+          if(Array.isArray(obj.material))obj.material.forEach(m=>m.dispose());else obj.material?.dispose();
+        });
       }
     }
-
-    function ribbonGeometry(points,width,lift=0){
-      const verts=[],indices=[],half=width/2;
-      for(let i=0;i<points.length;i++){
-        const prev=points[Math.max(0,i-1)],next=points[Math.min(points.length-1,i+1)],tx=next.x-prev.x,tz=next.z-prev.z,len=Math.hypot(tx,tz)||1,nx=-tz/len,nz=tx/len,p=points[i];
-        verts.push(p.x+nx*half,p.y+lift,p.z+nz*half,p.x-nx*half,p.y+lift,p.z-nz*half);
-        if(i<points.length-1){ const a=i*2; indices.push(a,a+2,a+1,a+1,a+2,a+3); }
-      }
-      const geometry=new THREE.BufferGeometry();
-      geometry.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-      geometry.setIndex(indices); geometry.computeVertexNormals(); return geometry;
+    function canvasTexture(canvas){
+      const texture=new THREE.CanvasTexture(canvas);
+      texture.colorSpace=THREE.SRGBColorSpace;
+      texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+      return texture;
     }
-
-    function addRoadMesh(road){
-      const shoulderMaterial=new THREE.MeshStandardMaterial({color:0x857d69,roughness:1});
-      const asphaltMaterial=new THREE.MeshStandardMaterial({color:road.type==='arterial'?0x3f4442:0x484c48,roughness:.96});
-      const shoulder=new THREE.Mesh(ribbonGeometry(road.points,road.width+2.2,.10),shoulderMaterial);
-      const asphalt=new THREE.Mesh(ribbonGeometry(road.points,road.width,.16),asphaltMaterial);
-      shoulder.receiveShadow=true; asphalt.receiveShadow=true; roadGroup.add(shoulder,asphalt);
-      const markingColor=road.type==='arterial'?0xe6c75b:0xd9d8cd;
-      const dashMat=new THREE.MeshStandardMaterial({color:markingColor,roughness:.72});
-      const dashGeom=new THREE.BoxGeometry(.16,.055,road.type==='local'?2:3.2),every=road.type==='local'?5:4;
-      for(let i=2;i<road.points.length-2;i+=every){
-        const p=road.points[i],prev=road.points[i-1],next=road.points[i+1],dash=new THREE.Mesh(dashGeom,dashMat);
-        dash.position.set(p.x,p.y+.215,p.z); dash.rotation.y=Math.atan2(next.x-prev.x,next.z-prev.z); roadGroup.add(dash);
-      }
+    function buildSurfaceTextures(groundCanvas){
+      groundTexture=canvasTexture(groundCanvas);
+      const canvas=document.createElement('canvas');
+      const mobile=matchMedia('(pointer:coarse)').matches;
+      canvas.width=canvas.height=Math.min(mobile?2048:4096,renderer.capabilities.maxTextureSize);
+      const ctx=canvas.getContext('2d',{alpha:false});
+      ctx.imageSmoothingEnabled=true;
+      ctx.drawImage(groundCanvas,0,0,canvas.width,canvas.height);
+      // UV (0,1) is the -X/-Z corner of PlaneGeometry after rotation.
+      const scale=canvas.width/worldSize;
+      ctx.setTransform(scale,0,0,scale,canvas.width/2,canvas.height/2);
+      paintRoadSurface(ctx,roads,roadField);
+      roadTexture=canvasTexture(canvas);
     }
-
     function addScaleRuler(){
       const z=halfWorld-18,startX=-halfWorld+28,length=100,pts=[];
-      for(let i=0;i<=20;i++){ const x=startX+length*(i/20); pts.push(new THREE.Vector3(x,gradedTerrainHeight(x,z)+.8,z)); }
-      const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xf2efdd}));
-      guideGroup.add(line);
-      for(const x of [startX,startX+length]){
+      for(let i=0;i<=20;i++){const x=startX+length*i/20;pts.push(new THREE.Vector3(x,gradedTerrainHeight(x,z)+.8,z));}
+      guideGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xf2efdd})));
+      for(const x of[startX,startX+length]){
         const y=gradedTerrainHeight(x,z)+.8,tick=new THREE.Mesh(new THREE.BoxGeometry(.35,2.2,.35),new THREE.MeshBasicMaterial({color:0xf2efdd}));
-        tick.position.set(x,y+.8,z); guideGroup.add(tick);
+        tick.position.set(x,y+.8,z);guideGroup.add(tick);
       }
     }
-
     function generateScene(){
-      disposeGroup(terrainGroup); disposeGroup(roadGroup); disposeGroup(guideGroup);
+      const started=performance.now();
+      disposeGroup(terrainGroup);disposeGroup(guideGroup);
+      groundTexture?.dispose();roadTexture?.dispose();
       currentParams={hillHeight:Number(ui.hillHeight.value),roughness:Number(ui.roughness.value),waterLevel:Number(ui.waterLevel.value)};
-      ui.hillHeightOut.value=currentParams.hillHeight; ui.roughnessOut.value=currentParams.roughness.toFixed(2); ui.waterLevelOut.value=currentParams.waterLevel; ui.seedLabel.textContent=String(seed);
-      roads=generateRoadPlan();
-
-      const geometry=new THREE.PlaneGeometry(worldSize,worldSize,segments,segments); geometry.rotateX(-Math.PI/2);
-      const pos=geometry.attributes.position,colors=[];
+      ui.hillHeightOut.value=currentParams.hillHeight;ui.roughnessOut.value=currentParams.roughness.toFixed(2);ui.waterLevelOut.value=currentParams.waterLevel;ui.seedLabel.textContent=String(seed);
+      roads=generateRoadPlan();roadField=createRoadField(roads,baseTerrainHeight);
+      const geometry=new THREE.PlaneGeometry(worldSize,worldSize,segments,segments);geometry.rotateX(-Math.PI/2);
+      const pos=geometry.attributes.position;
+      const groundCanvas=document.createElement('canvas');
+      groundCanvas.width=groundCanvas.height=segments+1;
+      const ctx=groundCanvas.getContext('2d'),image=ctx.createImageData(segments+1,segments+1);
+      let minHeight=Infinity;
       for(let i=0;i<pos.count;i++){
-        const x=pos.getX(i),z=pos.getZ(i),y=gradedTerrainHeight(x,z); pos.setY(i,y);
-        const c=terrainColor(y,currentParams.waterLevel); colors.push(c.r,c.g,c.b);
+        const x=pos.getX(i),z=pos.getZ(i),y=gradedTerrainHeight(x,z);pos.setY(i,y);minHeight=Math.min(minHeight,y);
+        const c=terrainColor(y,currentParams.waterLevel).convertLinearToSRGB(),k=i*4;
+        image.data[k]=Math.round(c.r*255);image.data[k+1]=Math.round(c.g*255);image.data[k+2]=Math.round(c.b*255);image.data[k+3]=255;
       }
-      geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3)); geometry.computeVertexNormals();
-      const terrain=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.98,metalness:0}));
-      terrain.receiveShadow=true; terrain.castShadow=true; terrainGroup.add(terrain);
-
+      ctx.putImageData(image,0,0);buildSurfaceTextures(groundCanvas);
+      geometry.computeVertexNormals();
+      terrainMaterial=new THREE.MeshStandardMaterial({map:ui.showRoads.checked?roadTexture:groundTexture,roughness:.98,metalness:0});
+      terrainMesh=new THREE.Mesh(geometry,terrainMaterial);
+      terrainMesh.name='unified-terrain-road-surface';
+      terrainMesh.receiveShadow=true;terrainMesh.castShadow=true;terrainGroup.add(terrainMesh);
       const water=new THREE.Mesh(new THREE.PlaneGeometry(worldSize*.985,worldSize*.985),new THREE.MeshStandardMaterial({color:0x6f9697,transparent:true,opacity:.68,roughness:.25,metalness:.03}));
-      water.rotation.x=-Math.PI/2; water.position.y=currentParams.waterLevel; terrainGroup.add(water);
-
+      water.rotation.x=-Math.PI/2;water.position.y=currentParams.waterLevel;terrainGroup.add(water);
       const border=new THREE.Mesh(new THREE.BoxGeometry(worldSize+4,6,worldSize+4),new THREE.MeshStandardMaterial({color:0x586552,roughness:1}));
-      border.position.y=-7; terrainGroup.add(border);
-
-      roads.forEach(addRoadMesh); addScaleRuler(); roadGroup.visible=ui.showRoads.checked;
-      const length=roads.reduce((sum,road)=>{ for(let i=1;i<road.points.length;i++) sum+=road.points[i].distanceTo(road.points[i-1]); return sum; },0);
+      // The old fixed slab could poke through low terrain and even the roads.
+      border.position.y=Math.min(minHeight,currentParams.waterLevel)-4;terrainGroup.add(border);
+      addScaleRuler();
+      const length=roads.reduce((sum,road)=>{for(let i=1;i<road.points.length;i++)sum+=road.points[i].distanceTo(road.points[i-1]);return sum;},0);
       ui.roadStats.textContent=`${roads.length} roads · ${(length/1000).toFixed(2)} km`;
+      document.body.dataset.ready='true';
+      document.body.dataset.generationMs=String(Math.round(performance.now()-started));
+      // Preserve a seed in the link so a phone screenshot can be reproduced.
+      try{const url=new URL(location.href);url.searchParams.set('seed',String(seed));history.replaceState(null,'',url);}catch{}
     }
-
-    ui.toggle.addEventListener('click',()=>ui.controls.classList.toggle('collapsed'));
+    ui.toggle.addEventListener('click',()=>{
+      const collapsed=ui.controls.classList.toggle('collapsed');ui.toggle.setAttribute('aria-expanded',String(!collapsed));
+    });
     ui.regenerate.addEventListener('click',generateScene);
-    ui.newSeed.addEventListener('click',()=>{ seed=Math.floor(Math.random()*1_000_000_000); generateScene(); });
-    ui.showRoads.addEventListener('change',()=>roadGroup.visible=ui.showRoads.checked);
-    for(const el of [ui.hillHeight,ui.roughness,ui.waterLevel]){
-      el.addEventListener('input',()=>{ ui.hillHeightOut.value=ui.hillHeight.value; ui.roughnessOut.value=Number(ui.roughness.value).toFixed(2); ui.waterLevelOut.value=ui.waterLevel.value; });
+    ui.newSeed.addEventListener('click',()=>{seed=Math.floor(Math.random()*1_000_000_000);generateScene();});
+    ui.showRoads.addEventListener('change',()=>{terrainMaterial.map=ui.showRoads.checked?roadTexture:groundTexture;});
+    for(const el of[ui.hillHeight,ui.roughness,ui.waterLevel]){
+      el.addEventListener('input',()=>{ui.hillHeightOut.value=ui.hillHeight.value;ui.roughnessOut.value=Number(ui.roughness.value).toFixed(2);ui.waterLevelOut.value=ui.waterLevel.value;});
       el.addEventListener('change',generateScene);
     }
-    function resize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
-    addEventListener('resize',resize);
+    addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
     generateScene();
-    renderer.setAnimationLoop(()=>{ controls.update(); renderer.render(scene,camera); });
+    // Opt-in inspection hook for reproducible browser regression tests.
+    if(query.has('debug'))window.__cityRoadLab={
+      get roads(){return roads;},get field(){return roadField;},get mesh(){return terrainMesh;},
+      get textures(){return{ground:groundTexture,roads:roadTexture};},renderer,camera,controls,scene,
+      regenerate(nextSeed=seed){seed=nextSeed>>>0;generateScene();}
+    };
+    renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});
   </script>
 </body>
 </html>
