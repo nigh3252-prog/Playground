@@ -12,7 +12,7 @@ export const STRATEGIC_TYPES={
 const BIOME_PRODUCTIVITY=[0,0,.08,.38,.64,.72,.88,.48,.20,.20,.035,.008];
 const BIOME_FRICTION=[.12,.12,4.2,2.35,1.72,1.34,1.0,1.18,1.50,2.55,4.4,7.0];
 const eachNeighbor=(mesh,i,fn)=>{for(let k=mesh.offsets[i];k<mesh.offsets[i+1];k++)fn(mesh.neighbors[k],mesh.distances[k],k);};
-const gaussian=(x,c,w)=>Math.exp(-((x-c)/w)**2);
+const gaussian=(x,c,w)=>Math.exp(-(((x-c)/w)**2));
 const angularDifference=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
 
 class MinHeap{
