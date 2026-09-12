@@ -18,6 +18,8 @@ export const DEFAULT_DRAINAGE_CONDITIONING=Object.freeze({
   catchmentDepthScaleM:65,
   catchmentReferenceKm2:500,
   maxFillDepthCapM:800,
+  lowReliefSlopeThreshold:.02,
+  lowReliefDepthFloorM:35,
   minFloorElevationM:20,
   outletGradeMPerKm:.02,
   neighborCutFraction:.12,
@@ -34,17 +36,17 @@ function percentile(values,q){const a=[...values].sort((x,y)=>x-y);return a.leng
 
 /** Coarse-grid outlet incision proxy.
  *
- * Large contributing catchments only gain strong incision power in genuinely
- * rugged terrain. Below roughly 1.5% P95 slope, catchment size contributes no
- * extra cutting power; this preserves low-relief lake country. Repeating the
- * pass exposes nested closures after an upstream outlet opens. Arid climates
- * retain substantially less incision capacity.
+ * Low-relief landscapes get a small minimum correction because a several-km
+ * sample can easily miss a shallow river outlet behind a 20–30 m interfluve.
+ * Large contributing catchments gain extra incision only in genuinely rugged
+ * terrain. Repeating the pass exposes nested closures after an upstream outlet
+ * opens. Arid climates retain substantially less incision capacity.
  */
 export function conditionRegionalDrainage(terrain,overrides={}){
   if(!terrain?.mesh||!terrain.height||!terrain.ocean)throw new TypeError('Drainage conditioning requires terrain mesh, height and ocean fields');
   const cfg={...DEFAULT_DRAINAGE_CONDITIONING,...overrides},height=Float32Array.from(terrain.height),mesh=terrain.mesh,history=terrain.landHistory||new Uint8Array(height.length),work={...terrain,height};
   const initialSlope=slopeField(mesh,height),landSlope=[];for(let i=0;i<height.length;i++)if(!terrain.ocean[i])landSlope.push(initialSlope[i]);
-  const p95Slope=percentile(landSlope,.95),annualRainMm=Number.isFinite(Number(cfg.annualRainMm))?Number(cfg.annualRainMm):cfg.defaultRainMm*Number(terrain.config?.rain||1),moisture=clamp(annualRainMm/800,.35,1.50),ruggedGate=clamp((p95Slope-.015)/.04,0,1);
+  const p95Slope=percentile(landSlope,.95),annualRainMm=Number.isFinite(Number(cfg.annualRainMm))?Number(cfg.annualRainMm):cfg.defaultRainMm*Number(terrain.config?.rain||1),moisture=clamp(annualRainMm/800,.35,1.50),ruggedGate=clamp((p95Slope-.015)/.04,0,1),lowReliefFloor=p95Slope<cfg.lowReliefSlopeThreshold?cfg.lowReliefDepthFloorM:cfg.baseMaxFillDepthM;
   let breachedBasins=0,totalCutNodes=0,maxCutM=0,maxBreachedFillDepthM=0,maxIncisionCapacityM=0,minIncisionCapacityM=Infinity;
 
   for(let pass=0;pass<cfg.passes;pass++){
@@ -60,7 +62,7 @@ export function conditionRegionalDrainage(terrain,overrides={}){
       const htype=history[floorNode]||0;if(cfg.protectIntentional&&htype>=1&&htype<=3)continue;
       const fillDepth=hydro.filled[floorNode]-height[floorNode],catchmentKm2=Math.max(mesh.nodeArea[floorNode],hydro.area[spill]||0);
       const ruggedTerm=p95Slope*cfg.ruggedDepthScaleM*moisture,catchmentTerm=cfg.catchmentDepthScaleM*Math.log1p(catchmentKm2/cfg.catchmentReferenceKm2)*moisture*ruggedGate;
-      const incisionCapacityM=clamp(cfg.baseMaxFillDepthM+ruggedTerm+catchmentTerm,cfg.baseMaxFillDepthM,cfg.maxFillDepthCapM);
+      const incisionCapacityM=clamp(Math.max(lowReliefFloor,cfg.baseMaxFillDepthM+ruggedTerm+catchmentTerm),cfg.baseMaxFillDepthM,cfg.maxFillDepthCapM);
       maxIncisionCapacityM=Math.max(maxIncisionCapacityM,incisionCapacityM);minIncisionCapacityM=Math.min(minIncisionCapacityM,incisionCapacityM);
       if(!(fillDepth>.5)||fillDepth>incisionCapacityM)continue;
 
@@ -85,5 +87,5 @@ export function conditionRegionalDrainage(terrain,overrides={}){
   }
 
   const slope=slopeField(mesh,height);
-  return{...terrain,height,slope,erosion:{kind:'regional-stream-power-breach-v6',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,ruggedGate,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
+  return{...terrain,height,slope,erosion:{kind:'regional-stream-power-breach-v7',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,ruggedGate,lowReliefFloorM:lowReliefFloor,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
 }
