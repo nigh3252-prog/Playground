@@ -2,5 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "node scripts/build-watershed.mjs",
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "git": {
+    "deploymentEnabled": {
+      "benchmark-world-calibration": false
+    }
+  }
 }
