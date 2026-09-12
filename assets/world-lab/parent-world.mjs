@@ -1,6 +1,7 @@
 import {createTerrainMesh} from './world-mesh.mjs';
 import {random32,noise,clamp} from './world-utils.mjs';
 import {applyGeology} from './geology-provinces.mjs';
+import {conditionRegionalDrainage} from './drainage-conditioning.mjs';
 const mix=(a,b,t)=>a+(b-a)*t,gauss=x=>Math.exp(-(x*x));
 function fbm(x,z,s){let out=0,a=.55,total=0;for(let k=0;k<5;k++){out+=a*noise(x,z,s+k*977);total+=a;x=x*2.03+13;z=z*2.03-7;a*=.5;}return out/total;}
 function pathDistance(points,x,z){let best=Infinity;for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],dx=b.x-a.x,dz=b.z-a.z,t=clamp(((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1),0,1);best=Math.min(best,Math.hypot(x-a.x-t*dx,z-a.z-t*dz));}return best;}
@@ -38,12 +39,15 @@ export function generateParentTerrain(options={}){
  if(!Number.isFinite(windowKm)||!Number.isFinite(sizeKm)||windowKm<200||windowKm>=sizeKm*.94||sizeKm<3000||sizeKm>6000||!Number.isInteger(n)||n<17||n>321)throw new Error('Invalid parent/window dimensions');
  for(const [key,lo,hi] of [['relief',.5,1.6],['rain',.4,1.8]])if(options[key]!==undefined&&(!Number.isFinite(Number(options[key]))||Number(options[key])<lo||Number(options[key])>hi))throw new Error('Invalid '+key);
  if(options.wind!==undefined&&!['west','east'].includes(options.wind))throw new Error('Invalid wind');
- const plan=planParent(seed,sizeKm),mesh=createTerrainMesh(n,sizeKm,seed),N=n*n,height=new Float32Array(N),landHistory=new Uint8Array(N),featureAt=new Int16Array(N).fill(-1),slope=new Float32Array(N),ocean=new Uint8Array(N);
+ const plan=planParent(seed,sizeKm),mesh=createTerrainMesh(n,sizeKm,seed),N=n*n,height=new Float32Array(N),landHistory=new Uint8Array(N),featureAt=new Int16Array(N).fill(-1),ocean=new Uint8Array(N);
  for(let i=0;i<N;i++){const b=plan.baseAt(mesh.x[i],mesh.z[i]),g=b.landBlend>.9?applyGeology(plan,mesh.x[i],mesh.z[i],b.height):{height:b.height,landHistory:0,feature:-1};height[i]=g.height*Number(options.relief||1);landHistory[i]=g.landHistory;featureAt[i]=g.feature;}
  const queue=new Int32Array(N);let head=0,tail=0;for(let i=0;i<N;i++)if(mesh.boundary[i]&&height[i]<=0){ocean[i]=1;queue[tail++]=i;}
  while(head<tail){const i=queue[head++];for(let k=mesh.offsets[i];k<mesh.offsets[i+1];k++){const j=mesh.neighbors[k];if(!ocean[j]&&height[j]<=0){ocean[j]=1;queue[tail++]=j;}}}
- for(let i=0;i<N;i++)for(let k=mesh.offsets[i];k<mesh.offsets[i+1];k++){const j=mesh.neighbors[k];slope[i]=Math.max(slope[i],Math.abs(height[i]-height[j])/(mesh.distances[k]*1000));}
- return{version:'regional-world-v6',stage:1,n,stepKm:mesh.stepKm,config:{seed,n,sizeKm,relief:Number(options.relief||1),rain:Number(options.rain||1),wind:options.wind||'west',source:'generated'},mesh,height,slope,ocean,landHistory,featureAt,features:plan.features,geology:{lands:plan.lands,ranges:plan.ranges,features:plan.features,source:'Seeded continental parent; no child-edge barriers'},erosion:null,parentDomain:{sizeKm,windowKm,seed,nominalSpacingKm:mesh.stepKm,regionalDetail:options.n||193,solverExtent:'entire parent before cropping'}};
+ const terrain={version:'regional-world-v6',stage:1,n,stepKm:mesh.stepKm,config:{seed,n,sizeKm,relief:Number(options.relief||1),rain:Number(options.rain||1),wind:options.wind||'west',source:'generated'},mesh,height,ocean,landHistory,featureAt,features:plan.features,geology:{lands:plan.lands,ranges:plan.ranges,features:plan.features,source:'Seeded continental parent; no child-edge barriers'},erosion:null,parentDomain:{sizeKm,windowKm,seed,nominalSpacingKm:mesh.stepKm,regionalDetail:options.n||193,solverExtent:'entire parent before cropping'}};
+ // Conditioning happens on the complete parent before any child window is
+ // chosen. Deliberate glacial/rift/volcanic basins stay protected, while
+ // shallow sampling pits get sub-grid drainage outlets.
+ return conditionRegionalDrainage(terrain);
 }
 export function chooseWindow(world,index=0){
  const size=world.parentDomain?.windowKm||world.config.sizeKm;if(!world.parentDomain)return{x:0,z:0,size,index:0};
