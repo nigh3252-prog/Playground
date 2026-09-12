@@ -14,7 +14,7 @@ export const BENCHMARK_SOURCES={
  country:'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson',
  history:'https://www2.census.gov/library/working-papers/1998/demographics/pop-twps0027/tab08.txt',
  historyNotes:'https://www.census.gov/library/working-papers/1998/demo/POP-twps0027.html',
- places:'https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gaz_place_national.zip',
+ places:'https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_place_national.zip',
  climate:'https://noaa-normals-pds.s3.amazonaws.com/normals-annualseasonal/1991-2020/access/',
  stationInventory:'https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt'
 };
