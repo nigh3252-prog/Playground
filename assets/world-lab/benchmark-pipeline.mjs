@@ -11,13 +11,14 @@ export async function loadBenchmark(id,kind){
  if(!BENCHMARK_REGIONS[id]||!['input','observations'].includes(kind))throw new Error('Unknown benchmark resource');
  const key=id+'.'+kind;if(!cache.has(key))cache.set(key,fetch(new URL(`./benchmarks/${key}.json`,import.meta.url)).then(async r=>{if(!r.ok)throw new Error(`Benchmark ${key} unavailable (${r.status}); no synthetic data will be substituted.`);return r.json();}).catch(e=>{cache.delete(key);throw e;}));return cache.get(key);
 }
+function bytesToBase64(bytes){let text='';for(let i=0;i<bytes.length;i+=8192)text+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(text);}
 /** Explicit allow-list: raw elevation and climate only. No lake shapes, river
  * lines, population, city coordinates or benchmark split affect prediction.
  */
 export function blindTerrain(pack,options={}){
  if(pack.schema!=='watershed-blind-input-v1'||!pack.provenance.rawDEM||pack.provenance.waterMasksUsed)throw new Error('A raw, unburned DEM is required for a held-out benchmark');
- const region={...pack.region,landmarks:[]},zeros=new Uint8Array(pack.n*pack.n*2);let text='';for(let i=0;i<zeros.length;i+=8192)text+=String.fromCharCode(...zeros.subarray(i,i+8192));
- const safe={schema:'watershed-reference-v1',region,n:pack.n,height:pack.rawHeight,lakeIndex:btoa(text),lakes:[],rivers:[],provenance:pack.provenance};
+ const region={...pack.region,landmarks:[]},cells=pack.n*pack.n;
+ const safe={schema:'watershed-reference-v2',region,n:pack.n,height:pack.rawHeight,lakeIndex:bytesToBase64(new Uint8Array(cells*2)),lakes:[],rivers:[],benchmarkLake:bytesToBase64(new Uint8Array(cells)),benchmarkBoundaryWater:bytesToBase64(new Uint8Array(cells)),benchmarkRiver:bytesToBase64(new Uint8Array(cells)),population:[],benchmarkMeta:{blindAdapter:true},provenance:pack.provenance};
  const w=generateReferenceTerrain(safe,options);return{...w,version:'regional-world-v6',referenceMode:'blind',reference:{...w.reference,measuredInputs:'Raw real DEM; no mapped lake/river constraints or settlement data.',modeledOutputs:'Hydrology and human potential predicted without water/population targets.',edgeWarning:'Cropped region; lake-bottom bathymetry and external upstream inflows are absent.'},benchmarkRole:pack.region.role};
 }
 export function observedClimate(world,forcing){
