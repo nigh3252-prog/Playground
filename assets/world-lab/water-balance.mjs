@@ -16,10 +16,9 @@ export function retentionFor(history,seed){
  const r=random(seed),leak=history===3?2.5+9*r:history===2?.12+.8*r:history===1?.025+.35*r:.06+1.1*r;
  return{leakMYear:leak,headLeakPerM:history===3?.008+.012*r:.001+.005*r,floorLeakFactor:.25+.4*random(seed+117)};
 }
-/** Solve a level-dependent annual budget using a simple sub-node area ramp.
- * Input precipitation/runoff and losses all use m³/year. Basin samples carry
- * geometric area, not an arbitrary number of equal-area grid pixels.
- */
+export function evaporationMYear(rain,temp){
+ return clamp(.22+Math.max(0,temp)*.037+clamp((800-rain)/800,0,.75),.16,2.1);
+}
 export function solveBasin(samples,spill,inflow,retention){
  if(!samples.length)throw new Error('Empty water basin');
  const bottom=samples.reduce((v,s)=>Math.min(v,s.height),Infinity),range=Math.max(.01,spill-bottom),area=samples.reduce((a,s)=>a+s.area,0);
@@ -28,7 +27,7 @@ export function solveBasin(samples,spill,inflow,retention){
   for(const s of samples){const fraction=clamp((level-s.height)/Math.max(1,s.cellRelief),0,1),a=s.area*1e6*fraction;
    const direct=s.rain/1000*a,land=s.rain/1000*s.area*1e6*(1-fraction)*runoffFraction(s.temp);
    precip+=direct;landRunoff+=land;supply+=direct+land;wetArea+=a;
-   evap+=a*clamp(.22+Math.max(0,s.temp)*.037+clamp((700-s.rain)/1400,0,.45),.16,1.9);
+   evap+=a*evaporationMYear(s.rain,s.temp);
    seep+=a*(retention.leakMYear+retention.headLeakPerM*Math.max(0,level-bottom));
   }
   const floorLoss=Math.min(supply,dryCapacity),loss=evap+seep+floorLoss;
@@ -57,10 +56,11 @@ export function topologicalOrder(receiver){
 }
 function incisionDecision(world,b,samples){
  if(b.status!=='overflowing'||[1,2,3].includes(b.history))return null;
- const rugged=Number(world.erosion?.p95SlopePercent||0);if(rugged<4)return null;
- let rain=0,area=0;for(const s of samples){rain+=s.rain*s.area;area+=s.area;}rain/=Math.max(area,1e-9);if(rain<650)return null;
- const throughflowRatio=b.inflowM3Year/Math.max(b.supplyM3Year,1);if(throughflowRatio<.15)return null;
- return{ruggednessPercent:rugged,meanRainMm:rain,throughflowRatio,reason:'Persistent humid through-flow on rugged unprotected terrain implies a sub-grid incised outlet'};
+ let rain=0,area=0;for(const s of samples){rain+=s.rain*s.area;area+=s.area;}rain/=Math.max(area,1e-9);
+ const rugged=Number(world.erosion?.p95SlopePercent||0),throughflowRatio=b.inflowM3Year/Math.max(b.supplyM3Year,1);
+ if(rugged>=4&&rain>=650&&throughflowRatio>=.15)return{ruggednessPercent:rugged,meanRainMm:rain,throughflowRatio,reason:'Persistent humid through-flow on rugged unprotected terrain implies a sub-grid incised outlet'};
+ if(rugged<2&&rain>=650&&b.depthM<=45&&b.wetAreaKm2>=1000&&throughflowRatio>=.25)return{ruggednessPercent:rugged,meanRainMm:rain,throughflowRatio,reason:'Very large shallow humid flow-through basin on low-relief coarse terrain implies an unresolved outlet corridor'};
+ return null;
 }
 export function resolveSurfaceWater(potential,climate){
  const w=potential,{mesh,height,rank,order}=w,N=height.length,sourceLakeId=w.lakeId,groups=w.lakeBodies.map(()=>[]),observed=w.observedLake||new Uint8Array(N);
@@ -115,5 +115,5 @@ export function resolveSurfaceWater(potential,climate){
  outlets.sort((a,b)=>b.areaKm2-a.areaKm2);
  return{...w,stage:2,version:'regional-world-v6',potentialSpill:w.filled,potentialReceiver:w.receiver,potentialBasinId:sourceLakeId,potentialLakeBodies:w.lakeBodies,
   filled:waterSurface,waterSurface,lake,lakeId,lakeBodies,waterState,basinWater:budgets,receiver,rank:actualRank,order:actualOrder,area,runoff:Float64Array.from(discharge,v=>v/YEAR),river,basin,flowAngle,outlets,confluences,
-  rainfall:climate.rainfall,temperature:climate.temperature,waterModel:'annual-budget-with-subgrid-incision-v2',waterBudgetNote:'Annual precipitation/runoff, evaporation and geology-dependent leakage determine closed-basin water. In humid rugged terrain, persistent externally supplied overflow can become sub-grid through-drainage rather than a permanent coarse-cell lake. This is a plausibility model, not measured groundwater or a calibrated erosion forecast.'};
+  rainfall:climate.rainfall,temperature:climate.temperature,waterModel:'annual-budget-with-subgrid-incision-v3',waterBudgetNote:'Annual precipitation/runoff, climate-sensitive evaporation and geology-dependent leakage determine closed-basin water. Persistent through-flow can become sub-grid drainage in rugged humid terrain or in very large shallow humid low-relief basins. This is a plausibility model, not measured groundwater or a calibrated erosion forecast.'};
 }
