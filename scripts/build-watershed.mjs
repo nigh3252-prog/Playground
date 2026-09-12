@@ -1,0 +1,14 @@
+import {readdir,mkdir,cp,writeFile} from 'node:fs/promises';import {execFileSync} from 'node:child_process';
+const node=process.execPath,completed=[];
+const run=args=>execFileSync(node,args,{stdio:'inherit',timeout:1800000});
+for(const file of await readdir('assets/world-lab'))if(file.endsWith('.mjs'))run(['--check',`assets/world-lab/${file}`]);
+for(const file of await readdir('scripts'))if(file.endsWith('.mjs'))run(['--check',`scripts/${file}`]);
+run(['--experimental-vm-modules','scripts/check-browser-module-graph.mjs']);completed.push('Browser app and worker module graphs linked');
+run(['--test','tests/regional-water-budget.test.mjs','tests/regional-reference-data.test.mjs','tests/regional-benchmark-math.test.mjs']);completed.push('Water/data/benchmark unit checks passed');
+run(['scripts/verify-frozen-benchmarks.mjs']);completed.push('Frozen benchmark files verified locally; no source-service calls');
+run(['--test','tests/regional-benchmark-integration.test.mjs']);completed.push('Parent-world and four frozen-reference integration checks passed');
+run(['scripts/run-benchmark-baselines.mjs']);completed.push('Four baseline reports recomputed from frozen snapshots only');
+await mkdir('public',{recursive:true});
+for(const entry of await readdir('.',{withFileTypes:true}))if(!entry.name.startsWith('.')&&entry.name!=='public'&&(entry.isFile()&&/\.(html|js|mjs|css|png|jpg|ico|svg)$/.test(entry.name)||entry.isDirectory()&&['assets','docs'].includes(entry.name)))await cp(entry.name,`public/${entry.name}`,{recursive:true});
+await writeFile('public/assets/world-lab/build-validation.json',JSON.stringify({revision:'r6-frozen',completed,generatedAt:new Date().toISOString(),networkDuringDeploy:false,note:'Deployment validation uses committed benchmark snapshots only. Refreshing source data is a separate intentional workflow. Not a phone WebGL visual test.'},null,2));
+console.log('WATERSHED R6 FROZEN: offline build checks passed; no USGS/Census/NOAA request was made by this deployment build.');
