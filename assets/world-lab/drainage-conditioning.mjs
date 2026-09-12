@@ -12,12 +12,12 @@ const each=(mesh,i,fn)=>{for(let k=mesh.offsets[i];k<mesh.offsets[i+1];k++)fn(me
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 export const DEFAULT_DRAINAGE_CONDITIONING=Object.freeze({
-  passes:2,
+  passes:4,
   baseMaxFillDepthM:8,
-  ruggedDepthScaleM:1200,
-  catchmentDepthScaleM:55,
+  ruggedDepthScaleM:1500,
+  catchmentDepthScaleM:65,
   catchmentReferenceKm2:500,
-  maxFillDepthCapM:450,
+  maxFillDepthCapM:800,
   minFloorElevationM:20,
   outletGradeMPerKm:.02,
   neighborCutFraction:.12,
@@ -34,20 +34,17 @@ function percentile(values,q){const a=[...values].sort((x,y)=>x-y);return a.leng
 
 /** Coarse-grid outlet incision proxy.
  *
- * - Rugged landscapes are more likely to hide a narrow valley between samples.
- * - Large contributing catchments maintain channels capable of cutting an
- *   outlet; small closed bowls do not get that benefit (important for real
- *   crater/glacial lakes).
- * - Arid climates reduce both terms, preserving endorheic basins.
- *
- * This is a geomorphic plausibility heuristic, not a calibrated erosion-rate
- * equation. Its parameters are global and are tested against fixed regions.
+ * Large contributing catchments only gain strong incision power where the
+ * regional terrain is actually rugged. That prevents low-relief lake country
+ * from being turned into a dense network of artificial trenches. Repeating
+ * the pass exposes nested false closures revealed after an upstream outlet is
+ * opened. Arid climates keep substantially less incision capacity.
  */
 export function conditionRegionalDrainage(terrain,overrides={}){
   if(!terrain?.mesh||!terrain.height||!terrain.ocean)throw new TypeError('Drainage conditioning requires terrain mesh, height and ocean fields');
   const cfg={...DEFAULT_DRAINAGE_CONDITIONING,...overrides},height=Float32Array.from(terrain.height),mesh=terrain.mesh,history=terrain.landHistory||new Uint8Array(height.length),work={...terrain,height};
   const initialSlope=slopeField(mesh,height),landSlope=[];for(let i=0;i<height.length;i++)if(!terrain.ocean[i])landSlope.push(initialSlope[i]);
-  const p95Slope=percentile(landSlope,.95),annualRainMm=Number.isFinite(Number(cfg.annualRainMm))?Number(cfg.annualRainMm):cfg.defaultRainMm*Number(terrain.config?.rain||1),moisture=clamp(annualRainMm/800,.30,1.50);
+  const p95Slope=percentile(landSlope,.95),annualRainMm=Number.isFinite(Number(cfg.annualRainMm))?Number(cfg.annualRainMm):cfg.defaultRainMm*Number(terrain.config?.rain||1),moisture=clamp(annualRainMm/800,.35,1.50),ruggedGate=clamp((p95Slope-.005)/.055,.15,1);
   let breachedBasins=0,totalCutNodes=0,maxCutM=0,maxBreachedFillDepthM=0,maxIncisionCapacityM=0,minIncisionCapacityM=Infinity;
 
   for(let pass=0;pass<cfg.passes;pass++){
@@ -57,11 +54,12 @@ export function conditionRegionalDrainage(terrain,overrides={}){
       if(deepest[basin]<0||height[i]<height[deepest[basin]])deepest[basin]=i;
       if(spillNode[basin]<0||hydro.rank[i]<hydro.rank[spillNode[basin]])spillNode[basin]=i;
     }
+    let cutsThisPass=0;
     for(let basin=0;basin<count;basin++){
       const floorNode=deepest[basin],spill=spillNode[basin];if(floorNode<0||spill<0||height[floorNode]<cfg.minFloorElevationM)continue;
       const htype=history[floorNode]||0;if(cfg.protectIntentional&&htype>=1&&htype<=3)continue;
       const fillDepth=hydro.filled[floorNode]-height[floorNode],catchmentKm2=Math.max(mesh.nodeArea[floorNode],hydro.area[spill]||0);
-      const ruggedTerm=p95Slope*cfg.ruggedDepthScaleM*moisture,catchmentTerm=cfg.catchmentDepthScaleM*Math.log1p(catchmentKm2/cfg.catchmentReferenceKm2)*moisture;
+      const ruggedTerm=p95Slope*cfg.ruggedDepthScaleM*moisture,catchmentTerm=cfg.catchmentDepthScaleM*Math.log1p(catchmentKm2/cfg.catchmentReferenceKm2)*moisture*ruggedGate;
       const incisionCapacityM=clamp(cfg.baseMaxFillDepthM+ruggedTerm+catchmentTerm,cfg.baseMaxFillDepthM,cfg.maxFillDepthCapM);
       maxIncisionCapacityM=Math.max(maxIncisionCapacityM,incisionCapacityM);minIncisionCapacityM=Math.min(minIncisionCapacityM,incisionCapacityM);
       if(!(fillDepth>.5)||fillDepth>incisionCapacityM)continue;
@@ -73,7 +71,7 @@ export function conditionRegionalDrainage(terrain,overrides={}){
         const target=floor-cfg.outletGradeMPerKm*distance;if(height[next]<target)break;
         const cut=height[next]-target;
         if(cut>0){
-          height[next]=target;cuts++;totalCutNodes++;maxCutM=Math.max(maxCutM,cut);
+          height[next]=target;cuts++;cutsThisPass++;totalCutNodes++;maxCutM=Math.max(maxCutM,cut);
           each(mesh,next,j=>{
             if(hydro.ocean[j]||(cfg.protectIntentional&&(history[j]===2||history[j]===3)))return;
             const neighborCut=Math.max(0,Math.min(height[j]-target,cut))*cfg.neighborCutFraction;if(neighborCut>0)height[j]-=neighborCut;
@@ -83,8 +81,9 @@ export function conditionRegionalDrainage(terrain,overrides={}){
       }
       if(cuts){breachedBasins++;maxBreachedFillDepthM=Math.max(maxBreachedFillDepthM,fillDepth);}
     }
+    if(!cutsThisPass)break;
   }
 
   const slope=slopeField(mesh,height);
-  return{...terrain,height,slope,erosion:{kind:'regional-stream-power-breach-v4',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
+  return{...terrain,height,slope,erosion:{kind:'regional-stream-power-breach-v5',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,ruggedGate,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
 }
