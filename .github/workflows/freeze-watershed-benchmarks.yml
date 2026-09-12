@@ -1,0 +1,53 @@
+name: Freeze Watershed benchmark snapshots
+
+on:
+  push:
+    branches: [benchmark-world-calibration]
+    paths:
+      - '.github/workflows/freeze-watershed-benchmarks.yml'
+      - 'benchmark-freeze.trigger'
+      - 'scripts/prepare-benchmarks.mjs'
+      - 'scripts/benchmark-data-utils.mjs'
+      - 'assets/world-lab/benchmark-protocol.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  freeze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: benchmark-world-calibration
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validate capture code
+        run: |
+          node --check scripts/prepare-benchmarks.mjs
+          node --check scripts/benchmark-data-utils.mjs
+          node --check assets/world-lab/benchmark-protocol.mjs
+          node --test tests/regional-benchmark-math.test.mjs
+      - name: Capture external sources once
+        run: node scripts/prepare-benchmarks.mjs
+      - name: Validate frozen packs against the model
+        run: |
+          node scripts/verify-frozen-benchmarks.mjs
+          node --test tests/regional-benchmark-integration.test.mjs
+          node scripts/run-benchmark-baselines.mjs
+      - name: Commit frozen snapshots
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/world-lab/benchmarks
+          if git diff --cached --quiet; then
+            echo 'No benchmark snapshot changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Freeze Watershed real-world benchmark snapshot'
+          git push origin HEAD:benchmark-world-calibration
