@@ -128,3 +128,5 @@ The export explicitly notes that no settlements have been placed.
 `tests/regional-human-geography.test.mjs` checks deterministic output, stage preservation, agricultural response to slope/climate/biome, movement-friction ordering, water-vs-cart edge costs, bounded water/land scores, navigable-reach constraints, transport-distance decay, graph influence on market access, strategic-node types/spacing, absence of settlements, hotspot relationships, climate sensitivity and several seeds / region sizes.
 
 The physical-world tests remain separate in `tests/regional-world.test.mjs`.
+
+Preview retry note: this commit intentionally retriggers the branch preview after fixing the JavaScript exponentiation parse error in the Stage-4 module.
