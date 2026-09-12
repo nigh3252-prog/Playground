@@ -2,8 +2,11 @@ import {generateTerrain,generateHydrology,generateEcology,wetDistances,BIOMES,ex
 import {generateHumanGeography} from './human-geography.mjs';
 import {loadReference,generateReferenceTerrain,referenceHydrology} from './reference-terrain.mjs';
 import {resolveSurfaceWater} from './water-balance.mjs';
-/** Ecology reuses the SAME climate that supplied the lake budget. Water
- * masks/runoff are actual resolved surface water, not hypothetical full pits.
+import {planGeneratedCrop,cropSolvedWorld} from './crop-world.mjs';
+import {evaluateBenchmark,compactBenchmark} from './benchmark-metrics.mjs';
+
+/** Ecology reuses the SAME climate that supplied the lake budget. Resolved
+ * water masks/runoff, not hypothetical full pits, drive wetness classes.
  */
 export function resolveEnvironments(w){
  const N=w.height.length,wetDistanceKm=wetDistances(w,w.stepKm*3),biome=new Uint8Array(N),counts=new Float64Array(BIOMES.length);
@@ -17,20 +20,38 @@ export function resolveEnvironments(w){
 }
 export function resolveWaterStage(terrain){
  const hydro=terrain.reference?referenceHydrology(terrain):generateHydrology(terrain);
- // Do not boost rainfall because of lakes that have not yet been justified.
  const climate=generateEcology({...hydro,lake:terrain.observedLake||new Uint8Array(terrain.height.length)});
  return resolveSurfaceWater(hydro,climate);
 }
-export async function generateStages(options,emit=()=>{},cancelled=()=>false){
- const start=performance.now(),source=options.source||'generated',pause=()=>new Promise(r=>setTimeout(r,0));
- let terrain=source==='generated'?generateTerrain(options):generateReferenceTerrain(await loadReference(source),options);
- if(cancelled())return;emit({stage:1,world:terrain,elapsed:performance.now()-start});await pause();if(cancelled())return;
- const water=resolveWaterStage(terrain);emit({stage:2,world:water,elapsed:performance.now()-start});await pause();if(cancelled())return;
- const ecology=resolveEnvironments(water);emit({stage:3,world:ecology,elapsed:performance.now()-start});await pause();if(cancelled())return;
- const human={...generateHumanGeography(ecology),version:'regional-world-v5'};emit({stage:4,world:human,elapsed:performance.now()-start});return human;
+function attachBenchmark(world){
+ if(!world.reference)return world;const benchmark=evaluateBenchmark(world);return{...world,benchmark,benchmarkWaterClass:benchmark.water?.class||null};
 }
+
+/** Generated worlds are physically solved on a larger parent first. Only then
+ * is the visible crop selected. Terrain/water/ecology at crop edges therefore
+ * inherit context from outside the camera instead of treating every viewport
+ * as its own continent. Human transport is evaluated after cropping so the
+ * expensive market graph stays phone-friendly; inherited runoff/areas already
+ * contain parent contributions.
+ */
+async function generatedStages(options,emit,cancelled,start,pause){
+ const plan=planGeneratedCrop(options),parentOptions={...options,n:plan.parentN,sizeKm:plan.parentSizeKm};
+ let parent=generateTerrain(parentOptions);if(cancelled())return;emit({stage:1,world:cropSolvedWorld(parent,plan),elapsed:performance.now()-start});await pause();if(cancelled())return;
+ parent=resolveWaterStage(parent);if(cancelled())return;emit({stage:2,world:cropSolvedWorld(parent,plan),elapsed:performance.now()-start});await pause();if(cancelled())return;
+ parent=resolveEnvironments(parent);const ecology=cropSolvedWorld(parent,plan);emit({stage:3,world:ecology,elapsed:performance.now()-start});await pause();if(cancelled())return;
+ const human={...generateHumanGeography(ecology),version:'regional-world-v6'};emit({stage:4,world:human,elapsed:performance.now()-start});return human;
+}
+async function referenceStages(options,emit,cancelled,start,pause){
+ let world=generateReferenceTerrain(await loadReference(options.source),options);if(cancelled())return;emit({stage:1,world,elapsed:performance.now()-start});await pause();if(cancelled())return;
+ world=attachBenchmark(resolveWaterStage(world));emit({stage:2,world,elapsed:performance.now()-start});await pause();if(cancelled())return;
+ world=attachBenchmark(resolveEnvironments(world));emit({stage:3,world,elapsed:performance.now()-start});await pause();if(cancelled())return;
+ const human=attachBenchmark({...generateHumanGeography(world),version:'regional-world-v6'});emit({stage:4,world:human,elapsed:performance.now()-start});return human;
+}
+export async function generateStages(options,emit=()=>{},cancelled=()=>false){const start=performance.now(),pause=()=>new Promise(r=>setTimeout(r,0));return(options.source||'generated')==='generated'?generatedStages(options,emit,cancelled,start,pause):referenceStages(options,emit,cancelled,start,pause);}
 export function exportBenchmarkWorld(base,human){
- const out=exportWorld({...base,stage:3});out.version='regional-world-v5';out.reference=base.reference||null;out.observedLake=base.observedLake||null;out.landmarks=base.landmarks||[];
+ const out=exportWorld({...base,stage:3});out.version='regional-world-v6';out.reference=base.reference||null;out.parentContext=base.parentContext||null;out.observedLake=base.observedLake||null;out.benchmarkLake=base.benchmarkLake||null;out.benchmarkRiver=base.benchmarkRiver||null;out.landmarks=base.landmarks||[];
  out.water={model:base.waterModel,state:base.waterState,surface:base.waterSurface,potentialSpill:base.potentialSpill,potentialBasinId:base.potentialBasinId,basinBudgets:base.basinWater,explanation:base.waterBudgetNote};
- if(human)out.humanGeography={model:human.humanModel,productivity:human.productivity,travelFriction:human.travelFriction,waterAccessCost:human.waterAccessCost,transportAccess:human.transportAccess,navigableRiver:human.navigableRiver,marketAccess:human.marketAccess,humanPotential:human.humanPotential,strategicNodes:human.strategicNodes,note:'No settlements are placed; reference city labels are never scored.'};return out;
+ if(base.benchmark)out.benchmark=compactBenchmark(base.benchmark);
+ if(human){out.humanGeography={model:human.humanModel,productivity:human.productivity,travelFriction:human.travelFriction,waterAccessCost:human.waterAccessCost,transportAccess:human.transportAccess,navigableRiver:human.navigableRiver,marketAccess:human.marketAccess,humanPotential:human.humanPotential,strategicNodes:human.strategicNodes,note:'No settlements are placed; real population is held out and used only for benchmark scoring.'};if(human.benchmark)out.benchmark=compactBenchmark(human.benchmark);}
+ return out;
 }
