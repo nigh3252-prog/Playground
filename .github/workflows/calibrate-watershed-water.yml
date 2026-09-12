@@ -25,9 +25,12 @@ jobs:
           node --check assets/world-lab/water-balance.mjs
           node --check assets/world-lab/parent-world.mjs
           node --check assets/world-lab/benchmark-pipeline.mjs
+          node --check scripts/inspect-water-budgets.mjs
       - name: Water unit tests
         run: node --test tests/regional-water-budget.test.mjs tests/regional-benchmark-math.test.mjs
       - name: Parent and frozen benchmark integration
         run: node --test tests/regional-benchmark-integration.test.mjs
+      - name: Inspect basin budgets
+        run: node scripts/inspect-water-budgets.mjs
       - name: Recompute fixed-baseline scores
         run: node scripts/run-benchmark-baselines.mjs
