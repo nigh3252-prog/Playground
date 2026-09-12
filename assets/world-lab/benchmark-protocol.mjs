@@ -1,6 +1,6 @@
 /** Fixed protocol. Calibration roles are labels for development, not a claim
  * that these displayed regions have remained statistically untouched. */
-export const PROTOCOL=Object.freeze({version:'watershed-benchmark-1',waterDataset:'USGS NHD high-resolution (download snapshot)',populationDataset:'US Census 2020 tract population at representative points',historicalDataset:'Census 1850 largest-100 urban-place sample',evaluationN:257,minimumLakeKm2:25,riverDrainageKm2:500,riverToleranceKm:8,edgeBufferKm:25,parameterProfile:'water-budget-r5-unfitted',climatePeriod:'1991-2020',noAutomaticFitting:true});
+export const PROTOCOL=Object.freeze({version:'watershed-benchmark-1',waterDataset:'USGS NHD high-resolution (download snapshot)',riverDataset:'USGS NHDPlusV2 (Fabric API)',populationDataset:'US Census 2020 tract population at representative points',historicalDataset:'Census 1850 largest-100 urban-place sample',evaluationN:257,minimumLakeKm2:25,riverDrainageKm2:500,riverToleranceKm:8,edgeBufferKm:25,parameterProfile:'water-budget-r5-unfitted',climatePeriod:'1991-2020',noAutomaticFitting:true});
 export const BENCHMARK_REGIONS={
  michigan:{id:'michigan',name:'Michigan / Great Lakes',lat:44.25,lon:-85.5,sizeKm:700,role:'calibration',landmarks:[['Grand Rapids',42.963,-85.668,'city'],['Detroit',42.331,-83.046,'city'],['Lansing',42.733,-84.556,'city'],['Traverse City',44.764,-85.622,'city'],['Mackinac',45.85,-84.62,'place'],['Chicago',41.878,-87.630,'city']]},
  greatbasin:{id:'greatbasin',name:'Great Basin / Nevada–Utah',lat:39.5,lon:-116,sizeKm:700,role:'calibration',landmarks:[['Reno',39.53,-119.814,'city'],['Elko',40.833,-115.763,'city'],['Wheeler Peak',38.985,-114.314,'peak'],['Great Salt Lake',41.2,-112.5,'water']]},
@@ -9,7 +9,7 @@ export const BENCHMARK_REGIONS={
 };
 export const BENCHMARK_SOURCES={
  water:'https://hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer/12',
- rivers:'https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer/3',
+ rivers:'https://api.water.usgs.gov/fabric/pygeoapi/collections/nhdflowline_network/items',
  population:'https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/Tracts_Blocks/MapServer/0',
  country:'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson',
  history:'https://www2.census.gov/library/working-papers/1998/demographics/pop-twps0027/tab08.txt',

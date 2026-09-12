@@ -4,6 +4,7 @@ import {BENCHMARK_REGIONS,PROTOCOL,BENCHMARK_SOURCES as S} from '../assets/world
 import {toLonLat,fromLonLat,tilePosition} from '../assets/world-lab/reference-regions.mjs';
 import {decodeTerrarium} from './terrain-png.mjs';
 import {fetchSource,fetchJSON,queryAll,digest,bounds,rasterPolygon,parseCSV,unzipText,historyRows,normalFromCSV} from './benchmark-data-utils.mjs';
+import {fetchUSGSFlowlines,RIVER_SOURCE} from './usgs-flowlines.mjs';
 const root='assets/world-lab/benchmarks',tileCache=new Map(),GRID=PROTOCOL.evaluationN;
 const inside=(r,x,z)=>x>=0&&z>=0&&x<=r.sizeKm&&z<=r.sizeKm;
 function geometryParams(region){const pts=[];for(let k=0;k<=16;k++)for(const[x,z]of[[k/16*region.sizeKm,0],[k/16*region.sizeKm,region.sizeKm],[0,k/16*region.sizeKm],[region.sizeKm,k/16*region.sizeKm]])pts.push(toLonLat(region,x,z));return{geometry:bounds(pts).join(','),geometryType:'esriGeometryEnvelope',inSR:'4326',spatialRel:'esriSpatialRelIntersects'};}
@@ -31,7 +32,7 @@ async function waterObservations(region){
  if(!result.count)throw new Error('No waterbody observations retrieved for '+region.id);return{water,catalog,provenance:result.provenance,count:result.count};
 }
 async function riverObservations(region){
- const result=await queryAll(S.rivers,{...geometryParams(region),where:`totdasqkm >= ${PROTOCOL.riverDrainageKm2} AND ftype IN (460,558)`},{fields:'OBJECTID,permanent_identifier,gnis_name,totdasqkm,ftype,fromnode,tonode,flowdir',batch:200});
+ const result=await fetchUSGSFlowlines(geometryParams(region).geometry.split(',').map(Number),PROTOCOL.riverDrainageKm2);
  const rivers=[],junctions=new Map();for(const f of result.features){if(!f.geometry?.paths)throw new Error('Missing river geometry');const a=f.attributes,paths=projectRings(region,f.geometry.paths);rivers.push({id:a.permanent_identifier,name:a.gnis_name||'',areaKm2:Number(a.totdasqkm),type:Number(a.ftype),paths});
   if(Number(a.flowdir)===1&&Number(a.tonode)>0){const id=String(a.tonode),p=paths.at(-1).at(-1);if(!junctions.has(id))junctions.set(id,{x:p[0],z:p[1],donors:0});junctions.get(id).donors++;}}
  return{rivers,confluences:[...junctions.values()].filter(j=>j.donors>=2&&inside(region,j.x,j.z)),count:result.count,provenance:result.provenance};
@@ -68,7 +69,7 @@ export async function prepareBenchmarks(){
   input.provenance.sourcePeakM=input._heights.reduce((m,v)=>Math.max(m,v),-Infinity);delete input._heights;input.forcing=climate;
   const historical=history.points.map(p=>{const[xKm,zKm]=fromLonLat(region,p.lon,p.lat);return{...p,xKm,zKm};}).filter(p=>inside(region,p.xKm,p.zKm));
   const provenance={water:water.provenance,rivers:rivers.provenance,population:pop.provenance,historical:history.provenance,coverage:country.provenance};
-  const observations={schema:'watershed-observations-v1',status:'complete',region,n:GRID,coverage:Buffer.from(coverageGrid(region,country.json)).toString('base64'),water:Buffer.from(water.water).toString('base64'),waterClassLegend:{0:'No mapped water ≥1 km²',1:'Natural lake/pond',2:'Reservoir (excluded)',3:'Intermittent (excluded)',4:'Marsh/playa (excluded)',5:'Large/cropped boundary water (excluded)'},lakeSizes:water.catalog,rivers:rivers.rivers,confluences:rivers.confluences,population:pop.population,historical,historicalCoverage:{source:'1850 largest 100 urban places, not total historical population',matchedNational:history.points.length,unmatched:history.unmatched},provenance,sourceDigest:digest(JSON.stringify(provenance)),protocol:PROTOCOL};
+  const observations={schema:'watershed-observations-v1',status:'complete',region,n:GRID,coverage:Buffer.from(coverageGrid(region,country.json)).toString('base64'),water:Buffer.from(water.water).toString('base64'),waterClassLegend:{0:'No mapped water ≥1 km²',1:'Natural lake/pond',2:'Reservoir (excluded)',3:'Intermittent (excluded)',4:'Marsh/playa (excluded)',5:'Large/cropped boundary water (excluded)'},lakeSizes:water.catalog,riverSource:RIVER_SOURCE,rivers:rivers.rivers,confluences:rivers.confluences,population:pop.population,historical,historicalCoverage:{source:'1850 largest 100 urban places, not total historical population',matchedNational:history.points.length,unmatched:history.unmatched},provenance,sourceDigest:digest(JSON.stringify(provenance)),protocol:PROTOCOL};
   await writeFile(`${root}/${region.id}.input.json`,JSON.stringify(input));await writeFile(`${root}/${region.id}.observations.json`,JSON.stringify(observations));
   const meta={id:region.id,role:region.role,waterFeatures:water.count,riverFeatures:rivers.count,censusTracts:pop.population.length,historicalPlaces:historical.length,climateStations:climate.stations.length,sourcePeakM:input.provenance.sourcePeakM,observationBytes:Buffer.byteLength(JSON.stringify(observations)),sourceDigest:observations.sourceDigest};manifest.push(meta);console.log(JSON.stringify(meta));
  }
