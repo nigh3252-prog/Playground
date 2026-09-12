@@ -6,10 +6,10 @@ const cacheDir='.cache/watershed-sources';
 export async function fetchSource(url,{optional=false}={}){
  await mkdir(cacheDir,{recursive:true});const key=digest(url),path=`${cacheDir}/${key}.bin`;let bytes;
  try{bytes=await readFile(path);}catch{}
- if(!bytes){let error;for(let k=0;k<3;k++)try{const r=await fetch(url,{signal:AbortSignal.timeout(90000),headers:{'User-Agent':'Watershed-research-prototype/6'}});if(!r.ok){if(optional&&[403,404].includes(r.status))return{missing:true,url,error:`${r.status}: source record unavailable`};throw new Error(`${r.status}: ${url}`);}bytes=Buffer.from(await r.arrayBuffer());await writeFile(path,bytes);break;}catch(e){error=e;await new Promise(r=>setTimeout(r,700*(k+1)));}if(!bytes){if(optional)return{missing:true,url,error:error.message};throw error;}}
+ if(!bytes){console.log('SOURCE',new URL(url).host+new URL(url).pathname,key.slice(0,10));let error;for(let k=0;k<3;k++)try{const r=await fetch(url,{signal:AbortSignal.timeout(90000),headers:{'User-Agent':'Watershed-research-prototype/6'}});if(!r.ok){if(optional&&[403,404].includes(r.status))return{missing:true,url,error:`${r.status}: source record unavailable`};throw new Error(`${r.status}: ${url}`);}bytes=Buffer.from(await r.arrayBuffer());await writeFile(path,bytes);break;}catch(e){error=e;await new Promise(r=>setTimeout(r,700*(k+1)));}if(!bytes){if(optional)return{missing:true,url,error:error.message};throw new Error(`${error?.message||error}: ${url}`);}}
  return{bytes,provenance:{url,sha256:digest(bytes),bytes:bytes.length,accessed:new Date().toISOString()}};
 }
-export async function fetchJSON(url){const r=await fetchSource(url);let json;try{json=JSON.parse(r.bytes.toString());}catch{throw new Error(`Invalid JSON: ${url}`);}if(json.error)throw new Error(`Service error ${JSON.stringify(json.error)} from ${url}`);return{json,provenance:r.provenance};}
+export async function fetchJSON(url){const r=await fetchSource(url);let json;try{json=JSON.parse(r.bytes.toString());}catch{throw new Error(`Invalid JSON: ${url}`);}if(json.error)throw new Error(`Service error ${JSON.stringify(json.error)} from ${url}`);if(json.objectIds===null&&typeof json.objectIdFieldName==='string')json.objectIds=[];return{json,provenance:r.provenance};}
 export function parseCSV(text,delimiter=','){
  const rows=[];let row=[],value='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){value+='"';i++;}else quoted=!quoted;}else if(!quoted&&(c===delimiter||c==='\n')){row.push(value.replace(/\r$/,''));value='';if(c==='\n'){if(row.some(Boolean))rows.push(row);row=[];}}else value+=c;}if(value||row.length){row.push(value.replace(/\r$/,''));rows.push(row);}return rows;
 }
@@ -20,12 +20,20 @@ export function unzipText(zip,endsWith='.txt'){
   if(!name.endsWith(endsWith))continue;const start=offset+30+b.readUInt16LE(offset+26)+b.readUInt16LE(offset+28),data=b.subarray(start,start+length);if(method===8)return inflateRawSync(data).toString('utf8');if(method===0)return data.toString('utf8');throw new Error('Unsupported ZIP compression');}
  throw new Error('Expected text file missing from source ZIP');
 }
-/** Fetch IDs first, then every returned ID exactly once. Missing records or a
- * transfer limit abort the dataset; they never become observed dry land. */
+/** Enumerate bounded spatial tiles, union their IDs, fetch each exactly once.
+ * Missing records or transfer limits abort rather than becoming dry land. */
 export async function queryAll(endpoint,parameters,{fields='*',geometry=true,batch=150}={}){
  const base={f:'json',...parameters};const make=p=>endpoint+'/query?'+new URLSearchParams({...base,...p});
- const idsResponse=await fetchJSON(make({returnIdsOnly:'true',returnGeometry:'false'})),ids=idsResponse.json.objectIds;
- if(!Array.isArray(ids))throw new Error('No object-ID enumeration from '+endpoint);const oid=idsResponse.json.objectIdFieldName||'OBJECTID',features=[],provenance=[idsResponse.provenance];
+ let idsResponse;
+ if(parameters.geometryType==='esriGeometryEnvelope'){
+  const [west,south,east,north]=String(parameters.geometry).split(',').map(Number),responses=[],envelopes=[];
+  for(let y=south;y<north;y+=2)for(let x=west;x<east;x+=2)envelopes.push([x,y,Math.min(east,x+2),Math.min(north,y+2)]);
+  for(let k=0;k<envelopes.length;k+=3)responses.push(...await Promise.all(envelopes.slice(k,k+3).map(b=>fetchJSON(make({geometry:b.join(','),returnIdsOnly:'true',returnGeometry:'false'})))));
+  for(const r of responses)if(!Array.isArray(r.json.objectIds))throw new Error('Incomplete spatial ID query: '+endpoint);
+  idsResponse={json:{objectIds:[...new Set(responses.flatMap(r=>r.json.objectIds))].sort((a,b)=>a-b),objectIdFieldName:responses[0].json.objectIdFieldName},provenances:responses.map(r=>r.provenance)};
+ }else idsResponse=await fetchJSON(make({returnIdsOnly:'true',returnGeometry:'false'}));
+ const ids=idsResponse.json.objectIds;
+ if(!Array.isArray(ids))throw new Error('No object-ID enumeration from '+endpoint);const oid=idsResponse.json.objectIdFieldName||'OBJECTID',features=[],provenance=idsResponse.provenances||[idsResponse.provenance];console.log('SOURCE IDS',endpoint,ids.length);
  const chunks=[];for(let i=0;i<ids.length;i+=batch)chunks.push(ids.slice(i,i+batch));
  for(let k=0;k<chunks.length;k+=3)await Promise.all(chunks.slice(k,k+3).map(async group=>{
   const request=await fetchJSON(make({objectIds:group.join(','),outFields:fields,returnIdsOnly:'false',returnGeometry:String(geometry),outSR:'4326',returnZ:'false',returnM:'false',maxAllowableOffset:geometry?'0.001':'0'}));

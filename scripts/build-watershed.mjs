@@ -5,9 +5,8 @@ for(const file of await readdir('assets/world-lab'))if(file.endsWith('.mjs'))run
 for(const file of await readdir('scripts'))if(file.endsWith('.mjs'))run(['--check',`scripts/${file}`]);
 run(['--experimental-vm-modules','scripts/check-browser-module-graph.mjs']);completed.push('Browser app and worker module graphs linked without evaluating a fake DOM');
 run(['--test','tests/regional-water-budget.test.mjs','tests/regional-reference-data.test.mjs','tests/regional-benchmark-math.test.mjs']);completed.push('17 existing water/data tests + 21 benchmark-math/UI-contract tests');
-// Preserve the previous reference display and its datasets alongside the new
-// independent experiment; do not replace it with made-up reference data.
 run(['scripts/prepare-reference-data.mjs']);run(['--test','tests/regional-integration-v5.test.mjs']);completed.push('6 existing real-reference integration tests');
+run(['--test','--test-name-pattern=parent |geography is|true visual','tests/regional-benchmark-integration.test.mjs']);
 run(['scripts/prepare-benchmarks.mjs']);
 run(['--test','tests/regional-benchmark-integration.test.mjs']);completed.push('13 parent/blind-prediction/source/benchmark integration tests');
 run(['scripts/run-benchmark-baselines.mjs']);completed.push('4 actual reference baseline reports, same frozen parameters');
