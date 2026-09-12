@@ -4,6 +4,7 @@ import {generateHumanGeography} from './human-geography.mjs';
 import {resolveSurfaceWater} from './water-balance.mjs';
 import {resolveEnvironments} from './world-pipeline.mjs';
 import {generateParentTerrain,chooseWindow} from './parent-world.mjs';
+import {conditionRegionalDrainage} from './drainage-conditioning.mjs';
 import {evaluateWorld,portableReport} from './benchmark-evaluate.mjs';
 import {BENCHMARK_REGIONS,PROTOCOL} from './benchmark-protocol.mjs';
 const cache=new Map();
@@ -19,7 +20,8 @@ export function blindTerrain(pack,options={}){
  if(pack.schema!=='watershed-blind-input-v1'||!pack.provenance.rawDEM||pack.provenance.waterMasksUsed)throw new Error('A raw, unburned DEM is required for a held-out benchmark');
  const region={...pack.region,landmarks:[]},cells=pack.n*pack.n;
  const safe={schema:'watershed-reference-v2',region,n:pack.n,height:pack.rawHeight,lakeIndex:bytesToBase64(new Uint8Array(cells*2)),lakes:[],rivers:[],benchmarkLake:bytesToBase64(new Uint8Array(cells)),benchmarkBoundaryWater:bytesToBase64(new Uint8Array(cells)),benchmarkRiver:bytesToBase64(new Uint8Array(cells)),population:[],benchmarkMeta:{blindAdapter:true},provenance:pack.provenance};
- const w=generateReferenceTerrain(safe,options);return{...w,version:'regional-world-v6',referenceMode:'blind',reference:{...w.reference,measuredInputs:'Raw real DEM; no mapped lake/river constraints or settlement data.',modeledOutputs:'Hydrology and human potential predicted without water/population targets.',edgeWarning:'Cropped region; lake-bottom bathymetry and external upstream inflows are absent.'},benchmarkRole:pack.region.role};
+ const raw=generateReferenceTerrain(safe,options),w=conditionRegionalDrainage(raw,{protectIntentional:false});
+ return{...w,version:'regional-world-v6',referenceMode:'blind',reference:{...w.reference,measuredInputs:'Raw real DEM plus terrain-only shallow-sink conditioning; no mapped lake/river constraints or settlement data.',modeledOutputs:'Hydrology and human potential predicted without water/population targets.',edgeWarning:'Cropped region; lake-bottom bathymetry and external upstream inflows are absent. Shallow sub-grid closures are breached from terrain topology only.'},benchmarkRole:pack.region.role};
 }
 export function observedClimate(world,forcing){
  if(!forcing||forcing.kind!=='NOAA-1991-2020-station-normals'||forcing.stations.length<4)throw new Error('Real-climate forcing is missing; select synthetic climate explicitly rather than silently substituting it');
