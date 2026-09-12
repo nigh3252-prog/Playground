@@ -5,7 +5,8 @@
   "outputDirectory": "public",
   "git": {
     "deploymentEnabled": {
-      "benchmark-world-calibration": false
+      "benchmark-world-calibration": false,
+      "regional-world-lab": false
     }
   }
 }
