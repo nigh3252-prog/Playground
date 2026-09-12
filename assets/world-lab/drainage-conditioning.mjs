@@ -19,7 +19,7 @@ export const DEFAULT_DRAINAGE_CONDITIONING=Object.freeze({
   catchmentReferenceKm2:500,
   maxFillDepthCapM:800,
   lowReliefSlopeThreshold:.02,
-  lowReliefDepthFloorM:35,
+  lowReliefDepthFloorM:29,
   minFloorElevationM:20,
   outletGradeMPerKm:.02,
   neighborCutFraction:.12,
@@ -87,5 +87,5 @@ export function conditionRegionalDrainage(terrain,overrides={}){
   }
 
   const slope=slopeField(mesh,height);
-  return{...terrain,height,slope,erosion:{kind:'regional-stream-power-breach-v7',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,ruggedGate,lowReliefFloorM:lowReliefFloor,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
+  return{...terrain,height,slope,erosion:{kind:'regional-stream-power-breach-v8',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,ruggedGate,lowReliefFloorM:lowReliefFloor,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
 }
