@@ -1,1 +1,1 @@
-conditioning-pass-2-ruggedness-aware
+conditioning-pass-2-ruggedness-diagnostics
