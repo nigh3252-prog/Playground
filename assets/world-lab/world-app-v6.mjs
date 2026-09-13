@@ -8,6 +8,7 @@ import {BENCHMARK_REGIONS,PROTOCOL} from './benchmark-protocol.mjs';
 import {terrainMetrics,portableReport} from './benchmark-evaluate.mjs';
 import {fromLonLat,toLonLat} from './reference-regions.mjs';
 import {WATER_STATES} from './water-balance.mjs';
+import {BOUNDARY_COLORS,tectonicColor,tectonicFacts} from './tectonic-debug.mjs';
 const $=id=>document.getElementById(id),fmt=(n,d=0)=>n===null||n===undefined||!Number.isFinite(Number(n))?'N/A':Number(n).toLocaleString('en-US',{maximumFractionDigits:d}),pct=v=>v===null||v===undefined?'N/A':fmt(v*100,1)+'%',params=new URLSearchParams(location.search);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let world=null,snapshots=[],generation=0,worker=null,suiteWorker=null,selected=-1,stage=clamp(Number(params.get('stage'))||4,1,4),mode=params.get('mode')||'natural',box=null,cropIndex=Number(params.get('crop'))||0,parentView=params.get('parent')==='1',playing=false,timer=0,lastExag=18,reports=[],selectedReport=null;
@@ -52,7 +53,8 @@ const potentialColors=[[48,64,63],[89,108,76],[148,151,79],[214,184,87],[244,213
 function actualMode(){if(['agreement','observed','population'].includes(mode)&&(!world.benchmark||world.benchmark.status!=='scored'))return'natural';if(['potential','productivity','travel','transport'].includes(mode)&&stage<4)return'natural';if(mode==='water'&&stage<2||mode==='rainfall'&&stage<3)return'natural';return mode;}
 function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=actualMode(),colors=new Uint8ClampedArray(N*4),normal=!view.gl?meshNormals(w.mesh,Float32Array.from(view.modelHeights,h=>h/1000*view.exag)):null;
  for(let i=0;i<N;i++){let c,alpha=255;
-  if(w.ocean[i]){c=[34,73,91];alpha=100;}else if(stage>=2&&w.lake[i]){c=biomes[1];alpha=110;}
+  if(kind==='tectonics')c=tectonicColor(w,i);
+  else if(w.ocean[i]){c=[34,73,91];alpha=100;}else if(stage>=2&&w.lake[i]){c=biomes[1];alpha=110;}
   else if(kind==='water')c=rgb(WATER_STATES[w.waterState[i]][1]);
   else if(kind==='history')c=rgb(HISTORY_TYPES[w.landHistory[i]][1]);
   else if(kind==='rainfall')c=ramp((w.rainfall[i]-150)/1500,[[196,163,104],[131,160,125],[52,115,136]]);
@@ -66,6 +68,12 @@ function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=act
  const canvas=document.createElement('canvas');canvas.width=canvas.height=2048;const ctx=canvas.getContext('2d'),base=document.createElement('canvas');base.width=base.height=1024;base.getContext('2d').putImageData(new ImageData(rasterizeWindow(w.mesh,colors,1024,box),1024,1024),0,0);ctx.drawImage(base,0,0,2048,2048);
  const scale=2048/box.size,xy=(x,z)=>[(x-box.x)*scale,(z-box.z)*scale],node=i=>xy(w.mesh.x[i],w.mesh.z[i]);ctx.lineCap='round';ctx.lineJoin='round';
  const line=points=>{ctx.beginPath();points.forEach(([x,z],i)=>i?ctx.lineTo(x,z):ctx.moveTo(x,z));ctx.stroke();};
+ if(kind==='tectonics'&&w.geology?.tectonics){
+  const tectonics=w.geology.tectonics;
+  for(const boundary of tectonics.boundaries){ctx.strokeStyle=BOUNDARY_COLORS[boundary.kind];ctx.lineWidth=boundary.kind==='subduction'||boundary.kind==='collision'?6:4;line(boundary.points.map(({x,z})=>xy(x,z)));}
+  ctx.strokeStyle='#f2f0d4';ctx.fillStyle='#f2f0d4';ctx.lineWidth=3;
+  for(const plate of tectonics.plates){const start=xy(plate.centerX,plate.centerZ),end=xy(plate.centerX+plate.velocityX*620,plate.centerZ+plate.velocityZ*620);line([start,end]);const angle=Math.atan2(end[1]-start[1],end[0]-start[0]);ctx.beginPath();ctx.moveTo(end[0],end[1]);ctx.lineTo(end[0]-13*Math.cos(angle-.5),end[1]-13*Math.sin(angle-.5));ctx.lineTo(end[0]-13*Math.cos(angle+.5),end[1]-13*Math.sin(angle+.5));ctx.closePath();ctx.fill();}
+ }
  if(['agreement','observed'].includes(kind)&&w.benchmark?.overlay){const o=w.benchmark.overlay,grid=document.createElement('canvas');grid.width=grid.height=o.n;const im=grid.getContext('2d').createImageData(o.n,o.n),palette=[[50,65,72],[101,190,179],[232,158,82],[180,136,210],[123,133,104]];
   for(let i=0;i<o.n*o.n;i++){const c=kind==='agreement'?palette[o.agreement[i]]:o.valid[i]?(o.observed[i]?[83,160,188]:[146,153,119]):[50,65,72];im.data.set([...c,255],i*4);}grid.getContext('2d').putImageData(im,0,0);ctx.imageSmoothingEnabled=false;ctx.drawImage(grid,0,0,2048,2048);ctx.imageSmoothingEnabled=true;
  }
@@ -84,6 +92,7 @@ function renderLegend(kind){let rows=[],title='';if(kind==='agreement'){title='P
  else if(kind==='observed'){title='Held-out natural-lake water';rows=[['Mapped water','#53a0bc'],['Evaluated dry land','#929977'],['Excluded / unknown','#324148']];}
  else if(kind==='water'){title='Modeled basin states';rows=WATER_STATES;}
  else if(kind==='population'){title=$('populationYear').value==='1850'?'1850 large-city SAMPLE':'2020 tract-point population';rows=[['Count-sized points—not settlements','#dccbeb']];}
+ else if(kind==='tectonics'){title='Tectonic cause';rows=Object.entries(BOUNDARY_COLORS).map(([label,color])=>[label[0].toUpperCase()+label.slice(1),color]);}
  else if(stage===3&&kind==='natural'){title='Environments';rows=BIOMES;}
  else{title=kind==='elevation'?'Elevation':kind==='history'?'Geological family':kind==='natural'&&stage<3?'Landform':kind.replaceAll('-',' ')||'Map';rows=kind==='history'?HISTORY_TYPES:[['Low','#455448'],['High','#e8ce86']];}
  $('legend').innerHTML='<h2>'+escape(title)+'</h2>'+rows.map(r=>`<div class="swatch-row"><i style="background:${r[1]}"></i><span>${escape(r[0])}</span></div>`).join('')+(kind==='agreement'||kind==='observed'?'<p class="note">Natural water bodies ≥25 km². Reservoirs, seasonal water, cropped boundary systems, non-US coverage and map edges are excluded. This is not a complete census of small lakes.</p>':'');
@@ -91,7 +100,7 @@ function renderLegend(kind){let rows=[],title='';if(kind==='agreement'){title='P
 function inspect(id,repaint=true){if(!world||id<0||id>=world.height.length)return;selected=id;const w=world,b=stage>=2?w.basinWater?.[w.potentialBasinId?.[id]]:null,facts=[['Elevation',fmt(w.height[id])+' m'],['Physical spacing',fmt(w.stepKm,2)+' km']];
  if(w.reference){const[lon,lat]=toLonLat(BENCHMARK_REGIONS[w.config.source],w.mesh.x[id],w.mesh.z[id]);facts.push(['Longitude / latitude',fmt(lon,3)+' / '+fmt(lat,3)]);}else facts.push(['Parent coordinates',fmt(w.mesh.x[id])+' / '+fmt(w.mesh.z[id])+' km']);
  if(stage>=2)facts.push(['Full upstream area',fmt(w.area[id])+' km²']);if(b)facts.push(['Basin state',b.status],['Spill / actual level',fmt(b.spillM)+' / '+fmt(b.level)+' m']);
- if(stage>=3)facts.push(['Precipitation',fmt(w.rainfall[id])+' mm/y'],['Temperature',fmt(w.temperature[id],1)+' °C']);if(stage===4)facts.push(['Human potential',fmt(w.humanPotential[id]*100)+' / 100'],['Food potential',fmt(w.productivity[id]*100)+' / 100']);
+ if(stage>=3)facts.push(['Precipitation',fmt(w.rainfall[id])+' mm/y'],['Temperature',fmt(w.temperature[id],1)+' °C']);if(stage===4)facts.push(['Human potential',fmt(w.humanPotential[id]*100)+' / 100'],['Food potential',fmt(w.productivity[id]*100)+' / 100']);if(w.parentDomain)facts.push(...tectonicFacts(w,id));
  $('inspect').hidden=false;$('legend').hidden=true;$('inspectTitle').textContent=w.ocean[id]?'Ocean':b?'Water-basin diagnosis':'Physical sample';$('inspectFacts').innerHTML=facts.map(([k,v])=>`<div><small>${escape(k)}</small><b>${escape(v)}</b></div>`).join('');
  $('inspectNote').textContent=w.parentDomain?'This is a parent-world sample. Its contributing area and drainage continue outside the visible window; the gold trace is not rerouted at the edge.':`Blind real-terrain prediction. Climate: ${w.climateForcing?.kind||'not computed yet'}. Water/population targets do not enter this prediction.`;if(repaint)paint();}
 function stop(){playing=false;clearTimeout(timer);$('play').textContent='▶ Watch build';}
