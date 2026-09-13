@@ -152,7 +152,7 @@ function pivot(x,y) {
 }
 async function selectModel(id) {
   const model=byId.get(id);if(!model||!renderer) return;
-  current=model;const token=++loadToken;
+  current=model;const token=++loadToken;document.body.dataset.ready="";
   loadAbort?.abort();loadAbort=new AbortController();
   $("model-name").textContent=model.name;$("model-era").textContent=model.era.join(" / ");
   $("model-byline").textContent=model.creator+" · "+packById(model.pack).name;
