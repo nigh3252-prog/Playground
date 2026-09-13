@@ -1,5 +1,4 @@
 import {clamp,noise} from './world-utils.mjs';
-import {plateAt} from './tectonic-plates.mjs';
 
 function fbm(x,z,seed){
  let value=0,amplitude=.56,total=0;
@@ -20,16 +19,19 @@ export function synthesizeTectonicTerrain({seed,mesh,tectonics,history}){
  if(!mesh?.x||!mesh?.z||!history?.uplift)throw new Error('Invalid tectonic terrain input');
  const count=mesh.x.length,elevation=new Float32Array(count),continentality=new Float32Array(count),ruggedness=new Float32Array(count),{width,height,sizeKm}=history;
  for(let i=0;i<count;i++){
-  const x=mesh.x[i],z=mesh.z[i],u=x/sizeKm,v=z/sizeKm,plate=plateAt(tectonics,x,z),broad=fbm(u*3.1,v*3.1,seed+5),detail=fbm(u*12.5,v*12.5,seed+81),grain=fbm(u*34,v*34,seed+44),signal=plate.buoyancy-.35+broad*.15+detail*.045;
-  const uplift=sampleGrid(history.uplift,width,height,x,z,sizeKm),subsidence=sampleGrid(history.subsidence,width,height,x,z,sizeKm),volcanism=sampleGrid(history.volcanism,width,height,x,z,sizeKm),shear=sampleGrid(history.shear,width,height,x,z,sizeKm),boundaryDistance=sampleGrid(history.boundaryDistance,width,height,x,z,sizeKm);
+  const x=mesh.x[i],z=mesh.z[i],u=x/sizeKm,v=z/sizeKm,broad=fbm(u*3.1,v*3.1,seed+5),detail=fbm(u*12.5,v*12.5,seed+81),grain=fbm(u*34,v*34,seed+44),wx=x+sizeKm*.048*fbm(u*4.2,v*4.2,seed+11),wz=z+sizeKm*.048*fbm(u*4.2+17,v*4.2-9,seed+19);
+  let continent=0;
+  for(const block of tectonics.continents){const dx=wx-block.x,dz=wz-block.z,c=Math.cos(block.angle),s=Math.sin(block.angle),distance=((dx*c+dz*s)/block.rx)**2+((-dx*s+dz*c)/block.rz)**2;continent=Math.max(continent,Math.exp(-distance));}
+  const signal=continent-.38+broad*.13+detail*.045;
+  const uplift=sampleGrid(history.uplift,width,height,x,z,sizeKm),subsidence=sampleGrid(history.subsidence,width,height,x,z,sizeKm),volcanism=sampleGrid(history.volcanism,width,height,x,z,sizeKm),shear=sampleGrid(history.shear,width,height,x,z,sizeKm);
   continentality[i]=signal;
   let base;
   if(signal<0){
-   const shelf=plate.crust==='oceanic'?clamp(boundaryDistance/330,.1,1):clamp(boundaryDistance/180,.18,1);
+   const shelf=clamp((.38-continent)*4.5,.08,1);
    base=signal*11200*shelf;
   }else base=55+signal*1080+detail*125+grain*42;
-  const mountainTexture=.73+.31*Math.abs(fbm(u*21+uplift*2.7,v*8.5-u*3.2,seed+701))+.13*grain;
-  const relief=uplift*2580*mountainTexture-subsidence*1120+volcanism*760+shear*180*grain;
+  const mountainTexture=.46+.58*Math.abs(fbm(u*21+uplift*2.7,v*8.5-u*3.2,seed+701))+.18*Math.max(0,grain);
+  const relief=uplift*2180*mountainTexture-subsidence*1120+volcanism*760+shear*180*grain;
   ruggedness[i]=clamp(uplift*.78+volcanism*.55+shear*.3+Math.abs(grain)*.18,0,1.5);
   elevation[i]=base+relief;
  }

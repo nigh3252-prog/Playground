@@ -76,7 +76,7 @@ export function planTectonicPlates({seed=431970387,sizeKm=4800,padding=.22}={}){
   const roll=r(),crust=roll<.43?'continental':roll<.74?'oceanic':'mixed',ageMyr=crust==='oceanic'?8+r()*165:120+r()*1750,angle=r()*Math.PI*2,speed=.035+r()*.17;
   plates.push({id,centerX,centerZ,crust,ageMyr,buoyancy:crustBuoyancy(crust,ageMyr),velocityX:Math.cos(angle)*speed,velocityZ:Math.sin(angle)*speed});
  }
- const tectonics={seed,sizeKm,paddingKm,warpSeed:(seed^0x85ebca6b)>>>0,plates,boundaries:[]};
+ const tectonics={seed,sizeKm,paddingKm,warpSeed:(seed^0x85ebca6b)>>>0,plates,boundaries:[],continents:[]};
  const raw=traceBoundaries(tectonics);
  if(!raw.length)throw new Error('Tectonic plate plan has no boundaries');
 
@@ -88,6 +88,16 @@ export function planTectonicPlates({seed=431970387,sizeKm=4800,padding=.22}={}){
  const convergence=.13+r()*.08;
  a.velocityX=dominant.nx*convergence;a.velocityZ=dominant.nz*convergence;
  b.velocityX=-dominant.nx*convergence;b.velocityZ=-dominant.nz*convergence;
+
+ const middle=dominant.points[Math.floor(dominant.points.length/2)],primaryAcross=(.15+r()*.035)*sizeKm,primaryAlong=(.29+r()*.055)*sizeKm,primaryAngle=Math.atan2(dominant.tz,dominant.tx);
+ const primaryMargin=primaryAcross*.45,primaryX=Math.max(primaryMargin,Math.min(sizeKm-primaryMargin,middle.x-dominant.nx*primaryAcross*.48)),primaryZ=Math.max(primaryMargin,Math.min(sizeKm-primaryMargin,middle.z-dominant.nz*primaryAcross*.48));
+ tectonics.continents.push({id:0,plateId:a.id,x:primaryX,z:primaryZ,angle:primaryAngle,rx:primaryAlong,rz:primaryAcross,ageMyr:a.ageMyr});
+ const continentCount=2+Math.floor(r()*2),hosts=plates.filter(plate=>plate.id!==b.id);
+ while(tectonics.continents.length<continentCount){
+  const host=hosts[Math.floor(r()*hosts.length)];host.crust='continental';host.ageMyr=280+r()*1450;host.buoyancy=crustBuoyancy(host.crust,host.ageMyr);
+  const rx=(.2+r()*.12)*sizeKm,rz=(.12+r()*.1)*sizeKm,margin=rz*.45,x=Math.max(margin,Math.min(sizeKm-margin,host.centerX+(r()-.5)*sizeKm*.11)),z=Math.max(margin,Math.min(sizeKm-margin,host.centerZ+(r()-.5)*sizeKm*.11));
+  tectonics.continents.push({id:tectonics.continents.length,plateId:host.id,x,z,angle:r()*Math.PI,rx,rz,ageMyr:host.ageMyr});
+ }
 
  tectonics.boundaries=raw.map((boundary,id)=>{
   const pa=plates[boundary.plateA],pb=plates[boundary.plateB],relativeX=pa.velocityX-pb.velocityX,relativeZ=pa.velocityZ-pb.velocityZ,normalRate=relativeX*boundary.nx+relativeZ*boundary.nz,signedShear=relativeX*boundary.tx+relativeZ*boundary.tz,shearRate=Math.abs(signedShear),kind=boundaryKind(pa,pb,normalRate,shearRate),polarity=kind==='subduction'?(pa.buoyancy>=pb.buoyancy?pa.id:pb.id):null;

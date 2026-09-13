@@ -8,6 +8,9 @@ test('plate plans are deterministic and cover the padded parent domain',()=>{
  assert.deepEqual(a,b);
  assert.ok(a.plates.length>=6&&a.plates.length<=10);
  assert.ok(a.boundaries.length>0);
+ assert.ok(a.continents.length>=2&&a.continents.length<=3);
+ assert.ok(a.continents.every(block=>a.plates.some(plate=>plate.id===block.plateId)));
+ assert.ok(a.continents.every(block=>block.x>=block.rz*.45&&block.x<=a.sizeKm-block.rz*.45&&block.z>=block.rz*.45&&block.z<=a.sizeKm-block.rz*.45));
  for(const [x,z] of [[0,0],[2048,2048],[4096,4096],[-200,100],[4250,3900]]){
   const plate=plateAt(a,x,z);
   assert.ok(a.plates.some(candidate=>candidate.id===plate.id));

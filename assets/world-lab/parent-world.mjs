@@ -19,7 +19,7 @@ export function generateParentTerrain(options={}){
  if(options.wind!==undefined&&!['west','east'].includes(options.wind))throw new Error('Invalid wind');
  const plan=planParent(seed,sizeKm),mesh=createTerrainMesh(n,sizeKm,seed),history=buildTectonicHistory(plan.tectonics,{width:n,height:n,sizeKm}),base=synthesizeTectonicTerrain({seed,mesh,tectonics:plan.tectonics,history}),erosion=erodeTerrain({elevation:base.elevation,width:n,height:n},history.tectonicAge,{passes:4}),N=n*n,height=new Float32Array(N),landHistory=new Uint8Array(N),featureAt=new Int16Array(N).fill(-1),ocean=new Uint8Array(N);
  const baseAt=(x,z)=>{const column=clamp(Math.round(x/sizeKm*(n-1)),0,n-1),row=clamp(Math.round(z/sizeKm*(n-1)),0,n-1),value=erosion.elevation[row*n+column];return{height:value,landBlend:clamp((value+80)/260,0,1)};};
- const geologyPlan=planGeology({seed,sizeKm,northAxis:.2,eastAxis:.8,baseAt}),featurePlan={features:geologyPlan.features};
+ const geologyPlan=planGeology({seed,sizeKm,northAxis:.2,eastAxis:.8,baseAt,tectonics:{...plan.tectonics,history}}),featurePlan={features:geologyPlan.features};
  for(let i=0;i<N;i++){const raw=erosion.elevation[i],g=raw>0?applyGeology(featurePlan,mesh.x[i],mesh.z[i],raw):{height:raw,landHistory:0,feature:-1};height[i]=g.height*Number(options.relief||1);landHistory[i]=g.landHistory;featureAt[i]=g.feature;}
  const queue=new Int32Array(N);let head=0,tail=0;for(let i=0;i<N;i++)if(mesh.boundary[i]&&height[i]<=0){ocean[i]=1;queue[tail++]=i;}
  while(head<tail){const i=queue[head++];for(let k=mesh.offsets[i];k<mesh.offsets[i+1];k++){const j=mesh.neighbors[k];if(!ocean[j]&&height[j]<=0){ocean[j]=1;queue[tail++]=j;}}}

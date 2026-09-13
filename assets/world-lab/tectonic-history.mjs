@@ -1,16 +1,17 @@
-import {clamp,random32} from './world-utils.mjs';
+import {clamp,noise,random32} from './world-utils.mjs';
 import {plateAt} from './tectonic-plates.mjs';
 
 const gauss=value=>Math.exp(-(value*value));
 
 function closestOnBoundary(boundary,plates,x,z){
  const a=plates[boundary.plateA],b=plates[boundary.plateB],cdx=b.centerX-a.centerX,cdz=b.centerZ-a.centerZ,centerLength=Math.hypot(cdx,cdz)||1,nx=cdx/centerLength,nz=cdz/centerLength;
- let bestDistance=Infinity,bestSigned=0;
+ let bestDistance=Infinity,bestSigned=0,bestAlong=0,travelled=0;
  for(let i=1;i<boundary.points.length;i++){
-  const p=boundary.points[i-1],q=boundary.points[i],dx=q.x-p.x,dz=q.z-p.z,length2=dx*dx+dz*dz||1,t=clamp(((x-p.x)*dx+(z-p.z)*dz)/length2,0,1),cx=p.x+t*dx,cz=p.z+t*dz,ox=x-cx,oz=z-cz,distance=Math.hypot(ox,oz);
-  if(distance<bestDistance){bestDistance=distance;bestSigned=ox*nx+oz*nz;}
+  const p=boundary.points[i-1],q=boundary.points[i],dx=q.x-p.x,dz=q.z-p.z,length2=dx*dx+dz*dz||1,length=Math.sqrt(length2),t=clamp(((x-p.x)*dx+(z-p.z)*dz)/length2,0,1),cx=p.x+t*dx,cz=p.z+t*dz,ox=x-cx,oz=z-cz,distance=Math.hypot(ox,oz);
+  if(distance<bestDistance){bestDistance=distance;bestSigned=ox*nx+oz*nz;bestAlong=travelled+t*length;}
+  travelled+=length;
  }
- return{distance:bestDistance,signed:bestSigned};
+ return{distance:bestDistance,signed:bestSigned,along:bestAlong};
 }
 
 function crustCode(crust){return crust==='continental'?2:crust==='mixed'?1:0;}
@@ -29,17 +30,18 @@ export function buildTectonicHistory(tectonics,{width,height,sizeKm,eras=3}={}){
   for(const boundary of tectonics.boundaries){
    const nearest=closestOnBoundary(boundary,tectonics.plates,x,z),distance=nearest.distance,signed=nearest.signed;
    boundaryDistance[i]=Math.min(boundaryDistance[i],distance);
-   const rate=clamp(Math.abs(boundary.normalRate)/.34,.2,1.25),activity=episodeStrength*rate;
+   const alongScale=Math.max(70,(boundary.lengthKm||sizeKm*.3)*.18),along=nearest.along/alongScale,variation=clamp(.82+.34*noise(along,boundary.id*1.71,tectonics.seed+913),.48,1.24),widthVariation=clamp(.92+.42*noise(along*.63+7,boundary.id*.91,tectonics.seed+1217),.58,1.42),offset=42*noise(along*.77-5,boundary.id*2.13,tectonics.seed+1597),warpedSigned=signed-offset,rate=clamp(Math.abs(boundary.normalRate)/.34,.2,1.25),activity=episodeStrength*rate*variation;
    if(boundary.kind==='subduction'){
-    const overridingSign=boundary.polarity===boundary.plateB?1:-1,side=signed*overridingSign;
-    subsidence[i]+=gauss((side+38)/44)*.76*activity;
-    uplift[i]+=gauss((side-92)/128)*.82*activity;
-    volcanism[i]+=gauss((side-158)/62)*.7*activity;
+    const overridingSign=boundary.polarity===boundary.plateB?1:-1,side=warpedSigned*overridingSign;
+    subsidence[i]+=gauss((side+38)/(44*widthVariation))*.76*activity;
+    uplift[i]+=gauss((side-92)/(128*widthVariation))*.82*activity;
+    volcanism[i]+=gauss((side-158)/(62*widthVariation))*.7*activity;
    }else if(boundary.kind==='collision'){
-    uplift[i]+=gauss(signed/205)*.95*activity;
+    const core=gauss(warpedSigned/(190*widthVariation)),splay=gauss((warpedSigned-(55+35*noise(along*.4,4,tectonics.seed+1777)))/(105*widthVariation));
+    uplift[i]+=(core*.78+splay*.2)*activity;
    }else if(boundary.kind==='rift'){
-    subsidence[i]+=gauss(signed/48)*.72*activity;
-    uplift[i]+=gauss((Math.abs(signed)-82)/58)*.34*activity;
+    subsidence[i]+=gauss(warpedSigned/(48*widthVariation))*.72*activity;
+    uplift[i]+=gauss((Math.abs(warpedSigned)-82)/(58*widthVariation))*.34*activity;
    }else if(boundary.kind==='transform'){
     shear[i]+=gauss(distance/38)*clamp(boundary.shearRate/.25,.15,1.1)*episodeStrength;
    }

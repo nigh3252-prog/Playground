@@ -25,6 +25,11 @@ test('continental collision is broad without a dominant volcanic arc',()=>{
  assert.ok(max(history.volcanism)<.12);
 });
 
+test('collision strength and belt width vary along strike',()=>{
+ const history=buildTectonicHistory(plan('collision'),mesh),north=at(history.uplift,.62,.24),south=at(history.uplift,.62,.76);
+ assert.ok(Math.abs(north-south)>.03,`${north} and ${south} formed a uniform ribbon`);
+});
+
 test('rifting creates a subsiding axis and uplifted shoulders',()=>{
  const history=buildTectonicHistory(plan('rift'),mesh);
  assert.ok(at(history.subsidence,.5)>.25);
