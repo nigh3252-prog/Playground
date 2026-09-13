@@ -189,17 +189,17 @@ function renderCards() {
   if(list.length&&!list.some(m=>m.id===current()?.id))selectModel(list[0].id);
 }
 function enterHeavy() {
-  if(active)return;active=true;onlyFavorites=false;toggle.textContent="← Regular packs";toggle.setAttribute("aria-pressed","true");
+  if(active)return;active=true;onlyFavorites=false;toggle.textContent="← Packs";toggle.setAttribute("aria-pressed","true");
   document.body.classList.add("heavy-reference-mode");
-  $("view-tools").hidden=true;$("inspect-panel").hidden=true;$("inspect-open").setAttribute("aria-expanded","false");
+  const tools=document.querySelector(".view-tools"),hint=document.querySelector(".gesture-hint");if(tools)tools.hidden=true;if(hint)hint.textContent="Drag to orbit · Pinch to zoom · source-hosted";
+  $("inspect-panel").hidden=true;$("inspect-open").setAttribute("aria-expanded","false");
   $("collection-count").textContent="87 BUNDLED + 9 HEAVY REFS";
-  $("gesture-hint").textContent="Drag to orbit · Pinch to zoom · source-hosted";
   renderCards();selectModel(current()?.id||HEAVY_MODELS[0].id);
 }
 function exitHeavy(dispatch=true) {
-  if(!active)return;active=false;onlyFavorites=false;toggle.textContent="Heavy refs · 9";toggle.setAttribute("aria-pressed","false");document.body.classList.remove("heavy-reference-mode");
+  if(!active)return;active=false;onlyFavorites=false;toggle.textContent="Heavy · 9";toggle.setAttribute("aria-pressed","false");document.body.classList.remove("heavy-reference-mode");
   frame?.remove();frame=null;const canvas=$("stage").querySelector("canvas");if(canvas)canvas.style.visibility="";
-  $("view-tools").hidden=false;$("gesture-hint").textContent="Drag to orbit · Pinch to zoom";$("export-open").textContent="Export favorites ↗";
+  const tools=document.querySelector(".view-tools"),hint=document.querySelector(".gesture-hint");if(tools)tools.hidden=false;if(hint)hint.textContent="Drag to orbit · Pinch to zoom";$("export-open").textContent="Export favorites ↗";
   if(dispatch)$("pack").dispatchEvent(new Event("change",{bubbles:true}));
   setTimeout(()=>{const id=window.armory?.current;if(id)window.armory.select(id);},0);
 }
@@ -215,7 +215,7 @@ function injectStyle() {
   .heavy-reference-mode .stage-heading button,.heavy-reference-mode .stage-footer button,.heavy-reference-mode .stage-footer a{pointer-events:auto}
   .heavy-thumb{height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;background:linear-gradient(145deg,#1a222d,#0e131a);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#c4ee8f;border-bottom:1px solid #2a3442}
   .heavy-thumb b{font-size:2rem;letter-spacing:.15em}.heavy-thumb small{color:#8290a3;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}
-  #heavy-ref-toggle[aria-pressed="true"]{border-color:#c4ee8f;color:#c4ee8f}
+  #heavy-ref-toggle{white-space:nowrap}#heavy-ref-toggle[aria-pressed="true"]{border-color:#c4ee8f;color:#c4ee8f}
   `;document.head.append(style);
 }
 
@@ -223,7 +223,7 @@ async function boot() {
   for(let i=0;i<100&&!window.armory;i++)await new Promise(r=>setTimeout(r,50));
   if(!window.armory)return;
   injectStyle();
-  toggle=document.createElement("button");toggle.id="heavy-ref-toggle";toggle.className="quiet";toggle.type="button";toggle.textContent="Heavy refs · 9";toggle.setAttribute("aria-pressed","false");toggle.title="Browse free LMGs, miniguns, autocannons and other oversized weapon references";
+  toggle=document.createElement("button");toggle.id="heavy-ref-toggle";toggle.className="quiet";toggle.type="button";toggle.textContent="Heavy · 9";toggle.setAttribute("aria-pressed","false");toggle.title="Browse free LMGs, miniguns, autocannons and other oversized weapon references";
   $("pack").closest(".packbar").insertBefore(toggle,$("catalog-toggle"));
   toggle.addEventListener("click",()=>active?exitHeavy():enterHeavy());
 
