@@ -25,6 +25,9 @@ for job in jobs:
     else:
         raise ValueError(str(source))
 
+    if bpy.context.object and bpy.context.object.mode != "OBJECT":
+        bpy.ops.object.mode_set(mode="OBJECT")
+
     if job["id"] == "historical-mg08-15":
         for obj in list(bpy.context.scene.objects):
             if obj.type == "MESH" and obj.name.lower().startswith("plane"):
@@ -53,7 +56,8 @@ for job in jobs:
             if shader:
                 shader.inputs["Base Color"].default_value = base
                 shader.inputs["Roughness"].default_value = 0.65
-    bpy.ops.object.select_all(action="DESELECT")
+    for obj in bpy.context.scene.objects:
+        obj.select_set(False)
     objects = [o for o in bpy.context.scene.objects if o.type in ("MESH", "ARMATURE", "EMPTY")]
     meshes = [o for o in objects if o.type == "MESH"]
     if not meshes:
