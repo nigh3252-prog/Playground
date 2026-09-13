@@ -8,6 +8,14 @@ import {BENCHMARK_REGIONS,PROTOCOL} from '../assets/world-lab/benchmark-protocol
 const read=(id,kind)=>JSON.parse(readFileSync(`assets/world-lab/benchmarks/${id}.${kind}.json`,'utf8'));
 const near=(a,b,tol=.01)=>assert.ok(Math.abs(a-b)<tol,`${a} != ${b}`);
 function flowCheck(w){topologicalOrder(w.receiver);let source=0,sink=0;for(let i=0;i<w.height.length;i++){assert.ok(Number.isFinite(w.height[i]));assert.ok(Number.isFinite(w.waterSurface[i]));assert.ok(Number.isFinite(w.runoff[i])&&w.runoff[i]>=0);if(w.ocean[i])continue;source+=w.mesh.nodeArea[i];const r=w.receiver[i];if(r<0||w.ocean[r])sink+=w.area[i];else assert.ok(w.rank[r]<w.rank[i]);}near(source,sink,.2);}
+test('fictional parent relief is caused by tectonic plates rather than painted ranges',()=>{
+ const parent=generateParentTerrain({seed:431970387,parentN:49});
+ assert.ok(parent.geology.tectonics);
+ assert.ok(parent.geology.tectonics.plates.length>=6);
+ assert.ok(parent.geology.tectonics.boundaries.some(({kind})=>kind==='subduction'||kind==='collision'));
+ assert.equal(parent.geology.ranges,undefined);
+ assert.ok(parent.height.some(value=>value>1500));
+});
 for(const seed of [1,42,431970387])test(`parent ${seed}: crop is a view of an intact solved world`,()=>{
  const t=generateParentTerrain({seed,parentN:49}),stages=predictFromTerrain(t),w=stages[3];flowCheck(w);assert.equal(w.config.sizeKm,4800);assert.equal(w.parentDomain.windowKm,1200);assert.equal(w.height.length,49*49);
  const before=w.receiver.slice(),areas=w.area.slice(),heights=w.height.slice(),a=chooseWindow(w,0),b=chooseWindow(w,1);assert.deepEqual(a,chooseWindow(w,0));assert.notDeepEqual(a,b);

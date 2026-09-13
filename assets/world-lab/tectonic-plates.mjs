@@ -10,9 +10,9 @@ function shuffledSlots(r){
 }
 
 function crustBuoyancy(crust,ageMyr){
- if(crust==='continental')return .72-ageMyr*.00035;
- if(crust==='mixed')return .46-ageMyr*.00055;
- return .18-ageMyr*.00105;
+ if(crust==='continental')return .68+Math.min(2000,ageMyr)*.00004;
+ if(crust==='mixed')return .43+Math.min(1000,ageMyr)*.000025;
+ return Math.max(.08,.23-ageMyr*.00075);
 }
 
 function assignPlate(tectonics,xKm,zKm){
