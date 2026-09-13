@@ -91,7 +91,7 @@ for pack in CONFIG["packs"]:
     if pack["mode"] == "archive":
         directory = unpack(pack["url"], WORK / pack["id"])
         for path in candidates(directory):
-            if re.search(r"scope|silencer|bayonet|suppressor|grenade", path.stem, re.I):
+            if "Accessories" in path.parts or re.search(r"scope|silencer|bayonet|suppressor|grenade|bipod", path.stem, re.I):
                 continue
             entries.append({"name": nice_name(path.stem), "path": path, "url": pack["url"]})
     else:
@@ -131,7 +131,7 @@ for pack in CONFIG["packs"]:
         models.append(model)
 
 (WORK / "jobs.json").write_text(json.dumps(jobs))
-subprocess.run(["blender", "--background", "--factory-startup", "--disable-autoexec", "--python", str(ROOT / "tools" / "convert_assets.py"), "--", str(WORK / "jobs.json")], check=True)
+subprocess.run(["blender", "--background", "--factory-startup", "--disable-autoexec", "--python-exit-code", "1", "--python", str(ROOT / "tools" / "convert_assets.py"), "--", str(WORK / "jobs.json")], check=True)
 
 # Vendor the minimal runtime and its license so browsing and exports need no CDN.
 vendor = ROOT / "vendor"
