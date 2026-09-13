@@ -15,6 +15,7 @@ test('fictional parent relief is caused by tectonic plates rather than painted r
  assert.ok(parent.geology.tectonics.boundaries.some(({kind})=>kind==='subduction'||kind==='collision'));
  assert.equal(parent.geology.ranges,undefined);
  assert.ok(parent.height.some(value=>value>1500));
+ assert.ok(parent.erosion.sediment.some(value=>value>0));
 });
 for(const seed of [1,42,431970387])test(`parent ${seed}: crop is a view of an intact solved world`,()=>{
  const t=generateParentTerrain({seed,parentN:49}),stages=predictFromTerrain(t),w=stages[3];flowCheck(w);assert.equal(w.config.sizeKm,4800);assert.equal(w.parentDomain.windowKm,1200);assert.equal(w.height.length,49*49);
