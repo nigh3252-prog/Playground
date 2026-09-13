@@ -1,0 +1,102 @@
+import {noise,random32} from './world-utils.mjs';
+
+const pairKey=(a,b)=>a<b?`${a}:${b}`:`${b}:${a}`;
+
+function shuffledSlots(r){
+ const slots=[];
+ for(let z=0;z<3;z++)for(let x=0;x<3;x++)slots.push([x,z]);
+ for(let i=slots.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[slots[i],slots[j]]=[slots[j],slots[i]];}
+ return slots;
+}
+
+function crustBuoyancy(crust,ageMyr){
+ if(crust==='continental')return .72-ageMyr*.00035;
+ if(crust==='mixed')return .46-ageMyr*.00055;
+ return .18-ageMyr*.00105;
+}
+
+function assignPlate(tectonics,xKm,zKm){
+ const {sizeKm,warpSeed,plates}=tectonics;
+ const frequency=2.35/sizeKm,amplitude=sizeKm*.038;
+ const x=xKm+noise(xKm*frequency,zKm*frequency,warpSeed)*amplitude;
+ const z=zKm+noise(xKm*frequency+19,zKm*frequency-11,warpSeed^0x6a09e667)*amplitude;
+ let best=plates[0],bestDistance=Infinity;
+ for(const plate of plates){
+  const dx=x-plate.centerX,dz=z-plate.centerZ;
+  const distance=dx*dx+dz*dz;
+  if(distance<bestDistance){bestDistance=distance;best=plate;}
+ }
+ return best;
+}
+
+function traceBoundaries(tectonics){
+ const groups=new Map(),steps=52,min=-tectonics.paddingKm,max=tectonics.sizeKm+tectonics.paddingKm,step=(max-min)/steps;
+ const ids=new Int16Array((steps+1)*(steps+1));
+ for(let z=0;z<=steps;z++)for(let x=0;x<=steps;x++)ids[z*(steps+1)+x]=assignPlate(tectonics,min+x*step,min+z*step).id;
+ const record=(a,b,x,z)=>{
+  if(a===b)return;
+  const key=pairKey(a,b);
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push({x,z});
+ };
+ for(let z=0;z<=steps;z++)for(let x=0;x<=steps;x++){
+  const i=z*(steps+1)+x,a=ids[i];
+  if(x<steps)record(a,ids[i+1],min+(x+.5)*step,min+z*step);
+  if(z<steps)record(a,ids[i+steps+1],min+x*step,min+(z+.5)*step);
+ }
+ const boundaries=[];
+ for(const [key,samples] of groups){
+  if(samples.length<3)continue;
+  const [plateA,plateB]=key.split(':').map(Number),a=tectonics.plates[plateA],b=tectonics.plates[plateB];
+  const dx=b.centerX-a.centerX,dz=b.centerZ-a.centerZ,length=Math.hypot(dx,dz)||1,nx=dx/length,nz=dz/length,tx=-nz,tz=nx;
+  samples.sort((p,q)=>(p.x*tx+p.z*tz)-(q.x*tx+q.z*tz));
+  const stride=Math.max(1,Math.floor(samples.length/18)),points=[];
+  for(let i=0;i<samples.length;i+=stride)points.push(samples[i]);
+  const last=samples.at(-1);
+  if(points.at(-1)!==last)points.push(last);
+  boundaries.push({plateA,plateB,nx,nz,tx,tz,points,lengthKm:Math.max(step,samples.length*step*.52)});
+ }
+ return boundaries;
+}
+
+function boundaryKind(a,b,normalRate,shearRate){
+ if(normalRate>.08)return a.crust==='continental'&&b.crust==='continental'?'collision':'subduction';
+ if(normalRate<-.08)return'rift';
+ return shearRate>.09?'transform':'inactive';
+}
+
+/** Plan a deterministic, padded plate graph for a fictional parent world. */
+export function planTectonicPlates({seed=431970387,sizeKm=4800,padding=.22}={}){
+ if(!Number.isFinite(sizeKm)||sizeKm<=0)throw new Error('Invalid tectonic domain size');
+ if(!Number.isFinite(padding)||padding<0||padding>.5)throw new Error('Invalid tectonic padding');
+ seed=Number(seed)>>>0;
+ const r=random32(seed^0x9e3779b9),paddingKm=sizeKm*padding,count=7+Math.floor(r()*3),domain=sizeKm+paddingKm*2,slots=shuffledSlots(r),plates=[];
+ for(let id=0;id<count;id++){
+  const [sx,sz]=slots[id],cell=domain/3,centerX=-paddingKm+(sx+.18+r()*.64)*cell,centerZ=-paddingKm+(sz+.18+r()*.64)*cell;
+  const roll=r(),crust=roll<.43?'continental':roll<.74?'oceanic':'mixed',ageMyr=crust==='oceanic'?8+r()*165:120+r()*1750,angle=r()*Math.PI*2,speed=.035+r()*.17;
+  plates.push({id,centerX,centerZ,crust,ageMyr,buoyancy:crustBuoyancy(crust,ageMyr),velocityX:Math.cos(angle)*speed,velocityZ:Math.sin(angle)*speed});
+ }
+ const tectonics={seed,sizeKm,paddingKm,warpSeed:(seed^0x85ebca6b)>>>0,plates,boundaries:[]};
+ const raw=traceBoundaries(tectonics);
+ if(!raw.length)throw new Error('Tectonic plate plan has no boundaries');
+
+ // Select one long shared margin as the world's dominant active system. The
+ // boundary class below is still derived from the resulting relative motion.
+ const dominant=raw.reduce((best,item)=>item.lengthKm>best.lengthKm?item:best,raw[0]),a=plates[dominant.plateA],b=plates[dominant.plateB];
+ a.crust='continental';a.ageMyr=450+r()*900;a.buoyancy=crustBuoyancy(a.crust,a.ageMyr);
+ b.crust='oceanic';b.ageMyr=20+r()*110;b.buoyancy=crustBuoyancy(b.crust,b.ageMyr);
+ const convergence=.13+r()*.08;
+ a.velocityX=dominant.nx*convergence;a.velocityZ=dominant.nz*convergence;
+ b.velocityX=-dominant.nx*convergence;b.velocityZ=-dominant.nz*convergence;
+
+ tectonics.boundaries=raw.map((boundary,id)=>{
+  const pa=plates[boundary.plateA],pb=plates[boundary.plateB],relativeX=pa.velocityX-pb.velocityX,relativeZ=pa.velocityZ-pb.velocityZ,normalRate=relativeX*boundary.nx+relativeZ*boundary.nz,signedShear=relativeX*boundary.tx+relativeZ*boundary.tz,shearRate=Math.abs(signedShear),kind=boundaryKind(pa,pb,normalRate,shearRate),polarity=kind==='subduction'?(pa.buoyancy>=pb.buoyancy?pa.id:pb.id):null;
+  return{id,plateA:boundary.plateA,plateB:boundary.plateB,kind,polarity,normalRate,shearRate,signedShear,lengthKm:boundary.lengthKm,points:boundary.points};
+ });
+ return tectonics;
+}
+
+export function plateAt(tectonics,xKm,zKm){
+ if(!tectonics?.plates?.length)throw new Error('Invalid tectonic plan');
+ return assignPlate(tectonics,Number(xKm),Number(zKm));
+}
