@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11151c">
+<title>Warden Armory</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2311151c'/%3E%3Cpath d='m12 18 8 28 12-20 12 20 8-28' fill='none' stroke='%23c4ee8f' stroke-width='6'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../" aria-label="Playground home"><span class="brand-mark">W</span><span>WARDEN <b>ARMORY</b></span></a>
+  <div class="header-actions">
+    <button id="favorites-filter" class="quiet" aria-pressed="false" title="Browse all favorites">☆ <span class="wide">Favorites</span> <b id="favorite-count">0</b></button>
+    <button id="export-open" class="accent" disabled>Export <span class="wide">favorites</span> ↗</button>
+    <button id="help-open" class="icon" aria-label="Help and sources">?</button>
+  </div>
+</header>
+<div class="packbar">
+  <label for="pack">PACK</label>
+  <select id="pack" aria-label="Choose a weapon pack"><option>Loading collection…</option></select>
+  <span id="collection-count" class="mono wide"></span>
+  <button id="catalog-toggle" class="quiet" aria-expanded="true" aria-controls="catalog-panel">Hide list</button>
+</div>
+<main class="workspace">
+  <section class="viewer" aria-label="3D weapon viewer">
+    <div id="stage" tabindex="0" aria-label="Interactive 3D view. Drag to orbit, pinch or scroll to zoom, use two fingers or right drag to pan. Double click a surface to change pivot."></div>
+    <div class="stage-heading">
+      <div><div id="model-era" class="eyebrow">COLLECTION</div><h1 id="model-name">Loading armory…</h1><div id="model-byline" class="muted"></div></div>
+      <button id="model-favorite" class="favorite-large" disabled aria-label="Add current weapon to favorites" aria-pressed="false">☆</button>
+    </div>
+    <div id="load-status" class="load-status" role="status">Loading collection…</div>
+    <button id="retry-model" class="retry" hidden>Retry model</button>
+    <div class="view-tools">
+      <div class="tool-group">
+        <button id="reset-view" title="Fit whole model (R)">Fit</button>
+        <button id="side-view" title="Side view">Side</button>
+        <button id="top-view" title="Top view">Top</button>
+        <button id="spin" aria-pressed="false">Spin</button>
+      </div>
+      <button id="inspect-open" class="inspect-button" aria-expanded="false" aria-controls="inspect-panel">Inspect <span>⌘</span></button>
+    </div>
+    <aside id="inspect-panel" class="inspect-panel" hidden>
+      <div class="panel-title">Inspection <button id="inspect-close" class="icon" aria-label="Close inspection">×</button></div>
+      <label class="check"><input id="wireframe" type="checkbox"> Wireframe</label>
+      <label>Show part <select id="parts"><option value="all">Whole weapon</option></select></label>
+      <label>Animation <select id="animation"><option value="">No animation</option></select></label>
+      <div class="inline"><button id="rotate-x">Turn X 90°</button><button id="rotate-y">Turn Y 90°</button></div>
+      <p>Double-click or double-tap a surface to move the orbit pivot.</p>
+      <p id="mesh-stats" class="mono"></p>
+    </aside>
+    <div class="stage-footer">
+      <div class="navigation"><button id="previous" class="icon" aria-label="Previous weapon">←</button><span id="position" class="mono">—</span><button id="next" class="icon" aria-label="Next weapon">→</button></div>
+      <span class="gesture-hint">Drag to orbit · Pinch to zoom</span>
+      <a id="source-link" href="#" target="_blank" rel="noopener noreferrer">Source ↗</a>
+    </div>
+  </section>
+  <aside id="catalog-panel" class="catalog-panel">
+    <div class="catalog-controls">
+      <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a weapon…" aria-label="Search weapons" autocomplete="off"><kbd>/</kbd></label>
+      <div class="catalog-filter-row"><select id="era" aria-label="Filter by era"><option value="all">Every era</option><option>Sci-fi</option><option>Modern</option><option>WWI</option><option>WWII</option><option>Antique</option></select><span id="result-count" class="mono"></span></div>
+    </div>
+    <div id="cards" class="cards" aria-label="Weapon catalog"></div>
+    <div id="empty" class="empty" hidden><strong>No weapons here yet.</strong><p>Try another search, or star a model to save it.</p><button id="clear-filters">Clear filters</button></div>
+    <div class="catalog-footer"><span id="pack-caption"></span><button id="sources-open" class="link-button">Sources & credits ↗</button></div>
+  </aside>
+</main>
+<dialog id="details-dialog">
+  <form method="dialog" class="dialog-title"><h2>Warden Armory</h2><button class="icon" aria-label="Close help">×</button></form>
+  <div class="dialog-body">
+    <p>Browse visual game models, save a shortlist, and take the original GLBs into your next project.</p>
+    <div class="help-grid"><span>Orbit</span><b>Drag / one finger</b><span>Pan</span><b>Right drag / two fingers</b><span>Zoom</span><b>Scroll / pinch</b><span>Move pivot</span><b>Double-click / double-tap a surface</b><span>Navigate</span><b>← →</b><span>Favorite / fit</span><b>F / R</b></div>
+    <p>Favorites and notes are saved in this browser. Export JSON as a backup; import it on another device. The model ZIP contains all favorites, even when a pack or search filter is active.</p>
+    <h3>Sources & licenses</h3>
+    <p id="source-summary"></p>
+    <div id="sources"></div>
+    <h3>More collections to explore</h3>
+    <p>These source links are outside this bundled collection:</p>
+    <p><a href="https://3dmodelscc0.itch.io/free-cc0-guns-explosives-pack" target="_blank" rel="noopener noreferrer">3DModelsCC0 · Guns & Explosives ↗</a> — CC0; includes M3, Luger, Suomi KP and modern firearms. Download from the creator.</p>
+    <p><a href="https://sketchfab.com/search?features=downloadable&amp;q=ww2%20weapon&amp;type=models" target="_blank" rel="noopener noreferrer">Sketchfab · downloadable WWII models ↗</a> — discovery/reference link; each model has its own license and download conditions.</p>
+    <p class="muted">This is a curated collection, not an exhaustive list of every free model online. Historical accuracy and game readiness vary. Exported models still need scale, attachment points and behavior configured in Warden Mech.</p>
+    <a href="CREDITS.txt" target="_blank" rel="noopener">Complete asset credits</a> · <a href="vendor/THREE-LICENSE.txt" target="_blank" rel="noopener">Three.js license</a>
+  </div>
+</dialog>
+<dialog id="export-dialog">
+  <form method="dialog" class="dialog-title"><h2>Your favorites</h2><button class="icon" aria-label="Close export">×</button></form>
+  <div class="dialog-body">
+    <p id="export-summary"></p>
+    <div id="favorite-list" class="favorite-list"></div>
+    <p class="muted">GLBs retain the original model data. Viewer orientation and your notes go in the manifest; inspection filters do not edit the exported geometry.</p>
+    <div class="export-actions"><button id="export-zip" class="accent">Download models + credits (.zip)</button><button id="export-json">Save shortlist (.json)</button></div>
+    <p id="export-status" role="status"></p>
+    <label class="import-button">Import a shortlist <input id="import-json" type="file" accept=".json,application/json"></label>
+  </div>
+</dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript>This 3D catalog needs JavaScript enabled.</noscript>
+<script type="module" src="app.mjs"></script>
+</body>
+</html>
