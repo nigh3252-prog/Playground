@@ -239,6 +239,8 @@ Generated parent worlds no longer paint mountains from arbitrary range polylines
 
 The browser has a **Tectonic plates and boundaries** map. It shows plate/crust coloring, boundary classes, velocity arrows, and causal inspector fields for relative motion, uplift, subsidence, volcanism, and tectonic age.
 
+Generated parents also expose two reproducible tuning inputs: **Continental blocks** (`1`–`4`) and **Crust footprint** (`0.75×`–`1.45×`). They alter the seeded initial continental crust before tectonic relief, erosion, drainage, ecology, or human geography runs; they do not move sea level after generation. The defaults are `3` blocks and `1.15×`. A 40-seed quick-mesh calibration produced about `36%` mean parent land with a roughly `30%`–`42%` middle-68% range. The browser reports measured land/water coverage for the current view, and the URL/export retain both inputs for exact replay.
+
 Visual calibration used seed `431970387`, parent `4,800 km`, crop `2`, and true physical height (`1×`). The final crop sampled a `2,927 m` peak with `1,961 m` middle-90% relief at the browser's `18.75 km` parent spacing. It reads most closely as a coarse central/southern Andes–Altiplano or Patagonian-transition story: a broken convergent-margin cordillera, drier interior highland, enclosed lakes, and outward drainage. This is an analogue, not a reconstruction.
 
 The visual loop caught and corrected three artifacts:

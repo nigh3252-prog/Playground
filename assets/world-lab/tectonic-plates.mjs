@@ -66,9 +66,11 @@ function boundaryKind(a,b,normalRate,shearRate){
 }
 
 /** Plan a deterministic, padded plate graph for a fictional parent world. */
-export function planTectonicPlates({seed=431970387,sizeKm=4800,padding=.22}={}){
+export function planTectonicPlates({seed=431970387,sizeKm=4800,padding=.22,continentCount=3,crustScale=1.15}={}){
  if(!Number.isFinite(sizeKm)||sizeKm<=0)throw new Error('Invalid tectonic domain size');
  if(!Number.isFinite(padding)||padding<0||padding>.5)throw new Error('Invalid tectonic padding');
+ if(!Number.isInteger(continentCount)||continentCount<1||continentCount>4)throw new Error('Invalid continent block count');
+ if(!Number.isFinite(crustScale)||crustScale<.6||crustScale>1.6)throw new Error('Invalid continental crust footprint');
  seed=Number(seed)>>>0;
  const r=random32(seed^0x9e3779b9),paddingKm=sizeKm*padding,count=7+Math.floor(r()*3),domain=sizeKm+paddingKm*2,slots=shuffledSlots(r),plates=[];
  for(let id=0;id<count;id++){
@@ -76,7 +78,7 @@ export function planTectonicPlates({seed=431970387,sizeKm=4800,padding=.22}={}){
   const roll=r(),crust=roll<.43?'continental':roll<.74?'oceanic':'mixed',ageMyr=crust==='oceanic'?8+r()*165:120+r()*1750,angle=r()*Math.PI*2,speed=.035+r()*.17;
   plates.push({id,centerX,centerZ,crust,ageMyr,buoyancy:crustBuoyancy(crust,ageMyr),velocityX:Math.cos(angle)*speed,velocityZ:Math.sin(angle)*speed});
  }
- const tectonics={seed,sizeKm,paddingKm,warpSeed:(seed^0x85ebca6b)>>>0,plates,boundaries:[],continents:[]};
+ const tectonics={seed,sizeKm,paddingKm,continentCount,crustScale,warpSeed:(seed^0x85ebca6b)>>>0,plates,boundaries:[],continents:[]};
  const raw=traceBoundaries(tectonics);
  if(!raw.length)throw new Error('Tectonic plate plan has no boundaries');
 
@@ -89,13 +91,13 @@ export function planTectonicPlates({seed=431970387,sizeKm=4800,padding=.22}={}){
  a.velocityX=dominant.nx*convergence;a.velocityZ=dominant.nz*convergence;
  b.velocityX=-dominant.nx*convergence;b.velocityZ=-dominant.nz*convergence;
 
- const middle=dominant.points[Math.floor(dominant.points.length/2)],primaryAcross=(.15+r()*.035)*sizeKm,primaryAlong=(.29+r()*.055)*sizeKm,primaryAngle=Math.atan2(dominant.tz,dominant.tx);
+ const middle=dominant.points[Math.floor(dominant.points.length/2)],primaryAcross=(.15+r()*.035)*sizeKm*crustScale,primaryAlong=(.29+r()*.055)*sizeKm*crustScale,primaryAngle=Math.atan2(dominant.tz,dominant.tx);
  const primaryMargin=primaryAcross*.45,primaryX=Math.max(primaryMargin,Math.min(sizeKm-primaryMargin,middle.x-dominant.nx*primaryAcross*.48)),primaryZ=Math.max(primaryMargin,Math.min(sizeKm-primaryMargin,middle.z-dominant.nz*primaryAcross*.48));
  tectonics.continents.push({id:0,plateId:a.id,x:primaryX,z:primaryZ,angle:primaryAngle,rx:primaryAlong,rz:primaryAcross,ageMyr:a.ageMyr});
- const continentCount=2+Math.floor(r()*2),hosts=plates.filter(plate=>plate.id!==b.id);
+ const hosts=plates.filter(plate=>plate.id!==b.id);
  while(tectonics.continents.length<continentCount){
   const host=hosts[Math.floor(r()*hosts.length)];host.crust='continental';host.ageMyr=280+r()*1450;host.buoyancy=crustBuoyancy(host.crust,host.ageMyr);
-  const rx=(.2+r()*.12)*sizeKm,rz=(.12+r()*.1)*sizeKm,margin=rz*.45,x=Math.max(margin,Math.min(sizeKm-margin,host.centerX+(r()-.5)*sizeKm*.11)),z=Math.max(margin,Math.min(sizeKm-margin,host.centerZ+(r()-.5)*sizeKm*.11));
+  const rx=(.2+r()*.12)*sizeKm*crustScale,rz=(.12+r()*.1)*sizeKm*crustScale,margin=rz*.45,x=Math.max(margin,Math.min(sizeKm-margin,host.centerX+(r()-.5)*sizeKm*.11)),z=Math.max(margin,Math.min(sizeKm-margin,host.centerZ+(r()-.5)*sizeKm*.11));
   tectonics.continents.push({id:tectonics.continents.length,plateId:host.id,x,z,angle:r()*Math.PI,rx,rz,ageMyr:host.ageMyr});
  }
 

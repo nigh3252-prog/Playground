@@ -4,7 +4,7 @@ This extends PR #21, keeping the separate 410 m City Lab and other Playground de
 
 ## Parent worlds rather than fixed border scenery
 
-Generated terrain is now a **3,600–6,000 km parent landmass**, not a rectangle with sea on two sides and mountains on the other two. Default: 4,800 km parent / 1,200 km window. Rotated continental bodies, independent mountain corridors and inherited geological features are seeded across the parent.
+Generated terrain is now a **3,600–6,000 km parent landmass**, not a rectangle with sea on two sides and mountains on the other two. Default: 4,800 km parent / 1,200 km window, with 3 continental blocks at a 1.15× crust footprint. Both initial-crust inputs are adjustable and reproducible in the browser. Rotated continental bodies, tectonically derived mountain belts and inherited geological features are seeded across the parent.
 
 Terrain, spill levels, annual water budgets, drainage, climate, ecology and human potential are computed on the **entire parent domain**. Display triangles are clipped/interpolated without rebuilding the drainage graph. **New window** selects another deterministic crop of the SAME solved parent. **Parent** shows that full domain with the selected window outlined. Upstream land outside the window still contributes to visible rivers.
 

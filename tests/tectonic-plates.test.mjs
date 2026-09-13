@@ -40,3 +40,18 @@ test('subduction polarity points to the more buoyant overriding plate',()=>{
   assert.equal(boundary.polarity,overriding.id);
  }
 });
+
+test('continent controls set block count and scale the initial crust footprint',()=>{
+ const base=planTectonicPlates({seed:431970387,sizeKm:4096,continentCount:4,crustScale:1});
+ const larger=planTectonicPlates({seed:431970387,sizeKm:4096,continentCount:4,crustScale:1.25});
+ assert.equal(base.continents.length,4);
+ assert.equal(base.continentCount,4);
+ assert.equal(larger.crustScale,1.25);
+ for(let i=0;i<base.continents.length;i++){
+  assert.ok(Math.abs(larger.continents[i].rx/base.continents[i].rx-1.25)<1e-9);
+  assert.ok(Math.abs(larger.continents[i].rz/base.continents[i].rz-1.25)<1e-9);
+ }
+ for(const options of [{continentCount:0},{continentCount:5},{continentCount:2.5},{crustScale:.5},{crustScale:1.7}]){
+  assert.throws(()=>planTectonicPlates({seed:1,sizeKm:4096,...options}));
+ }
+});
