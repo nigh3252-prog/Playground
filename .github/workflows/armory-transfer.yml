@@ -1,0 +1,28 @@
+name: Prepare armory deployment transfer
+on:
+  push:
+    branches: [codex/armory-deploy-transfer]
+    paths: [.github/workflows/armory-transfer.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Encode the large asset for the deployment connector
+        run: |
+          python3 - <<'PY'
+          import base64, pathlib
+          data=base64.b64encode(pathlib.Path("armory/models/historical-lee-enfield.glb").read_bytes()).decode()
+          out=pathlib.Path(".deploy-transfer")
+          out.mkdir(exist_ok=True)
+          for i,start in enumerate(range(0,len(data),700000)):
+              (out/f"lee-{i:02d}.txt").write_text(data[start:start+700000])
+          print("Encoded",len(data),"characters")
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .deploy-transfer/
+          git commit -m "Prepare unchanged Lee-Enfield asset for connector transfer"
+          git push origin HEAD:codex/armory-deploy-transfer

@@ -1,7 +1,1 @@
-{
-  "git": {
-    "deploymentEnabled": {
-      "codex/warden-armory": false
-    }
-  }
-}
+{"git":{"deploymentEnabled":false}}
