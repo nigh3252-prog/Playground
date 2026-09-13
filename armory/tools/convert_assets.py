@@ -25,6 +25,11 @@ for job in jobs:
     else:
         raise ValueError(str(source))
 
+    if job["id"] == "historical-mg08-15":
+        for obj in list(bpy.context.scene.objects):
+            if obj.type == "MESH" and obj.name.lower().startswith("plane"):
+                bpy.data.objects.remove(obj, do_unlink=True)
+
     # Make legacy files portable. Do not execute embedded scripts or preserve lights/cameras.
     image_paths = {p.name.lower(): p for p in source.parent.rglob("*") if p.is_file() and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".tga", ".bmp")}
     for image in bpy.data.images:

@@ -116,6 +116,15 @@ try {
   await phone.tap("#model-favorite");assert.equal(await phone.locator("#favorite-count").innerText(),"1");
   await phone.tap("#catalog-toggle");assert.equal(await phone.locator("#catalog-toggle").getAttribute("aria-expanded"),"false");
   await phone.tap("#catalog-toggle");
+  await phone.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  const phonePixels=await phone.evaluate(()=>{
+    const source=document.querySelector("#stage canvas"),c=document.createElement("canvas");c.width=source.width;c.height=source.height;
+    const context=c.getContext("2d");context.drawImage(source,0,0);const p=context.getImageData(0,0,c.width,c.height).data;
+    let count=0;for(let i=3;i<p.length;i+=4)if(p[i]>100)count++;return count;
+  });
+  console.log("MOBILE",JSON.stringify({pixels:phonePixels,state:await phone.evaluate(()=>window.armory.state)}));
+  assert(phonePixels>100,"mobile model remains visible after collapse and expand");
+  const cardSize=await phone.locator(".card").first().boundingBox();assert(cardSize.height>=124,"card names retain space");
   await phone.screenshot({path:out+"/mobile.png",fullPage:true});
   report.checks.push("390px portrait layout, pack switching, touch favorite, collapsible catalog, no horizontal overflow");
   assert.deepEqual(errors,[],"uncaught browser errors");assert.deepEqual(remote,[],"unexpected remote runtime requests");

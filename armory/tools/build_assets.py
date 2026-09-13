@@ -100,6 +100,10 @@ for pack in CONFIG["packs"]:
             if pack["mode"] == "historical":
                 directory = unpack(entry["url"], WORK / (pack["id"] + str(i)))
                 item["path"] = candidates(directory)[0]
+                if entry["name"] == "MG08/15":
+                    originals = sorted(directory.rglob("*.blend"))
+                    if originals:
+                        item["path"] = originals[0]
             elif not urlsplit(entry["url"]).path.lower().endswith(".glb"):
                 directory = unpack(entry["url"], WORK / (pack["id"] + str(i)))
                 item["path"] = candidates(directory)[0]
@@ -128,6 +132,8 @@ for pack in CONFIG["packs"]:
         else:
             output.write_bytes(standalone_glb(download(entry["url"]), entry["url"]))
             model["conversion"] = "Original GLB geometry; any external texture embedded for portable export."
+        if model_id == "historical-mg08-15":
+            model["conversion"] += " Source display backdrop omitted; weapon geometry retained."
         models.append(model)
 
 (WORK / "jobs.json").write_text(json.dumps(jobs))

@@ -124,6 +124,7 @@ function initViewer() {
     const w=$("stage").clientWidth,h=$("stage").clientHeight;
     if(!w||!h) return;
     camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);
+    if(root){fit();renderer.render(scene,camera);}
   }).observe($("stage"));
   renderer.domElement.addEventListener("webglcontextlost",event=>{event.preventDefault();$("load-status").textContent="The 3D graphics session was interrupted. Reload the page to continue; favorites are saved.";});
   renderer.setAnimationLoop(()=>{
@@ -273,7 +274,7 @@ function wireEvents() {
   $("model-favorite").addEventListener("click",()=>current&&toggleFavorite(current.id));
   $("catalog-toggle").addEventListener("click",()=>{
     const hidden=document.body.classList.toggle("catalog-hidden");$("catalog-toggle").textContent=hidden?"Show list":"Hide list";$("catalog-toggle").setAttribute("aria-expanded",String(!hidden));
-    requestAnimationFrame(()=>fit());
+    // ResizeObserver refits after the canvas dimensions and camera aspect have updated.
   });
   const inspect=open=>{$("inspect-panel").hidden=!open;$("inspect-open").setAttribute("aria-expanded",String(open));};
   $("inspect-open").addEventListener("click",()=>inspect($("inspect-panel").hidden));$("inspect-close").addEventListener("click",()=>inspect(false));
