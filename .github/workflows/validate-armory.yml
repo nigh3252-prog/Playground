@@ -1,0 +1,35 @@
+name: Validate Warden Armory
+on:
+  pull_request:
+    paths:
+      - armory/**
+      - .github/workflows/validate-armory.yml
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JavaScript and bundled models
+        run: |
+          node --check armory/app.mjs
+          node --check armory/export.mjs
+          python3 armory/tools/validate_assets.py
+      - name: Install browser verification runtime
+        run: |
+          npm install --prefix /tmp/armory-check playwright@1.56.1
+          /tmp/armory-check/node_modules/.bin/playwright install --with-deps chromium
+      - name: Test browsing, controls, persistence, and real exports
+        env:
+          ARMORY_PLAYWRIGHT_MODULE: /tmp/armory-check/node_modules/playwright
+        run: node armory/tools/browser_check.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: armory-browser-review
+          path: armory/review/
