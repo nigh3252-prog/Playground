@@ -26,7 +26,10 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y blender python3-numpy
       - name: Make system Python packages visible to Blender
-        run: echo 'PYTHONPATH=/usr/lib/python3/dist-packages' >> "$GITHUB_ENV"
+        run: |
+          echo 'PYTHONPATH=/usr/lib/python3/dist-packages' >> "$GITHUB_ENV"
+          echo 'OCIO=/usr/share/blender/datafiles/colormanagement/config.ocio' >> "$GITHUB_ENV"
+          test -f /usr/share/blender/datafiles/colormanagement/config.ocio
       - name: Download and convert verified CC0 sources
         run: python3 armory/tools/build_assets.py
       - name: Commit generated assets to this branch

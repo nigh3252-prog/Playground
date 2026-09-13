@@ -142,6 +142,7 @@ vendor_files = {
     "addons/controls/OrbitControls.js": "examples/jsm/controls/OrbitControls.js",
     "addons/loaders/GLTFLoader.js": "examples/jsm/loaders/GLTFLoader.js",
     "addons/utils/BufferGeometryUtils.js": "examples/jsm/utils/BufferGeometryUtils.js",
+    "addons/environments/RoomEnvironment.js": "examples/jsm/environments/RoomEnvironment.js",
     "THREE-LICENSE.txt": "LICENSE",
 }
 for target, source in vendor_files.items():
