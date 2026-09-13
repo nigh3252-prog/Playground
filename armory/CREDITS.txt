@@ -430,44 +430,44 @@ SHA-256: 8ed6ddff1cf37fc30f63a2cf924be8466d6f532d0afaaea5df319abf2367966e
 Lightning Gun — Quaternius
 https://quaternius.com/packs/scifigun.html
 https://quaternius.com/packs/scifigun.html
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: 825e0af44c589cb2d06a2b9ffa3c879629722155e650a3b762d124a3b775876e
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Legacy FBX zero-opacity materials corrected to opaque.
+SHA-256: a217e3569caba5872cc2f6c3ec560bfada5fd41a3e554253ad412ba4e8e13161
 
 LongPistol — Quaternius
 https://quaternius.com/packs/scifigun.html
 https://quaternius.com/packs/scifigun.html
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: b4765ecdd33d8d574aa10f0f437831b44f219623f693771603302573b5fcdf52
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Legacy FBX zero-opacity materials corrected to opaque.
+SHA-256: 37ff98a2380624e7adb22c74ce06b9a170914ffcb389292b7d93411d5d0d9dbf
 
 LongPistol_small — Quaternius
 https://quaternius.com/packs/scifigun.html
 https://quaternius.com/packs/scifigun.html
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: 6a914fae192f14aad9be077ace7858826d25bed5c97b26d57062456aa05d8b7e
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Legacy FBX zero-opacity materials corrected to opaque.
+SHA-256: 2e78dde7056ad78bbf4562679a1eeed35fab43f7412ae77b6d5bdc9b38b6aed8
 
 Pistol — Quaternius
 https://quaternius.com/packs/scifigun.html
 https://quaternius.com/packs/scifigun.html
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: 818cb4662e969bedca9156cf3062bc104b36940b12ac57f0f0034fc303e49085
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Legacy FBX zero-opacity materials corrected to opaque.
+SHA-256: 9d0777d4d4a7a9ae72e324163e1994bddc389d01165e01a84394e1dc2de5348d
 
 Ray Gun — Quaternius
 https://quaternius.com/packs/scifigun.html
 https://quaternius.com/packs/scifigun.html
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: 8b0fe58e545e0590af45600c19c2712ec5b4ad5fef26b3e11b9b8e3d3d0561f5
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Legacy FBX zero-opacity materials corrected to opaque.
+SHA-256: 467b532f2b5e029a5038462232d77fc80e84d1ceb7bb163f2713aefb54342ddb
 
 Rifle — Quaternius
 https://quaternius.com/packs/scifigun.html
 https://quaternius.com/packs/scifigun.html
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: 84e37ecf86699159f22048bee282e5cb8c2379e0818e4da23aa812976dc9b14a
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Legacy FBX zero-opacity materials corrected to opaque.
+SHA-256: d8fc66ebc372c4d9b2004e5a0856d9196a6e5763164eb09c27b943b4a8e0bebc
 
 Sniper rifle — Quaternius
 https://quaternius.com/packs/scifigun.html
 https://quaternius.com/packs/scifigun.html
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: 597ee310f5bbbb3cb12ba23cd39581ed364b02abbcc958e529f02c65d1f34a54
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Legacy FBX zero-opacity materials corrected to opaque.
+SHA-256: a0eddeb960e8c6a0d122a33b9b30232367fb96ea9cc9690cedf004e3ae2575a7
 
 P90 — Quaternius
 https://quaternius.com/packs/animatedguns.html
