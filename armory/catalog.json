@@ -2032,12 +2032,12 @@
       "file": "models/historical-mg08-15.glb",
       "thumbnail": "thumbs/historical-mg08-15.png",
       "downloadSource": "https://opengameart.org/sites/default/files/German_MG08_15_portable.zip",
-      "conversion": "Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.",
-      "bytes": 50144,
-      "sha256": "738ec160a7e3e6dcd2bbac6754dd4cca11c218e676d2e7168bd1a0595350609a",
-      "meshCount": 2,
+      "conversion": "Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Source display backdrop omitted; weapon geometry retained.",
+      "bytes": 75076,
+      "sha256": "96185feb7b1b0c08311494f4b7bc57f8bae35e5520cf84095a0959edea5260f6",
+      "meshCount": 1,
       "animations": [],
-      "triangles": 985
+      "triangles": 967
     },
     {
       "id": "historical-sten",

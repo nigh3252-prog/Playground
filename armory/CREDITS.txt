@@ -514,8 +514,8 @@ SHA-256: 5267fd789d6917f4fa40daec5413591a74d0525e04da04df5cc2b9cc52f69e96
 MG08/15 — Wiggilytuff (aaronw)
 https://opengameart.org/content/ww1-mg0515-portable-lp
 https://opengameart.org/content/ww1-mg0515-portable-lp
-Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained.
-SHA-256: 738ec160a7e3e6dcd2bbac6754dd4cca11c218e676d2e7168bd1a0595350609a
+Converted to GLB with Blender; texture dimensions limited to 2048 pixels. Source scale and authored parts retained. Source display backdrop omitted; weapon geometry retained.
+SHA-256: 96185feb7b1b0c08311494f4b7bc57f8bae35e5520cf84095a0959edea5260f6
 
 Sten — ege
 https://opengameart.org/content/sten-smg
