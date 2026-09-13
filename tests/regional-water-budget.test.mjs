@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {solveBasin,retentionFor,resolveSurfaceWater,topologicalOrder} from '../assets/world-lab/water-balance.mjs';
+import {solveBasin,retentionFor,resolveSurfaceWater,topologicalOrder,incisionDecision} from '../assets/world-lab/water-balance.mjs';
 const lowLeak={leakMYear:.05,headLeakPerM:.002,floorLeakFactor:.3},highLeak={leakMYear:12,headLeakPerM:.02,floorLeakFactor:.6};
 const bowl=rain=>Array.from({length:12},(_,i)=>({height:i*6,area:1,rain,temp:14,cellRelief:2}));
 const near=(a,b,tol=1e-4)=>assert.ok(Math.abs(a-b)<=tol,`${a} != ${b}`);
@@ -9,6 +9,10 @@ test('a retained lake equilibrates below the outlet rim',()=>{const b=solveBasin
 test('more inflow cannot reduce standing water in a fixed basin',()=>{const a=solveBasin(bowl(700),85,2e6,lowLeak),b=solveBasin(bowl(700),85,10e6,lowLeak);assert.ok(b.level>=a.level);});
 test('no rainfall or upstream supply does not invent a lake',()=>{const b=solveBasin(bowl(0),85,0,lowLeak);assert.equal(b.status,'dry');});
 test('geology leakage is deterministic and volcanic values are generally higher',()=>{assert.deepEqual(retentionFor(3,21),retentionFor(3,21));assert.ok(retentionFor(3,21).leakMYear>retentionFor(1,21).leakMYear);});
+const wetSamples=[{rain:1000,area:100,temp:10,cellRelief:10,height:0},{rain:1000,area:100,temp:10,cellRelief:10,height:10}];
+test('very rugged humid retained closures can become through-drainage',()=>{const d=incisionDecision({erosion:{p95SlopePercent:12}},{status:'retained',history:0,depthM:260,wetAreaKm2:120,inflowM3Year:400,supplyM3Year:800},wetSamples);assert.equal(d.regime,'very-rugged-deep-closure');});
+test('moderately rugged humid overflow needs strong throughflow before incision',()=>{const world={erosion:{p95SlopePercent:6.3}},weak={status:'overflowing',history:0,depthM:40,wetAreaKm2:80,inflowM3Year:250,supplyM3Year:1000},strong={...weak,inflowM3Year:500};assert.equal(incisionDecision(world,weak,wetSamples),null);assert.equal(incisionDecision(world,strong,wetSamples).regime,'moderate-rugged-overflow');});
+test('arid mountain basins are not incised by the humid drainage rule',()=>{const dry=wetSamples.map(s=>({...s,rain:250}));assert.equal(incisionDecision({erosion:{p95SlopePercent:13}},{status:'retained',history:0,depthM:300,wetAreaKm2:200,inflowM3Year:500,supplyM3Year:800},dry),null);});
 function fixture(){
  const edges=[[1],[0,2,4],[1,3],[2],[1,5],[4]],offsets=new Uint32Array(7),ns=[],ds=[];edges.forEach((e,i)=>{offsets[i]=ns.length;e.forEach(j=>{ns.push(j);ds.push(1);});});offsets[6]=ns.length;
  return{config:{seed:31,sizeKm:600},n:6,stepKm:1,stage:2,mesh:{x:Float64Array.from([0,1,2,3,1,1]),z:Float64Array.from([0,0,0,0,1,2]),nodeArea:new Float64Array(6).fill(1),offsets,neighbors:Uint32Array.from(ns),distances:Float64Array.from(ds),boundary:Uint8Array.from([1,0,0,0,0,1])},height:Float32Array.from([110,10,20,0,50,-1]),slope:new Float32Array(6).fill(.01),ocean:Uint8Array.from([0,0,0,0,0,1]),filled:Float64Array.from([110,100,100,100,50,0]),rank:Int32Array.from([5,2,3,4,1,0]),order:Int32Array.from([5,4,1,2,3,0]),receiver:Int32Array.from([1,4,1,2,5,-1]),lakeId:Int32Array.from([-1,0,0,0,-1,-1]),lake:Uint8Array.from([0,1,1,1,0,0]),lakeBodies:[{id:0,level:100,history:3}],riverThresholdKm2:.1,landHistory:new Uint8Array(6).fill(3)};
