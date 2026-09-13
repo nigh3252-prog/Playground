@@ -1,0 +1,39 @@
+{
+  "character": "05",
+  "source": "character-05-concept-isolated.png",
+  "source_is_exact_crop": true,
+  "coordinate_space": {
+    "origin": "top-left",
+    "width": 710,
+    "height": 430,
+    "units": "pixels"
+  },
+  "naming": {
+    "screen_left": "far assembly in this concept pose; do not mirror",
+    "screen_right": "near assembly in this concept pose; do not mirror"
+  },
+  "joints": [
+    {"id": "root", "kind": "rig_root", "point": [352, 266], "overlap_radius": 31, "confidence": "inferred"},
+    {"id": "screen_left_shoulder", "kind": "shoulder_socket", "point": [227, 118], "overlap_radius": 29, "confidence": "high"},
+    {"id": "screen_left_elbow", "kind": "elbow_hinge", "point": [178, 198], "overlap_radius": 21, "confidence": "high"},
+    {"id": "screen_left_wrist", "kind": "wrist_collar", "point": [152, 291], "overlap_radius": 18, "confidence": "high"},
+    {"id": "screen_left_hip", "kind": "hip_socket", "point": [292, 266], "overlap_radius": 25, "confidence": "inferred"},
+    {"id": "screen_left_knee", "kind": "knee_hinge", "point": [257, 315], "overlap_radius": 21, "confidence": "high"},
+    {"id": "screen_left_ankle", "kind": "ankle_hinge", "point": [226, 382], "overlap_radius": 18, "confidence": "high"},
+    {"id": "screen_right_shoulder", "kind": "shoulder_socket", "point": [468, 127], "overlap_radius": 31, "confidence": "high"},
+    {"id": "screen_right_elbow", "kind": "elbow_hinge", "point": [551, 198], "overlap_radius": 23, "confidence": "high"},
+    {"id": "screen_right_wrist", "kind": "wrist_collar", "point": [544, 292], "overlap_radius": 18, "confidence": "high"},
+    {"id": "screen_right_hip", "kind": "hip_socket", "point": [411, 267], "overlap_radius": 26, "confidence": "inferred"},
+    {"id": "screen_right_knee", "kind": "knee_hinge", "point": [453, 315], "overlap_radius": 21, "confidence": "high"},
+    {"id": "screen_right_ankle", "kind": "ankle_hinge", "point": [451, 382], "overlap_radius": 18, "confidence": "high"}
+  ],
+  "attachment_candidates": [
+    {"id": "screen_left_chain_exit", "point": [206, 174], "confidence": "low", "note": "partly hidden by the far shoulder/upper-arm assembly"},
+    {"id": "screen_right_chain_exit", "point": [592, 201], "confidence": "medium", "note": "visible at the outer elbow/forearm guide"}
+  ],
+  "atlas_guidance": {
+    "crop_overlap": "Each adjacent part should include the complete joint collar and continue beyond overlap_radius.",
+    "generation_completion": "Complete occluded metal behind each overlap zone rather than ending the generated sprite at the visible seam.",
+    "side_handling": "Generate screen-left and screen-right parts separately from their own crops; never derive one side by flipping the other."
+  }
+}

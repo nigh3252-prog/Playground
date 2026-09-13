@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10161b">
+  <title>Sprite Playground</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1318;
+      color: #f3f0e7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 78% 8%, rgba(122, 72, 174, .22), transparent 31rem),
+        radial-gradient(circle at 8% 80%, rgba(44, 130, 130, .12), transparent 28rem),
+        #0d1318;
+    }
+
+    .shell {
+      width: min(100% - 2rem, 68rem);
+      margin-inline: auto;
+      padding-block: clamp(1.2rem, 5vw, 3.5rem);
+    }
+
+    nav {
+      margin-bottom: clamp(2rem, 7vw, 4rem);
+    }
+
+    nav a {
+      color: #aebcb7;
+      font-size: .82rem;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 .65rem;
+      color: #cba1ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .7rem;
+      font-weight: 850;
+      letter-spacing: .18em;
+    }
+
+    h1 {
+      max-width: 11ch;
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.8rem, 9vw, 6rem);
+      font-weight: 700;
+      line-height: .88;
+      letter-spacing: -.055em;
+    }
+
+    .intro {
+      max-width: 43rem;
+      margin: 1.25rem 0 clamp(2.25rem, 7vw, 4.5rem);
+      color: #aebcb7;
+      font-size: clamp(.95rem, 2vw, 1.1rem);
+      line-height: 1.65;
+    }
+
+    article {
+      display: grid;
+      grid-template-columns: minmax(15rem, .9fr) minmax(18rem, 1.1fr);
+      overflow: hidden;
+      border: 1px solid rgba(220, 229, 223, .16);
+      border-radius: 1.4rem;
+      background: rgba(19, 27, 32, .92);
+      box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .28);
+    }
+
+    article + article { margin-top: 1.4rem; }
+
+    .preview {
+      min-height: 29rem;
+      display: grid;
+      place-items: center;
+      padding: 1.25rem;
+      background:
+        linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px),
+        radial-gradient(circle at center, rgba(133, 78, 190, .22), transparent 62%),
+        #111a1f;
+      background-size: 2rem 2rem, 2rem 2rem, auto, auto;
+    }
+
+    .preview img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: 25.5rem;
+      object-fit: contain;
+      filter: drop-shadow(0 1.2rem 1.2rem rgba(0, 0, 0, .38));
+    }
+
+    .copy {
+      padding: clamp(1.4rem, 4vw, 2.5rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .number {
+      margin: 0 0 .8rem;
+      color: #cba1ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .68rem;
+      font-weight: 850;
+      letter-spacing: .16em;
+    }
+
+    h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: .95;
+      letter-spacing: -.04em;
+    }
+
+    .copy > p {
+      margin: 1rem 0 1.4rem;
+      color: #aebcb7;
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem;
+    }
+
+    .action {
+      padding: .75rem .9rem;
+      border: 1px solid rgba(219, 191, 255, .34);
+      border-radius: .75rem;
+      color: #f6efff;
+      background: rgba(134, 72, 193, .16);
+      font-size: .82rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .action.primary {
+      border-color: #b783e9;
+      color: #150d1b;
+      background: #cba1ff;
+    }
+
+    .action:hover,
+    .action:focus-visible { translate: 0 -1px; }
+
+    article.character-05 .preview {
+      background:
+        linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px),
+        radial-gradient(circle at center, rgba(200, 117, 45, .23), transparent 64%),
+        #1a211b;
+      background-size: 2rem 2rem, 2rem 2rem, auto, auto;
+    }
+
+    article.character-05 .number { color: #f1a251; }
+
+    article.character-05 .action {
+      border-color: rgba(241, 162, 81, .4);
+      background: rgba(197, 103, 32, .14);
+    }
+
+    article.character-05 .action.primary {
+      border-color: #f1a251;
+      color: #24150a;
+      background: #f1a251;
+    }
+
+    details {
+      margin-top: 1.1rem;
+      border-top: 1px solid rgba(220, 229, 223, .12);
+      padding-top: 1rem;
+    }
+
+    summary {
+      cursor: pointer;
+      color: #c9d4d0;
+      font-size: .8rem;
+      font-weight: 800;
+    }
+
+    .parts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem .75rem;
+      margin-top: .8rem;
+    }
+
+    .parts a {
+      color: #b8c9c3;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .7rem;
+      text-underline-offset: .18rem;
+    }
+
+    footer {
+      padding: 2rem 0 .25rem;
+      color: #697b75;
+      font-size: .72rem;
+    }
+
+    @media (max-width: 44rem) {
+      .shell { width: min(100% - 1.25rem, 68rem); }
+      article { grid-template-columns: 1fr; }
+      .preview { min-height: 22rem; }
+      .preview img { height: 20rem; }
+      .copy { padding: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav><a href="../">← Playground index</a></nav>
+    <p class="eyebrow">GENERATED ART · PAPER-DOLL RIGS</p>
+    <h1>Sprite Playground</h1>
+    <p class="intro">Autonomous animation studies, clean reference art, and downloadable transparent sprite parts. Each character keeps the asymmetry and movement language of its concept.</p>
+
+    <article>
+      <div class="preview">
+        <img src="character-04/character-04-reference.png" alt="Character 4, a silver tuning-fork-headed figure carrying two different purple ring weapons">
+      </div>
+      <div class="copy">
+        <p class="number">CHARACTER 04</p>
+        <h2>Resonance Wander</h2>
+        <p>A deliberate roaming conductor with two-joint walking and crackling purple fire: it drifts, pauses to listen, then raises its mismatched focuses and vibrates the tuning-fork head into a field-wide pulse.</p>
+        <div class="actions">
+          <a class="action primary" href="character-04/">Open animation</a>
+          <a class="action" href="character-04/character-04-reference.png" download>Reference PNG</a>
+          <a class="action" href="character-04/character-04-parts-atlas.png" download>Parts atlas</a>
+          <a class="action" href="character-04/character-04-parts-atlas.json" download>Atlas JSON</a>
+          <a class="action" href="character-04/character-04-focus-animation.json" download>Focus animation JSON</a>
+        </div>
+        <details>
+          <summary>Individual transparent parts</summary>
+          <div class="parts">
+            <a href="character-04/parts/head.png" download>head</a>
+            <a href="character-04/parts/torso.png" download>torso</a>
+            <a href="character-04/parts/left_thigh.png" download>left_thigh</a>
+            <a href="character-04/parts/left_knee.png" download>left_knee</a>
+            <a href="character-04/parts/left_shin.png" download>left_shin</a>
+            <a href="character-04/parts/right_thigh.png" download>right_thigh</a>
+            <a href="character-04/parts/right_knee.png" download>right_knee</a>
+            <a href="character-04/parts/right_shin.png" download>right_shin</a>
+            <a href="character-04/parts/left_upper.png" download>left_upper</a>
+            <a href="character-04/parts/left_fore.png" download>left_fore</a>
+            <a href="character-04/parts/left_focus.png" download>left_focus</a>
+            <a href="character-04/parts/left_focus-frames.png" download>left_focus · 4 frames</a>
+            <a href="character-04/parts/right_upper.png" download>right_upper</a>
+            <a href="character-04/parts/right_fore.png" download>right_fore</a>
+            <a href="character-04/parts/right_focus.png" download>right_focus</a>
+            <a href="character-04/parts/right_focus-frames.png" download>right_focus · 4 frames</a>
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <article class="character-05">
+      <div class="preview">
+        <img src="character-05/character-05-reference.png" alt="Character 5, a massive cream, orange, and olive robot dragging a different chained block weight on each side">
+      </div>
+      <div class="copy">
+        <p class="number">CHARACTER 05</p>
+        <h2>Iron Haul</h2>
+        <p>A heavyweight field walker assembled from sixteen completed paper-doll parts. It hauls two independently trailing chain weights, plants into the concept's broad action stance, then drives both blocks outward in an anchor slam.</p>
+        <div class="actions">
+          <a class="action primary" href="character-05/">Open animation</a>
+          <a class="action" href="character-05/character-05-reference.png" download>Reference PNG</a>
+          <a class="action" href="character-05/character-05-parts-atlas.png" download>Parts atlas</a>
+          <a class="action" href="character-05/character-05-parts-atlas.json" download>Atlas JSON</a>
+        </div>
+        <details>
+          <summary>Individual transparent parts</summary>
+          <div class="parts">
+            <a href="character-05/parts/body.png" download>body</a>
+            <a href="character-05/parts/pelvis.png" download>pelvis</a>
+            <a href="character-05/parts/left_shoulder.png" download>left_shoulder</a>
+            <a href="character-05/parts/right_shoulder.png" download>right_shoulder</a>
+            <a href="character-05/parts/left_upper_arm.png" download>left_upper_arm</a>
+            <a href="character-05/parts/right_upper_arm.png" download>right_upper_arm</a>
+            <a href="character-05/parts/left_forearm_fist.png" download>left_forearm_fist</a>
+            <a href="character-05/parts/right_forearm_fist.png" download>right_forearm_fist</a>
+            <a href="character-05/parts/left_thigh.png" download>left_thigh</a>
+            <a href="character-05/parts/right_thigh.png" download>right_thigh</a>
+            <a href="character-05/parts/left_shin_foot.png" download>left_shin_foot</a>
+            <a href="character-05/parts/right_shin_foot.png" download>right_shin_foot</a>
+            <a href="character-05/parts/left_knee.png" download>left_knee</a>
+            <a href="character-05/parts/right_knee.png" download>right_knee</a>
+            <a href="character-05/parts/left_weight.png" download>left_weight</a>
+            <a href="character-05/parts/right_weight.png" download>right_weight</a>
+          </div>
+        </details>
+      </div>
+    </article>
+    <footer>Playground · character studies</footer>
+  </main>
+</body>
+</html>

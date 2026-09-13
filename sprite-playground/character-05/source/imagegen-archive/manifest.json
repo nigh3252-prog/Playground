@@ -1,0 +1,191 @@
+{
+  "character": "05",
+  "display_name": "Iron Haul",
+  "generated_output_count": 14,
+  "archive_policy": "Exact byte-for-byte copies of every confirmed Character 05 image-generation output, including rejected and superseded attempts.",
+  "side_naming": "left and right are viewer/image sides; side-specific parts are never mirrored",
+  "entries": [
+    {
+      "file": "01-neutral-reference-v1.png",
+      "original_file": "exec-7900dbd4-7353-404d-9563-ccc4fbd9a0a4.png",
+      "pass": "v1",
+      "subject": "neutral full-character reference",
+      "status": "selected_reference",
+      "current_runtime": false,
+      "derived_assets": [
+        "sprite-playground/character-05/character-05-reference.png",
+        "sprite-playground/character-05/source/character-05-rough-crops.png"
+      ],
+      "dimensions": [1402, 1122],
+      "sha256": "3c6d7ca4548cb212fbe63c3d01217a18e3eb1f2714bb059d5cc1f030e67b5cc0"
+    },
+    {
+      "file": "02-completion-atlas-v1.png",
+      "original_file": "exec-14b67316-7702-4374-b372-3ab51908b8da.png",
+      "pass": "v1",
+      "subject": "completed paper-doll component sheet",
+      "status": "selected_base",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/left_forearm_fist.png",
+        "sprite-playground/character-05/parts/right_forearm_fist.png",
+        "sprite-playground/character-05/parts/left_weight.png",
+        "sprite-playground/character-05/parts/right_weight.png",
+        "sprite-playground/character-05/parts/left_shin_foot.png",
+        "sprite-playground/character-05/parts/right_shin_foot.png"
+      ],
+      "dimensions": [1254, 1254],
+      "sha256": "5e163b07d19e9e1466847455595d3269f3a6f33f5667f08c66ea1b960a926e70"
+    },
+    {
+      "file": "03-viewer-left-shoulder-v2.png",
+      "original_file": "exec-0cc9e954-7d18-48f9-9ecc-26e9797eb7f3.png",
+      "pass": "v2",
+      "subject": "viewer-left shoulder-to-elbow assembly",
+      "status": "selected",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/left_shoulder.png"
+      ],
+      "dimensions": [1254, 1254],
+      "sha256": "b22474e8edd55d5bb21b3e801f60d7be9bcfcce9d60822cc8296297290cd6526"
+    },
+    {
+      "file": "04-viewer-right-shoulder-v2.png",
+      "original_file": "exec-85cfe950-edbd-480f-be60-2fdd96713665.png",
+      "pass": "v2",
+      "subject": "viewer-right shoulder-to-elbow assembly",
+      "status": "selected",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/right_shoulder.png"
+      ],
+      "dimensions": [1254, 1254],
+      "sha256": "58794cdc1f79e342808dbd4193afc44f97820f969c8624784f4d757dbb5a53fd"
+    },
+    {
+      "file": "05-torso-v3-rejected-dark-background.png",
+      "original_file": "exec-69286359-0664-464c-8756-1049367596c6.png",
+      "pass": "v3",
+      "subject": "barrel torso with dark background",
+      "status": "rejected",
+      "current_runtime": false,
+      "derived_assets": [],
+      "dimensions": [1536, 1024],
+      "sha256": "9f8d1e396a5374aab6619d860a0c738e91eb740fd3382d2d034176f6fad9cee3"
+    },
+    {
+      "file": "06-viewer-left-leg-sheet-v3.png",
+      "original_file": "exec-eceadb6a-a96b-4de6-afce-e0aa3f100a4d.png",
+      "pass": "v3",
+      "subject": "viewer-left thigh, shin, and boot component sheet",
+      "status": "partially_selected",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/left_boot.png",
+        "sprite-playground/character-05/parts/left_foot.png"
+      ],
+      "dimensions": [886, 1776],
+      "sha256": "8a0c249ff15b7715c969a4eab251166e3becb417f6836c267de1db330209ec97"
+    },
+    {
+      "file": "07-viewer-right-leg-sheet-v3.png",
+      "original_file": "exec-f0063fb6-79a5-44b1-b597-84074f80b381.png",
+      "pass": "v3",
+      "subject": "viewer-right thigh, shin, and boot component sheet",
+      "status": "partially_selected",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/right_boot.png",
+        "sprite-playground/character-05/parts/right_foot.png"
+      ],
+      "dimensions": [934, 1683],
+      "sha256": "809521690d29ce762f69f8e40efc3f7b6c79d7e4cb2eb9520005aed956df03a8"
+    },
+    {
+      "file": "08-torso-v3-selected.png",
+      "original_file": "exec-b7059505-31a0-4895-8d46-e34d74bb0f97.png",
+      "pass": "v3",
+      "subject": "transparent barrel torso",
+      "status": "selected",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/body.png"
+      ],
+      "dimensions": [1536, 1024],
+      "sha256": "1cd1c2833fc2fc033385d6e89b3663f89367d3116dd60eab1f644cb88138aa71"
+    },
+    {
+      "file": "09-viewer-left-shin-v3-rejected-dark-background-01.png",
+      "original_file": "exec-e1946829-fff2-4871-be80-43ab2347bdce.png",
+      "pass": "v3",
+      "subject": "viewer-left shin with dark background",
+      "status": "rejected",
+      "current_runtime": false,
+      "derived_assets": [],
+      "dimensions": [1024, 1536],
+      "sha256": "274c1d7d9ffee6758a6610eb6ef5eb82aa4c3a2059d932aac54baf5b10e5cacb"
+    },
+    {
+      "file": "10-viewer-right-shin-v3-selected.png",
+      "original_file": "exec-1594b704-601c-4d47-802c-e90c03adc192.png",
+      "pass": "v3",
+      "subject": "viewer-right shin",
+      "status": "selected_v3_superseded_v4",
+      "current_runtime": false,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/right_shin.png"
+      ],
+      "dimensions": [1081, 1455],
+      "sha256": "410d0d147947c48e4f8cd6dae74a50322c6f619c5b5c9efec2f1a5c27ffc5fc3"
+    },
+    {
+      "file": "11-viewer-left-shin-v3-rejected-dark-background-02.png",
+      "original_file": "exec-f9da7e9a-bf8f-4bd6-a168-540452b4e80f.png",
+      "pass": "v3",
+      "subject": "second viewer-left shin with dark background",
+      "status": "rejected",
+      "current_runtime": false,
+      "derived_assets": [],
+      "dimensions": [1024, 1536],
+      "sha256": "41e15069e10307b61786b15057151f8d6ff6cb22b8f87699351b94754e17925a"
+    },
+    {
+      "file": "12-viewer-left-thigh-v3-selected.png",
+      "original_file": "exec-9312d430-883e-455f-bba2-845de485a472.png",
+      "pass": "v3",
+      "subject": "viewer-left short thigh",
+      "status": "selected",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/left_thigh.png"
+      ],
+      "dimensions": [1254, 1254],
+      "sha256": "00c178874de88e6a4952dd174b54e6c7e749bc996ee1722c8b97ff691acf4bf3"
+    },
+    {
+      "file": "13-viewer-right-thigh-v3-superseded-orange-plate.png",
+      "original_file": "exec-1e48240c-0f65-4c2c-b8de-09e49da12675.png",
+      "pass": "v3",
+      "subject": "viewer-right thigh with prominent orange plate",
+      "status": "superseded",
+      "current_runtime": false,
+      "derived_assets": [],
+      "dimensions": [1224, 1285],
+      "sha256": "46d2fb73b615f1caa09fb960d93dcc9eb2da29f4a8ffcae2f64287e283195005"
+    },
+    {
+      "file": "14-viewer-right-thigh-v3-selected.png",
+      "original_file": "exec-59c4a2a6-82f1-4ffe-b2a7-42c19dce053a.png",
+      "pass": "v3",
+      "subject": "viewer-right short thigh",
+      "status": "selected",
+      "current_runtime": true,
+      "derived_assets": [
+        "sprite-playground/character-05/parts/right_thigh.png"
+      ],
+      "dimensions": [1312, 1199],
+      "sha256": "a18ab694afb6a25888da84dfbed3f86d88e5c9941c0978e6d4b59e4ca1b407ee"
+    }
+  ]
+}

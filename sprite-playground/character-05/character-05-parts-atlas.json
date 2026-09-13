@@ -1,0 +1,192 @@
+{
+  "character": "05",
+  "generated_atlas_size": [
+    1536,
+    1536
+  ],
+  "grid": [
+    4,
+    4
+  ],
+  "active_part_count": 13,
+  "joint_ownership": {
+    "shoulder": "body socket; full side-specific upper arm tucks beneath",
+    "elbow": "full side-specific upper arm",
+    "hip": "body; thigh tucks beneath",
+    "knee": "thigh; lower leg tucks beneath",
+    "ankle": "foot; lower leg tucks beneath",
+    "wrist": "combined forearm/fist"
+  },
+  "handedness": "Names are viewer/image-left and viewer/image-right. Corrected shoulders and all other side-specific pieces remain independent; nothing is mirrored at runtime.",
+  "parts": {
+    "body": {
+      "file": "parts/body.png",
+      "atlas_crop": [
+        0,
+        0,
+        384,
+        384
+      ],
+      "size": [
+        739,
+        560
+      ]
+    },
+    "left_shoulder": {
+      "file": "parts/left_shoulder.png",
+      "atlas_crop": [
+        384,
+        0,
+        384,
+        384
+      ],
+      "size": [
+        621,
+        845
+      ]
+    },
+    "right_shoulder": {
+      "file": "parts/right_shoulder.png",
+      "atlas_crop": [
+        768,
+        0,
+        384,
+        384
+      ],
+      "size": [
+        831,
+        829
+      ]
+    },
+    "left_forearm_fist": {
+      "file": "parts/left_forearm_fist.png",
+      "atlas_crop": [
+        1152,
+        0,
+        384,
+        384
+      ],
+      "size": [
+        169,
+        292
+      ]
+    },
+    "right_forearm_fist": {
+      "file": "parts/right_forearm_fist.png",
+      "atlas_crop": [
+        0,
+        384,
+        384,
+        384
+      ],
+      "size": [
+        160,
+        298
+      ]
+    },
+    "left_thigh": {
+      "file": "parts/left_thigh.png",
+      "atlas_crop": [
+        384,
+        384,
+        384,
+        384
+      ],
+      "size": [
+        263,
+        390
+      ]
+    },
+    "right_thigh": {
+      "file": "parts/right_thigh.png",
+      "atlas_crop": [
+        768,
+        384,
+        384,
+        384
+      ],
+      "size": [
+        400,
+        379
+      ]
+    },
+    "left_lower_leg": {
+      "file": "parts/left_lower_leg.png",
+      "atlas_crop": [
+        1152,
+        384,
+        384,
+        384
+      ],
+      "size": [
+        205,
+        205
+      ]
+    },
+    "right_lower_leg": {
+      "file": "parts/right_lower_leg.png",
+      "atlas_crop": [
+        0,
+        768,
+        384,
+        384
+      ],
+      "size": [
+        212,
+        206
+      ]
+    },
+    "left_foot": {
+      "file": "parts/left_foot.png",
+      "atlas_crop": [
+        384,
+        768,
+        384,
+        384
+      ],
+      "size": [
+        292,
+        110
+      ]
+    },
+    "right_foot": {
+      "file": "parts/right_foot.png",
+      "atlas_crop": [
+        768,
+        768,
+        384,
+        384
+      ],
+      "size": [
+        290,
+        120
+      ]
+    },
+    "left_weight": {
+      "file": "parts/left_weight.png",
+      "atlas_crop": [
+        1152,
+        768,
+        384,
+        384
+      ],
+      "size": [
+        333,
+        201
+      ]
+    },
+    "right_weight": {
+      "file": "parts/right_weight.png",
+      "atlas_crop": [
+        0,
+        1152,
+        384,
+        384
+      ],
+      "size": [
+        279,
+        202
+      ]
+    }
+  }
+}
