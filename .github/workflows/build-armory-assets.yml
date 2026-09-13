@@ -24,12 +24,20 @@ jobs:
       - name: Install Blender
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y blender python3-numpy
+          sudo apt-get install -y blender blender-data python3-numpy
       - name: Make system Python packages visible to Blender
         run: |
           echo 'PYTHONPATH=/usr/lib/python3/dist-packages' >> "$GITHUB_ENV"
-          echo 'OCIO=/usr/share/blender/datafiles/colormanagement/config.ocio' >> "$GITHUB_ENV"
-          test -f /usr/share/blender/datafiles/colormanagement/config.ocio
+          python3 - <<'PY'
+          import os, pathlib, subprocess
+          paths = subprocess.check_output(["dpkg-query", "-L", "blender-data"], text=True).splitlines()
+          matches = [p for p in paths if p.endswith("/config.ocio") and pathlib.Path(p).is_file()]
+          if not matches:
+              raise RuntimeError("Blender color configuration not installed: " + "\n".join(p for p in paths if "color" in p.lower()))
+          print("Using color configuration", matches[0])
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write("OCIO=" + matches[0] + "\n")
+          PY
       - name: Download and convert verified CC0 sources
         run: python3 armory/tools/build_assets.py
       - name: Commit generated assets to this branch
