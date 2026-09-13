@@ -153,7 +153,26 @@ for target, source in vendor_files.items():
 for model in models:
     path = ROOT / model["file"]
     data = path.read_bytes()
-    document = json.loads(data[20:20+struct.unpack_from("<I", data, 12)[0]])
+    json_length = struct.unpack_from("<I", data, 12)[0]
+    document = json.loads(data[20:20+json_length])
+    # The legacy Quaternius FBX exporter stored zero opacity on solid-color guns.
+    # Modern Blender preserves that as invisible alpha masks. Correct only this known source case.
+    corrected = False
+    if model["pack"] in ("scifi", "animated"):
+        for material in document.get("materials", []):
+            color = material.get("pbrMetallicRoughness", {}).get("baseColorFactor", [])
+            if len(color) == 4 and color[3] == 0:
+                color[3] = 1
+                material.pop("alphaMode", None)
+                material.pop("alphaCutoff", None)
+                corrected = True
+    if corrected:
+        encoded = json.dumps(document, separators=(",", ":"), ensure_ascii=True).encode()
+        encoded += b" " * ((-len(encoded)) % 4)
+        remainder = data[20+json_length:]
+        data = struct.pack("<III", 0x46546C67, 2, 20+len(encoded)+len(remainder)) + struct.pack("<II", len(encoded), 0x4E4F534A) + encoded + remainder
+        path.write_bytes(data)
+        model["conversion"] += " Legacy FBX zero-opacity materials corrected to opaque."
     assert document.get("meshes"), model["id"]
     model["bytes"] = len(data)
     model["sha256"] = hashlib.sha256(data).hexdigest()
