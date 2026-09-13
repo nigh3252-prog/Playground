@@ -69,14 +69,24 @@ test('asphalt is painted after ALL shoulders, with round joins and no depth laye
   assert.ok(calls.slice(0,4).every(c=>c.join==='round'&&c.cap==='round'));
   assert.equal(calls.length,roads.length*3);
 });
+test('surface texture selection preserves independent road and lot toggles',()=>{
+  const html=readFileSync(new URL('../procedural-city-roads.html',import.meta.url),'utf8');
+  const source=html.match(/function selectedSurfaceTexture\(\)\{[^}]+\}/)?.[0];
+  assert.ok(source,'surface selector is present');
+  const textures={groundTexture:{id:'ground'},lotTexture:{id:'lots'},roadTexture:{id:'roads'},cityTexture:{id:'city'}};
+  const ui={showRoads:{checked:false},showLots:{checked:false}};
+  const select=Function('ui',...Object.keys(textures),`return (${source})`)(ui,...Object.values(textures));
+  assert.equal(select(),textures.groundTexture);
+  ui.showRoads.checked=true;assert.equal(select(),textures.roadTexture);
+  ui.showRoads.checked=false;ui.showLots.checked=true;assert.equal(select(),textures.lotTexture);
+  ui.showRoads.checked=true;assert.equal(select(),textures.cityTexture);
+});
 test('single ground mesh owns asphalt/paint; no floating ribbon or dash geometry remains',()=>{
   const html=readFileSync(new URL('../procedural-city-roads.html',import.meta.url),'utf8');
   assert.ok(html.includes("name='unified-terrain-road-surface'"));
-  assert.ok(html.includes('map:ui.showRoads.checked?roadTexture:groundTexture'));
   assert.ok(!html.includes('ribbonGeometry'));
   assert.ok(!html.includes('addRoadMesh'));
   assert.ok(!html.includes('dashGeom'));
-  assert.ok(html.includes('groundTexture?.dispose();roadTexture?.dispose();'));
   assert.ok(html.includes('Math.min(minHeight,currentParams.waterLevel)-4'));
 });
 test('many layouts: heights stay finite and sampling is deterministic',()=>{
