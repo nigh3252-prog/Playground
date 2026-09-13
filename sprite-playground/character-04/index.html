@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1318">
+  <title>Character 04 · Resonance Wander</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a1014;
+      color: #f4f2e9;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(.75rem, 2vw, 1.5rem);
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 78% 12%, rgba(114, 63, 164, .2), transparent 34rem),
+        #0a1014;
+    }
+
+    main {
+      width: min(100%, 70rem);
+      overflow: hidden;
+      border: 1px solid rgba(215, 227, 219, .16);
+      border-radius: clamp(1rem, 2.5vw, 1.55rem);
+      background: #11191e;
+      box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, .38);
+    }
+
+    header {
+      min-height: 4.25rem;
+      padding: .85rem clamp(1rem, 3vw, 1.5rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(215, 227, 219, .12);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.2rem, 3.5vw, 1.75rem);
+      line-height: 1;
+      letter-spacing: -.02em;
+    }
+
+    .eyebrow {
+      margin: 0 0 .35rem;
+      color: #cba2ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .67rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+    }
+
+    header a {
+      flex: 0 0 auto;
+      color: #cbd7d2;
+      font-size: .82rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    header a:hover,
+    header a:focus-visible { color: white; }
+
+    .stage {
+      position: relative;
+      background: #121a20;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 48 / 31;
+    }
+
+    .readout {
+      position: absolute;
+      inset: auto .85rem .75rem .85rem;
+      display: flex;
+      justify-content: space-between;
+      gap: .75rem;
+      pointer-events: none;
+      color: rgba(232, 240, 236, .78);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: clamp(.58rem, 1.8vw, .72rem);
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+
+    #status { color: #d7adff; }
+
+    #fallback {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      translate: -50% -50%;
+      color: white;
+    }
+
+    footer {
+      padding: .75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      color: #8ea09a;
+      font-size: .72rem;
+    }
+
+    footer span:last-child { text-align: right; }
+
+    @media (max-width: 34rem) {
+      body { padding: 0; place-items: start center; }
+      main { border-width: 0; border-radius: 0; min-height: 100vh; }
+      header { min-height: 3.75rem; }
+      footer { font-size: .64rem; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <p class="eyebrow">PAPER DOLL · CHARACTER 04</p>
+        <h1>Resonance Wander</h1>
+      </div>
+      <a href="../">Sprite Playground</a>
+    </header>
+    <section class="stage" aria-label="Autonomous Character 4 paper-doll animation">
+      <canvas id="field" width="960" height="620" aria-label="A tuning-fork-headed wanderer roams, strikes marked targets with its two focuses, and casts resonance waves"></canvas>
+      <p id="fallback">Loading generated parts…</p>
+      <div class="readout" aria-hidden="true">
+        <span>ASYMMETRIC RIG · NO MIRRORING</span>
+        <span id="status">CALIBRATING</span>
+      </div>
+    </section>
+    <footer>
+      <span>Autonomous 2D field study · point at the field to mark a target</span>
+      <span>drift → mark → chime · slam → resonate</span>
+    </footer>
+  </main>
+  <script src="character-04-rig.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "fps": 8,
+  "frameOrder": [0, 1, 2, 3],
+  "source": "source/character-04-focus-animation-source.png",
+  "right_focus": {
+    "hand": "image-right",
+    "description": "large chained ring; top row of source sheet",
+    "sheet": "parts/right_focus-frames.png",
+    "frameCount": 4,
+    "frameSize": [536, 840],
+    "pivot": [63, 500],
+    "ringCenter": [216, -52],
+    "phaseOffset": 0
+  },
+  "left_focus": {
+    "hand": "image-left",
+    "description": "small shafted ring; bottom row of source sheet",
+    "sheet": "parts/left_focus-frames.png",
+    "frameCount": 4,
+    "frameSize": [780, 640],
+    "pivot": [70, 438],
+    "ringCenter": [375, -155],
+    "phaseOffset": 2
+  }
+}
