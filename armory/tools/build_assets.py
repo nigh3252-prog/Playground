@@ -83,27 +83,6 @@ def standalone_glb(data, url):
 def nice_name(stem):
     return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", stem.replace("_", " ")).strip()
 
-# Ubuntu's DFSG Blender package omits upstream color-management files.
-# Fetch the matching release's data files (never scripts) into the temporary build directory.
-ocio = WORK / "colormanagement"
-queue = [""]
-while queue:
-    folder = queue.pop()
-    api = "https://api.github.com/repos/blender/blender/contents/release/datafiles/colormanagement"
-    if folder:
-        api += "/" + folder
-    listing = json.loads(download(api + "?ref=v3.0.1"))
-    for entry in listing:
-        relative = (folder + "/" if folder else "") + entry["name"]
-        if entry["type"] == "dir":
-            queue.append(relative)
-        elif entry["type"] == "file":
-            target = ocio / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            url = "https://raw.githubusercontent.com/blender/blender/v3.0.1/release/datafiles/colormanagement/" + relative
-            target.write_bytes(download(url))
-os.environ["OCIO"] = str(ocio / "config.ocio")
-
 jobs, models, packs = [], [], []
 for pack in CONFIG["packs"]:
     print("SOURCE", pack["id"], flush=True)
