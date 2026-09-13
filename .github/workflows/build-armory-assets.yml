@@ -1,0 +1,46 @@
+name: Build armory assets
+on:
+  push:
+    branches: [codex/warden-armory]
+    paths:
+      - armory/sources.json
+      - armory/tools/build_assets.py
+      - armory/tools/convert_assets.py
+      - .github/workflows/build-armory-assets.yml
+permissions:
+  contents: write
+concurrency:
+  group: armory-asset-build
+  cancel-in-progress: true
+jobs:
+  build:
+    if: github.repository == 'nigh3252-prog/Playground' && github.ref == 'refs/heads/codex/warden-armory'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/warden-armory
+      - name: Install Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y blender
+      - name: Download and convert verified CC0 sources
+        run: python3 armory/tools/build_assets.py
+      - name: Commit generated assets to this branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add armory/models armory/vendor armory/catalog.json armory/asset-lock.json armory/CREDITS.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Add verified CC0 armory models and local Three.js runtime"
+            git push origin HEAD:codex/warden-armory
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: armory-build-report
+          path: |
+            armory/catalog.json
+            armory/asset-lock.json
+            /tmp/armory-conversion-report.json

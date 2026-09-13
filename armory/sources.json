@@ -1,0 +1,310 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "verifiedAt": "2026-09-12",
+  "packs": [
+    {
+      "creator": "Kenney",
+      "description": "18 blasters from Blaster Kit 2.1; props and targets omitted.",
+      "era": [
+        "Sci-fi"
+      ],
+      "files": [
+        {
+          "name": "blaster-a",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-a.glb"
+        },
+        {
+          "name": "blaster-b",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-b.glb"
+        },
+        {
+          "name": "blaster-c",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-c.glb"
+        },
+        {
+          "name": "blaster-d",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-d.glb"
+        },
+        {
+          "name": "blaster-e",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-e.glb"
+        },
+        {
+          "name": "blaster-f",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-f.glb"
+        },
+        {
+          "name": "blaster-g",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-g.glb"
+        },
+        {
+          "name": "blaster-h",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-h.glb"
+        },
+        {
+          "name": "blaster-i",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-i.glb"
+        },
+        {
+          "name": "blaster-j",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-j.glb"
+        },
+        {
+          "name": "blaster-k",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-k.glb"
+        },
+        {
+          "name": "blaster-l",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-l.glb"
+        },
+        {
+          "name": "blaster-m",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-m.glb"
+        },
+        {
+          "name": "blaster-n",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-n.glb"
+        },
+        {
+          "name": "blaster-o",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-o.glb"
+        },
+        {
+          "name": "blaster-p",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-p.glb"
+        },
+        {
+          "name": "blaster-q",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-q.glb"
+        },
+        {
+          "name": "blaster-r",
+          "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-r.glb"
+        }
+      ],
+      "id": "blasters",
+      "mode": "files",
+      "name": "Kenney · Blaster Kit",
+      "source": "https://kenney.nl/assets/blaster-kit"
+    },
+    {
+      "creator": "Quaternius",
+      "description": "12 assembled guns; the original 78-piece collection also includes modular components.",
+      "era": [
+        "Sci-fi"
+      ],
+      "files": [
+        {
+          "name": "Scifi Assault Rifle 01",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Rifle/Scifi%20Assault%20Rifle-JqdHbURERk.glb"
+        },
+        {
+          "name": "Scifi AR 02",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20AR.glb"
+        },
+        {
+          "name": "Scifi Assault Rifle 03",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Assault%20Rifle-RGtBoJNn3N.glb"
+        },
+        {
+          "name": "Scifi Assault Rifle 04",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Assault%20Rifle-j40c8VDdAQ.glb"
+        },
+        {
+          "name": "Scifi Assault Rifle 05",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Assault%20Rifle.glb"
+        },
+        {
+          "name": "Scifi Grenade Launcher 06",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Grenade%20Launcher.glb"
+        },
+        {
+          "name": "Scifi Pistol 07",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Pistol-U0Q1BrKL1y.glb"
+        },
+        {
+          "name": "Scifi Pistol 08",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Pistol-uw4B33Mm0d.glb"
+        },
+        {
+          "name": "Scifi Pistol 09",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Pistol.glb"
+        },
+        {
+          "name": "Scifi Smg 10",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Smg.glb"
+        },
+        {
+          "name": "Scifi Sniper 11",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Sniper-46615JyFm7.glb"
+        },
+        {
+          "name": "Scifi Sniper 12",
+          "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Sniper.glb"
+        }
+      ],
+      "id": "modular",
+      "mode": "files",
+      "name": "Quaternius · Modular Sci-fi",
+      "source": "https://quaternius.com/packs/scifimodularguns.html"
+    },
+    {
+      "creator": "Quaternius",
+      "description": "Firearms from the original Ultimate Gun Pack. Separate scopes, suppressors and bayonets are omitted.",
+      "era": [
+        "Modern"
+      ],
+      "id": "ultimate",
+      "licenseEvidence": "https://opengameart.org/content/low-poly-guns-pack",
+      "mode": "archive",
+      "name": "Quaternius · Ultimate Guns",
+      "source": "https://quaternius.com/packs/ultimategun.html",
+      "url": "https://opengameart.org/sites/default/files/ultimate_gun_pack_by_quaternius.zip"
+    },
+    {
+      "creator": "Quaternius",
+      "description": "Seven original stylized sci-fi guns.",
+      "era": [
+        "Sci-fi"
+      ],
+      "files": [
+        {
+          "name": "Lightning Gun",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Lightning%20Gun.fbx"
+        },
+        {
+          "name": "LongPistol",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/LongPistol.fbx"
+        },
+        {
+          "name": "LongPistol_small",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/LongPistol_small.fbx"
+        },
+        {
+          "name": "Pistol",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Pistol.fbx"
+        },
+        {
+          "name": "Ray Gun",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Ray%20Gun.fbx"
+        },
+        {
+          "name": "Rifle",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Rifle.fbx"
+        },
+        {
+          "name": "Sniper rifle",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Sniper%20rifle.fbx"
+        }
+      ],
+      "id": "scifi",
+      "mode": "files",
+      "name": "Quaternius · Sci-fi Guns",
+      "source": "https://quaternius.com/packs/scifigun.html"
+    },
+    {
+      "creator": "Quaternius",
+      "description": "Six original animated firearms; animation clips retained where present.",
+      "era": [
+        "Modern"
+      ],
+      "files": [
+        {
+          "name": "P90",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/P90.fbx"
+        },
+        {
+          "name": "Pistol",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Pistol.fbx"
+        },
+        {
+          "name": "Revolver",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Revolver.fbx"
+        },
+        {
+          "name": "Rifle",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Rifle.fbx"
+        },
+        {
+          "name": "Shotgun",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Shotgun.fbx"
+        },
+        {
+          "name": "SniperRifle",
+          "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/SniperRifle.fbx"
+        }
+      ],
+      "id": "animated",
+      "mode": "files",
+      "name": "Quaternius · Animated Guns",
+      "source": "https://quaternius.com/packs/animatedguns.html"
+    },
+    {
+      "description": "Individual CC0 models from OpenGameArt. Detail and historical fidelity vary by creator.",
+      "files": [
+        {
+          "creator": "Lucian Pavel",
+          "description": "Textured bolt-action rifle; original source includes 2K diffuse, normal and specular maps.",
+          "era": [
+            "WWI",
+            "WWII"
+          ],
+          "extension": ".zip",
+          "name": "Lee–Enfield",
+          "source": "https://opengameart.org/content/bolt-action-rifle-lee-enfield",
+          "url": "https://opengameart.org/sites/default/files/Lee%20Enfield.zip"
+        },
+        {
+          "creator": "Wiggilytuff (aaronw)",
+          "description": "Low-poly German WWI machine gun. The source page title says MG05/15; its description identifies MG08/15.",
+          "era": [
+            "WWI"
+          ],
+          "extension": ".zip",
+          "name": "MG08/15",
+          "source": "https://opengameart.org/content/ww1-mg0515-portable-lp",
+          "url": "https://opengameart.org/sites/default/files/German_MG08_15_portable.zip"
+        },
+        {
+          "creator": "ege",
+          "description": "Untextured reference model with separate parts. Converted from the author's Blender file.",
+          "era": [
+            "WWII"
+          ],
+          "extension": ".blend",
+          "name": "Sten",
+          "source": "https://opengameart.org/content/sten-smg",
+          "url": "https://opengameart.org/sites/default/files/STENNORMALFINISHED.blend"
+        }
+      ],
+      "id": "historical",
+      "mode": "historical",
+      "name": "History · WWI & WWII"
+    },
+    {
+      "creator": "RayB2",
+      "description": "Two revolvers and one rifle, loosely based on historical examples.",
+      "era": [
+        "Antique"
+      ],
+      "files": [
+        {
+          "creator": "RayB2",
+          "description": "Three firearms in one original scene; choose individual meshes in inspection controls.",
+          "era": [
+            "Antique"
+          ],
+          "extension": ".blend",
+          "name": "Antique firearms set",
+          "source": "https://opengameart.org/content/antique-guns",
+          "url": "https://opengameart.org/sites/default/files/antique%20guns.blend"
+        }
+      ],
+      "id": "antique",
+      "mode": "historical",
+      "name": "History · Antique Guns",
+      "source": "https://opengameart.org/content/antique-guns"
+    }
+  ]
+}
