@@ -1,0 +1,537 @@
+{
+  "models": 87,
+  "packs": 7,
+  "checks": [
+    "Every GLB loads and renders visible geometry; no external runtime requests",
+    "Pack, era, search, and empty-state filters",
+    "Cross-pack favorites persist; notes and JSON round-trip; ZIP CRC and model hashes; invalid import rejected",
+    "Orbit, pan, wheel zoom, fit, wireframe, orientation and spin controls",
+    "390px portrait layout, pack switching, touch favorite, collapsible catalog, no horizontal overflow"
+  ],
+  "rendered": [
+    {
+      "id": "blasters-blaster-a",
+      "filled": 17677,
+      "geometry": 2,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-b",
+      "filled": 22120,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-c",
+      "filled": 22988,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-d",
+      "filled": 13955,
+      "geometry": 2,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-e",
+      "filled": 8606,
+      "geometry": 3,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-f",
+      "filled": 8645,
+      "geometry": 3,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-g",
+      "filled": 15317,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-h",
+      "filled": 16102,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-i",
+      "filled": 20173,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-j",
+      "filled": 18637,
+      "geometry": 2,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-k",
+      "filled": 22618,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-l",
+      "filled": 19270,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-m",
+      "filled": 18521,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-n",
+      "filled": 14434,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-o",
+      "filled": 23056,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-p",
+      "filled": 13581,
+      "geometry": 2,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-q",
+      "filled": 19712,
+      "geometry": 1,
+      "textures": 2
+    },
+    {
+      "id": "blasters-blaster-r",
+      "filled": 17087,
+      "geometry": 2,
+      "textures": 2
+    },
+    {
+      "id": "modular-scifi-assault-rifle-01",
+      "filled": 12473,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-ar-02",
+      "filled": 13415,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-assault-rifle-03",
+      "filled": 14806,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-assault-rifle-04",
+      "filled": 12464,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-assault-rifle-05",
+      "filled": 9998,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-grenade-launcher-06",
+      "filled": 10832,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-pistol-07",
+      "filled": 16099,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-pistol-08",
+      "filled": 12553,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-pistol-09",
+      "filled": 16430,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-smg-10",
+      "filled": 10617,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-sniper-11",
+      "filled": 6083,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "modular-scifi-sniper-12",
+      "filled": 7287,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle2-1",
+      "filled": 5558,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle2-2",
+      "filled": 6216,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle2-3",
+      "filled": 6768,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle2-4",
+      "filled": 10285,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle-1",
+      "filled": 9192,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle-2",
+      "filled": 5561,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle-3",
+      "filled": 9194,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle-4",
+      "filled": 5211,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-assault-rifle-5",
+      "filled": 5561,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-bullpup-1",
+      "filled": 8356,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-bullpup-2",
+      "filled": 11208,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-bullpup-3",
+      "filled": 10138,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-pistol-1",
+      "filled": 16494,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-pistol-2",
+      "filled": 16494,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-pistol-3",
+      "filled": 18553,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-pistol-4",
+      "filled": 15817,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-pistol-5",
+      "filled": 15037,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-pistol-6",
+      "filled": 13866,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-revolver-1",
+      "filled": 9448,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-revolver-2",
+      "filled": 9952,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-revolver-3",
+      "filled": 10793,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-revolver-4",
+      "filled": 12941,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-revolver-5",
+      "filled": 8677,
+      "geometry": 3,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-shotgun-1",
+      "filled": 4981,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-shotgun-2",
+      "filled": 4495,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-shotgun-3",
+      "filled": 4484,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-shotgun-4",
+      "filled": 3874,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-shotgun-sawed-off",
+      "filled": 6880,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-shotgun-short-stock",
+      "filled": 5870,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-sniper-rifle-1",
+      "filled": 3442,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-sniper-rifle-2",
+      "filled": 3494,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-sniper-rifle-3",
+      "filled": 3616,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-sniper-rifle-4",
+      "filled": 3422,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-sniper-rifle-5",
+      "filled": 3788,
+      "geometry": 6,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-sniper-rifle-6",
+      "filled": 3431,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-submachine-gun-1",
+      "filled": 13393,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-submachine-gun-2",
+      "filled": 9311,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-submachine-gun-3",
+      "filled": 8734,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-submachine-gun-4",
+      "filled": 13224,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "ultimate-submachine-gun-5",
+      "filled": 7581,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "scifi-lightning-gun",
+      "filled": 13940,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "scifi-longpistol",
+      "filled": 9767,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "scifi-longpistol-small",
+      "filled": 11174,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "scifi-pistol",
+      "filled": 18573,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "scifi-ray-gun",
+      "filled": 13928,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "scifi-rifle",
+      "filled": 7412,
+      "geometry": 5,
+      "textures": 1
+    },
+    {
+      "id": "scifi-sniper-rifle",
+      "filled": 4576,
+      "geometry": 4,
+      "textures": 1
+    },
+    {
+      "id": "animated-p90",
+      "filled": 12552,
+      "geometry": 3,
+      "textures": 2
+    },
+    {
+      "id": "animated-pistol",
+      "filled": 13289,
+      "geometry": 6,
+      "textures": 3
+    },
+    {
+      "id": "animated-revolver",
+      "filled": 13049,
+      "geometry": 5,
+      "textures": 4
+    },
+    {
+      "id": "animated-rifle",
+      "filled": 2241,
+      "geometry": 7,
+      "textures": 5
+    },
+    {
+      "id": "animated-shotgun",
+      "filled": 4663,
+      "geometry": 6,
+      "textures": 6
+    },
+    {
+      "id": "animated-sniperrifle",
+      "filled": 4628,
+      "geometry": 8,
+      "textures": 7
+    },
+    {
+      "id": "historical-lee-enfield",
+      "filled": 3799,
+      "geometry": 1,
+      "textures": 8
+    },
+    {
+      "id": "historical-mg08-15",
+      "filled": 18598,
+      "geometry": 4,
+      "textures": 7
+    },
+    {
+      "id": "historical-sten",
+      "filled": 3924,
+      "geometry": 24,
+      "textures": 7
+    },
+    {
+      "id": "antique-antique-firearms-set",
+      "filled": 9499,
+      "geometry": 7,
+      "textures": 7
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}
