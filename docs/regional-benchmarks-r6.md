@@ -1,6 +1,6 @@
 # Watershed r6 — parent worlds and independent benchmark measurements
 
-This extends PR #21, keeping the separate 410 m City Lab and other Playground demos intact. No settlements are generated. The entry remains `regional-world.html`. The previous mapped-water display remains at `regional-world-reference-r5.html`; its constrained lakes must not be used as independent water predictions.
+This extends PR #21, keeping the separate 410 m City Lab and other Playground demos intact. No settlements are generated. The entry remains `regional-world.html`. The retired r5 mapped-water URL now points readers to the current frozen-benchmark view; constrained lakes are not used as independent water predictions.
 
 ## Parent worlds rather than fixed border scenery
 
@@ -26,8 +26,8 @@ The blind adapter allow-lists inputs and strips lake masks, river vectors, town 
 | --- | --- | --- |
 | Michigan / Great Lakes | 700 km; 44.25 N, 85.5 W | Calibration: low relief / lake-rich |
 | Great Basin / Nevada–Utah | 700 km; 39.5 N, 116 W | Calibration: dry basins / ranges |
-| Cascades / Pacific Northwest | 650 km; 45 N, 121.8 W | Validation: volcanoes / coastal mountains |
-| Central Appalachians | 650 km; 38.5 N, 80.5 W | Validation: ridges, valleys, passes |
+| Cascades / Pacific Northwest | 650 km; 45 N, 121.8 W | Secondary check: volcanoes / coastal mountains |
+| Central Appalachians | 650 km; 38.5 N, 80.5 W | Secondary check: ridges, valleys, passes |
 
 The protocol is frozen in `benchmark-protocol.mjs`. **No automatic fitting** is performed; the same water/human model runs everywhere. Split labels do not prove generalization. Previously viewed Cascades are not honestly a never-seen historical holdout; avoid tuning to them and add fresh holdouts before stronger claims.
 

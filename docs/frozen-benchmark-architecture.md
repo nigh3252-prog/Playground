@@ -11,7 +11,7 @@ The fixed protocol deliberately separates model inputs from score-only truth:
 - model input: raw regional elevation plus frozen NOAA climate normals;
 - held-out observations: USGS NHD inland water, Natural Earth major-river geometry, Census 2020 tract population, and the available 1850 urban-place sample;
 - calibration regions: Michigan and Great Basin;
-- validation regions: Cascades and Central Appalachians.
+- secondary check regions: Cascades and Central Appalachians. Both have been inspected during tuning, so they are not pristine holdouts.
 
 Known observed inland water, river lines, and population do not enter the prediction path. They are applied only after Water → Ecology → Human has been generated.
 
@@ -27,6 +27,6 @@ A benchmark refresh is appropriate when the benchmark protocol/source set is int
 
 ## Current calibration result
 
-The first frozen, unfitted baseline is intentionally diagnostic rather than a success criterion. In particular, Michigan currently exposes a large false-positive lake problem: the ≥25 km² scored model water is about 19,074 km² versus about 1,914 km² observed, roughly +897% area bias. That is evidence to tune the water-retention / depression model next, not a reason to alter the frozen benchmark target.
+The current frozen, unfitted baseline is intentionally diagnostic rather than a success criterion. Predicted versus observed inland water is about 2,500 versus 1,914 km² in Michigan (+30.6%), 5,987 versus 4,548 km² in the Great Basin (+31.6%), 1,247 versus 1,004 km² in the Cascades (+24.2%), and 211 versus 358 km² in Central Appalachia (-41.1%). These are useful coarse plausibility checks, not independent validation claims.
 
 Visual relief exaggeration never enters these metrics. Physical elevation, drainage, lake masks, population correlation, and benchmark scoring use unexaggerated values.

@@ -15,7 +15,7 @@
     "noAutomaticFitting": true,
     "frozenSnapshots": true
   },
-  "created": "2026-09-12T20:19:29.462Z",
+  "created": "2026-09-12T20:18:12.647Z",
   "reports": [
     {
       "schema": "watershed-benchmark-2-frozen",
@@ -52,38 +52,38 @@
         "frozenSnapshots": true
       },
       "sourceDigest": "20992921bc526d6986f02391d992ec725e3025c048883b6c1898085d209b3fab",
-      "generatedAt": "2026-09-12T20:19:25.965Z",
+      "generatedAt": "2026-09-12T20:18:12.647Z",
       "water": {
-        "truePositiveKm2": 1142.4851246801602,
-        "falsePositiveKm2": 17931.081469818037,
-        "falseNegativeKm2": 771.5483958878996,
-        "trueNegativeKm2": 220685.09742774215,
+        "truePositiveKm2": 74.18734575845205,
+        "falsePositiveKm2": 2425.9262063013844,
+        "falseNegativeKm2": 1839.8461748096177,
+        "trueNegativeKm2": 236190.2526912783,
         "excludedKm2": 249469.78758205805,
-        "evaluatedKm2": 240530.21241812824,
-        "predictedKm2": 19073.566594498196,
-        "observedKm2": 1914.0335205680599,
-        "precision": 0.05989887203422731,
-        "recall": 0.5968992248062017,
-        "iou": 0.05757009345794335,
-        "f1": 0.10887239307175577,
-        "areaBiasKm2": 17159.533073930135,
-        "areaBiasPercent": 896.5116279069873
+        "evaluatedKm2": 240530.21241814774,
+        "predictedKm2": 2500.1135520598364,
+        "observedKm2": 1914.0335205680697,
+        "precision": 0.029673590504451012,
+        "recall": 0.03875968992248049,
+        "iou": 0.017094017094017058,
+        "f1": 0.0336134453781512,
+        "areaBiasKm2": 586.0800314917667,
+        "areaBiasPercent": 30.620155038759346
       },
       "allSizeWaterDiagnostic": {
-        "truePositiveKm2": 1476.3281805931983,
-        "falsePositiveKm2": 19956.396009023367,
-        "falseNegativeKm2": 2833.956607972863,
-        "trueNegativeKm2": 218659.78288853384,
+        "truePositiveKm2": 96.44354948598767,
+        "falsePositiveKm2": 2477.8573483323,
+        "falseNegativeKm2": 4213.841239080052,
+        "trueNegativeKm2": 236138.3215492473,
         "excludedKm2": 247073.536314057,
-        "evaluatedKm2": 242926.46368612326,
-        "predictedKm2": 21432.724189616565,
-        "observedKm2": 4310.284788566061,
-        "precision": 0.06888196607822862,
-        "recall": 0.34251290877796986,
-        "iou": 0.060837664322837756,
-        "f1": 0.11469740634005889,
-        "areaBiasKm2": 17122.439401050506,
-        "areaBiasPercent": 397.2461273666043
+        "evaluatedKm2": 242926.46368614564,
+        "predictedKm2": 2574.3008978182875,
+        "observedKm2": 4310.28478856604,
+        "precision": 0.03746397694524494,
+        "recall": 0.022375215146299608,
+        "iou": 0.014207650273224093,
+        "f1": 0.02801724137931044,
+        "areaBiasKm2": -1735.9838907477524,
+        "areaBiasPercent": -40.2753872633387
       },
       "lakeSizes": {
         "minimumScoredAreaKm2": 25,
@@ -97,32 +97,32 @@
           {
             "minKm2": 1,
             "maxKm2": 10,
-            "count": 57,
-            "areaKm2": 422.86787082317613
+            "count": 2,
+            "areaKm2": 14.837469151690412
           },
           {
             "minKm2": 10,
             "maxKm2": 25,
-            "count": 168,
-            "areaKm2": 3145.5434601583715
+            "count": 7,
+            "areaKm2": 103.86228406183288
           },
           {
             "minKm2": 25,
             "maxKm2": 100,
-            "count": 204,
-            "areaKm2": 9592.423806567844
+            "count": 14,
+            "areaKm2": 741.8734575845206
           },
           {
             "minKm2": 100,
             "maxKm2": 1000,
-            "count": 62,
-            "areaKm2": 14807.794213387035
+            "count": 6,
+            "areaKm2": 1891.7773168405274
           },
           {
             "minKm2": 1000,
             "maxKm2": null,
-            "count": 4,
-            "areaKm2": 7411.31584126936
+            "count": 1,
+            "areaKm2": 1936.2897242955987
           }
         ],
         "observed": [
@@ -13547,19 +13547,19 @@
         "toleranceKm": 10,
         "distanceCapKm": 50,
         "predictedToObserved": {
-          "withinTolerance": 0.10366893870858773,
-          "meanSeparationCappedKm": 41.922259909806264,
-          "lengthKm": 3403.1048956525306
+          "withinTolerance": 0.10338948962359443,
+          "meanSeparationCappedKm": 40.690059484469955,
+          "lengthKm": 6035.032547740909
         },
         "observedToPredicted": {
-          "withinTolerance": 0.6591682378989294,
-          "meanSeparationCappedKm": 10.222944698563845,
+          "withinTolerance": 0.8933690796207625,
+          "meanSeparationCappedKm": 4.73572206670519,
           "lengthKm": 610.6223847085244
         },
         "minimumDrainageKm2": 500,
         "domain": "Mapped open-water interiors omitted; artificial paths retained only outside those water masks.",
-        "predictedDensityKmPerKm2": 0.014008786214619921,
-        "observedDensityKmPerKm2": 0.00251360998486146
+        "predictedDensityKmPerKm2": 0.024843042854063056,
+        "observedDensityKmPerKm2": 0.0025136099848612286
       },
       "confluences": {
         "toleranceKm": 10,
@@ -13567,7 +13567,7 @@
         "predictedToObserved": {
           "withinTolerance": null,
           "meanSeparationCappedKm": null,
-          "lengthKm": 36
+          "lengthKm": 68
         },
         "observedToPredicted": {
           "withinTolerance": null,
@@ -13577,29 +13577,29 @@
       },
       "population": {
         "sampleCount": 8044,
-        "matchedCount": 7502,
+        "matchedCount": 8001,
         "representedPopulation": 29513000,
-        "matchedPopulation": 27461247,
-        "coverage": 0.9304796869176295,
+        "matchedPopulation": 29334050,
+        "coverage": 0.9939365703249415,
         "captures": [
           {
             "topLandFraction": 0.1,
-            "populationShare": 0.04941567292992922,
-            "lift": 0.49415672929929216,
-            "threshold": 0.6435717940330505,
-            "tieFraction": 0.40000000161845806
+            "populationShare": 0.06491064138773882,
+            "lift": 0.6491064138773881,
+            "threshold": 0.6142939329147339,
+            "tieFraction": 0.8000000020693279
           },
           {
             "topLandFraction": 0.2,
-            "populationShare": 0.11709071332412545,
-            "lift": 0.5854535666206272,
-            "threshold": 0.5710768699645996,
-            "tieFraction": 0.8000000026523864
+            "populationShare": 0.18102229320533647,
+            "lift": 0.9051114660266824,
+            "threshold": 0.5345401167869568,
+            "tieFraction": 0.6000000032537276
           }
         ],
-        "rankCorrelation": -0.11345902760899357,
-        "medianLocationScore": 0.41827637556687397,
-        "medianLandScore": 0.45432254672050476,
+        "rankCorrelation": -0.004979540094533194,
+        "medianLocationScore": 0.4204716497186616,
+        "medianLandScore": 0.42690861225128174,
         "interpretation": "2020 tract counts represented at Census internal points, not household locations. Modern population is a secondary proxy, not validation of a preindustrial explanation."
       },
       "historical": {
@@ -13613,20 +13613,20 @@
             "topLandFraction": 0.1,
             "populationShare": 0,
             "lift": 0,
-            "threshold": 0.6435717940330505,
-            "tieFraction": 0.40000000161845806
+            "threshold": 0.6142939329147339,
+            "tieFraction": 0.8000000020693279
           },
           {
             "topLandFraction": 0.2,
-            "populationShare": 0,
-            "lift": 0,
-            "threshold": 0.5710768699645996,
-            "tieFraction": 0.8000000026523864
+            "populationShare": 0.5679575825697969,
+            "lift": 2.8397879128489842,
+            "threshold": 0.5345401167869568,
+            "tieFraction": 0.6000000032537276
           }
         ],
         "rankCorrelation": null,
-        "medianLocationScore": 0.4842687119910875,
-        "medianLandScore": 0.45432254672050476,
+        "medianLocationScore": 0.5515171883559764,
+        "medianLandScore": 0.42690861225128174,
         "interpretation": "1850 largest-100 urban-place sample geolocated with modern Census place internal points. Not all historical population; rural/Indigenous populations and unmatched/annexed places are absent. No local sample means N/A, not zero population."
       },
       "terrain": {
@@ -13636,25 +13636,25 @@
           "zKm": 71.39873329840854
         },
         "sampledPeakM": 564.8184814453125,
-        "p05ElevationM": 175,
-        "medianElevationM": 223.9539794921875,
-        "p95ElevationM": 459.4641418457031,
-        "centralReliefM": 284.4641418457031,
-        "p95SlopePercent": 1.3373651541769505,
+        "p05ElevationM": 171.30337524414062,
+        "medianElevationM": 222.94598388671875,
+        "p95ElevationM": 458.94879150390625,
+        "centralReliefM": 287.6454162597656,
+        "p95SlopePercent": 1.370322611182928,
         "nominalSpacingKm": 5.46875,
         "landAreaKm2": 489999.9999999989,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 481038.1657903336,
-            "landFraction": 0.9817105424292545
+            "areaKm2": 481366.9171496351,
+            "landFraction": 0.9823814635706861
           },
           {
             "minM": 500,
             "maxM": 1000,
-            "areaKm2": 8961.834209665443,
-            "landFraction": 0.018289457570745845
+            "areaKm2": 8633.082850363922,
+            "landFraction": 0.017618536429314168
           },
           {
             "minM": 1000,
@@ -13690,9 +13690,9 @@
         "peakCaution": "Sampled mesh maximum, not a surveyed summit; different source/detail settings smooth peaks differently."
       },
       "waterAreaDiagnostics": {
-        "budgetAreaKm2": 25968.22453811156,
-        "nodeMaskAreaKm2": 39274.17346373473,
-        "rasterMaskAreaKm2": 35379.945192203704,
+        "budgetAreaKm2": 3768.65353670776,
+        "nodeMaskAreaKm2": 4991.798887852472,
+        "rasterMaskAreaKm2": 4688.6402519341655,
         "note": "Budget, node-mask and rendered-color water footprints are different discretizations. The scored mask is thresholded on a fixed analysis grid, not blue screen pixels."
       },
       "limitations": [
@@ -14197,38 +14197,38 @@
         "frozenSnapshots": true
       },
       "sourceDigest": "a45a517e232b4a3359f8ae6f665af366fbffe6ce5bd44ac746fd03d77feab5fc",
-      "generatedAt": "2026-09-12T20:19:26.791Z",
+      "generatedAt": "2026-09-12T20:18:12.647Z",
       "water": {
-        "truePositiveKm2": 623.173704370996,
-        "falsePositiveKm2": 13843.358718527536,
-        "falseNegativeKm2": 3924.5105906220874,
-        "trueNegativeKm2": 398586.3525567358,
+        "truePositiveKm2": 170.63089524443973,
+        "falsePositiveKm2": 5816.287907462684,
+        "falseNegativeKm2": 4377.053399748654,
+        "trueNegativeKm2": 406613.4233678105,
         "excludedKm2": 73022.60443004576,
-        "evaluatedKm2": 416977.3955702564,
-        "predictedKm2": 14466.532422898532,
-        "observedKm2": 4547.684294993083,
-        "precision": 0.043076923076921854,
-        "recall": 0.13703099510603645,
-        "iou": 0.033884630899555554,
-        "f1": 0.06554818571985818,
-        "areaBiasKm2": 9918.848127905449,
-        "areaBiasPercent": 218.10766721045076
+        "evaluatedKm2": 416977.3955702663,
+        "predictedKm2": 5986.918802707124,
+        "observedKm2": 4547.684294993093,
+        "precision": 0.028500619578686288,
+        "recall": 0.03752039151712902,
+        "iou": 0.01646385110952036,
+        "f1": 0.03239436619718302,
+        "areaBiasKm2": 1439.2345077140308,
+        "areaBiasPercent": 31.647634584014515
       },
       "allSizeWaterDiagnostic": {
-        "truePositiveKm2": 756.7109267362092,
-        "falsePositiveKm2": 15965.116807219354,
-        "falseNegativeKm2": 4310.284788566044,
-        "trueNegativeKm2": 396464.5944680414,
+        "truePositiveKm2": 215.14330269951097,
+        "falsePositiveKm2": 6046.2686793138955,
+        "falseNegativeKm2": 4851.852412602767,
+        "trueNegativeKm2": 406383.442595959,
         "excludedKm2": 72503.29300973695,
-        "evaluatedKm2": 417496.70699056296,
-        "predictedKm2": 16721.827733955564,
-        "observedKm2": 5066.995715302253,
-        "precision": 0.04525288376219915,
-        "recall": 0.1493411420204981,
-        "iou": 0.035978835978835125,
-        "f1": 0.06945863125638248,
-        "areaBiasKm2": 11654.83201865331,
-        "areaBiasPercent": 230.01464128844407
+        "evaluatedKm2": 417496.7069905752,
+        "predictedKm2": 6261.4119820134065,
+        "observedKm2": 5066.995715302278,
+        "precision": 0.034360189573459425,
+        "recall": 0.04245973645680818,
+        "iou": 0.01935914552736973,
+        "f1": 0.03798297314996707,
+        "areaBiasKm2": 1194.4162667111286,
+        "areaBiasPercent": 23.57247437774623
       },
       "lakeSizes": {
         "minimumScoredAreaKm2": 25,
@@ -14242,26 +14242,26 @@
           {
             "minKm2": 1,
             "maxKm2": 10,
-            "count": 31,
-            "areaKm2": 229.98077185120138
+            "count": 3,
+            "areaKm2": 22.256203727535617
           },
           {
             "minKm2": 10,
             "maxKm2": 25,
-            "count": 132,
-            "areaKm2": 2544.6259595149068
+            "count": 13,
+            "areaKm2": 267.0744447304274
           },
           {
             "minKm2": 25,
             "maxKm2": 100,
-            "count": 131,
-            "areaKm2": 6150.13096337568
+            "count": 34,
+            "areaKm2": 1654.37781041348
           },
           {
             "minKm2": 100,
             "maxKm2": 1000,
-            "count": 55,
-            "areaKm2": 12352.19306878227
+            "count": 19,
+            "areaKm2": 5245.04534512256
           },
           {
             "minKm2": 1000,
@@ -19215,19 +19215,19 @@
         "toleranceKm": 10,
         "distanceCapKm": 50,
         "predictedToObserved": {
-          "withinTolerance": 0.06489471732500103,
-          "meanSeparationCappedKm": 44.60793537989363,
-          "lengthKm": 5530.933723670705
+          "withinTolerance": 0.05588258385753398,
+          "meanSeparationCappedKm": 45.22367484564014,
+          "lengthKm": 9983.702204932119
         },
         "observedToPredicted": {
-          "withinTolerance": 0.5385654342136796,
-          "meanSeparationCappedKm": 11.756008401865559,
+          "withinTolerance": 0.6861052479501146,
+          "meanSeparationCappedKm": 9.258630136413823,
           "lengthKm": 731.1945782091415
         },
         "minimumDrainageKm2": 500,
         "domain": "Mapped open-water interiors omitted; artificial paths retained only outside those water masks.",
-        "predictedDensityKmPerKm2": 0.013247849937642085,
-        "observedDensityKmPerKm2": 0.0017513780730866204
+        "predictedDensityKmPerKm2": 0.023913247787981946,
+        "observedDensityKmPerKm2": 0.001751378073086569
       },
       "confluences": {
         "toleranceKm": 10,
@@ -19235,7 +19235,7 @@
         "predictedToObserved": {
           "withinTolerance": null,
           "meanSeparationCappedKm": null,
-          "lengthKm": 52
+          "lengthKm": 105
         },
         "observedToPredicted": {
           "withinTolerance": null,
@@ -19245,29 +19245,29 @@
       },
       "population": {
         "sampleCount": 1055,
-        "matchedCount": 1016,
+        "matchedCount": 1049,
         "representedPopulation": 4620662,
-        "matchedPopulation": 4473590,
-        "coverage": 0.9681707945744571,
+        "matchedPopulation": 4601951,
+        "coverage": 0.9959505802415325,
         "captures": [
           {
             "topLandFraction": 0.1,
-            "populationShare": 0.6398693219539564,
-            "lift": 6.398693219539564,
-            "threshold": 0.4214937686920166,
-            "tieFraction": 0.700000004917018
+            "populationShare": 0.5460025541341053,
+            "lift": 5.460025541341052,
+            "threshold": 0.3933491110801697,
+            "tieFraction": 0.10000000510083502
           },
           {
             "topLandFraction": 0.2,
-            "populationShare": 0.7557482916404945,
-            "lift": 3.7787414582024725,
-            "threshold": 0.3260965645313263,
-            "tieFraction": 0.40000001157654924
+            "populationShare": 0.7034946699780158,
+            "lift": 3.517473349890079,
+            "threshold": 0.29814210534095764,
+            "tieFraction": 0.20000001231225384
           }
         ],
-        "rankCorrelation": 0.38677481366900185,
-        "medianLocationScore": 0.4850194510612249,
-        "medianLandScore": 0.2336307317018509,
+        "rankCorrelation": 0.38184751332757316,
+        "medianLocationScore": 0.39771386627375327,
+        "medianLandScore": 0.1956835240125656,
         "interpretation": "2020 tract counts represented at Census internal points, not household locations. Modern population is a secondary proxy, not validation of a preindustrial explanation."
       },
       "historical": {
@@ -19290,7 +19290,7 @@
         ],
         "rankCorrelation": null,
         "medianLocationScore": null,
-        "medianLandScore": 0.2336307317018509,
+        "medianLandScore": 0.1956835240125656,
         "interpretation": "1850 largest-100 urban-place sample geolocated with modern Census place internal points. Not all historical population; rural/Indigenous populations and unmatched/annexed places are absent. No local sample means N/A, not zero population."
       },
       "terrain": {
@@ -19300,37 +19300,37 @@
           "zKm": 555.0056983932453
         },
         "sampledPeakM": 3945.32080078125,
-        "p05ElevationM": 1027.716552734375,
-        "medianElevationM": 1681.44873046875,
-        "p95ElevationM": 2500.4638671875,
-        "centralReliefM": 1472.747314453125,
-        "p95SlopePercent": 13.116325438022614,
+        "p05ElevationM": 1026.8116455078125,
+        "medianElevationM": 1679.8101806640625,
+        "p95ElevationM": 2498.51708984375,
+        "centralReliefM": 1471.7054443359375,
+        "p95SlopePercent": 13.129322230815887,
         "nominalSpacingKm": 5.46875,
         "landAreaKm2": 489630.1133665688,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 8256.459935734641,
-            "landFraction": 0.016862647354276023
+            "areaKm2": 8347.719988338651,
+            "landFraction": 0.017049033056692343
           },
           {
             "minM": 500,
             "maxM": 1000,
-            "areaKm2": 15243.50949478884,
-            "landFraction": 0.03113270421620608
+            "areaKm2": 15180.409856495738,
+            "landFraction": 0.03100383216244443
           },
           {
             "minM": 1000,
             "maxM": 2000,
-            "areaKm2": 362996.3413104358,
-            "landFraction": 0.7413684971591468
+            "areaKm2": 363297.82707263576,
+            "landFraction": 0.7419842390303463
           },
           {
             "minM": 2000,
             "maxM": 3000,
-            "areaKm2": 96837.54979547448,
-            "landFraction": 0.19777694866364484
+            "areaKm2": 96507.90361896345,
+            "landFraction": 0.19710369314379034
           },
           {
             "minM": 3000,
@@ -19354,9 +19354,9 @@
         "peakCaution": "Sampled mesh maximum, not a surveyed summit; different source/detail settings smooth peaks differently."
       },
       "waterAreaDiagnostics": {
-        "budgetAreaKm2": 12309.12260351117,
-        "nodeMaskAreaKm2": 23969.288957112156,
-        "rasterMaskAreaKm2": 21276.930763523545,
+        "budgetAreaKm2": 4390.257618228029,
+        "nodeMaskAreaKm2": 7783.064234550841,
+        "rasterMaskAreaKm2": 7188.7538039941055,
         "note": "Budget, node-mask and rendered-color water footprints are different discretizations. The scored mask is thresholded on a fixed analysis grid, not blue screen pixels."
       },
       "limitations": [
@@ -19741,38 +19741,38 @@
         "frozenSnapshots": true
       },
       "sourceDigest": "b05623efabbb6e8d7784278a583ff5ae642006d77a75e822f03bd895ede6463b",
-      "generatedAt": "2026-09-12T20:19:28.049Z",
+      "generatedAt": "2026-09-12T20:18:12.647Z",
       "water": {
-        "truePositiveKm2": 505.34451694953697,
-        "falsePositiveKm2": 28651.115081225456,
-        "falseNegativeKm2": 498.94775091220106,
-        "trueNegativeKm2": 256465.54073476998,
+        "truePositiveKm2": 0,
+        "falsePositiveKm2": 1247.3693772805088,
+        "falseNegativeKm2": 1004.2922678617422,
+        "trueNegativeKm2": 283869.28643869585,
         "excludedKm2": 136379.05191595582,
-        "evaluatedKm2": 286120.9480838572,
-        "predictedKm2": 29156.45959817499,
-        "observedKm2": 1004.2922678617381,
-        "precision": 0.01733216322948786,
-        "recall": 0.5031847133757962,
-        "iou": 0.017040552200173763,
-        "f1": 0.03351007423117942,
-        "areaBiasKm2": 28152.167330313256,
-        "areaBiasPercent": 2803.184713375588
+        "evaluatedKm2": 286120.9480838381,
+        "predictedKm2": 1247.3693772805088,
+        "observedKm2": 1004.2922678617422,
+        "precision": 0,
+        "recall": 0,
+        "iou": 0,
+        "f1": 0,
+        "areaBiasKm2": 243.07710941876667,
+        "areaBiasPercent": 24.20382165605106
       },
       "allSizeWaterDiagnostic": {
-        "truePositiveKm2": 959.5149056003904,
-        "falsePositiveKm2": 31305.772986719316,
-        "falseNegativeKm2": 1336.9241018032124,
-        "trueNegativeKm2": 253810.88282927763,
+        "truePositiveKm2": 31.983830186679583,
+        "falsePositiveKm2": 1311.3370376538685,
+        "falseNegativeKm2": 2264.455177216927,
+        "trueNegativeKm2": 283805.31877832254,
         "excludedKm2": 135086.90517641496,
-        "evaluatedKm2": 287413.09482340055,
-        "predictedKm2": 32265.287892319706,
-        "observedKm2": 2296.439007403603,
-        "precision": 0.029738302934181764,
-        "recall": 0.41782729805013896,
-        "iou": 0.028555111364936665,
-        "f1": 0.05552470849528482,
-        "areaBiasKm2": 29968.848884916104,
-        "areaBiasPercent": 1305.0139275764807
+        "evaluatedKm2": 287413.09482338,
+        "predictedKm2": 1343.320867840548,
+        "observedKm2": 2296.4390074036064,
+        "precision": 0.02380952380952371,
+        "recall": 0.013927576601671234,
+        "iou": 0.00886524822695031,
+        "f1": 0.017574692442882164,
+        "areaBiasKm2": -953.1181395630585,
+        "areaBiasPercent": -41.50417827298058
       },
       "lakeSizes": {
         "minimumScoredAreaKm2": 25,
@@ -19786,32 +19786,32 @@
           {
             "minKm2": 1,
             "maxKm2": 10,
-            "count": 39,
-            "areaKm2": 249.47387545610064
+            "count": 1,
+            "areaKm2": 6.396766037335917
           },
           {
             "minKm2": 10,
             "maxKm2": 25,
-            "count": 188,
-            "areaKm2": 3032.067101697233
+            "count": 5,
+            "areaKm2": 76.761192448031
           },
           {
             "minKm2": 25,
             "maxKm2": 100,
-            "count": 241,
-            "areaKm2": 10305.190086148177
+            "count": 8,
+            "areaKm2": 434.9800905388424
           },
           {
             "minKm2": 100,
             "maxKm2": 1000,
-            "count": 58,
-            "areaKm2": 13414.01838029342
+            "count": 4,
+            "areaKm2": 837.9763508910052
           },
           {
             "minKm2": 1000,
             "maxKm2": null,
-            "count": 3,
-            "areaKm2": 9646.323184302562
+            "count": 0,
+            "areaKm2": 0
           }
         ],
         "observed": [
@@ -23163,19 +23163,19 @@
         "toleranceKm": 10,
         "distanceCapKm": 50,
         "predictedToObserved": {
-          "withinTolerance": 0.19950061309639405,
-          "meanSeparationCappedKm": 32.823098235754706,
-          "lengthKm": 3457.670211447213
+          "withinTolerance": 0.21814414344304273,
+          "meanSeparationCappedKm": 33.11126439494211,
+          "lengthKm": 8534.554313651213
         },
         "observedToPredicted": {
-          "withinTolerance": 0.42286777111934276,
-          "meanSeparationCappedKm": 16.04784155510069,
+          "withinTolerance": 0.8367303826773186,
+          "meanSeparationCappedKm": 5.110123533833658,
           "lengthKm": 1739.5737252217004
         },
         "minimumDrainageKm2": 500,
         "domain": "Mapped open-water interiors omitted; artificial paths retained only outside those water masks.",
-        "predictedDensityKmPerKm2": 0.012030315506576902,
-        "observedDensityKmPerKm2": 0.006052520767331677
+        "predictedDensityKmPerKm2": 0.029694382292831282,
+        "observedDensityKmPerKm2": 0.00605252076733211
       },
       "confluences": {
         "toleranceKm": 10,
@@ -23183,7 +23183,7 @@
         "predictedToObserved": {
           "withinTolerance": null,
           "meanSeparationCappedKm": null,
-          "lengthKm": 43
+          "lengthKm": 114
         },
         "observedToPredicted": {
           "withinTolerance": null,
@@ -23193,29 +23193,29 @@
       },
       "population": {
         "sampleCount": 2373,
-        "matchedCount": 1471,
+        "matchedCount": 2337,
         "representedPopulation": 10387762,
-        "matchedPopulation": 6469994,
-        "coverage": 0.6228477317828421,
+        "matchedPopulation": 10286351,
+        "coverage": 0.9902374544199222,
         "captures": [
           {
             "topLandFraction": 0.1,
-            "populationShare": 0.49013383938223126,
-            "lift": 4.9013383938223125,
-            "threshold": 0.5122608542442322,
-            "tieFraction": 0.0999999977766762
+            "populationShare": 0.41939731591892987,
+            "lift": 4.193973159189299,
+            "threshold": 0.527866005897522,
+            "tieFraction": 0.49999999745685864
           },
           {
             "topLandFraction": 0.2,
-            "populationShare": 0.6337579292963795,
-            "lift": 3.1687896464818976,
-            "threshold": 0.4343031942844391,
-            "tieFraction": 0.19999999392567128
+            "populationShare": 0.6424139133498361,
+            "lift": 3.2120695667491805,
+            "threshold": 0.44723960757255554,
+            "tieFraction": 0
           }
         ],
-        "rankCorrelation": 0.32151793096771486,
-        "medianLocationScore": 0.4931624022965098,
-        "medianLandScore": 0.3026168942451477,
+        "rankCorrelation": 0.3211642168309469,
+        "medianLocationScore": 0.49391616183713305,
+        "medianLandScore": 0.27173712849617004,
         "interpretation": "2020 tract counts represented at Census internal points, not household locations. Modern population is a secondary proxy, not validation of a preindustrial explanation."
       },
       "historical": {
@@ -23238,7 +23238,7 @@
         ],
         "rankCorrelation": null,
         "medianLocationScore": null,
-        "medianLandScore": 0.3026168942451477,
+        "medianLandScore": 0.27173712849617004,
         "interpretation": "1850 largest-100 urban-place sample geolocated with modern Census place internal points. Not all historical population; rural/Indigenous populations and unmatched/annexed places are absent. No local sample means N/A, not zero population."
       },
       "terrain": {
@@ -23248,37 +23248,37 @@
           "zKm": 116.53389416082817
         },
         "sampledPeakM": 2725.6650390625,
-        "p05ElevationM": 82.01412963867188,
-        "medianElevationM": 835.7716674804688,
-        "p95ElevationM": 1731.984130859375,
-        "centralReliefM": 1649.9700012207031,
-        "p95SlopePercent": 11.91297322511673,
+        "p05ElevationM": 76.25428771972656,
+        "medianElevationM": 825.873291015625,
+        "p95ElevationM": 1729.80615234375,
+        "centralReliefM": 1653.5518646240234,
+        "p95SlopePercent": 12.183362245559692,
         "nominalSpacingKm": 5.078125,
         "landAreaKm2": 333040.7793286864,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 105133.67095097658,
-            "landFraction": 0.31567807150492366
+            "areaKm2": 107205.23316515691,
+            "landFraction": 0.3218982173331793
           },
           {
             "minM": 500,
             "maxM": 1000,
-            "areaKm2": 79968.92030025103,
-            "landFraction": 0.24011750291194123
+            "areaKm2": 78934.3578231426,
+            "landFraction": 0.23701108909921292
           },
           {
             "minM": 1000,
             "maxM": 2000,
-            "areaKm2": 143289.31674995003,
-            "landFraction": 0.43024556043491047
+            "areaKm2": 142285.12461666545,
+            "landFraction": 0.4272303376885887
           },
           {
             "minM": 2000,
             "maxM": 3000,
-            "areaKm2": 3730.2977654754786,
-            "landFraction": 0.011200723746187108
+            "areaKm2": 3697.490161688224,
+            "landFraction": 0.011102214476981741
           },
           {
             "minM": 3000,
@@ -23302,9 +23302,9 @@
         "peakCaution": "Sampled mesh maximum, not a surveyed summit; different source/detail settings smooth peaks differently."
       },
       "waterAreaDiagnostics": {
-        "budgetAreaKm2": 29663.68833629639,
-        "nodeMaskAreaKm2": 40207.63787234607,
-        "rasterMaskAreaKm2": 36647.07262789591,
+        "budgetAreaKm2": 1053.8506884692094,
+        "nodeMaskAreaKm2": 1498.7490162969516,
+        "rasterMaskAreaKm2": 1356.1143999152202,
         "note": "Budget, node-mask and rendered-color water footprints are different discretizations. The scored mask is thresholded on a fixed analysis grid, not blue screen pixels."
       },
       "limitations": [
@@ -23623,38 +23623,38 @@
         "frozenSnapshots": true
       },
       "sourceDigest": "e3ed903ec2ccef5cab2ce81511ecaee664cf8347fbe8fe9e2608e375a7295f07",
-      "generatedAt": "2026-09-12T20:19:29.434Z",
+      "generatedAt": "2026-09-12T20:18:12.647Z",
       "water": {
-        "truePositiveKm2": 147.1256188587261,
-        "falsePositiveKm2": 67351.5496071174,
-        "falseNegativeKm2": 211.0932792320852,
-        "trueNegativeKm2": 289651.96293644304,
+        "truePositiveKm2": 0,
+        "falsePositiveKm2": 211.0932792320852,
+        "falseNegativeKm2": 358.2188980908111,
+        "trueNegativeKm2": 356792.4192642688,
         "excludedKm2": 65138.26855820043,
-        "evaluatedKm2": 357361.73144165124,
-        "predictedKm2": 67498.67522597613,
-        "observedKm2": 358.2188980908113,
-        "precision": 0.0021796815769519937,
-        "recall": 0.4107142857142858,
-        "iou": 0.002172886159659655,
-        "f1": 0.004336349924584738,
-        "areaBiasKm2": 67140.45632788532,
-        "areaBiasPercent": 18742.857142859248
+        "evaluatedKm2": 357361.73144159175,
+        "predictedKm2": 211.0932792320852,
+        "observedKm2": 358.2188980908111,
+        "precision": 0,
+        "recall": 0,
+        "iou": 0,
+        "f1": 0,
+        "areaBiasKm2": -147.1256188587259,
+        "areaBiasPercent": -41.07142857142855
       },
       "allSizeWaterDiagnostic": {
-        "truePositiveKm2": 383.8059622401547,
-        "falsePositiveKm2": 72033.98234644366,
-        "falseNegativeKm2": 1061.8631621977659,
-        "trueNegativeKm2": 284969.5301971168,
+        "truePositiveKm2": 0,
+        "falsePositiveKm2": 211.0932792320852,
+        "falseNegativeKm2": 1445.6691244379238,
+        "trueNegativeKm2": 356792.4192642688,
         "excludedKm2": 64050.818331852926,
-        "evaluatedKm2": 358449.1816679984,
-        "predictedKm2": 72417.78830868381,
-        "observedKm2": 1445.6691244379206,
-        "precision": 0.005299885169154379,
-        "recall": 0.265486725663716,
-        "iou": 0.0052232958997124376,
-        "f1": 0.010392309690828229,
-        "areaBiasKm2": 70972.1191842459,
-        "areaBiasPercent": 4909.292035398488
+        "evaluatedKm2": 358449.1816679388,
+        "predictedKm2": 211.0932792320852,
+        "observedKm2": 1445.6691244379238,
+        "precision": 0,
+        "recall": 0,
+        "iou": 0,
+        "f1": 0,
+        "areaBiasKm2": -1234.5758452058385,
+        "areaBiasPercent": -85.39823008849565
       },
       "lakeSizes": {
         "minimumScoredAreaKm2": 25,
@@ -23668,32 +23668,32 @@
           {
             "minKm2": 1,
             "maxKm2": 10,
-            "count": 89,
-            "areaKm2": 569.3121773228966
+            "count": 0,
+            "areaKm2": 0
           },
           {
             "minKm2": 10,
             "maxKm2": 25,
-            "count": 316,
-            "areaKm2": 5015.064573271368
+            "count": 0,
+            "areaKm2": 0
           },
           {
             "minKm2": 25,
             "maxKm2": 100,
-            "count": 432,
-            "areaKm2": 20028.274462898775
+            "count": 4,
+            "areaKm2": 249.47387545610079
           },
           {
             "minKm2": 100,
             "maxKm2": 1000,
-            "count": 137,
-            "areaKm2": 28990.143681206384
+            "count": 0,
+            "areaKm2": 0
           },
           {
             "minKm2": 1000,
             "maxKm2": null,
-            "count": 8,
-            "areaKm2": 25139.290526730154
+            "count": 0,
+            "areaKm2": 0
           }
         ],
         "observed": [
@@ -27619,19 +27619,19 @@
         "toleranceKm": 10,
         "distanceCapKm": 50,
         "predictedToObserved": {
-          "withinTolerance": 0.3221031928126529,
-          "meanSeparationCappedKm": 22.208636472294778,
-          "lengthKm": 2216.8893706593053
+          "withinTolerance": 0.3903453435961999,
+          "meanSeparationCappedKm": 20.519848263065327,
+          "lengthKm": 11885.274221780253
         },
         "observedToPredicted": {
-          "withinTolerance": 0.35075723035006734,
-          "meanSeparationCappedKm": 19.676661364466902,
+          "withinTolerance": 0.9026670184282689,
+          "meanSeparationCappedKm": 3.849524070170444,
           "lengthKm": 4239.8805632281355
         },
         "minimumDrainageKm2": 500,
         "domain": "Mapped open-water interiors omitted; artificial paths retained only outside those water masks.",
-        "predictedDensityKmPerKm2": 0.0061846685221689955,
-        "observedDensityKmPerKm2": 0.011828400733120333
+        "predictedDensityKmPerKm2": 0.033157487391868475,
+        "observedDensityKmPerKm2": 0.011828400733122298
       },
       "confluences": {
         "toleranceKm": 10,
@@ -27639,7 +27639,7 @@
         "predictedToObserved": {
           "withinTolerance": null,
           "meanSeparationCappedKm": null,
-          "lengthKm": 28
+          "lengthKm": 154
         },
         "observedToPredicted": {
           "withinTolerance": null,
@@ -27649,56 +27649,56 @@
       },
       "population": {
         "sampleCount": 8546,
-        "matchedCount": 6434,
+        "matchedCount": 8545,
         "representedPopulation": 33281046,
-        "matchedPopulation": 25950167,
-        "coverage": 0.7797281071033645,
+        "matchedPopulation": 33278817,
+        "coverage": 0.9999330249415839,
         "captures": [
           {
             "topLandFraction": 0.1,
-            "populationShare": 0.07627692723518889,
-            "lift": 0.7627692723518888,
-            "threshold": 0.6590234637260437,
-            "tieFraction": 0.0999999973125994
+            "populationShare": 0.07798200879556506,
+            "lift": 0.7798200879556506,
+            "threshold": 0.6096020936965942,
+            "tieFraction": 0.49999999581495946
           },
           {
             "topLandFraction": 0.2,
-            "populationShare": 0.18494663252070787,
-            "lift": 0.9247331626035393,
-            "threshold": 0.5759711265563965,
-            "tieFraction": 0.19999999253685322
+            "populationShare": 0.2010748759488656,
+            "lift": 1.005374379744328,
+            "threshold": 0.5495229959487915,
+            "tieFraction": 0
           }
         ],
-        "rankCorrelation": 0.08446096268826908,
-        "medianLocationScore": 0.46150721318588733,
-        "medianLandScore": 0.441372275352478,
+        "rankCorrelation": 0.1141805485019244,
+        "medianLocationScore": 0.4471105230628232,
+        "medianLandScore": 0.4102744460105896,
         "interpretation": "2020 tract counts represented at Census internal points, not household locations. Modern population is a secondary proxy, not validation of a preindustrial explanation."
       },
       "historical": {
         "sampleCount": 11,
-        "matchedCount": 5,
+        "matchedCount": 11,
         "representedPopulation": 201044,
-        "matchedPopulation": 76267,
-        "coverage": 0.37935476811046337,
+        "matchedPopulation": 201044,
+        "coverage": 1,
         "captures": [
           {
             "topLandFraction": 0.1,
-            "populationShare": 0.10582558642663276,
-            "lift": 1.0582558642663276,
-            "threshold": 0.6590234637260437,
-            "tieFraction": 0.0999999973125994
+            "populationShare": 0.03943912775312867,
+            "lift": 0.39439127753128667,
+            "threshold": 0.6096020936965942,
+            "tieFraction": 0.49999999581495946
           },
           {
             "topLandFraction": 0.2,
-            "populationShare": 0.10582558642663276,
-            "lift": 0.5291279321331638,
-            "threshold": 0.5759711265563965,
-            "tieFraction": 0.19999999253685322
+            "populationShare": 0.4629683054455741,
+            "lift": 2.31484152722787,
+            "threshold": 0.5495229959487915,
+            "tieFraction": 0
           }
         ],
         "rankCorrelation": null,
-        "medianLocationScore": 0.3138315804679064,
-        "medianLandScore": 0.441372275352478,
+        "medianLocationScore": 0.507194758296255,
+        "medianLandScore": 0.4102744460105896,
         "interpretation": "1850 largest-100 urban-place sample geolocated with modern Census place internal points. Not all historical population; rural/Indigenous populations and unmatched/annexed places are absent. No local sample means N/A, not zero population."
       },
       "terrain": {
@@ -27708,31 +27708,31 @@
           "zKm": 634.41463241626
         },
         "sampledPeakM": 1801.947021484375,
-        "p05ElevationM": 46.69178009033203,
-        "medianElevationM": 312.30645751953125,
-        "p95ElevationM": 847.8969116210938,
-        "centralReliefM": 801.2051315307617,
-        "p95SlopePercent": 6.177385151386261,
+        "p05ElevationM": 45.999027252197266,
+        "medianElevationM": 306.53009033203125,
+        "p95ElevationM": 838.599609375,
+        "centralReliefM": 792.6005821228027,
+        "p95SlopePercent": 6.290607154369354,
         "nominalSpacingKm": 5.078125,
         "landAreaKm2": 422333.8055406933,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 333545.85298458906,
-            "landFraction": 0.789768303196962
+            "areaKm2": 335928.24785397487,
+            "landFraction": 0.7954093265726204
           },
           {
             "minM": 500,
             "maxM": 1000,
-            "areaKm2": 79315.08009082558,
-            "landFraction": 0.18780187389754974
+            "areaKm2": 77080.85595682722,
+            "landFraction": 0.18251168849281288
           },
           {
             "minM": 1000,
             "maxM": 2000,
-            "areaKm2": 9128.767088817809,
-            "landFraction": 0.021615051812228708
+            "areaKm2": 8980.596353430314,
+            "landFraction": 0.021264213841307104
           },
           {
             "minM": 2000,
@@ -27762,9 +27762,9 @@
         "peakCaution": "Sampled mesh maximum, not a surveyed summit; different source/detail settings smooth peaks differently."
       },
       "waterAreaDiagnostics": {
-        "budgetAreaKm2": 63771.86234854116,
-        "nodeMaskAreaKm2": 85950.96844499366,
-        "rasterMaskAreaKm2": 79742.08542142747,
+        "budgetAreaKm2": 248.46518432957816,
+        "nodeMaskAreaKm2": 267.1972942806031,
+        "rasterMaskAreaKm2": 249.47387545610064,
         "note": "Budget, node-mask and rendered-color water footprints are different discretizations. The scored mask is thresholded on a fixed analysis grid, not blue screen pixels."
       },
       "limitations": [
