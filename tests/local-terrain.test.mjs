@@ -53,6 +53,22 @@ test('derived arrays use physical masks consistently',()=>{
  assert.ok(tile.metrics.maxElevationM>tile.metrics.minElevationM);
 });
 
+test('drainage reports significant outlets instead of every boundary sheet-flow terminus',()=>{
+ const tile=generateLocalTerrain(fixtureParent(),{siteIndex:0});
+ assert.ok(tile.drainage.outlets.length>0);
+ assert.ok(tile.drainage.outlets.length<=64,`reported ${tile.drainage.outlets.length} outlets`);
+ for(const id of tile.drainage.outlets)assert.ok(tile.flowAccumulation[id]>=tile.grid.spacingM**2*64);
+});
+
+test('flow conditioning physically incises bounded drainage channels',()=>{
+ const tile=generateLocalTerrain(fixtureParent(),{siteIndex:0}),maximum=Math.max(...tile.incisionM);
+ assert.equal(tile.incisionM.length,257*257);
+ assert.ok(maximum>=.5,`maximum incision was ${maximum} m`);
+ assert.ok(maximum<=2.5,`maximum incision was ${maximum} m`);
+ const channel=tile.incisionM.findIndex(value=>value>=.5);
+ assert.equal(tile.surfaceClass[channel],2);
+});
+
 test('different site indices produce distinct local terrain',()=>{
  const parent=fixtureParent(),a=generateLocalTerrain(parent,{siteIndex:0}),b=generateLocalTerrain(parent,{siteIndex:1});
  assert.notDeepEqual([a.anchor.centerXKm,a.anchor.centerZKm],[b.anchor.centerXKm,b.anchor.centerZKm]);

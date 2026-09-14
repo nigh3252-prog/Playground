@@ -21,26 +21,28 @@ export function generateLocalTerrain(parentWorld,{windowIndex=0,siteIndex=0}={})
   const trend=anchor.elevationM+anchor.slopeX*(localXM/1000)+anchor.slopeZ*(localZM/1000),detail=terrainDetail(worldXM,worldZM,structureAngle,seed);
   raw[row*PADDED_N+col]=trend+detail*amplitude;
  }
- const routed=routeLocalDrainage({heightM:raw,width:PADDED_N,height:PADDED_N,spacingM:SPACING_M,preferredOutletBearingRad:anchor.downslopeBearingRad}),outputCount=OUTPUT_N*OUTPUT_N;
- const heightM=new Float32Array(outputCount),conditionedHeightM=new Float32Array(outputCount),receiver=new Int32Array(outputCount).fill(-1),flowAccumulation=new Float32Array(outputCount);
+ let routed=routeLocalDrainage({heightM:raw,width:PADDED_N,height:PADDED_N,spacingM:SPACING_M,preferredOutletBearingRad:anchor.downslopeBearingRad});const paddedIncision=new Float32Array(count),eroded=Float32Array.from(routed.conditionedHeightM),cellAreaM2=SPACING_M*SPACING_M;
+ for(let id=0;id<count;id++){const contributingCells=Math.max(1,routed.flowAccumulation[id]/cellAreaM2),incision=clamp((Math.log2(contributingCells)-5)*.45,0,2.5);paddedIncision[id]=incision;eroded[id]-=incision;}
+ routed=routeLocalDrainage({heightM:eroded,width:PADDED_N,height:PADDED_N,spacingM:SPACING_M,preferredOutletBearingRad:anchor.downslopeBearingRad});const outputCount=OUTPUT_N*OUTPUT_N;
+ const heightM=new Float32Array(outputCount),conditionedHeightM=new Float32Array(outputCount),incisionM=new Float32Array(outputCount),receiver=new Int32Array(outputCount).fill(-1),flowAccumulation=new Float32Array(outputCount);
  const paddedToOutput=new Int32Array(count).fill(-1);
- for(let row=0;row<OUTPUT_N;row++)for(let col=0;col<OUTPUT_N;col++){const out=row*OUTPUT_N+col,pad=(row+CROP_OFFSET)*PADDED_N+col+CROP_OFFSET;paddedToOutput[pad]=out;heightM[out]=routed.conditionedHeightM[pad];conditionedHeightM[out]=routed.conditionedHeightM[pad];flowAccumulation[out]=routed.flowAccumulation[pad];}
+ for(let row=0;row<OUTPUT_N;row++)for(let col=0;col<OUTPUT_N;col++){const out=row*OUTPUT_N+col,pad=(row+CROP_OFFSET)*PADDED_N+col+CROP_OFFSET;paddedToOutput[pad]=out;heightM[out]=routed.conditionedHeightM[pad];conditionedHeightM[out]=routed.conditionedHeightM[pad];incisionM[out]=paddedIncision[pad];flowAccumulation[out]=routed.flowAccumulation[pad];}
  for(let row=0;row<OUTPUT_N;row++)for(let col=0;col<OUTPUT_N;col++){const out=row*OUTPUT_N+col,pad=(row+CROP_OFFSET)*PADDED_N+col+CROP_OFFSET,next=routed.receiver[pad];receiver[out]=next>=0?paddedToOutput[next]:-1;}
  const slope=new Float32Array(outputCount),ruggedness=new Float32Array(outputCount),waterMask=new Uint8Array(outputCount),surfaceClass=new Uint8Array(outputCount),walkability=new Uint8Array(outputCount);
  const sourceNode=anchor.nearestNode,sourceWater=Boolean(parentWorld.lake?.[sourceNode])||Number(parentWorld.waterSurface?.[sourceNode])>Number(parentWorld.height?.[sourceNode])+.25,sourceWaterLevel=sourceWater?Number(parentWorld.waterSurface[sourceNode]):null;
  for(let row=0;row<OUTPUT_N;row++)for(let col=0;col<OUTPUT_N;col++){
   const id=row*OUTPUT_N+col,left=heightM[row*OUTPUT_N+Math.max(0,col-1)],right=heightM[row*OUTPUT_N+Math.min(OUTPUT_N-1,col+1)],up=heightM[Math.max(0,row-1)*OUTPUT_N+col],down=heightM[Math.min(OUTPUT_N-1,row+1)*OUTPUT_N+col],dx=(right-left)/(col===0||col===OUTPUT_N-1?SPACING_M:2*SPACING_M),dz=(down-up)/(row===0||row===OUTPUT_N-1?SPACING_M:2*SPACING_M);
   slope[id]=Math.hypot(dx,dz);let lo=Infinity,hi=-Infinity;for(let rz=Math.max(0,row-1);rz<=Math.min(OUTPUT_N-1,row+1);rz++)for(let cx=Math.max(0,col-1);cx<=Math.min(OUTPUT_N-1,col+1);cx++){const value=heightM[rz*OUTPUT_N+cx];lo=Math.min(lo,value);hi=Math.max(hi,value);}ruggedness[id]=hi-lo;
-  waterMask[id]=sourceWater&&heightM[id]<=sourceWaterLevel+.15?1:0;const drainageCorridor=flowAccumulation[id]>=SPACING_M*SPACING_M*180&&slope[id]<.22;
+  waterMask[id]=sourceWater&&heightM[id]<=sourceWaterLevel+.15?1:0;const drainageCorridor=incisionM[id]>=.5||flowAccumulation[id]>=SPACING_M*SPACING_M*64&&slope[id]<.55;
   surfaceClass[id]=waterMask[id]?3:slope[id]>.55?1:drainageCorridor?2:0;walkability[id]=!waterMask[id]&&slope[id]<=.55&&ruggedness[id]<=18?1:0;
  }
- const outlets=[];for(let id=0;id<outputCount;id++)if(receiver[id]===-1){const row=Math.floor(id/OUTPUT_N),col=id-row*OUTPUT_N;if(row===0||row===OUTPUT_N-1||col===0||col===OUTPUT_N-1)outlets.push(id);}
- outlets.sort((a,b)=>flowAccumulation[b]-flowAccumulation[a]||a-b);let min=Infinity,max=-Infinity,walkable=0,wet=0;for(let i=0;i<outputCount;i++){min=Math.min(min,heightM[i]);max=Math.max(max,heightM[i]);walkable+=walkability[i];wet+=waterMask[i];}
+ const boundaryTermini=[];for(let id=0;id<outputCount;id++)if(receiver[id]===-1){const row=Math.floor(id/OUTPUT_N),col=id-row*OUTPUT_N;if(row===0||row===OUTPUT_N-1||col===0||col===OUTPUT_N-1)boundaryTermini.push(id);}
+ boundaryTermini.sort((a,b)=>flowAccumulation[b]-flowAccumulation[a]||a-b);const significantAreaM2=SPACING_M*SPACING_M*64,outlets=boundaryTermini.filter(id=>flowAccumulation[id]>=significantAreaM2);if(!outlets.length&&boundaryTermini.length)outlets.push(boundaryTermini[0]);let min=Infinity,max=-Infinity,walkable=0,wet=0;for(let i=0;i<outputCount;i++){min=Math.min(min,heightM[i]);max=Math.max(max,heightM[i]);walkable+=walkability[i];wet+=waterMask[i];}
  const warnings=[];if(routed.maxFillM>6)warnings.push(`Local pit conditioning raised terrain by up to ${routed.maxFillM.toFixed(1)} m.`);
  return{
   version:'local-terrain-v1',config:{windowIndex:Number(windowIndex),siteIndex:Number(siteIndex),algorithm:'parent-conditioned-v1'},anchor,
   grid:{width:OUTPUT_N,height:OUTPUT_N,sizeM:OUTPUT_SIZE_M,spacingM:SPACING_M,minXM:-600,maxXM:600,minZM:-600,maxZM:600},focus:{centerXM:0,centerZM:0,sizeM:410},
-  heightM,conditionedHeightM,slope,ruggedness,waterMask,surfaceClass,walkability,receiver,flowAccumulation,
+  heightM,conditionedHeightM,incisionM,slope,ruggedness,waterMask,surfaceClass,walkability,receiver,flowAccumulation,
   drainage:{outlets,primaryOutlet:outlets[0]??-1,maxFillM:routed.maxFillM,preferredOutletBearingRad:anchor.downslopeBearingRad},
   metrics:{minElevationM:min,maxElevationM:max,reliefM:max-min,medianSlope:quantile(slope,.5),p95Slope:quantile(slope,.95),walkableFraction:walkable/outputCount,waterFraction:wet/outputCount},
   surfaceClasses:{soil:0,steepRock:1,drainage:2,water:3},warnings

@@ -1,6 +1,7 @@
 import {generateParentTerrain} from '../world-lab/parent-world.mjs';
 import {WorldView} from '../world-lab/world-view.mjs';
 import {generateLocalTerrain,serializeLocalTerrain} from './local-terrain.mjs';
+import {localTextureSize} from './local-rendering.mjs';
 
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={status:'loading',parent:null,tile:null,error:null,mode:'natural',generation:0};window.__localTerrainLab=state;
@@ -14,7 +15,7 @@ function regularMesh(){
  for(let row=0;row<n-1;row++)for(let col=0;col<n-1;col++){const a=row*n+col,b=a+1,c=a+n,d=c+1;triangles.set([a,c,b,b,c,d],k);k+=6;}
  return{n,sizeKm:1.2,stepKm:step,x,z,triangles};
 }
-const mesh=regularMesh(),texture=document.createElement('canvas');texture.width=texture.height=768;
+const mesh=regularMesh(),texture=document.createElement('canvas');texture.width=texture.height=localTextureSize();
 function updateURL(){const url=new URL(location.href);for(const id of ['seed','continentCount','crustScale','windowIndex','siteIndex'])url.searchParams.set(id,$(id).value);url.searchParams.set('mode',$('mapMode').value);history.replaceState(null,'',url);}
 function colorRamp(t,stops){t=clamp(t,0,1)*(stops.length-1);const i=Math.min(stops.length-2,Math.floor(t)),f=t-i;return stops[i].map((v,ch)=>Math.round(v+(stops[i+1][ch]-v)*f));}
 function paint(){
