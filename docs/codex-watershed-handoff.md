@@ -4,13 +4,13 @@
 
 Repository: `nigh3252-prog/Playground`
 
-Current branch: `regional-world-lab`
+Current implementation branch: `codex/local-terrain-foundation`
 
-Current PR: **#21 — Watershed r6: parent worlds + frozen benchmark calibration**
+Parent dependency: **#26 — tectonic parent terrain and controls**
 
-PR URL: https://github.com/nigh3252-prog/Playground/pull/21
+Parent PR URL: https://github.com/nigh3252-prog/Playground/pull/26
 
-This work is intentionally separate from City Lab / PR #20. Do not collapse or replace PR #20.
+The local-terrain PR is intentionally stacked on PR #26 until the parent-world work lands. City Lab / PR #20 remains a separate earlier layer; do not replace its layout work with the local-terrain viewer.
 
 The immediate goal is **not** to build settlements yet. The goal is to make the large-scale geography believable enough that later settlements, roads, districts, and Warden gameplay spaces inherit plausible causes instead of feeling random.
 
@@ -257,7 +257,43 @@ Remaining limitations:
 - Plate boundaries remain macro-scale; the debug map is intentionally schematic.
 - The 18.75 km parent sampling cannot produce mech-scale cliffs, passes, talus, or walkable ground.
 - Continental blocks are geologically motivated initial conditions, but they are not yet assembled through a long supercontinent cycle.
-- Local terrain synthesis and gameplay collision/navigation are still the next layer before a Warden can traverse these regions.
+- Local terrain now has a physical foundation, but gameplay collision/navigation, settlements, roads, and Warden integration remain later layers.
+
+### Local terrain foundation (September 13, 2026)
+
+`local-terrain.html` is the deterministic bridge from a solved parent world to a future playable district. It generates a physical **1,200 m × 1,200 m** tile with a **257 × 257** height grid at **4.6875 m** spacing. A centered **410 m × 410 m** rectangle is shown as the near-term gameplay-composition focus; it is metadata and an overlay, not a second terrain solution.
+
+The generator works on a **1,800 m**, **385 × 385** padded domain before cropping the central tile. This prevents the delivered edge from acting as the first drainage boundary. It preserves the parent anchor's absolute elevation and broad gradient, adds deterministic world-coordinate detail conditioned by parent ruggedness/uplift/age, runs priority-flood drainage conditioning, applies a bounded flow-driven incision of at most **2.5 m**, and reroutes once over the resulting physical surface.
+
+Key files:
+
+- `assets/local-terrain/local-site.mjs` — reproducible ranked terrestrial site selection inside a parent window.
+- `assets/local-terrain/local-drainage.mjs` — padded grid routing, contributing area, and boundary outlet resolution.
+- `assets/local-terrain/local-terrain.mjs` — physical synthesis, derived masks, provenance, metrics, and JSON serialization.
+- `assets/local-terrain/local-rendering.mjs` — WebGL-safe diagnostic texture contract.
+- `assets/local-terrain/local-terrain-app.mjs` and `local-terrain.html` — thin browser viewer and controls.
+
+The browser accepts `seed`, `continentCount`, `crustScale`, `windowIndex`, `siteIndex`, and `mode` URL parameters. Watershed has a **Local terrain** handoff button that preserves the current generated parent controls and window. The viewer exposes natural, elevation, slope, drainage, surface-water, and terrain-walkability maps, plus measured relief, slope, water, walkability, and significant outlet counts. JSON export retains typed-array values as ordinary arrays with complete provenance.
+
+Visual calibration used this reproducible base URL:
+
+`local-terrain.html?seed=431970387&continentCount=3&crustScale=1.15&windowIndex=0&siteIndex=2&mode=natural`
+
+Three consecutive sites were inspected in 3D and map views. The final site-2 pass measured about **884–922 m elevation**, **37.8 m local relief**, **26.7% P95 grade**, and **24 significant outlets**. It reads as a subdued dissected upland: broad rounded divides with branching shallow valleys. The closest morphology analogue is the lower-relief end of the Appalachian Piedmont/upland family, not a deeply incised mountain gorge. USGS describes the Piedmont upland as a low-relief surface undergoing dissection and Appalachian plateau settings as flat-lying uplands broken by dendritic drainage; this result matches the former more closely at the present 1.2 km scale: https://pubs.usgs.gov/publication/70015399 and https://pubs.usgs.gov/wri/wri99-4269/.
+
+The browser loop caught and corrected three issues before handoff:
+
+1. A 768-pixel non-power-of-two texture became incomplete when the shared WebGL1 viewer generated mipmaps, producing a black surface. Local textures now use a tested 1,024-pixel power-of-two size.
+2. Every sheet-flow boundary terminus was labeled an outlet, producing counts near 400–500. The diagnostic now reports only termini draining at least 64 cells.
+3. Drainage originally existed only as routing and map color. A bounded physical incision pass now cuts the derived channels into the heightfield and reroutes them.
+
+Current local limitations:
+
+- Site ranking seeks representative usable land, not a final city location.
+- Local erosion is deliberately shallow and bounded; it is not a long-timescale sediment model.
+- A visible surface-water mask requires parent lake/water evidence at the selected anchor; drainage corridors alone are not mislabeled as permanent rivers.
+- Walkability is terrain-only. It does not yet include mech dimensions, roads, structures, or combat navigation.
+- No adjacent-tile seam/export contract, settlements, roads, buildings, spawns, or Warden runtime adapter exists yet.
 
 ---
 
@@ -300,22 +336,31 @@ When changing geography behavior, prefer this loop:
 
 Unless the user redirects the work, the safest progression is:
 
-**A. Local terrain synthesis for a playable level**
-- choose a bounded gameplay tile from a solved parent crop
-- synthesize meter-scale relief constrained by parent elevation, drainage, geology, and tectonic ruggedness
-- produce stable collision terrain, walkable slopes, and explicit no-go cliffs without changing parent hydrology
-- add deterministic spawn/test routes for the Warden mech
+**A. Settlement suitability and regional roads**
+- rank local sites using the existing food, water, slope, and transport-opportunity fields
+- place towns and connections at the regional scale before detailed city streets
+- retain the selected parent/window/site provenance when opening a local tile
 
-**B. Add a new independent holdout region before further aggressive water tuning**
+**B. City structure on the local terrain**
+- replace City Lab's independent `baseHeight` with the exported local heightfield
+- generate terrain-aware arterial roads, lots, and buildings inside the 1.2 km district
+- keep the centered 410 m area as the first detailed gameplay focus
+
+**C. Warden terrain adapter and first traversal route**
+- convert physical meters to Warden's 10-meters-per-simulation-unit contract at the runtime boundary
+- build collision and navigation from the same exported heightfield
+- add deterministic spawn/test routes and verify the Warden mech against slopes, channels, and no-go terrain
+
+**D. Add a new independent holdout region before further aggressive water tuning**
 - useful choices would be a humid lake-rich / glaciated region or another arid closed-basin region
 - do not fit against it before the first score
 
-**C. Continue tectonic calibration without returning to range painting**
+**E. Continue tectonic calibration without returning to range painting**
 - compare generated elevation / relief / slope distributions with real benchmark ranges
 - sample additional seeds across subduction, collision, and rift stories
 - keep the generate → screenshot → analogue → causal-tuning loop for every terrain pass
 
-**D. Then return to Stage 4 human geography**
+**F. Continue Stage 4 human-geography calibration while settlement placement begins**
 - benchmark the spatial relationship between human-potential output and historical settlement / population where data quality allows
 - avoid jumping directly to town generation until the regional opportunity field looks credible
 
