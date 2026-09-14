@@ -26,3 +26,10 @@ test('source polygon scanlines respect islands/holes',()=>{const mask=new Uint8A
 test('invalid source ZIP data is rejected, never treated as an empty Census table',()=>assert.throws(()=>unzipText(Buffer.alloc(32))));
 test('protocol roles and model assumptions do not change between benchmark regions',()=>{assert.equal(BENCHMARK_REGIONS.michigan.role,'calibration');assert.equal(BENCHMARK_REGIONS.greatbasin.role,'calibration');assert.equal(BENCHMARK_REGIONS.cascades.role,'validation');assert.equal(BENCHMARK_REGIONS.appalachians.role,'validation');assert.equal(PROTOCOL.noAutomaticFitting,true);assert.equal(PROTOCOL.minimumLakeKm2,25);});
 test('HTML provides every literal controller element without duplicate IDs',()=>{const html=readFileSync(new URL('../regional-world.html',import.meta.url),'utf8'),app=readFileSync(new URL('../assets/world-lab/world-app-v6.mjs',import.meta.url),'utf8'),ids=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);for(const m of app.matchAll(/\$\('([^']+)'\)/g))assert.ok(ids.includes(m[1]),m[1]);assert.ok(html.includes('world-app-v6.mjs'));});
+test('generated world controls expose the calibrated continent defaults',()=>{
+ const html=readFileSync(new URL('../regional-world.html',import.meta.url),'utf8');
+ const count=html.match(/<select id="continentCount">([\s\S]*?)<\/select>/)?.[1];
+ const scale=html.match(/<select id="crustScale">([\s\S]*?)<\/select>/)?.[1];
+ assert.match(count||'',/<option value="3" selected>/);
+ assert.match(scale||'',/<option value="1\.15" selected>/);
+});

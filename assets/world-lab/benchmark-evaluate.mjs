@@ -4,11 +4,11 @@ import {PROTOCOL} from './benchmark-protocol.mjs';
 export function decodeBytes(base64,length){const bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));if(bytes.length!==length)throw new Error('Observation grid length mismatch');return bytes;}
 const isLand=(w,i)=>!w.ocean[i]&&!w.lake?.[i];
 export function terrainMetrics(w,box={x:0,z:0,size:w.config.sizeKm}){
- const ids=[];for(let i=0;i<w.height.length;i++)if(!w.ocean[i]&&w.mesh.x[i]>=box.x&&w.mesh.x[i]<=box.x+box.size&&w.mesh.z[i]>=box.z&&w.mesh.z[i]<=box.z+box.size)ids.push(i);
- const heights=ids.map(i=>w.height[i]),weights=ids.map(i=>w.mesh.nodeArea[i]),slopes=ids.map(i=>w.slope[i]),total=weights.reduce((s,a)=>s+a,0),bands=[0,500,1000,2000,3000,4000,5000,Infinity];
+ const ids=[],domainIds=[];for(let i=0;i<w.height.length;i++)if(w.mesh.x[i]>=box.x&&w.mesh.x[i]<=box.x+box.size&&w.mesh.z[i]>=box.z&&w.mesh.z[i]<=box.z+box.size){domainIds.push(i);if(isLand(w,i))ids.push(i);}
+ const heights=ids.map(i=>w.height[i]),weights=ids.map(i=>w.mesh.nodeArea[i]),slopes=ids.map(i=>w.slope[i]),total=weights.reduce((s,a)=>s+a,0),domainArea=domainIds.reduce((sum,i)=>sum+w.mesh.nodeArea[i],0),bands=[0,500,1000,2000,3000,4000,5000,Infinity];
  let peak=null;for(const i of ids)if(!peak||w.height[i]>peak.elevationM)peak={elevationM:w.height[i],xKm:w.mesh.x[i],zKm:w.mesh.z[i]};
  const p05=weightedQuantile(heights,weights,.05),p95=weightedQuantile(heights,weights,.95);
- return{peak,sampledPeakM:peak?.elevationM??null,p05ElevationM:p05,medianElevationM:weightedQuantile(heights,weights,.5),p95ElevationM:p95,centralReliefM:p05===null?null:p95-p05,p95SlopePercent:100*(weightedQuantile(slopes,weights,.95)||0),nominalSpacingKm:w.stepKm,landAreaKm2:total,elevationBands:bands.slice(0,-1).map((lo,k)=>{const hi=bands[k+1];let area=0;for(let j=0;j<ids.length;j++)if(heights[j]>=lo&&heights[j]<hi)area+=weights[j];return{minM:lo,maxM:Number.isFinite(hi)?hi:null,areaKm2:area,landFraction:total?area/total:0};}),peakCaution:'Sampled mesh maximum, not a surveyed summit; different source/detail settings smooth peaks differently.'};
+ return{peak,sampledPeakM:peak?.elevationM??null,p05ElevationM:p05,medianElevationM:weightedQuantile(heights,weights,.5),p95ElevationM:p95,centralReliefM:p05===null?null:p95-p05,p95SlopePercent:100*(weightedQuantile(slopes,weights,.95)||0),nominalSpacingKm:w.stepKm,landAreaKm2:total,landFraction:domainArea?total/domainArea:0,elevationBands:bands.slice(0,-1).map((lo,k)=>{const hi=bands[k+1];let area=0;for(let j=0;j<ids.length;j++)if(heights[j]>=lo&&heights[j]<hi)area+=weights[j];return{minM:lo,maxM:Number.isFinite(hi)?hi:null,areaKm2:area,landFraction:total?area/total:0};}),peakCaution:'Sampled mesh maximum, not a surveyed summit; different source/detail settings smooth peaks differently.'};
 }
 export function evaluateWorld(w,observations){
  if(w.stage!==4)throw new Error('Complete all model stages before scoring');

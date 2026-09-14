@@ -87,5 +87,5 @@ export function conditionRegionalDrainage(terrain,overrides={}){
   }
 
   const slope=slopeField(mesh,height);
-  return{...terrain,height,slope,erosion:{kind:'regional-stream-power-breach-v8',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,ruggedGate,lowReliefFloorM:lowReliefFloor,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
+  return{...terrain,height,slope,erosion:{...terrain.erosion,kind:'regional-stream-power-breach-v8',breachedBasins,totalCutNodes,maxCutM,maxBreachedFillDepthM,p95SlopePercent:p95Slope*100,annualRainMm,moisture,ruggedGate,lowReliefFloorM:lowReliefFloor,minIncisionCapacityM:Number.isFinite(minIncisionCapacityM)?minIncisionCapacityM:0,maxIncisionCapacityM,settings:cfg}};
 }
