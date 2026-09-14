@@ -281,11 +281,12 @@ Visual calibration used this reproducible base URL:
 
 Three consecutive sites were inspected in 3D and map views. The final site-2 pass measured about **884–922 m elevation**, **37.8 m local relief**, **26.7% P95 grade**, and **24 significant outlets**. It reads as a subdued dissected upland: broad rounded divides with branching shallow valleys. The closest morphology analogue is the lower-relief end of the Appalachian Piedmont/upland family, not a deeply incised mountain gorge. USGS describes the Piedmont upland as a low-relief surface undergoing dissection and Appalachian plateau settings as flat-lying uplands broken by dendritic drainage; this result matches the former more closely at the present 1.2 km scale: https://pubs.usgs.gov/publication/70015399 and https://pubs.usgs.gov/wri/wri99-4269/.
 
-The browser loop caught and corrected three issues before handoff:
+The browser loop caught and corrected four issues before handoff:
 
 1. A 768-pixel non-power-of-two texture became incomplete when the shared WebGL1 viewer generated mipmaps, producing a black surface. Local textures now use a tested 1,024-pixel power-of-two size.
 2. Every sheet-flow boundary terminus was labeled an outlet, producing counts near 400–500. The diagnostic now reports only termini draining at least 64 cells.
 3. Drainage originally existed only as routing and map color. A bounded physical incision pass now cuts the derived channels into the heightfield and reroutes them.
+4. The first local render mesh used reversed triangle winding, which pointed normals downward and suppressed directional terrain shading. Mesh construction now has a regression test requiring upward normals.
 
 Current local limitations:
 
