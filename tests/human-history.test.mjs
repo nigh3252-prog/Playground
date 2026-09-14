@@ -73,3 +73,28 @@ test('woodland potential follows actual world-core biome IDs including mountain 
  const h=await simulateHumanHistory(w,{generations:1}),wood=h.snapshots[0].woodland;
  assert.ok(wood[3]>wood[5]&&wood[5]>wood[6]&&wood[6]>wood[8]);assert.ok(wood[9]>.6);assert.equal(wood[10],0);assert.equal(wood[11],0);
 });
+
+test('cooperation reports accounted generation trade and never a just-founded route forecast',async()=>{
+ const h=await simulateHumanHistory(fixture(),{seed:104729,generations:12});let totalShared=0,newRoutes=0;
+ for(const s of h.snapshots.slice(1)){
+  const cooperation=s.events.filter(e=>e.type==='cooperation'),shared=cooperation.reduce((sum,e)=>sum+e.amount,0);
+  totalShared+=shared;newRoutes+=h.routes.filter(r=>r.founded===s.generation).length;
+  assert.ok(Math.abs(shared-s.accounting.transportLoss*.88/.12)<1e-6,'received trade events reconcile exactly with real generation carriage losses');
+  for(const e of cooperation)assert.ok(h.routes[e.routeId].founded<s.generation,'routes founded after the last simulation step have not traded yet');
+ }
+ assert.ok(totalShared>0);assert.ok(newRoutes>0);
+});
+
+test('settlement names are unique and remain deterministic when stems repeat',async()=>{
+ const w=fixture({n:65,spacing:3,poor:true}),a=await simulateHumanHistory(w,{seed:0,generations:20}),b=await simulateHumanHistory(w,{seed:0,generations:20});
+ assert.ok(a.sites.length>30,'fixture has enough independently named places to expose repeated stems');
+ assert.equal(new Set(a.sites.map(s=>s.name)).size,a.sites.length);assert.deepEqual(a.sites.map(s=>s.name),b.sites.map(s=>s.name));
+});
+
+test('cultivation and woodland share finite land at founding and every saved generation',async()=>{
+ for(const w of [fixture({n:5,spacing:.2}),fixture({n:25,spacing:3,poor:true})]){
+  w.biome.fill(3);const h=await simulateHumanHistory(w,{seed:104729,generations:20});
+  assert.ok(h.snapshots.some(s=>s.cultivation.some(v=>v>.2)),'fixture includes substantial clearing');
+  for(const s of h.snapshots)for(let i=0;i<w.height.length;i++)assert.ok(s.cultivation[i]+s.woodland[i]<=1+1e-7,`generation ${s.generation}, node ${i} cannot be both field and forest`);
+ }
+});

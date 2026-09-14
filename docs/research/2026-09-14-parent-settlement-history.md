@@ -1,6 +1,6 @@
 # Parent-world settlement and ecological history
 
-Research proposal, September 14, 2026. This PR records a proposed direction for discussion; it does not implement the simulation.
+Research and approved design, September 14, 2026. PR #29 now implements the first parent-wide history simulation and its map timeline. The proposal below records the rationale; current controls and limits are summarized in `docs/codex-watershed-handoff.md`.
 
 Branch point: [Playground PR #26](https://github.com/nigh3252-prog/Playground/pull/26), `codex/tectonic-terrain-design`, commit `95488ed692851807942b831565198a1c1c959066`.
 

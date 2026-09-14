@@ -4,15 +4,15 @@
 
 Repository: `nigh3252-prog/Playground`
 
-Current branch: `regional-world-lab`
+Current branch: `codex/parent-settlement-history` (branched directly from PR #26)
 
-Current PR: **#21 — Watershed r6: parent worlds + frozen benchmark calibration**
+Current PR: **#29 — Parent settlement history and timeline**
 
-PR URL: https://github.com/nigh3252-prog/Playground/pull/21
+PR URL: https://github.com/nigh3252-prog/Playground/pull/29
 
 This work is intentionally separate from City Lab / PR #20. Do not collapse or replace PR #20.
 
-The immediate goal is **not** to build settlements yet. The goal is to make the large-scale geography believable enough that later settlements, roads, districts, and Warden gameplay spaces inherit plausible causes instead of feeling random.
+Ryan approved parent-level inhabitants and generations of history on September 14. The first version now adds settlement growth, migration, finite food sharing, route disputes, abandonment/reoccupation, cultivation and woodland recovery. Detailed streets, districts and buildings remain future work. Terrain and the independent benchmark pipeline are unchanged.
 
 ---
 
@@ -48,18 +48,33 @@ Key files include:
 - `assets/world-lab/world-app-v6.mjs`
 - `assets/world-lab/world-worker-v6.mjs`
 
-### 2. Current four-stage pipeline
+### 2. Current stages
 
 1. **Terrain / geology**
 2. **Water**
 3. **Ecology**
 4. **Human geography / potential**
+5. **Inhabitants** (generated parents only)
 
-There are still **no generated settlements**.
+The original geography pipeline still returns four stages. The worker caches its Stage 4 result, then runs `simulateHumanHistory()` separately. Human history never changes the geographic input.
 
 Stage 4 currently estimates things such as food productivity, overland friction, water / river transport access, reachable agricultural surplus, navigable reaches, and strategic opportunity points such as confluences, mouths, heads of navigation, passes, ferries / fords, and practical shore locations.
 
 The important conceptual rule is that these are **opportunity signals, not towns**.
+
+### 3. Parent history controls and model
+
+- `regional-world.html` opens a generated parent at Inhabitants by default, with 12 generations of 25 years. Use the slider, previous/next, or play to inspect a date. Date selection only repaints stored snapshots.
+- Settlement marker size follows population; abandoned sites are hollow. Land use follows reachable countryside on the physical graph. Routes follow traversable graph edges; disused routes are dashed. Community influence is optional and is not a national border.
+- Tap a settlement or use Explore a place for a collapsible history card. Event buttons jump to the recorded date and place. If a generation event is outside the current window, selecting it reveals the parent.
+- History options contains a separate seed, 4/8/12/20 generations, layer toggles, New history, and Apply settings. History regeneration reuses solved terrain. `historySeed`, `historyGenerations`, and `generation` are saved in the URL; `mode=history` still means geological families.
+- Export includes the complete parent graph, all human-history frames and events, model version, history seed, and viewed generation/window. Export waits for a completed history.
+- `human-history.mjs` owns simulation; `history-presentation.mjs` owns date filtering and map overlays; `history-controls.mjs` owns timeline/card state. Tests cover deterministic replay, immutable geography, migration/population/food accounting, finite land cover, reachable routes, abandonment/reuse, no future leaks, and stale reroll controls.
+
+This is an exploratory game model: aggregate populations, five-year internal updates, at most 240 sites, no individual biographies or calibrated historical forecasts. Routes support land travel and navigable river links. Sea travel is not implemented. Woodland recovery approaches the original biome's capacity; farms and woodland cannot occupy more than the available cell area. Trade events report accounted transfers, not forecast route capacity. The model does not schedule a mandatory collapse.
+
+A normal 66,049-node parent history runs in roughly 0.2 seconds in the Node runtime (browser hardware varies). The full Node suite passes 149 tests. The Vercel preview was exercised for playback, earlier dates, place selection, seed changes and window continuity; the cloud browser used the 2D fallback. Mobile CSS is included, but this browser exposes no phone viewport or WebGL context, so phone rendering and 3D still need a device check.
+
 
 ---
 

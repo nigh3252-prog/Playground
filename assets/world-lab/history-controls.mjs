@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 const number=n=>Math.round(n||0).toLocaleString('en-US');
 
 export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOptions}){
-  let history=null,frame=null,playing=false,timer=0;
+  let history=null,frame=null,playing=false,timer=0,pending=false,active=false;
   function stop(){playing=false;clearTimeout(timer);$('historyPlay').textContent='▶';$('historyPlay').setAttribute('aria-label','Play history');}
   function advance(){
     if(!playing||!history)return;
@@ -32,27 +32,38 @@ export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOpti
   $('newHistory').onclick=()=>generate(true);$('applyHistory').onclick=()=>generate(false);
   for(const id of ['historyLandUse','historyRoutes','historyTraces','historyLabels','historyInfluence'])$(id).onchange=onPaint;
   function eventButton(event){
+    const origin=history;
     const button=document.createElement('button');button.type='button';button.className='history-event';
     const date=document.createElement('span');date.textContent=`Year ${event.year}`;
     const text=document.createElement('span');text.textContent=event.text;button.append(date,text);
-    button.onclick=()=>{stop();onDate(event.generation);if(event.siteIds.length)onSelect(event.siteIds[0],true);};
+    button.onclick=()=>{if(origin!==history||!frame||pending||!active)return;stop();onDate(event.generation);if(event.siteIds.length)onSelect(event.siteIds[0],true);};
     return button;
   }
   function render({world,data,generation,box,selectedSite=-1,enabled=false,busy=false}){
-    history=data;frame=data?.snapshots[generation];
+    history=data;frame=data?.snapshots[generation];pending=busy;active=enabled;
     $('historyTimeline').hidden=!enabled;$('historySettings').hidden=!world?.parentDomain;
     $('placeCard').hidden=true;
     for(const id of ['newHistory','applyHistory'])$(id).disabled=busy||!world?.parentDomain;
     for(const id of ['historyDate','historyPlay','historyPrevious','historyNext','historyPlace'])$(id).disabled=!frame||busy;
-    if(!enabled||!frame)return;
+    if(!frame){
+      stop();$('historyYear').textContent=busy?'Generating…':'History unavailable';$('historyGeneration').textContent='';
+      $('historySummary').textContent='';$('historyDate').value='0';
+      $('historyPlace').replaceChildren(new Option('Explore a place…','-1'));
+      $('historyEvents').replaceChildren();$('placeEvents').replaceChildren();
+      $('historyEventCount').textContent='This generation';$('generationEvents').open=false;
+      return;
+    }
+    if(!enabled)return;
     $('historyDate').max=String(history.generations);$('historyDate').value=String(generation);
     $('historyDate').setAttribute('aria-valuetext',`Year ${frame.year}, generation ${generation}`);
     $('historyYear').textContent=`Year ${frame.year}`;
     $('historyGeneration').textContent=`Generation ${generation} of ${history.generations}`;
     $('historyPrevious').disabled=busy||generation===0;$('historyNext').disabled=busy||generation===history.generations;
-    $('historySummary').textContent=`${number(frame.summary.population)} people · ${number(frame.summary.settlements)} settlements · ${number(frame.summary.abandoned)} abandoned`;
-    $('historyPlace').replaceChildren(new Option('Explore a place…','-1'));
-    for(const {site,state} of visibleHistorySites(world,history,frame,box).sort((a,b)=>b.state.population-a.state.population)){
+    $('historySummary').textContent=`Parent · ${number(frame.summary.population)} people · ${number(frame.summary.settlements)} settlements · ${number(frame.summary.abandoned)} abandoned`;
+    const visible=visibleHistorySites(world,history,frame,box).sort((a,b)=>b.state.population-a.state.population);
+    $('historyPlace').replaceChildren(new Option(visible.length?'Explore a place…':'No recorded places here · choose Parent','-1'));
+    $('historyPlace').disabled=busy||!visible.length;
+    for(const {site,state} of visible){
       $('historyPlace').add(new Option(`${site.name} · ${state.status==='abandoned'?'abandoned':number(state.population)}`,String(site.id)));
     }
     $('historyPlace').value=String(selectedSite);

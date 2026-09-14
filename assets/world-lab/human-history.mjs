@@ -45,7 +45,7 @@ const SUFFIX=['ford','mere','stead','brook','field','haven','bank','grove','hill
 export async function simulateHumanHistory(world,options={},progress=()=>{},cancelled=()=>false){
  const {N,seed,generations,yearsPerGeneration}=validate(world,options);
  if(cancelled())return null;
- const rng=random32(seed),mesh=world.mesh,sites=[],routes=[],groups=[],snapshots=[],states=[],routeStates=[],searches=[],lastTrade=[],blockedUntil=[],abandonedAt=[],siteAt=new Int32Array(N).fill(-1);
+ const rng=random32(seed),mesh=world.mesh,sites=[],routes=[],groups=[],snapshots=[],states=[],routeStates=[],searches=[],generationTrade=[],nameCounts=new Map(),blockedUntil=[],abandonedAt=[],siteAt=new Int32Array(N).fill(-1);
  const dry=i=>!world.ocean[i]&&!world.lake[i];
  const viable=i=>dry(i)&&world.productivity[i]>=.075&&world.slope[i]<.085;
  const riverEdge=(a,b)=>(world.receiver[a]===b&&world.navigableRiver[a])||(world.receiver[b]===a&&world.navigableRiver[b]);
@@ -62,7 +62,8 @@ export async function simulateHumanHistory(world,options={},progress=()=>{},canc
  function event(g,type,ids,text,extra={}){events.push({id:eventId++,generation:g,year:g*yearsPerGeneration,type,siteIds:ids,routeId:null,text,...extra});}
  function found(node,groupId,g,population){
   const id=sites.length,reason=world.navigableRiver[node]?'A navigable river reach offered food and transport.':world.productivity[node]>.4?'Productive, accessible countryside supported the founding households.':'Households settled workable land within reach of their neighbors.';
-  const name=PREFIX[(Math.floor(rng()*PREFIX.length)+id)%PREFIX.length]+SUFFIX[Math.floor(rng()*SUFFIX.length)]+(id>=80?` ${Math.floor(id/80)+1}`:'');
+  const stem=PREFIX[(Math.floor(rng()*PREFIX.length)+id)%PREFIX.length]+SUFFIX[Math.floor(rng()*SUFFIX.length)],nameCount=(nameCounts.get(stem)||0)+1;
+  nameCounts.set(stem,nameCount);const name=stem+(nameCount>1?` ${nameCount}`:'');
   sites.push({id,nodeId:node,name,groupId,founded:g,reason});siteAt[node]=id;searches.push(search(node));states.push({siteId:id,population,peakPopulation:population,status:'village',groupId,farmAreaKm2:0,foodRatio:1});
   event(g,'founding',[id],`${name} was founded. ${reason}`);return id;
  }
@@ -111,6 +112,9 @@ export async function simulateHumanHistory(world,options={},progress=()=>{},canc
    const fraction=clamp(s.population*1.15/Math.max(1,capacity[s.siteId]))*.62;
    for(const node of areas[s.siteId]){
     cultivation[node]=fraction;s.farmAreaKm2+=cultivation[node]*mesh.nodeArea[node];
+    // Fields immediately displace woodland, including founding and the final
+    // allocation refresh. Both covers share this cell rather than overlap.
+    woodland[node]=Math.min(woodland[node],1-cultivation[node]);
     // Local multi-decade harvest variability; no prescribed global collapse.
     const harvestFactor=.97+.27*Math.sin(time/19+hash(node,seed)*2.5+sites[s.siteId].groupId*1.9);
     supply[s.siteId]+=cultivation[node]*mesh.nodeArea[node]*world.productivity[node]*soil[node]*85*harvestFactor;
@@ -120,10 +124,11 @@ export async function simulateHumanHistory(world,options={},progress=()=>{},canc
   accounting.foodProduced+=supply.reduce((v,x)=>v+x,0);
   // Surplus trade is a transfer, with 12% lost to carriage; recipient need and
   // donor surplus cap every transfer. Roads do not manufacture food.
-  for(const r of routes){lastTrade[r.id]=0;const a=states[r.a],b=states[r.b],rs=routeStates[r.id];if(!a.population||!b.population||(blockedUntil[r.id]??-1)>=Math.ceil(time/yearsPerGeneration)){rs.active=false;rs.traffic=0;continue;}
+  for(const r of routes){const a=states[r.a],b=states[r.b],rs=routeStates[r.id];if(!a.population||!b.population||(blockedUntil[r.id]??-1)>=Math.ceil(time/yearsPerGeneration)){rs.active=false;rs.traffic=0;continue;}
    let donor=r.a,recipient=r.b;if(supply[donor]-a.population<supply[recipient]-b.population)[donor,recipient]=[recipient,donor];
    const amount=Math.min(Math.max(0,supply[donor]-states[donor].population),Math.max(0,states[recipient].population-supply[recipient])/.88,Math.min(a.population,b.population)*.16);
-   lastTrade[r.id]=amount;supply[donor]-=amount;supply[recipient]+=amount*.88;accounting.transportLoss+=amount*.12;
+   if(!initial)generationTrade[r.id]=(generationTrade[r.id]||0)+amount*.88;
+   supply[donor]-=amount;supply[recipient]+=amount*.88;accounting.transportLoss+=amount*.12;
    rs.traffic=(a.population+b.population)*.018+amount;rs.active=true;rs.lastUsed=Math.ceil(time/yearsPerGeneration);
   }
   for(const s of states){s.foodRatio=s.population?supply[s.siteId]/s.population:0;accounting.foodConsumed+=Math.min(s.population,supply[s.siteId]);}
@@ -131,7 +136,7 @@ export async function simulateHumanHistory(world,options={},progress=()=>{},canc
    // Fallow soil regenerates, intensive fields lose fertility slowly, and forest
    // succession only approaches the original biome's woodland potential.
    const c=cultivation[node];soil[node]=clamp(soil[node]+dt*(.006*(1-c/.62)-.011*c/.62),.28,1);
-   woodland[node]=clamp(woodland[node]+dt*(.014*(potentialWood[node]*(1-c)-woodland[node])-.035*c*woodland[node]));
+   woodland[node]=clamp(woodland[node]+dt*(.014*(potentialWood[node]*(1-c)-woodland[node])-.035*c*woodland[node]),0,1-c);
   }
   return capacity;
  }
@@ -143,7 +148,7 @@ export async function simulateHumanHistory(world,options={},progress=()=>{},canc
  }
  connect(0);const first=ledger();harvest(0,0,first,true);snapshot(0,first);progress({generation:0,generations});await pause();
  for(let g=1;g<=generations;g++){
-  if(cancelled())return null;const accounting=ledger(),steps=Math.ceil(yearsPerGeneration/5),dt=yearsPerGeneration/steps;
+  if(cancelled())return null;generationTrade.fill(0);const accounting=ledger(),steps=Math.ceil(yearsPerGeneration/5),dt=yearsPerGeneration/steps;
   for(let step=0;step<steps;step++){
    const time=(g-1)*yearsPerGeneration+(step+1)*dt,capacity=harvest(time,dt,accounting);
    const oldPopulation=states.map(s=>s.population);
@@ -177,9 +182,12 @@ export async function simulateHumanHistory(world,options={},progress=()=>{},canc
   // Reallocate after departures/founding so frame land and place totals describe
   // the same instant. This display-only harvest is excluded from the food ledger.
   harvest(g*yearsPerGeneration,0,ledger(),true);
-  for(const r of routes){const a=states[r.a],b=states[r.b];if(!a.population||!b.population||!routeStates[r.id].active)continue;
+  for(const r of routes){
+   // Report only transfers recorded during real updates, even if this route
+   // became vacant or disputed later. Display refreshes cannot add trade events.
+   if(generationTrade[r.id]>0)event(g,'cooperation',[r.a,r.b],`${sites[r.a].name} and ${sites[r.b].name} shared a limited food surplus along their route.`,{routeId:r.id,amount:generationTrade[r.id]});
+   const a=states[r.a],b=states[r.b];if(!a.population||!b.population||!routeStates[r.id].active)continue;
    if(a.foodRatio<.95&&b.foodRatio<.95&&a.groupId!==b.groupId&&hash(r.id,seed+g)<.20){blockedUntil[r.id]=g+1;routeStates[r.id].active=false;routeStates[r.id].traffic=0;event(g,'conflict',[r.a,r.b],`Food pressure led neighbors at ${sites[r.a].name} and ${sites[r.b].name} to suspend trade along their disputed route for a generation.`,{routeId:r.id});}
-   else if(lastTrade[r.id]>0)event(g,'cooperation',[r.a,r.b],`${sites[r.a].name} and ${sites[r.b].name} shared a limited food surplus along their maintained route.`,{routeId:r.id,amount:lastTrade[r.id]*.88});
   }
   for(const s of states){const previous=snapshots.at(-1).siteStates[s.siteId];if(previous?.population>0&&s.population>0){if(s.population<previous.population*.8)event(g,'decline',[s.siteId],`${sites[s.siteId].name} declined as food pressure and departures reduced its population.`);else if(s.population>previous.population*1.25)event(g,'growth',[s.siteId],`${sites[s.siteId].name} grew as food and access supported more households.`);}}
   snapshot(g,accounting);progress({generation:g,generations});await pause();

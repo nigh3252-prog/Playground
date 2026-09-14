@@ -43,7 +43,7 @@ async function fallbackHistory(options,token){
 }
 function regenerateHistory(options){
  if(!snapshots[4]?.parentDomain)return;
- stop();historyControls.stop();historyBusy=true;humanHistory=null;selectedSite=-1;selected=-1;viewedGeneration=options.generations;
+ stop();historyControls.stop();historyBusy=true;$('export').disabled=true;humanHistory=null;selectedSite=-1;selected=-1;viewedGeneration=options.generations;
  const token=++generation;document.body.dataset.ready='false';updateURL({historySeed:options.seed,historyGenerations:options.generations,generation:viewedGeneration});
  $('menu').hidden=true;$('menuToggle').setAttribute('aria-expanded','false');showStage(5);busy('Generating another history on the same parent…');renderHistory();
  if(worker){worker.onmessage=({data})=>accept(data,data.requestId);worker.onerror=e=>{e.preventDefault();worker?.terminate();worker=null;fallbackHistory(options,token);};worker.postMessage({job:'humanHistory',requestId:token,historyOptions:options});}
@@ -53,13 +53,13 @@ function syncControls(){const reference=$('worldSource').value!=='generated';for
  $('sourceHelp').textContent=reference?'Benchmark mode: raw real elevation; water and population are withheld until scoring. No known lake shapes are imposed.':'A larger parent landmass is solved first. New window changes only what you see—not the parent rivers or basins.';
  for(const id of ['rain','relief'])$(id+'Out').value=Number($(id).value).toFixed(1)+'×';}
 function accept(data,token){if(token!==generation)return;if(data.error)return fail(data.error);if(data.progress){$('status').textContent=data.progress;return;}
- if(data.humanHistory){humanHistory=data.humanHistory;historyBusy=false;viewedGeneration=clamp(viewedGeneration,0,humanHistory.generations);document.body.dataset.historySeed=String(humanHistory.seed);document.body.dataset.historyGeneration=String(viewedGeneration);updateURL({historySeed:humanHistory.seed,historyGenerations:humanHistory.generations,generation:viewedGeneration});if(stage===5)showStage(5);else renderHistory();return;}
+ if(data.humanHistory){humanHistory=data.humanHistory;historyBusy=false;$('export').disabled=false;viewedGeneration=clamp(viewedGeneration,0,humanHistory.generations);document.body.dataset.historySeed=String(humanHistory.seed);document.body.dataset.historyGeneration=String(viewedGeneration);updateURL({historySeed:humanHistory.seed,historyGenerations:humanHistory.generations,generation:viewedGeneration});if(stage===5)showStage(5);else renderHistory();return;}
  snapshots[data.stage]=data.world;
  if(data.stage===4&&data.world.parentDomain){snapshots[5]=data.world;if(stage===5)showStage(5);}
  if(data.stage===4&&!data.world.parentDomain)historyBusy=false;
  if(data.stage===1){$('geologyNote').textContent=data.world.parentDomain?geologySummary(data.world):'Unburned real DEM + independent observations';}
  if(data.stage===stage)showStage(stage);
- if(data.stage===4){$('export').disabled=false;document.body.dataset.computeMs=String(Math.round(data.elapsed));const b=data.world.benchmark;if(b?.status==='scored'){addReport(portableReport(b));selectedReport=portableReport(b);renderBenchmarks();}}
+ if(data.stage===4){$('export').disabled=!!data.world.parentDomain;document.body.dataset.computeMs=String(Math.round(data.elapsed));const b=data.world.benchmark;if(b?.status==='scored'){addReport(portableReport(b));selectedReport=portableReport(b);renderBenchmarks();}}
 }
 async function generate(){stop();historyControls.stop();const opts=settings(),token=++generation;if(opts.source!=='generated'&&stage===5)stage=4;worker?.terminate();worker=null;world=null;snapshots=[];humanHistory=null;selectedSite=-1;historyBusy=opts.source==='generated';selected=-1;renderHistory();document.body.dataset.stage=String(stage);$('inspect').hidden=true;$('export').disabled=true;document.body.dataset.ready='false';
  busy(opts.source==='generated'?'Building the parent landmass before choosing a window…':'Loading raw elevation and independent benchmark sources…');$('status').textContent='Terrain → Water → Ecology → Potential → Inhabitants';syncControls();updateURL({...opts,stage,mode,crop:cropIndex,parent:parentView?1:0,exag:view.exag,historySeed:historyOptions().seed,historyGenerations:historyOptions().generations,generation:viewedGeneration});
