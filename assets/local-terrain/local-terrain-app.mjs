@@ -1,7 +1,7 @@
-import {generateParentTerrain} from '../world-lab/parent-world.mjs';
 import {WorldView} from '../world-lab/world-view.mjs';
 import {generateLocalTerrain,serializeLocalTerrain} from './local-terrain.mjs';
 import {createLocalRenderMesh,localTextureSize} from './local-rendering.mjs';
+import {generateSolvedParent} from './local-parent.mjs';
 
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={status:'loading',parent:null,tile:null,error:null,mode:'natural',generation:0};window.__localTerrainLab=state;
@@ -35,7 +35,7 @@ function settings(){
 }
 async function generate(){
  const token=++state.generation;state.status='generating';state.error=null;$('status').classList.remove('error');$('status').textContent='Building parent geography…';$('exportTerrain').disabled=true;await new Promise(resolve=>setTimeout(resolve,20));
- try{const options=settings(),parent=generateParentTerrain({seed:options.seed,sizeKm:1200,n:193,continentCount:options.continentCount,crustScale:options.crustScale});if(token!==state.generation)return;$('status').textContent='Synthesizing the 1.8 km padded terrain domain…';await new Promise(resolve=>setTimeout(resolve,20));const tile=generateLocalTerrain(parent,{windowIndex:options.windowIndex,siteIndex:options.siteIndex});if(token!==state.generation)return;state.parent=parent;state.tile=tile;state.status='ready';view.setSurface(mesh,tile.heightM);view.reset();view.target[1]=(tile.metrics.minElevationM+tile.metrics.maxElevationM)/2000*view.exag;metrics(tile);paint();$('exportTerrain').disabled=false;$('status').textContent=`Ready · site ${options.siteIndex} · ${fmt(tile.metrics.reliefM,1)} m local relief · parent anchor ${fmt(tile.anchor.centerXKm,1)}, ${fmt(tile.anchor.centerZKm,1)} km`;document.body.dataset.ready='true';}
+ try{const options=settings(),parent=generateSolvedParent({seed:options.seed,sizeKm:1200,n:193,continentCount:options.continentCount,crustScale:options.crustScale});if(token!==state.generation)return;$('status').textContent='Synthesizing the 1.8 km padded terrain domain…';await new Promise(resolve=>setTimeout(resolve,20));const tile=generateLocalTerrain(parent,{windowIndex:options.windowIndex,siteIndex:options.siteIndex});if(token!==state.generation)return;state.parent=parent;state.tile=tile;state.status='ready';view.setSurface(mesh,tile.heightM);view.reset();view.target[1]=(tile.metrics.minElevationM+tile.metrics.maxElevationM)/2000*view.exag;metrics(tile);paint();$('exportTerrain').disabled=false;$('status').textContent=`Ready · site ${options.siteIndex} · ${fmt(tile.metrics.reliefM,1)} m local relief · parent anchor ${fmt(tile.anchor.centerXKm,1)}, ${fmt(tile.anchor.centerZKm,1)} km`;document.body.dataset.ready='true';}
  catch(error){if(token!==state.generation)return;state.status='error';state.error=error;$('status').classList.add('error');$('status').textContent='Generation failed; no replacement terrain was substituted: '+error.message;document.body.dataset.ready='false';}
 }
 function save(){const blob=new Blob([JSON.stringify(serializeLocalTerrain(state.tile))],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`local-terrain-${state.tile.anchor.parentSeed}-${state.tile.anchor.siteIndex}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);}

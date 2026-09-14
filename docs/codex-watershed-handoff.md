@@ -268,12 +268,13 @@ The generator works on a **1,800 m**, **385 × 385** padded domain before croppi
 Key files:
 
 - `assets/local-terrain/local-site.mjs` — reproducible ranked terrestrial site selection inside a parent window.
+- `assets/local-terrain/local-parent.mjs` — runs generated parent terrain through the existing water, ecology, and human stages before local sampling.
 - `assets/local-terrain/local-drainage.mjs` — padded grid routing, contributing area, and boundary outlet resolution.
 - `assets/local-terrain/local-terrain.mjs` — physical synthesis, derived masks, provenance, metrics, and JSON serialization.
 - `assets/local-terrain/local-rendering.mjs` — WebGL-safe diagnostic texture contract.
 - `assets/local-terrain/local-terrain-app.mjs` and `local-terrain.html` — thin browser viewer and controls.
 
-The browser accepts `seed`, `continentCount`, `crustScale`, `windowIndex`, `siteIndex`, and `mode` URL parameters. Watershed has a **Local terrain** handoff button that preserves the current generated parent controls and window. The viewer exposes natural, elevation, slope, drainage, surface-water, and terrain-walkability maps, plus measured relief, slope, water, walkability, and significant outlet counts. JSON export retains typed-array values as ordinary arrays with complete provenance.
+The browser accepts `seed`, `continentCount`, `crustScale`, `windowIndex`, `siteIndex`, and `mode` URL parameters. It solves the generated parent through Water → Ecology → Human before selecting the local anchor, so rainfall, retained lakes, and parent water surfaces are available to the local contract. Watershed has a **Local terrain** handoff button that preserves the current generated parent controls and window. The viewer exposes natural, elevation, slope, drainage, surface-water, and terrain-walkability maps, plus measured relief, slope, water, walkability, and significant outlet counts. JSON export retains typed-array values as ordinary arrays with complete provenance.
 
 Visual calibration used this reproducible base URL:
 

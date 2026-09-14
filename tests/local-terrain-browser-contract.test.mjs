@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createTerrainMesh} from '../assets/world-lab/world-mesh.mjs';
 import {generateLocalTerrain,serializeLocalTerrain} from '../assets/local-terrain/local-terrain.mjs';
+import {generateSolvedParent} from '../assets/local-terrain/local-parent.mjs';
 
 function fixtureParent(){
  const n=17,sizeKm=100,mesh=createTerrainMesh(n,sizeKm,19),count=n*n,height=new Float32Array(count),ocean=new Uint8Array(count);
@@ -31,4 +32,12 @@ test('the local lab exposes accessible generation and diagnosis controls',async(
 test('the offline browser module graph includes the local terrain app',()=>{
  const output=execFileSync(process.execPath,['--experimental-vm-modules','scripts/check-browser-module-graph.mjs'],{encoding:'utf8'});
  assert.match(output,/Linked browser module graph: assets[\\/]local-terrain[\\/]local-terrain-app\.mjs/);
+});
+
+test('the local browser source includes solved parent water and ecology fields',()=>{
+ const parent=generateSolvedParent({seed:9981,sizeKm:1200,n:129,continentCount:3,crustScale:1.15});
+ assert.equal(parent.stage,4);
+ assert.equal(parent.lake.length,parent.height.length);
+ assert.equal(parent.rainfall.length,parent.height.length);
+ assert.equal(parent.humanPotential.length,parent.height.length);
 });
