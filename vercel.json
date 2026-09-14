@@ -1,0 +1,7 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "codex/watershed-continuous-local-view": false
+    }
+  }
+}
