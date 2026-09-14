@@ -46,3 +46,9 @@ export function generateLocalTerrain(parentWorld,{windowIndex=0,siteIndex=0}={})
   surfaceClasses:{soil:0,steepRock:1,drainage:2,water:3},warnings
  };
 }
+
+export function serializeLocalTerrain(tile){
+ if(!tile||tile.version!=='local-terrain-v1'||!tile.grid||!tile.anchor)throw new TypeError('Expected a local-terrain-v1 tile');
+ const convert=value=>ArrayBuffer.isView(value)?Array.from(value):Array.isArray(value)?value.map(convert):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,convert(item)])):value;
+ return convert(tile);
+}
