@@ -1,3 +1,5 @@
+import {normalizeWindow,createInheritedWindow} from './inherited-window.mjs';
+import {installLocalExplorer} from './local-explorer.mjs';
 import {BIOMES,HISTORY_TYPES,clamp,noise,drainageTrace,geologySummary} from './world-core.mjs';
 import {AtlasView} from './atlas-view.mjs';
 import {meshNormals} from './world-view.mjs';
@@ -11,6 +13,7 @@ import {WATER_STATES} from './water-balance.mjs';
 import {BOUNDARY_COLORS,tectonicColor,tectonicFacts} from './tectonic-debug.mjs';
 const $=id=>document.getElementById(id),fmt=(n,d=0)=>n===null||n===undefined||!Number.isFinite(Number(n))?'N/A':Number(n).toLocaleString('en-US',{maximumFractionDigits:d}),pct=v=>v===null||v===undefined?'N/A':fmt(v*100,1)+'%',params=new URLSearchParams(location.search);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let localWindow=null,inheritedView=null,overviewExag=18;
 let world=null,snapshots=[],generation=0,worker=null,suiteWorker=null,selected=-1,stage=clamp(Number(params.get('stage'))||4,1,4),mode=params.get('mode')||'natural',box=null,cropIndex=Number(params.get('crop'))||0,parentView=params.get('parent')==='1',playing=false,timer=0,lastExag=18,reports=[],selectedReport=null;
 const view=new AtlasView($('world'),{onPick:inspect,onChange:({yaw})=>{$('compass').style.transform=`rotate(${-yaw}rad)`;}});
 if(!view.gl){$('mapView').textContent='2D';$('mapView').disabled=true;}
@@ -29,18 +32,29 @@ function accept(data,token){if(token!==generation)return;if(data.error)return fa
  if(data.stage===stage)showStage(stage);
  if(data.stage===4){$('export').disabled=false;document.body.dataset.computeMs=String(Math.round(data.elapsed));const b=data.world.benchmark;if(b?.status==='scored'){addReport(portableReport(b));selectedReport=portableReport(b);renderBenchmarks();}}
 }
-async function generate(){stop();const opts=settings(),token=++generation;worker?.terminate();world=null;snapshots=[];selected=-1;$('inspect').hidden=true;$('export').disabled=true;document.body.dataset.ready='false';
+async function generate(){if(localWindow)setWindow(null);view.selectedPoint=null;stop();const opts=settings(),token=++generation;worker?.terminate();world=null;snapshots=[];selected=-1;$('inspect').hidden=true;$('export').disabled=true;document.body.dataset.ready='false';
  busy(opts.source==='generated'?'Building the parent landmass before choosing a window…':'Loading raw elevation and independent benchmark sources…');$('status').textContent='Terrain → Water → Ecology → Human';syncControls();updateURL({...opts,stage,mode,crop:cropIndex,parent:parentView?1:0,exag:view.exag});
  let fallbackStarted=false;const fallback=async()=>{if(fallbackStarted||token!==generation)return;fallbackStarted=true;worker?.terminate();try{await generateStagesV6(opts,m=>accept(m,token),()=>token!==generation);}catch(e){if(token===generation)fail(e);}};
  try{worker=new Worker(new URL('./world-worker-v6.mjs',import.meta.url),{type:'module'});worker.onmessage=({data})=>accept(data,token);worker.onerror=e=>{e.preventDefault();fallback();};worker.postMessage(opts);}catch{fallback();}
 }
-function currentBox(){if(!world.parentDomain||parentView)return{x:0,z:0,size:world.config.sizeKm,index:cropIndex};return chooseWindow(world,cropIndex);}
+function currentBox(){if(localWindow&&world.parentDomain)return normalizeWindow(world.config.sizeKm,localWindow);if(!world.parentDomain||parentView)return{x:0,z:0,size:world.config.sizeKm,index:cropIndex};return chooseWindow(world,cropIndex);}
 function applyWindow(reset=false){if(!world)return;box=currentBox();view.setWorld(world,box);if(reset)view.reset();$('parentMap').textContent=parentView?'Window':'Parent';
- const stats=terrainMetrics(world,box);$('regionSize').textContent=world.parentDomain?`${fmt(box.size)} km view · ${fmt(world.config.sizeKm)} km parent`:BENCHMARK_REGIONS[world.config.source]?.name||'Real-data benchmark';
+ inheritedView=localWindow?createInheritedWindow(world,box):null;
+ const stats=localWindow?{}:terrainMetrics(world,box);$('regionSize').textContent=world.parentDomain?`${fmt(box.size)} km view · ${fmt(world.config.sizeKm)} km parent`:BENCHMARK_REGIONS[world.config.source]?.name||'Real-data benchmark';
  $('scaleNote').textContent=`${fmt(box.size)} km across · r6`;$('terrainStats').innerHTML=`<b>Land ${pct(stats.landFraction)} · water ${pct(1-stats.landFraction)}</b><br>Sampled peak ${fmt(stats.sampledPeakM)} m<br>Middle 90% relief ${fmt(stats.centralReliefM)} m · P95 slope ${fmt(stats.p95SlopePercent,1)}%<br>Physical sample spacing ${fmt(world.stepKm,2)} km · view height ${view.exag}×`;
  $('inputNote').textContent=world.parentDomain?'Whole-parent drainage retained. Crop edges mean the world continues.':'BLIND BENCHMARK: observed water/population are not model inputs.';
  $('resolutionNote').textContent=world.parentDomain?`${world.n}² parent samples across ${fmt(world.config.sizeKm)} km. Changing window does not reroute rivers. This is macro geography; fine local terrain is not synthesized yet.`:`${world.n}² model samples. Scores use the same ${PROTOCOL.evaluationN}² evaluation grid at every detail setting. NOAA station normals are interpolated—not a gridded precipitation model.`;
+ if(inheritedView){const m=inheritedView.metrics,label=box.size<1?`${fmt(box.size*1000)} m`:`${fmt(box.size,2)} km`;
+  $('regionSize').textContent=`${label} view · same ${fmt(world.config.sizeKm)} km parent`;
+  $('scaleNote').textContent=`${label} across · inherited terrain`;
+  $('terrainStats').innerHTML=`<b>Same world · ${label} window</b><br>Inherited elevation ${fmt(m.minElevationM)}–${fmt(m.maxElevationM)} m<br>Relief ${fmt(m.reliefM,1)} m · ${inheritedView.rivers.length} inherited river edges<br>Source spacing ${fmt(world.stepKm,2)} km · height ${view.exag}×`;
+  $('inputNote').textContent='Same parent triangles and rivers. No local regeneration; river widths remain symbolic.';
+  $('resolutionNote').textContent=inheritedView.warnings.join(' ');
+ }
+ document.body.dataset.localWindow=String(Boolean(localWindow));
  paint();if(selected>=0)inspect(selected,false);
+ document.dispatchEvent(new CustomEvent('watershed-window'));
+
 }
 function showStage(value){stage=clamp(value|0,1,4);document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===stage)));$('progress').style.width=`${stage/4*100}%`;updateURL({stage});
  $('stageDescription').textContent=['','Terrain before lakes or people.','Water budget and drainage solved on the complete input domain.','Environments use actual modeled water and the selected climate forcing.','Human potential is predicted first; real observations are scored afterward.'][stage];
@@ -77,15 +91,15 @@ function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=act
  if(['agreement','observed'].includes(kind)&&w.benchmark?.overlay){const o=w.benchmark.overlay,grid=document.createElement('canvas');grid.width=grid.height=o.n;const im=grid.getContext('2d').createImageData(o.n,o.n),palette=[[50,65,72],[101,190,179],[232,158,82],[180,136,210],[123,133,104]];
   for(let i=0;i<o.n*o.n;i++){const c=kind==='agreement'?palette[o.agreement[i]]:o.valid[i]?(o.observed[i]?[83,160,188]:[146,153,119]):[50,65,72];im.data.set([...c,255],i*4);}grid.getContext('2d').putImageData(im,0,0);ctx.imageSmoothingEnabled=false;ctx.drawImage(grid,0,0,2048,2048);ctx.imageSmoothingEnabled=true;
  }
- if(stage>=2&&$('showRivers').checked){ctx.strokeStyle='#5ba4bd';for(let i=0;i<N;i++)if(w.river[i]){const r=w.receiver[i];if(r<0||w.lake[i]&&w.lake[r])continue;ctx.lineWidth=1.1+Math.min(3.8,Math.sqrt(w.area[i]/50000));line([node(i),node(r)]);}}
+ if(stage>=2&&$('showRivers').checked){ctx.strokeStyle='#5ba4bd';if(inheritedView){for(const e of inheritedView.rivers){ctx.lineWidth=1.1+Math.min(3.8,Math.sqrt((e.upstreamAreaKm2||0)/50000));line(e.points.map(([x,z])=>xy(x,z)));}}else for(let i=0;i<N;i++)if(w.river[i]){const r=w.receiver[i];if(r<0||w.lake[i]&&w.lake[r])continue;ctx.lineWidth=1.1+Math.min(3.8,Math.sqrt(w.area[i]/50000));line([node(i),node(r)]);}}
  if(stage===4&&$('showNavigable').checked){ctx.strokeStyle='#d2dfb8';ctx.lineWidth=3;for(let i=0;i<N;i++)if(w.navigableRiver[i]&&w.receiver[i]>=0)line([node(i),node(w.receiver[i])]);}
  if(stage===4&&$('showStrategic').checked){for(const p of w.strategicNodes){const[x,z]=node(p.id);ctx.fillStyle='#19353d';ctx.strokeStyle='#d9c891';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,z,5,0,Math.PI*2);ctx.fill();ctx.stroke();}}
  const observed=snapshots[4]?.observations;if(observed&&$('showReference').checked&&!w.parentDomain){ctx.strokeStyle='#dfa5c1';ctx.lineWidth=1.4;ctx.setLineDash([5,6]);for(const r of observed.rivers)for(const p of r.paths)line(p.map(([x,z])=>xy(x,z)));ctx.setLineDash([]);}
  if(w.reference&&$('showLabels').checked){ctx.font='bold 20px system-ui';for(const[name,lat,lon]of BENCHMARK_REGIONS[w.config.source].landmarks){const[x,z]=xy(...fromLonLat(BENCHMARK_REGIONS[w.config.source],lon,lat));ctx.fillStyle='#edf2dc';ctx.strokeStyle='#19333b';ctx.lineWidth=4;ctx.strokeText(name,x+7,z-6);ctx.fillText(name,x+7,z-6);ctx.beginPath();ctx.arc(x,z,3,0,Math.PI*2);ctx.fill();}}
  if(observed&&(kind==='population'||$('showPopulation').checked)){const points=$('populationYear').value==='1850'?observed.historical:observed.population;for(const p of points){const[x,z]=xy(p.xKm,p.zKm);ctx.fillStyle=$('populationYear').value==='1850'?'#f0c687bb':'#dccbeb66';ctx.beginPath();ctx.arc(x,z,Math.min(16,1+Math.sqrt(p.population)/60),0,Math.PI*2);ctx.fill();}}
- if(parentView&&w.parentDomain){const selectedBox=chooseWindow(w,cropIndex),[x,z]=xy(selectedBox.x,selectedBox.z);ctx.strokeStyle='#ffe0a1';ctx.lineWidth=5;ctx.strokeRect(x,z,selectedBox.size*scale,selectedBox.size*scale);}
- if(selected>=0){if(stage>=2){ctx.strokeStyle='#ffdfa0';ctx.lineWidth=3.5;line(drainageTrace(w,selected).map(node));}const[x,z]=node(selected);ctx.strokeStyle='#fff1cc';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,z,9,0,Math.PI*2);ctx.stroke();}
- ctx.strokeStyle='#bdd5cf';ctx.fillStyle='#bdd5cf';ctx.lineWidth=2;line([[205,1972],[205,1980],[546,1980],[546,1972]]);ctx.font='22px system-ui';ctx.fillText(`${fmt(box.size/6)} km`,205,1963);
+ if(parentView&&!localWindow&&w.parentDomain){const selectedBox=chooseWindow(w,cropIndex),[x,z]=xy(selectedBox.x,selectedBox.z);ctx.strokeStyle='#ffe0a1';ctx.lineWidth=5;ctx.strokeRect(x,z,selectedBox.size*scale,selectedBox.size*scale);}
+ if(selected>=0){if(stage>=2){ctx.strokeStyle='#ffdfa0';ctx.lineWidth=3.5;line(drainageTrace(w,selected).map(node));}const[x,z]=view.selectedPoint?xy(view.selectedPoint.x,view.selectedPoint.z):node(selected);ctx.strokeStyle='#fff1cc';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,z,9,0,Math.PI*2);ctx.stroke();}
+ ctx.strokeStyle='#bdd5cf';ctx.fillStyle='#bdd5cf';ctx.lineWidth=2;line([[205,1972],[205,1980],[546,1980],[546,1972]]);ctx.font='22px system-ui';ctx.fillText(box.size<6?`${fmt(box.size/6*1000)} m`:`${fmt(box.size/6,1)} km`,205,1963);
  view.setTexture(canvas);renderLegend(kind);
 }
 function renderLegend(kind){let rows=[],title='';if(kind==='agreement'){title='Predicted versus mapped water';rows=[['Correct predicted water','#65beb3'],['Model-only water','#e89e52'],['Missed mapped water','#b488d2'],['Dry agreement','#7b8568'],['Excluded / unknown','#324148']];}
@@ -127,7 +141,7 @@ function saveJSON(name,payload){const blob=new Blob([JSON.stringify(payload,(_,v
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;setTimeout(()=>$('toast').hidden=true,2200);}
 $('menuToggle').onclick=()=>{$('menu').hidden=!$('menu').hidden;$('menuToggle').setAttribute('aria-expanded',String(!$('menu').hidden));};$('legendToggle').onclick=()=>{$('legend').hidden=!$('legend').hidden;$('legendToggle').setAttribute('aria-expanded',String(!$('legend').hidden));$('inspect').hidden=true;};$('closeInspect').onclick=()=>{selected=-1;$('inspect').hidden=true;paint();};
 $('worldSource').onchange=()=>{syncControls();stage=1;generate();};$('regenerate').onclick=generate;$('newSeed').onclick=()=>{$('seed').value=crypto.getRandomValues(new Uint32Array(1))[0];cropIndex=0;generate();};
-$('newWindow').onclick=()=>{cropIndex++;parentView=false;selected=-1;$('inspect').hidden=true;updateURL({crop:cropIndex,parent:0});applyWindow(true);};$('parentMap').onclick=()=>{parentView=!parentView;updateURL({parent:parentView?1:0});applyWindow(true);};
+$('newWindow').onclick=()=>{setWindow(null);view.selectedPoint=null;cropIndex++;parentView=false;selected=-1;$('inspect').hidden=true;updateURL({crop:cropIndex,parent:0});applyWindow(true);};$('parentMap').onclick=()=>{setWindow(null);view.selectedPoint=null;parentView=!parentView;updateURL({parent:parentView?1:0});applyWindow(true);};
 $('mapView').onclick=()=>{view.toggleMap();$('mapView').textContent=view.map?'3D':'Map';};$('reset').onclick=()=>view.reset();$('play').onclick=watch;document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{stop();showStage(Number(b.dataset.stage));});
 $('mapMode').onchange=()=>{mode=$('mapMode').value;updateURL({mode});if(['agreement','observed','population'].includes(mode))showStage(4);else paint();};for(const id of ['showRivers','showNavigable','showStrategic','showReference','showLabels','showPopulation','populationYear'])$(id).onchange=paint;
 for(const id of ['rain','relief'])$(id).oninput=syncControls;$('trueScale').onclick=()=>setVisualScale(view.exag===1?lastExag:1);$('exaggerate').onchange=()=>setVisualScale($('exaggerate').checked?lastExag:1);$('exaggeration').oninput=()=>setVisualScale($('exaggeration').value);
@@ -136,6 +150,20 @@ $('copyLink').onclick=async()=>{try{await navigator.clipboard.writeText(location
 $('export').onclick=()=>{const w=snapshots[4];if(!w)return;saveJSON('watershed-r6-geography.json',{version:w.version,config:w.config,parentDomain:w.parentDomain||null,viewWindow:box,mesh:w.mesh,height:w.height,receiver:w.receiver,upstreamArea:w.area,lake:w.lake,waterSurface:w.waterSurface,basinBudgets:w.basinWater,runoff:w.runoff,humanPotential:w.humanPotential,benchmark:w.benchmark?portableReport(w.benchmark):null,note:'Full physical parent graph retained; the viewWindow does not alter it.'});};
 addEventListener('keydown',e=>{if(e.key==='Escape'){$('benchmarks').hidden=true;$('menu').hidden=true;}});
 addEventListener('unhandledrejection',e=>fail(e.reason));document.addEventListener('world-view-error',e=>fail(e.detail));
-window.__regionalWorldLab={get world(){return world;},get snapshots(){return snapshots;},get stage(){return stage;},get generation(){return generation;},get box(){return box;},get reports(){return reports;},view,generate,showStage,inspect,watch,stop,setVisualScale,chooseWindow:()=>{cropIndex++;applyWindow(true);}};
+function setWindow(next){
+ if(!world?.parentDomain)return false;
+ const entering=Boolean(next&&!localWindow),leaving=Boolean(!next&&localWindow);
+ if(entering)overviewExag=view.exag;
+ localWindow=next?normalizeWindow(world.config.sizeKm,next):null;
+ inheritedView=null;selected=-1;$('inspect').hidden=true;
+ view.selectedPoint=localWindow?{x:localWindow.x+localWindow.size/2,z:localWindow.z+localWindow.size/2}:null;
+ if(entering||leaving)setVisualScale(entering?1:overviewExag,false);
+ const u=new URL(location.href);for(const k of ['localX','localZ','localKm'])u.searchParams.delete(k);
+ if(localWindow){u.searchParams.set('localX',String(localWindow.x));u.searchParams.set('localZ',String(localWindow.z));u.searchParams.set('localKm',String(localWindow.size));}
+ u.searchParams.set('exag',String(view.exag));history.replaceState(null,'',u);
+ applyWindow(true);return true;
+}
+window.__regionalWorldLab={get localWindow(){return localWindow;},get localData(){return inheritedView;},setWindow,get world(){return world;},get snapshots(){return snapshots;},get stage(){return stage;},get generation(){return generation;},get box(){return box;},get reports(){return reports;},view,generate,showStage,inspect,watch,stop,setVisualScale,chooseWindow:()=>{setWindow(null);cropIndex++;applyWindow(true);}};
+installLocalExplorer(window.__regionalWorldLab);
 let initial=18;try{const saved=Number(localStorage.getItem('watershed-relief'));if(saved>=1&&saved<=30)initial=saved;const previous=JSON.parse(localStorage.getItem('watershed-benchmark-reports')||'[]');reports=previous.filter(r=>r.schema===PROTOCOL.version).slice(-30);}catch{}if(params.has('exag'))initial=clamp(Number(params.get('exag'))||1,1,30);setVisualScale(initial,false);syncControls();generate();
 fetch(new URL('./benchmarks/baseline-reports.json',import.meta.url)).then(r=>r.ok?r.json():null).then(data=>{if(data?.reports){for(const r of data.reports)if(!reports.some(p=>p.region===r.region&&p.settings?.n===r.settings?.n&&p.sourceDigest===r.sourceDigest))reports.push(r);renderBenchmarks();}}).catch(()=>{});
