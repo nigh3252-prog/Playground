@@ -8,6 +8,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import json
 import threading
+import os
+import shutil
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,7 +21,7 @@ base = f"http://127.0.0.1:{server.server_port}/regional-world.html"
 results = []
 try:
     with sync_playwright() as p:
-        browser = p.chromium.launch(args=["--enable-unsafe-swiftshader", "--use-angle=swiftshader"])
+        browser = p.chromium.launch(executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH") or shutil.which("chromium"), args=["--enable-unsafe-swiftshader", "--use-angle=swiftshader"])
         for name, width, height in [("desktop", 1440, 1000), ("portrait", 390, 844)]:
             page = browser.new_page(viewport={"width": width, "height": height}, device_scale_factor=1)
             errors = []
@@ -52,7 +54,7 @@ try:
                         sameReceiver:l.world.receiver.every((v,i)=>v===b.receiver[i]),
                         sameArea:l.world.area.every((v,i)=>v===b.area[i]),
                         riverRetained:l.localData.rivers.some(r=>r.from===e.from&&r.to===e.to),
-                        sourceWeightsValid:l.localData.sourceWeights.every((s,i)=>Math.abs(s.reduce((h,[id,v])=>h+l.world.height[id]*v,0)-l.localData.heightM[i])<.01),
+                        sourceWeightsValid:l.localData.sourceWeights.every((s,i)=>Math.abs(s.reduce((h,[id,v])=>h+l.world.height[id]*v,0)-(l.localData.baseHeightM||l.localData.heightM)[i])<.01),
                         triangles:l.localData.mesh.triangles.length/3,
                         cameraY:l.view.target[1],minY:Math.min(...l.view.surface)/1000,maxY:Math.max(...l.view.surface)/1000,
                         exag:l.view.exag,glError:l.view.gl.getError()};
@@ -71,7 +73,7 @@ try:
                 page.click("#localExport")
             item.value.save_as(str(OUT/f"{name}-export.json"))
             exported=json.loads((OUT/f"{name}-export.json").read_text())
-            assert exported["version"]=="watershed-inherited-window-v1" and exported["sourceWeights"]
+            assert exported["version"] in ["watershed-inherited-window-v1","watershed-refined-window-v1"] and exported["sourceWeights"]
             local_url=page.url
             page.click("#localOverview")
             assert page.evaluate("__regionalWorldLab.localWindow===null && __regionalWorldLab.view.exag===18")

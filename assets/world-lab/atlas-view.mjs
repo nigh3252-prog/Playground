@@ -14,6 +14,12 @@ export class AtlasView extends WorldView{
   // target can put an elevated landscape completely outside the viewport.
   if(this.surface?.length&&this.size<=120){let lo=Infinity,hi=-Infinity;for(const h of this.surface){lo=Math.min(lo,h);hi=Math.max(hi,h);}this.target[1]=(lo+hi)/2000*this.exag;}
  }
+ setLocalSurface(data){
+  // Picking still resolves to the original parent IDs and exact coordinates.
+  this.clip={mesh:data.mesh,samples:data.sourceWeights,sourceIds:data.sourceIds};
+  this.box=data.window;this.dataMesh=null;
+  super.setSurface(data.mesh,data.surfaceM);
+ }
  setWorld(world,box){
   if(this.dataMesh!==world.mesh||JSON.stringify(this.box)!==JSON.stringify(box)){this.clip=clipMesh(world.mesh,box);this.dataMesh=world.mesh;this.box=box;}
   const h=Float32Array.from(world.height,(v,i)=>world.ocean[i]?0:world.stage>=2?world.waterSurface?.[i]??world.filled[i]:v);

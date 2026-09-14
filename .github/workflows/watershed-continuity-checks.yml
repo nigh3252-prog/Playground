@@ -43,9 +43,13 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Real parent, desktop and portrait WebGL checks
         run: python scripts/check-inherited-browser.py
+      - name: Fine terrain, banks, gullies and comparison controls
+        run: python scripts/check-refinement-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: watershed-continuity-review
-          path: review/continuity/
+          path: |
+            review/continuity/
+            review/refinement/
           if-no-files-found: ignore
