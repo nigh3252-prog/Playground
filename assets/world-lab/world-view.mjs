@@ -8,7 +8,7 @@ const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 function multiply(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o;}
 function lookAt(eye,target){const z=norm(eye.map((v,i)=>v-target[i])),x=norm(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);}
-function perspective(aspect,far){const f=1/Math.tan(45*Math.PI/360),near=.1;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0]);}
+function perspective(aspect,far){const f=1/Math.tan(45*Math.PI/360),near=Math.max(1e-6,Math.min(.1,far/100000));return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0]);}
 export function meshNormals(mesh,displayHeight){
   const out=new Float32Array(mesh.x.length*3),{x,z,triangles:t}=mesh;
   for(let i=0;i<t.length;i+=3){const a=t[i],b=t[i+1],c=t[i+2],dx=x[b]-x[a],dz=z[b]-z[a],dy=displayHeight[b]-displayHeight[a],ex=x[c]-x[a],ez=z[c]-z[a],ey=displayHeight[c]-displayHeight[a];
@@ -77,12 +77,12 @@ export class WorldView{
   }
   heightAt(x,z){return this.spatial?interpolateAt(this.spatial,this.displayH,x+this.size/2,z+this.size/2):null;}
   pick(clientX,clientY){
-    if(!this.surface)return;const rect=this.canvas.getBoundingClientRect(),px=clientX-rect.left,py=clientY-rect.top;
-    if(!this.gl){const f=this.fallbackFrame;if(!f)return;const x=(px-f.x)/f.size*this.size,z=(py-f.y)/f.size*this.size,id=nearestNode(this.spatial,x,z);if(id>=0)this.onPick(id);return;}
+    this.lastPick=null;if(!this.surface)return;const rect=this.canvas.getBoundingClientRect(),px=clientX-rect.left,py=clientY-rect.top;
+    if(!this.gl){const f=this.fallbackFrame;if(!f)return;const x=(px-f.x)/f.size*this.size,z=(py-f.y)/f.size*this.size,id=nearestNode(this.spatial,x,z);if(id>=0){this.lastPick={x,z};this.onPick(id);}return;}
     const{eye,f,r,u}=this.basis(),tan=Math.tan(Math.PI/8),sx=(px/this.width*2-1)*this.width/this.height*tan,sy=(1-py/this.height*2)*tan,dir=norm(f.map((v,i)=>v+r[i]*sx+u[i]*sy)),dt=this.size/180;let previous=0;
     for(let t=dt;t<this.distance+this.size*3;t+=dt){const x=eye[0]+dir[0]*t,z=eye[2]+dir[2]*t,h=this.heightAt(x,z),y=eye[1]+dir[1]*t;
       if(h!==null&&y<=h){let lo=previous,hi=t;for(let k=0;k<14;k++){const m=(lo+hi)/2,mh=this.heightAt(eye[0]+dir[0]*m,eye[2]+dir[2]*m);if(mh!==null&&eye[1]+dir[1]*m<=mh)hi=m;else lo=m;}
-        const id=nearestNode(this.spatial,clamp(eye[0]+dir[0]*hi+this.size/2,0,this.size),clamp(eye[2]+dir[2]*hi+this.size/2,0,this.size));if(id>=0)this.onPick(id);return;
+        const x=clamp(eye[0]+dir[0]*hi+this.size/2,0,this.size),z=clamp(eye[2]+dir[2]*hi+this.size/2,0,this.size),id=nearestNode(this.spatial,x,z);if(id>=0){this.lastPick={x,z};this.onPick(id);}return;
       }previous=t;
     }
   }
