@@ -55,3 +55,32 @@ test('continent controls set block count and scale the initial crust footprint',
   assert.throws(()=>planTectonicPlates({seed:1,sizeKm:4096,...options}));
  }
 });
+
+test('traced plate margins curve without grid-locked steps or sharp sampling corners',()=>{
+ let axisLocked=0,segments=0;
+ const turns=[],curvature=[];
+ for(let seed=1;seed<=12;seed++){
+ const plan=planTectonicPlates({seed,sizeKm:4800});
+  for(const boundary of plan.boundaries){
+   let measuredLength=0,previousHeading=null;
+   for(let i=1;i<boundary.points.length;i++){
+    const a=boundary.points[i-1],b=boundary.points[i],dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
+    if(!length)continue;
+    measuredLength+=length;segments++;
+    if(Math.abs(dx)<1e-6||Math.abs(dz)<1e-6)axisLocked++;
+    const heading=Math.atan2(dz,dx);
+    if(previousHeading!==null){let turn=Math.abs(heading-previousHeading);turns.push(Math.min(turn,Math.PI*2-turn));}
+    previousHeading=heading;
+   }
+   assert.ok(Math.abs(boundary.lengthKm-measuredLength)<1e-6);
+   if(boundary.points.length>=8&&boundary.lengthKm>plan.sizeKm*.15){
+    const first=boundary.points[0],last=boundary.points.at(-1),dx=last.x-first.x,dz=last.z-first.z,chord=Math.hypot(dx,dz)||1,rms=Math.sqrt(boundary.points.reduce((sum,point)=>sum+(((point.x-first.x)*dz-(point.z-first.z)*dx)/chord)**2,0)/boundary.points.length);
+    curvature.push(rms/plan.sizeKm);
+   }
+  }
+ }
+ turns.sort((a,b)=>a-b);curvature.sort((a,b)=>a-b);
+ assert.ok(axisLocked/segments<.2,`axis-locked boundary fraction ${axisLocked/segments}`);
+ assert.ok(turns[Math.floor(turns.length*.95)]<Math.PI/6,`p95 boundary turn ${turns[Math.floor(turns.length*.95)]*180/Math.PI} degrees`);
+ assert.ok(curvature[Math.floor(curvature.length/2)]>.01,`median long-boundary curvature ${curvature[Math.floor(curvature.length/2)]}`);
+});

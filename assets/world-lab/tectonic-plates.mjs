@@ -17,9 +17,9 @@ function crustBuoyancy(crust,ageMyr){
 
 function assignPlate(tectonics,xKm,zKm){
  const {sizeKm,warpSeed,plates}=tectonics;
- const frequency=2.35/sizeKm,amplitude=sizeKm*.038;
- const x=xKm+noise(xKm*frequency,zKm*frequency,warpSeed)*amplitude;
- const z=zKm+noise(xKm*frequency+19,zKm*frequency-11,warpSeed^0x6a09e667)*amplitude;
+ const broadFrequency=1.65/sizeKm,middleFrequency=4.8/sizeKm,fineFrequency=11.2/sizeKm,broadAmplitude=sizeKm*.105,middleAmplitude=sizeKm*.035,fineAmplitude=sizeKm*.012;
+ const x=xKm+noise(xKm*broadFrequency,zKm*broadFrequency,warpSeed)*broadAmplitude+noise(xKm*middleFrequency+7,zKm*middleFrequency-5,warpSeed^0x6a09e667)*middleAmplitude+noise(xKm*fineFrequency-13,zKm*fineFrequency+17,warpSeed^0xbb67ae85)*fineAmplitude;
+ const z=zKm+noise(xKm*broadFrequency+19,zKm*broadFrequency-11,warpSeed^0x3c6ef372)*broadAmplitude+noise(xKm*middleFrequency-17,zKm*middleFrequency+23,warpSeed^0xa54ff53a)*middleAmplitude+noise(xKm*fineFrequency+29,zKm*fineFrequency-31,warpSeed^0x510e527f)*fineAmplitude;
  let best=plates[0],bestDistance=Infinity;
  for(const plate of plates){
   const dx=x-plate.centerX,dz=z-plate.centerZ;
@@ -29,8 +29,31 @@ function assignPlate(tectonics,xKm,zKm){
  return best;
 }
 
+function smoothPolyline(points,passes=1){
+ let result=points;
+ for(let pass=0;pass<passes;pass++)result=result.map((point,i)=>i===0||i===result.length-1?point:{x:(result[i-1].x+point.x*2+result[i+1].x)/4,z:(result[i-1].z+point.z*2+result[i+1].z)/4});
+ return result;
+}
+
+function curveBoundary(samples,{tx,tz,step,seed}){
+ samples.sort((p,q)=>(p.x*tx+p.z*tz)-(q.x*tx+q.z*tz));
+ const start=samples[0].x*tx+samples[0].z*tz,end=samples.at(-1).x*tx+samples.at(-1).z*tz,span=Math.max(step,end-start),bucketCount=Math.max(4,Math.min(24,Math.round(span/step)+1)),buckets=Array.from({length:bucketCount},()=>[]);
+ for(const point of samples){const along=point.x*tx+point.z*tz,index=Math.min(bucketCount-1,Math.floor((along-start)/span*bucketCount));buckets[index].push(point);}
+ let points=buckets.filter(bucket=>bucket.length).map(bucket=>({x:bucket.reduce((sum,p)=>sum+p.x,0)/bucket.length,z:bucket.reduce((sum,p)=>sum+p.z,0)/bucket.length}));
+ if(points.length<3)return points;
+ points=smoothPolyline(points,2);
+ points=points.map((point,i)=>{
+  if(i===0||i===points.length-1)return point;
+  const before=points[i-1],after=points[i+1],dx=after.x-before.x,dz=after.z-before.z,length=Math.hypot(dx,dz)||1,t=i/(points.length-1),envelope=Math.sin(Math.PI*t),broad=noise(t*2.4,seed*.000001,seed),fine=noise(t*7.1+13,seed*.000002-9,seed^0x6a09e667),offset=step*(broad*.42+fine*.16)*envelope;
+  return{x:point.x-dz/length*offset,z:point.z+dx/length*offset};
+ });
+ return smoothPolyline(points,1);
+}
+
+function polylineLength(points){let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].z-points[i-1].z);return length;}
+
 function traceBoundaries(tectonics){
- const groups=new Map(),steps=52,min=-tectonics.paddingKm,max=tectonics.sizeKm+tectonics.paddingKm,step=(max-min)/steps;
+ const groups=new Map(),steps=72,min=-tectonics.paddingKm,max=tectonics.sizeKm+tectonics.paddingKm,step=(max-min)/steps;
  const ids=new Int16Array((steps+1)*(steps+1));
  for(let z=0;z<=steps;z++)for(let x=0;x<=steps;x++)ids[z*(steps+1)+x]=assignPlate(tectonics,min+x*step,min+z*step).id;
  const record=(a,b,x,z)=>{
@@ -49,12 +72,8 @@ function traceBoundaries(tectonics){
   if(samples.length<3)continue;
   const [plateA,plateB]=key.split(':').map(Number),a=tectonics.plates[plateA],b=tectonics.plates[plateB];
   const dx=b.centerX-a.centerX,dz=b.centerZ-a.centerZ,length=Math.hypot(dx,dz)||1,nx=dx/length,nz=dz/length,tx=-nz,tz=nx;
-  samples.sort((p,q)=>(p.x*tx+p.z*tz)-(q.x*tx+q.z*tz));
-  const stride=Math.max(1,Math.floor(samples.length/18)),points=[];
-  for(let i=0;i<samples.length;i+=stride)points.push(samples[i]);
-  const last=samples.at(-1);
-  if(points.at(-1)!==last)points.push(last);
-  boundaries.push({plateA,plateB,nx,nz,tx,tz,points,lengthKm:Math.max(step,samples.length*step*.52)});
+  const curveSeed=(tectonics.warpSeed^Math.imul(plateA+1,73856093)^Math.imul(plateB+1,19349663))>>>0,points=curveBoundary(samples,{tx,tz,step,seed:curveSeed});
+  if(points.length>=3)boundaries.push({plateA,plateB,nx,nz,tx,tz,points,lengthKm:polylineLength(points)});
  }
  return boundaries;
 }
