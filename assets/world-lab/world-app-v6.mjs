@@ -1,5 +1,5 @@
 import {createRefinedWindow} from './terrain-refinement.mjs';
-import {refinementColors} from './refinement-rendering.mjs';
+import {refinementColors,paintRefinedWater} from './refinement-rendering.mjs';
 import {normalizeWindow,createInheritedWindow} from './inherited-window.mjs';
 import {installLocalExplorer} from './local-explorer.mjs';
 import {BIOMES,HISTORY_TYPES,clamp,noise,drainageTrace,geologySummary} from './world-core.mjs';
@@ -92,8 +92,9 @@ function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=act
   else if(stage>=3&&kind==='natural')c=biomes[w.biome[i]];else c=ramp(w.height[i]/5000,terrainColors);
   let shade=1;if(alpha===255&&normal){const j=i*3;shade=.69+.38*clamp((-.6*normal[j]+normal[j+1]-.35*normal[j+2])/Math.hypot(.6,1,.35),0,1);}colors.set([c[0]*shade,c[1]*shade,c[2]*shade,alpha],i*4);
  }
- const canvas=document.createElement('canvas');canvas.width=canvas.height=2048;const ctx=canvas.getContext('2d'),base=document.createElement('canvas');base.width=base.height=1024;const pixels=inheritedView?.refinement?rasterizeWindow(inheritedView.mesh,refinementColors(inheritedView,colors,{kind,stage,normals:!view.gl?view.normals:null}),1024,{x:0,z:0,size:box.size}):rasterizeWindow(w.mesh,colors,1024,box);base.getContext('2d').putImageData(new ImageData(pixels,1024,1024),0,0);ctx.drawImage(base,0,0,2048,2048);
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=2048;const ctx=canvas.getContext('2d'),base=document.createElement('canvas');base.width=base.height=1024;const pixels=inheritedView?.refinement?rasterizeWindow(inheritedView.mesh,refinementColors(inheritedView,colors,{kind,stage,normals:!view.gl?view.normals:null,vectorWater:true}),1024,{x:0,z:0,size:box.size}):rasterizeWindow(w.mesh,colors,1024,box);base.getContext('2d').putImageData(new ImageData(pixels,1024,1024),0,0);ctx.drawImage(base,0,0,2048,2048);
  const scale=2048/box.size,xy=(x,z)=>[(x-box.x)*scale,(z-box.z)*scale],node=i=>xy(w.mesh.x[i],w.mesh.z[i]);ctx.lineCap='round';ctx.lineJoin='round';
+ if(inheritedView?.refinement)paintRefinedWater(ctx,inheritedView,xy,{kind,stage});
  const line=points=>{ctx.beginPath();points.forEach(([x,z],i)=>i?ctx.lineTo(x,z):ctx.moveTo(x,z));ctx.stroke();};
  if(kind==='tectonics'&&w.geology?.tectonics){
   const tectonics=w.geology.tectonics;

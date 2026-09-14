@@ -92,7 +92,9 @@ try:
                 page.wait_for_function("document.body.dataset.ready==='true' && __regionalWorldLab.localWindow",timeout=180000)
                 assert page.evaluate('!__regionalWorldLab.detailEnabled && !__regionalWorldLab.localData.refinement')
                 page.click('#localExploreToggle');page.check('#localDetail')
-                page.click('#localRiverSpot');page.click('#localClose');page.wait_for_timeout(150)
+                page.click('#localRiverSpot');page.click('#localRiverSpot')
+                assert abs(page.evaluate('__regionalWorldLab.box.x')-site['x'])>.01, 'The second valley must be a different location'
+                page.click('#localClose');page.wait_for_timeout(150)
                 page.screenshot(path=str(OUT/f'{name}-second-valley.png'))
                 page.click('#mapView');page.wait_for_timeout(150)
                 page.screenshot(path=str(OUT/f'{name}-map.png'))

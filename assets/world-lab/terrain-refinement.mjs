@@ -13,6 +13,7 @@ const contexts=new WeakMap();
 const REACH_CELL=4,GULLY_CELL=.12,REACH_MARGIN=1.35;
 function hash(a,b,s){let h=(Math.imul(a,0x1f123bb5)^Math.imul(b,0x5f356495)^s)>>>0;h^=h>>>16;h=Math.imul(h,0x7feb352d);h^=h>>>15;h=Math.imul(h,0x846ca68b);return((h^(h>>>16))>>>0)/4294967296;}
 function noise(x,z,seed){const a=Math.floor(x),b=Math.floor(z),u=ease(x-a),v=ease(z-b);return 2*mix(mix(hash(a,b,seed),hash(a+1,b,seed),u),mix(hash(a,b+1,seed),hash(a+1,b+1,seed),u),v)-1;}
+function segmentsCross(a,b,c,d){const cross=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);return cross(a,b,c)*cross(a,b,d)<0&&cross(c,d,a)*cross(c,d,b)<0;}
 function length2(x,z){const d=Math.hypot(x,z)||1;return[x/d,z/d];}
 function binsPut(index,item,ax,az,bx,bz,pad,cell){
  for(let z=Math.floor((Math.min(az,bz)-pad)/cell);z<=Math.floor((Math.max(az,bz)+pad)/cell);z++)
@@ -112,6 +113,9 @@ function traceUphill(ctx,r,key,start,direction,maxLength,level){
    [dx,dz]=length2(dx*.7+gx*.3-dz*bend,dz*.7+gz*.3+dx*bend);
   }
   const nx=x+dx*step,nz=z+dz*step,next=ungullied(ctx,nx,nz);if(!next||next.dry<.95)break;
+  // End at a crest or before revisiting the path; a gully is not a looping trail.
+  if(i>3&&next.heightM<=here.heightM+.002)break;
+  if(points.slice(0,-3).some((p,j)=>Math.hypot(nx-p[0],nz-p[1])<step*.8||j>0&&segmentsCross([x,z],[nx,nz],points[j-1],p)))break;
   const remaining=Math.min(1,(steps-i)/5),depth=clamp(1.5+next.amplitudeM*.17,1.5,9)*remaining;
   const nextBed=Math.max(bed+.008,next.heightM-depth);
   if(nextBed>next.heightM+.001)break;
@@ -162,7 +166,7 @@ export function createRefinedWindow(world,requested,{n=161}={}){
  // Prepare a fixed physical halo. Gully construction never sees these bounds.
  for(const r of ctx.reaches)if(intersects(r.bounds,box,REACH_MARGIN))buildGullies(ctx,r);
  const count=n*n,x=new Float64Array(count),z=new Float64Array(count),triangles=new Uint32Array((n-1)*(n-1)*6),sourceWeights=[],sourceIds=new Int32Array(count);
- const names=['heightM','baseHeightM','surfaceM','detailM','waterDepthM','incisionM','oceanWeight','lakeWeight','bank'],fields=Object.fromEntries(names.map(k=>[k,new Float32Array(count)])),slope=new Float32Array(count),waterMask=new Uint8Array(count),step=box.size/(n-1);
+ const names=['heightM','baseHeightM','surfaceM','detailM','waterDepthM','incisionM','oceanWeight','lakeWeight','bank'],fields=Object.fromEntries(names.map(k=>[k,new Float32Array(count)])),slope=new Float32Array(count),ambient=new Float32Array(count).fill(1),waterMask=new Uint8Array(count),step=box.size/(n-1);
  let lo=Infinity,hi=-Infinity,maxAbsDeltaM=0,sumDelta=0,k=0;
  for(let row=0;row<n;row++)for(let col=0;col<n;col++){
   const i=row*n+col,px=col*step,pz=row*step,s=sampleRefinement(ctx,box.x+px,box.z+pz);x[i]=px;z[i]=pz;
@@ -174,11 +178,22 @@ export function createRefinedWindow(world,requested,{n=161}={}){
   const i=row*n+col,l=Math.max(0,col-1),r=Math.min(n-1,col+1),u=Math.max(0,row-1),d=Math.min(n-1,row+1);
   slope[i]=Math.hypot((fields.heightM[row*n+r]-fields.heightM[row*n+l])/((r-l)*step*1000),(fields.heightM[d*n+col]-fields.heightM[u*n+col])/((d-u)*step*1000));
  }
- const channels=ctx.reaches.filter(r=>intersects(r.bounds,box,.85)).map(r=>{const count=Math.max(2,Math.ceil(r.lengthKm/.025));return{from:r.from,to:r.to,parentPoints:r.points,points:Array.from({length:count+1},(_,i)=>channelCenter(r,i/count,ctx.seed)),levelsM:r.levelsM,upstreamAreaKm2:r.area0};});
+ // Local concavity shading makes shallow cuts readable without exaggerating height.
+ const radius=Math.max(1,Math.round(.04/step));
+ for(let row=radius;row<n-radius;row++)for(let col=radius;col<n-radius;col++){
+  const i=row*n+col;let sum=0;
+  for(const [dx,dz] of [[radius,0],[0,radius],[radius,radius],[radius,-radius]])sum+=(fields.heightM[(row+dz)*n+col+dx]+fields.heightM[(row-dz)*n+col-dx])*.5;
+  ambient[i]=clamp(1-Math.max(0,sum/4-fields.heightM[i])*.045,.72,1);
+ }
+ const channels=ctx.reaches.filter(r=>intersects(r.bounds,box,.85)).map(r=>{
+  const count=Math.max(2,Math.ceil(r.lengthKm/.025)),points=[],leftBank=[],rightBank=[],[a,b]=r.points,[tx,tz]=length2(b[0]-a[0],b[1]-a[1]);
+  for(let i=0;i<=count;i++){const t=i/count,p=channelCenter(r,t,ctx.seed),s=section(r,t,ctx.seed);points.push(p);leftBank.push([p[0]-tz*s.half,p[1]+tx*s.half]);rightBank.push([p[0]+tz*s.half,p[1]-tx*s.half]);}
+  return{from:r.from,to:r.to,parentPoints:r.points,points,leftBank,rightBank,levelsM:r.levelsM,upstreamAreaKm2:r.area0};
+ });
  const gullies=ctx.gullies.filter(g=>intersects(g.bounds,box,.06)),unresolved=ctx.unresolved.filter(r=>intersects(r.bounds,box));
  const warnings=['Fine landforms are synthesized inside the inherited terrain; they are not measured local elevation.','Parent river anchors and upstream supply are inherited. Fine bends stay inside the channel corridor; widths, depths and dry gullies are modeled, not calibrated hydrology.'];
  if(unresolved.length)warnings.push(`${unresolved.length} unresolved uphill parent reach(es): inherited identity retained; no invented local water profile.`);
- return {...inherited,version:'watershed-refined-window-v1',mesh:{n,sizeKm:box.size,stepKm:step,x,z,triangles},...fields,slope,waterMask,sourceWeights,sourceIds,channels,gullies,
+ return {...inherited,version:'watershed-refined-window-v1',mesh:{n,sizeKm:box.size,stepKm:step,x,z,triangles},...fields,slope,ambient,waterMask,sourceWeights,sourceIds,channels,gullies,
   refinement:{version:'parent-constrained-morphology-v1',coordinateSystem:'parent-world-km',spacingM:step*1000,maxAbsDeltaM,rmsDeltaM:Math.sqrt(sumDelta/count),channelCount:channels.length,gullyCount:gullies.length,unresolvedReachCount:unresolved.length},
   metrics:{minElevationM:lo,maxElevationM:hi,reliefM:hi-lo,displayTriangles:triangles.length/3},warnings,
   note:'baseHeightM and sourceWeights retain the original parent triangles. detailM is the synthesized difference. The parent solver, heights, receiver graph and parent river anchors are unchanged.'};

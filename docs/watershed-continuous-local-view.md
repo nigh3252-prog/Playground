@@ -19,11 +19,11 @@ The first implementation only enlarged the original triangles. The refinement no
 
 ## Added morphology
 
-`terrain-refinement.mjs` interpolates the actual parent triangles at every query. Bounded, domain-warped residual landforms use continuously interpolated relief density from the full parent mesh. They are suppressed on water and pinned at nonwater parent samples. Actual inherited reaches shape channel beds, banks and floodplains. Deterministic tributary-shaped dry gullies ascend continuous terrain gradients from those reaches and receive downhill incision profiles. There is no eight-neighbor raster drainage solver.
+`terrain-refinement.mjs` interpolates the actual parent triangles at every query. Bounded, domain-warped residual landforms use continuously interpolated relief density from the full parent mesh. They are suppressed on water and pinned at nonwater parent samples. Actual inherited reaches shape channel beds, banks and floodplains. Deterministic tributary-shaped dry gullies ascend continuous terrain gradients from those reaches and receive downhill incision profiles. Gullies terminate at crests and before self-intersections. There is no eight-neighbor raster drainage solver.
 
 A bounded render mesh samples the field at approximately 75 m for a 12 km view, 6.25 m for 1.2 km, and 2.14 m for 410 m. This is **render sampling**, not surveyed terrain accuracy. The height field is shared across scales; each render mesh approximates it at its own sampling density. The 120 km view and regional overview retain the original macro surface.
 
-The inherited atlas colors stay in place. Local natural views add material cues for water, eroded banks and steep terrain; diagnostic layers remain based on the parent model.
+The inherited atlas colors stay in place. Local natural views add material cues for water, eroded banks and steep terrain; diagnostic layers remain based on the parent model. Riverbank outlines are painted from continuous channel geometry at texture resolution, not the coarse vertex mask. Local concavity shading makes shallow landforms readable without changing their physical height.
 
 ## Export contract
 
@@ -40,7 +40,7 @@ The checkbox-off export stays `watershed-inherited-window-v1`.
 
 ## Verification
 
-Local validation after the refinement implementation: **161 Node tests pass**, the browser/worker import graphs link, and the complete `node scripts/build-watershed.mjs` packaging command passes. Frozen benchmark areas remain 2500.1 / 5986.9 / 1247.4 / 211.1 square kilometers for Michigan / Great Basin / Cascades / Appalachians respectively; this change does not recalibrate them.
+Local validation after the refinement implementation: **163 Node tests pass**, the browser/worker import graphs link, and the complete `node scripts/build-watershed.mjs` packaging command passes. Frozen benchmark areas remain 2500.1 / 5986.9 / 1247.4 / 211.1 square kilometers for Michigan / Great Basin / Cascades / Appalachians respectively; this change does not recalibrate them.
 
 The branch's `Watershed continuity checks` workflow runs both `scripts/check-inherited-browser.py` and `scripts/check-refinement-browser.py` against the actual source and generated parent. Its `watershed-continuity-review` artifact contains screenshots, exports and browser results for desktop and portrait Chromium. The refinement check exercises comparison, all three fine scales, river/profile invariants, URL restoration, generation stages, exact source weights, finite geometry and UI overflow. This is software-rendered browser testing, not physical Android performance certification.
 

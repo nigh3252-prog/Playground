@@ -86,3 +86,20 @@ test('channel beds remain below their inherited downhill water profile, includin
  const {w,point}=fixture(),ctx=createRefinementContext(w),d=createRefinedWindow(w,windowAround(32,point.x,point.z,1.2),{n:33}),c=d.channels[0];
  for(let j=0;j<c.points.length;j+=Math.max(1,Math.floor(c.points.length/17))){const [x,z]=c.points[j],s=sampleRefinement(ctx,x,z),t=j/(c.points.length-1),level=c.levelsM[0]*(1-t)+c.levelsM[1]*t;close(s.surfaceM,level);assert.ok(s.waterDepthM>.2,'a preserved channel cannot be blocked by an added hill or node pin');}
 });
+
+test('dry gullies stop at crests instead of curling into self-intersecting loops',()=>{
+ const {w,point}=fixture();const d=createRefinedWindow(w,windowAround(32,point.x,point.z,12),{n:33});
+ const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+ for(const g of d.gullies)for(let i=1;i<g.points.length;i++)for(let j=1;j<i-2;j++){
+  const a=g.points[i-1],b=g.points[i],c=g.points[j-1],e=g.points[j];
+  assert.ok(!(cross(a,b,c)*cross(a,b,e)<0&&cross(c,e,a)*cross(c,e,b)<0),`self-intersection: ${g.id}`);
+ }
+});
+
+test('continuous riverbank outlines are inherited, not reconstructed from the display raster',()=>{
+ const {w,point}=fixture(),a=createRefinedWindow(w,windowAround(32,point.x,point.z,1.2),{n:33}),b=createRefinedWindow(w,windowAround(32,point.x+.3,point.z,.41),{n:65});
+ const c=a.channels[0];assert.ok(c.leftBank?.length>5&&c.rightBank?.length>5);
+ assert.deepEqual(c.leftBank,b.channels.find(r=>r.from===c.from).leftBank);
+ for(let i=0;i<c.points.length;i++){const p=c.points[i],l=c.leftBank[i],r=c.rightBank[i];assert.ok(Math.hypot(l[0]-r[0],l[1]-r[1])>.006);close((l[0]+r[0])/2,p[0],1e-7);close((l[1]+r[1])/2,p[1],1e-7);}
+ assert.ok(a.ambient.every(v=>v>=.7&&v<=1));
+});
