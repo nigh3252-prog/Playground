@@ -36,6 +36,41 @@ test('rifting creates a subsiding axis and uplifted shoulders',()=>{
  assert.ok(at(history.uplift,.61)>.1);
 });
 
+test('a finite rift stops deforming terrain far beyond its endpoints',()=>{
+ const tectonics=plan('rift');
+ tectonics.boundaries[0].points=[{x:400,z:300},{x:400,z:500}];
+ tectonics.boundaries[0].lengthKm=200;
+ const history=buildTectonicHistory(tectonics,mesh);
+ assert.ok(at(history.subsidence,.5,.5)>.25);
+ assert.ok(at(history.subsidence,.5,0)<.001,'subsidence extends 300 km beyond the fault');
+ assert.ok(at(history.subsidence,.5,1)<.001,'subsidence extends 300 km beyond the other end');
+});
+
+test('deformation follows a bent margin instead of the plate-center projection',()=>{
+ const tectonics=plan('rift');
+ tectonics.boundaries[0].points=[{x:200,z:0},{x:200,z:300},{x:700,z:400}];
+ tectonics.boundaries[0].lengthKm=300+Math.hypot(500,100);
+ const history=buildTectonicHistory(tectonics,mesh);
+ // (500,360) lies on the shallow diagonal. (600,200) is about
+ // 177 km from it, but only 35 km away in the plate-center direction.
+ assert.ok(at(history.subsidence,.625,.45)>.2);
+ assert.ok(at(history.subsidence,.75,.25)<.002,'the bend broadens into a projected fault stripe');
+});
+
+for(const kind of ['rift','subduction'])test(`${kind}: crossing an endpoint's tangent does not create a terrain seam`,()=>{
+ const sample=offset=>{
+  const tectonics=plan(kind,{polarity:1});
+  tectonics.boundaries[0].points=[{x:400+offset,z:100},{x:400+offset,z:300}];
+  tectonics.boundaries[0].lengthKm=200;
+  return buildTectonicHistory(tectonics,mesh);
+ };
+ // Move the fault two metres across the sample, 100 km beyond its end.
+ // A tiny displacement must not switch a positive/negative 100 km distance
+ // and produce a mountain or trough seam.
+ const a=sample(-.001),b=sample(.001);
+ for(const key of ['uplift','subsidence','volcanism'])assert.ok(Math.abs(at(a[key],.5,0)-at(b[key],.5,0))<.001,`${key} jumps across the endpoint tangent`);
+});
+
 test('history fields are deterministic, finite, and record recent active deformation',()=>{
  const a=buildTectonicHistory(plan('subduction',{polarity:1}),mesh);
  const b=buildTectonicHistory(plan('subduction',{polarity:1}),mesh);

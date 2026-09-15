@@ -6,13 +6,13 @@ Repository: `nigh3252-prog/Playground`
 
 Current branch: `codex/parent-settlement-history` (branched directly from PR #26)
 
-Current PR: **#29 — Parent settlement history and timeline**
+Current PR: **#29 — Parent settlement history and regional landforms**
 
 PR URL: https://github.com/nigh3252-prog/Playground/pull/29
 
 This work is intentionally separate from City Lab / PR #20. Do not collapse or replace PR #20.
 
-Ryan approved parent-level inhabitants and generations of history on September 14. The first version now adds settlement growth, migration, finite food sharing, route disputes, abandonment/reoccupation, cultivation and woodland recovery. Detailed streets, districts and buildings remain future work. Terrain and the independent benchmark pipeline are unchanged.
+Ryan approved parent-level inhabitants and generations of history on September 14. The first version adds settlement growth, migration, finite food sharing, route disputes, abandonment/reoccupation, cultivation and woodland recovery. He then approved improving overly straight parent coastlines and lakes after a comparison with real 1,200 km maps. The September 15 update corrects infinite fault deformation, adds drowned coastal relief, and separates rifts into basins. Detailed streets, districts and buildings remain future work. The independent real-data benchmark pipeline is unchanged.
 
 ---
 
@@ -44,9 +44,21 @@ Key files include:
 - `assets/world-lab/world-core.mjs`
 - `assets/world-lab/world-mesh.mjs`
 - `assets/world-lab/geology-provinces.mjs`
+- `assets/world-lab/regional-landforms.mjs`
 - `assets/world-lab/world-pipeline.mjs`
 - `assets/world-lab/world-app-v6.mjs`
 - `assets/world-lab/world-worker-v6.mjs`
+
+The September 15 geography update changes the generated elevations for existing seeds:
+
+- `tectonic-history.mjs` measures distance to finite fault polylines. Local normals determine polarity, with a continuous cross-track coordinate and separate decay beyond each endpoint. Previously, projection onto the plate-center direction extended troughs/mountains beyond fault endpoints and broadened them at bends. Endpoint continuity has explicit rift and subduction regressions.
+- `regional-landforms.mjs` anchors coastal provinces to the actual parent terrain triangles. Submerged shelf and adjacent land receive bedrock ribs and connected valley branches before erosion. Sea level then determines exposed headlands/islands and flooded inlets. Gentler coastal lowlands use lower relief. The process has no child-window input.
+- `geology-provinces.mjs` follows the source rift polyline with offset, variable-depth basins, side lobes, and intervening higher ground. A source fault receives one basin chain, even if rifting is drawn repeatedly. Inland glacial and volcanic basins retain their drainage protection.
+- Parent mesh resolution and the four-stage geography pipeline are unchanged. Water, ecology, potential and human history use the modified physical terrain. The province plan remains on `world.geology.regionalLandforms` with model identifier `regional-drowned-relief-v1`.
+
+These are bounded procedural landform approximations, not simulated ice sheets, sea-level history, sediment transport, or a reconstruction of Earth's geography. At the default 4,800 km / 257² parent, nominal spacing is 18.75 km; tiny islands and channels remain below the model's resolution. Long simple shores can still occur.
+
+Review evidence: [same-scale parent and window comparisons](review/2026-09-15-regional-landforms/README.md). Fixed seeds 431970387, 1, 42, and 0 show removed radial streaks, new islands and branching embayments, and retained gentler stretches. The first default window becomes simpler when the false faults disappear; the update does not force every window to contain an archipelago.
 
 ### 2. Current stages
 
@@ -73,7 +85,9 @@ The important conceptual rule is that these are **opportunity signals, not towns
 
 This is an exploratory game model: aggregate populations, five-year internal updates, at most 240 sites, no individual biographies or calibrated historical forecasts. Routes support land travel and navigable river links. Sea travel is not implemented. Woodland recovery approaches the original biome's capacity; farms and woodland cannot occupy more than the available cell area. Trade events report accounted transfers, not forecast route capacity. The model does not schedule a mandatory collapse.
 
-A normal 66,049-node parent history runs in roughly 0.2 seconds in the Node runtime (browser hardware varies). The full Node suite passes 149 tests. The Vercel preview was exercised for playback, earlier dates, place selection, seed changes and window continuity; the cloud browser used the 2D fallback. Mobile CSS is included, but this browser exposes no phone viewport or WebGL context, so phone rendering and 3D still need a device check.
+A normal 66,049-node parent history runs in roughly 0.2 seconds in the Node runtime (browser hardware varies). After the geography update, all 159 Node tests pass and the offline deployment build passes. Six complete terrain → water → ecology → potential → history runs cover the four comparison seeds plus 103,041-node dry/high-relief/east-wind and 37,249-node wet/low-relief cases. They preserve finite fields, acyclic flow, catchment accounting, immutable geography, and dry settlement/route nodes. Complete runs took about 0.75–2.95 seconds in this Node runtime.
+
+The initial history Vercel preview was exercised for playback, earlier dates, place selection, seed changes and window continuity; the cloud browser used the 2D fallback. Mobile CSS is included, but this browser exposes no phone viewport or WebGL context, so phone rendering and 3D still need a device check.
 
 
 ---
