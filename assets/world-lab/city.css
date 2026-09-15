@@ -8,13 +8,13 @@ body[data-city="true"]>.bottom-left,body[data-city="true"]>.bottom-right,body[da
 .city-header h2{margin:0;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #citySummary{font-size:11px;color:#c2d2c3;margin:5px 0 0;font-variant-numeric:tabular-nums}
 .city-navigation{position:absolute;right:12px;top:100px;display:grid;gap:6px}
-.city-navigation button{width:44px;height:44px;font-size:22px;box-shadow:0 3px 12px #10282f30}
+.city-navigation button{width:44px;height:44px;font-size:22px;background:#162c32f0;border-color:#c0d0be45;color:#ecf0e8;box-shadow:0 3px 12px #10282f30}
 #cityScale{position:absolute;left:14px;bottom:max(12px,env(safe-area-inset-bottom));font-size:11px;color:#e0e6d3;margin:0;padding:7px 11px;border-radius:8px;font-variant-numeric:tabular-nums}
 #cityDistrictPanel{position:absolute;bottom:max(12px,env(safe-area-inset-bottom));right:12px;width:min(350px,calc(100% - 24px));padding:13px;border-radius:14px;max-height:44%;overflow:auto}
 .city-search-label{display:block;font-size:11px;color:#b5c8b8;margin-bottom:6px}
 #cityDistrict{font-size:12px;min-height:42px}
 .city-district-heading{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin-top:11px}
-#cityDistrictName{font-size:14px}#cityDistrictKind{font-size:10px;color:#bdd0b5;text-transform:capitalize}
+#cityDistrictName{font-size:14px}#cityDistrictKind{font-size:10px;color:#bdd0b5}
 #cityDistrictFacts{font-size:11px;line-height:1.5;color:#d0deca;margin:6px 0 0;font-variant-numeric:tabular-nums}
 #cityDistrictPanel details{margin-top:9px}#cityDistrictPanel summary{font-size:10px;min-height:23px}
 .city-key{display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:#c8d9c1}.city-key span{display:flex;align-items:center;gap:4px}.city-key i{width:10px;height:10px;border-radius:2px}

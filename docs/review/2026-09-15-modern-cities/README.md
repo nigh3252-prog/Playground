@@ -38,3 +38,16 @@ All 183 Node tests and the offline deployment build pass. Fresh app/worker modul
 Automated checks cover exact population budgets, deterministic replay, unchanged parent geography and early food accounting, water-free routes and city blocks, city size/granularity, dated selection, cancellation of queued city opens, keyboard-accessible selection, zoom/pan/pinch gestures, and offline app/worker module linking. Frozen real-data benchmarks remain separate from generated history.
 
 The city map is Canvas 2D with phone-oriented controls and a pixel-ratio cap. Actual phone hardware and the regional WebGL renderer still require a device check.
+
+### Hosted preview
+
+The Vercel preview for `43c1ead` was exercised through the actual controls:
+
+- Default modern endpoint: Year 600, 24 generations of history, 357,013,380 residents, and 1,000 places.
+- Open High Ground (8,857,139 residents), inspect its 96 neighborhoods, zoom from 161 km to 63 km across the desktop viewport, and select Downtown (115,991 residents, 13.21 km², 8,783 residents/km²).
+- Keyboard focus wraps within the city dialog; its background is inert. About this place shows the name origin and terrain interpretation.
+- Return to the parent and scrub to Year 0, which shows 46,424 residents and 20 early sites. Apply early-only history with four generations, reaching Year 100 / 133,153 residents / 50 sites. Restore the modern twelve-plus-twelve history and recover the original totals.
+- Search for Noah Lane Coast View (7,572 residents), open its five-neighborhood, 4.2 km² town, then return and choose another 1,200 km window. Parent population and date stay unchanged.
+- Visual inspection prompted a final CSS correction: dark zoom buttons remain legible over the light city map.
+
+The city export control was exercised, but the cloud browser's download event listener timed out; browser file delivery remains unverified. No application error was observed. The city model itself passes serialization/replay and exact-budget tests.
