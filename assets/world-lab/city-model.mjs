@@ -87,6 +87,44 @@ function inheritedOrientation(world,history,frame,site,seed){
  return{angle:(hash(site.id+17,seed)-.5)*Math.PI,source:'local street plan',ids:[]};
 }
 
+function datedUrbanArea(state,era){
+ const population=state.population,defaultDensity=era==='agrarian'?900:population<5000?1800:population<50000?3000:5000,density=Number.isFinite(state.densityPerKm2)&&state.densityPerKm2>0?state.densityPerKm2:defaultDensity;
+ return Number.isFinite(state.urbanAreaKm2)&&state.urbanAreaKm2>0?state.urbanAreaKm2:population/density;
+}
+
+function settlementTerritory(world,history,frame,site,state,bounds){
+ const states=new Map(frame.siteStates.map(s=>[s.siteId,s])),boundaries=[],era=frame.era||'agrarian',ownRadius=Math.sqrt(datedUrbanArea(state,era)/Math.PI),{mesh}=world;
+ for(const neighbor of history.sites){
+  const other=states.get(neighbor.id),node=neighbor.nodeId;
+  if(neighbor.id===site.id||neighbor.founded>frame.generation||!other||!Number.isSafeInteger(other.population)||other.population<=0||other.status==='abandoned'||!Number.isInteger(node)||node<0||node>=mesh.x.length||world.ocean[node]||world.lake[node])continue;
+  const otherRadius=Math.sqrt(datedUrbanArea(other,era)/Math.PI),first=site.id<neighbor.id?site:neighbor,second=site.id<neighbor.id?neighbor:site,firstRadius=site.id<neighbor.id?ownRadius:otherRadius,secondRadius=site.id<neighbor.id?otherRadius:ownRadius;
+  // Canonical ID order gives separately generated cities exactly the same
+  // boundary point. Reverse ownership changes only the half-plane sign.
+  const ax=mesh.x[first.nodeId],az=mesh.z[first.nodeId],dx=mesh.x[second.nodeId]-ax,dz=mesh.z[second.nodeId]-az,length=Math.hypot(dx,dz),fraction=firstRadius/(firstRadius+secondRadius),point={x:ax+dx*fraction,z:az+dz*fraction},sign=site.id<neighbor.id?1:-1,normal={x:(length?dx/length:1)*sign,z:(length?dz/length:0)*sign},offsetKm=normal.x*point.x+normal.z*point.z;
+  // A distant center matters only if its weighted half-plane can actually
+  // cut this city's candidate land. Large distant cities are not discarded
+  // by a fixed distance cutoff that could break reciprocal ownership.
+  const furthest=normal.x*(normal.x>=0?bounds.x+bounds.size:bounds.x)+normal.z*(normal.z>=0?bounds.z+bounds.size:bounds.z);
+  if(furthest<=offsetKm)continue;
+  boundaries.push({neighborSiteId:neighbor.id,point,normal,offsetKm});
+ }
+ boundaries.sort((a,b)=>a.neighborSiteId-b.neighborSiteId);
+ return{sourceGeneration:frame.generation,rule:'dated urban area weighted half-planes',boundaries};
+}
+
+function regionalRouteMasks(world,history,frame,bounds,widthKm){
+ const active=new Set((frame.routeStates||[]).filter(r=>r.active).map(r=>r.routeId)),masks=[],half=widthKm/2,{mesh}=world,box={x:bounds.x,z:bounds.z,right:bounds.x+bounds.size,bottom:bounds.z+bounds.size};
+ for(const route of history.routes||[]){
+  if(route.kind!=='land'||!(route.founded<=frame.generation)||!active.has(route.id))continue;
+  for(let i=1;i<route.nodes.length;i++){
+   const a={x:mesh.x[route.nodes[i-1]],z:mesh.z[route.nodes[i-1]]},b={x:mesh.x[route.nodes[i]],z:mesh.z[route.nodes[i]]},length=distance(a,b);if(!(length>0))continue;
+   if(!overlaps({x:Math.min(a.x,b.x)-half,z:Math.min(a.z,b.z)-half,right:Math.max(a.x,b.x)+half,bottom:Math.max(a.z,b.z)+half},box))continue;
+   const dx=(b.x-a.x)/length,dz=(b.z-a.z)/length,polygon=clipToBox([{x:a.x-dx*half-dz*half,z:a.z-dz*half+dx*half},{x:b.x+dx*half-dz*half,z:b.z+dz*half+dx*half},{x:b.x+dx*half+dz*half,z:b.z+dz*half-dx*half},{x:a.x-dx*half+dz*half,z:a.z-dz*half-dx*half}],bounds);
+   if(polygon.length>=3)masks.push({polygon});
+  }
+ }return masks;
+}
+
 function makeGrid(world,index,origin,length,n,angle,seed,blocked){
  const step=length/n,cos=Math.cos(angle),sin=Math.sin(angle),vertices=[],sample=[],cells=[],phase=hash(74,seed)*6.28;
  const at=(x,z)=>{const q=locateTriangle(index,x,z);if(!q)return null;const sum=f=>q.wa*f[q.a]+q.wb*f[q.b]+q.wc*f[q.c];return{height:sum(world.height),slope:world.slope?sum(world.slope):0,ocean:sum(world.ocean),lake:sum(world.lake)};};
@@ -165,17 +203,18 @@ function assignDistricts(grid,growth,population,era,seed,origin){
 export function generateCity(world,history,frame,siteId){
  const {site,state,size}=validate(world,history,frame,siteId),population=state.population,seed=((world.config?.seed||0)^(history.seed||0)^Math.imul(siteId+1,2891336453))>>>0;
  let index=indexes.get(world.mesh);if(!index){index=indexMesh({...world.mesh,sizeKm:size,n:world.mesh.n||Math.round(Math.sqrt(world.mesh.x.length))});indexes.set(world.mesh,index);}
- const origin={x:world.mesh.x[site.nodeId],z:world.mesh.z[site.nodeId]},era=frame.era||'agrarian',defaultDensity=era==='agrarian'?900:population<5000?1800:population<50000?3000:5000;
- const density=Number.isFinite(state.densityPerKm2)&&state.densityPerKm2>0?state.densityPerKm2:defaultDensity;
- const targetAreaKm2=Number.isFinite(state.urbanAreaKm2)&&state.urbanAreaKm2>0?state.urbanAreaKm2:population/density;
+ const origin={x:world.mesh.x[site.nodeId],z:world.mesh.z[site.nodeId]},era=frame.era||'agrarian',targetAreaKm2=datedUrbanArea(state,era);
  const length=Math.min(size*1.5,Math.max(.35,Math.sqrt(targetAreaKm2)*2.65)),grain=population<1500?.035:population<50000?.065:.13,n=Math.min(MAX_GRID,Math.max(33,Math.round(length/grain)))|1;
  const initialSize=Math.min(size,length*1.5),initialBounds={x:clamp(origin.x-initialSize/2,0,size-initialSize),z:clamp(origin.z-initialSize/2,0,size-initialSize),size:initialSize};
- const terrain=parentTerrain(world,initialBounds),blocked=polygonIndex([...terrain.water,...terrain.steep],initialBounds),orientation=inheritedOrientation(world,history,frame,site,seed);
+ const terrain=parentTerrain(world,initialBounds),terrainBlocked=polygonIndex([...terrain.water,...terrain.steep],initialBounds),territory=settlementTerritory(world,history,frame,site,state,initialBounds),owned=polygon=>territory.boundaries.every(({normal,offsetKm})=>polygon.every(p=>p.x*normal.x+p.z*normal.z<=offsetKm+1e-9)),blocked=polygon=>!owned(polygon)||terrainBlocked(polygon),orientation=inheritedOrientation(world,history,frame,site,seed);
+ // Every dated regional land corridor uses the same width in every city.
+ // Through-route masks constrain roofs, while allowing street intersections.
+ const regionalRoadWidthKm=era==='agrarian'?.012:.026,corridorBlocked=polygonIndex(regionalRouteMasks(world,history,frame,initialBounds,regionalRoadWidthKm),initialBounds),buildingBlocked=polygon=>blocked(polygon)||corridorBlocked(polygon);
  const grid=makeGrid(world,index,origin,length,n,orientation.angle,seed,blocked),growth=growCity(grid,origin,targetAreaKm2,seed),{districts,blocks}=assignDistricts(grid,growth,population,era,seed,origin);
  const developed=boxOf(blocks.flatMap(b=>b.polygon)),span=Math.max(developed.right-developed.x,developed.bottom-developed.z),extent=Math.min(size,Math.max(.3,span*1.32)),bounds={x:clamp((developed.x+developed.right-extent)/2,0,size-extent),z:clamp((developed.z+developed.bottom-extent)/2,0,size-extent),size:extent};
- const blockedWithoutRiver=polygonIndex([...terrain.water.filter(w=>w.kind!=='river'),...terrain.steep],initialBounds),structure=generateUrbanStructure({world,history,frame,site,grid,growth,districts,bounds,terrain,blocked,blockedWithoutRiver,orientation,seed,population});
+ const blockedWithoutRiver=polygonIndex([...terrain.water.filter(w=>w.kind!=='river'),...terrain.steep],initialBounds),structure=generateUrbanStructure({world,history,frame,site,grid,growth,districts,bounds,terrain,blocked,buildingBlocked,blockedWithoutRiver,regionalRoadWidthKm,orientation,seed,population});
  // The initial context covers every generated block; crop rendering to the
  // final view without re-solving drainage or assigning extra population.
  delete terrain.steep;
- return{version:'neighborhood-city-v2',siteId,name:site.name,nameOrigin:site.nameOrigin||null,population,year:frame.year,generation:frame.generation,era,eraLabel:frame.eraLabel||era,groupId:state.groupId??site.groupId,origin,center:grid.cells[growth.start].center,bounds,areaKm2:growth.area,targetAreaKm2,densityPerKm2:population/growth.area,footprintLimited:growth.area<targetAreaKm2*.96,districts,blocks,...structure,terrain,cellKm:grid.step/grid.divisions,orientationRadians:orientation.angle,orientationSource:orientation.source,inheritedRouteIds:orientation.ids,geographyNote:'Neighborhoods, streets and building footprints are generated at city scale. Terrain and water are interpolated from the unchanged parent mesh; no finer terrain observations are implied.'};
+ return{version:'neighborhood-city-v2',siteId,name:site.name,nameOrigin:site.nameOrigin||null,population,year:frame.year,generation:frame.generation,era,eraLabel:frame.eraLabel||era,groupId:state.groupId??site.groupId,origin,center:grid.cells[growth.start].center,bounds,areaKm2:growth.area,targetAreaKm2,densityPerKm2:population/growth.area,footprintLimited:growth.area<targetAreaKm2*.96,districts,blocks,...structure,terrain,territory,cellKm:grid.step/grid.divisions,orientationRadians:orientation.angle,orientationSource:orientation.source,inheritedRouteIds:orientation.ids,geographyNote:'Neighborhoods, streets and building footprints are generated at city scale. Terrain and water are interpolated from the unchanged parent mesh; no finer terrain observations are implied.'};
 }

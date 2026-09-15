@@ -43,8 +43,8 @@ export function createCityView(canvas,{onSelect=()=>{},onChange=()=>{},onSelectS
   for(const river of context?.rivers||[]){line(river.points);ctx.strokeStyle='#5ba4bd';ctx.lineWidth=Math.max(.65/scale,river.widthKm);ctx.stroke();}
   for(const route of context?.routes||[]){
    const waterway=route.kind==='river'||route.kind==='sea'||route.kind==='ferry';
-   line(route.points);ctx.strokeStyle=waterway?'#5d98a6':'#a29e79';ctx.lineWidth=2.4/scale;ctx.stroke();
-   ctx.strokeStyle=waterway?'#9ac3c7':'#e0d5ad';ctx.lineWidth=1.2/scale;ctx.stroke();
+   line(route.points);ctx.strokeStyle=waterway?'#5d98a6':'#a29e79';ctx.lineWidth=Math.max(2.4/scale,waterway?0:(route.widthKm||.026)+1/scale);ctx.stroke();
+   ctx.strokeStyle=waterway?'#9ac3c7':'#d2b69c';ctx.lineWidth=Math.max(1.2/scale,waterway?0:route.widthKm||.026);ctx.stroke();
   }
   const visibleCities=[...cities.values()].filter(c=>intersects({x:c.bounds.x,z:c.bounds.z,right:c.bounds.x+c.bounds.size,bottom:c.bounds.z+c.bounds.size}));
   for(const c of visibleCities){

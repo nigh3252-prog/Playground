@@ -11,7 +11,7 @@ export function regionalCityContext(world,history,frame,colors){
   return [{id:site.id,name:site.name,population:state.population,point:point(site.nodeId),radiusKm:Math.sqrt((state.urbanAreaKm2||state.population/3000)/Math.PI)}];
  });
  const active=new Map((frame.routeStates||[]).filter(r=>r.active).map(r=>[r.routeId,r]));
- const routes=history.routes.filter(r=>r.founded<=frame.generation&&active.has(r.id)).map(r=>({id:r.id,a:r.a,b:r.b,kind:r.kind,points:r.nodes.map(point),traffic:active.get(r.id).traffic||0}));
+ const routes=history.routes.filter(r=>r.founded<=frame.generation&&active.has(r.id)).map(r=>({id:r.id,a:r.a,b:r.b,kind:r.kind,widthKm:(frame.era||'agrarian')==='agrarian'?.012:.026,points:r.nodes.map(point),traffic:active.get(r.id).traffic||0}));
  const rivers=[];
  for(let i=0;i<world.height.length;i++){
   const j=world.receiver?.[i];

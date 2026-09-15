@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {isDeepStrictEqual} from 'node:util';
 import {createTerrainMesh,indexMesh,locateTriangle} from '../assets/world-lab/world-mesh.mjs';
+import {triangulate} from '../assets/world-lab/triangulate.mjs';
 import {generateCity} from '../assets/world-lab/city-model.mjs';
 
 function fixture({population=220000,coast=false,island=false,hills=false,river=false,era='modern'}={}){
@@ -211,4 +212,57 @@ test('a large metropolis retains neighborhood and local-block detail within fini
  assert.equal(c.districts.reduce((v,d)=>v+d.population,0),8800000);
  assert.equal(new Set(c.districts.map(d=>d.name)).size,c.districts.length);
  assert.ok(c.districts.every(d=>! /\s\d+$/.test(d.name)),'neighborhoods use distinct local names instead of repeated numbered suffixes');
+});
+
+// Independently generated nearby cities formerly occupied the same land.
+// Their reversed views must agree on one area-weighted straight boundary.
+test('neighboring metropolises reserve symmetric dated territories before either city grows',()=>{
+ // The failing default-world pair's populations, areas and relative parent
+ // coordinates, on a compact flat terrain patch so the regression is portable.
+ const f=fixture({population:7813471});f.world.mesh=createTerrainMesh(25,160,901);f.world.config.sizeKm=160;f.world.parentDomain.sizeKm=160;f.frame.year=600;
+ const first=f.history.sites[0],mesh=f.world.mesh;first.id=3;first.name='Woodland End';mesh.x[first.nodeId]=80;mesh.z[first.nodeId]=80;
+ const neighborPoint={x:118.4782120092625,z:94.5611260807196};let node=-1,nearest=Infinity;
+ for(let i=0;i<mesh.x.length;i++){const d=Math.hypot(mesh.x[i]-neighborPoint.x,mesh.z[i]-neighborPoint.z);if(i!==first.nodeId&&d<nearest){nearest=d;node=i;}}
+ mesh.x[node]=neighborPoint.x;mesh.z[node]=neighborPoint.z;mesh.triangles=triangulate(mesh.x,mesh.z);
+ f.history.sites.push({id:107,nodeId:node,name:'Zoya Parker High Ground',founded:12,groupId:0});
+ Object.assign(f.frame.siteStates[0],{siteId:3,densityPerKm2:4327.8819244099395,urbanAreaKm2:1805.3798917042504});
+ f.frame.siteStates.push({siteId:107,population:2858470,status:'city',groupId:0,densityPerKm2:3927.5377805120233,urbanAreaKm2:727.8020377508242});
+ f.history.routes.push({id:0,a:3,b:107,nodes:[first.nodeId,node],founded:12,kind:'land'});f.frame.routeStates.push({routeId:0,active:true});
+ const a=generateCity(f.world,f.history,f.frame,3),b=generateCity(f.world,f.history,f.frame,107),dx=b.origin.x-a.origin.x,dz=b.origin.z-a.origin.z,d=Math.hypot(dx,dz),nx=dx/d,nz=dz/d,share=Math.sqrt(1805.3798917042504)/(Math.sqrt(1805.3798917042504)+Math.sqrt(727.8020377508242));
+ const expected={x:a.origin.x+dx*share,z:a.origin.z+dz*share},signed=p=>(p.x-expected.x)*nx+(p.z-expected.z)*nz;
+ for(const [city,sign]of[[a,1],[b,-1]]){
+  for(const block of city.blocks)for(const p of block.polygon)assert.ok(sign*signed(p)<=1e-8,'accounting polygons remain wholly inside owned land');
+  for(const roof of city.buildings)for(const p of roof.polygon)assert.ok(sign*signed(p)<-1e-5,'opposite cities cannot overlap their roofs');
+  for(const road of city.roads.filter(r=>r.sourceRouteId==null))for(const p of road.points)assert.ok(sign*signed(p)+road.widthKm/2<=1e-8,'street corridors remain inside their own territory');
+  assert.equal(city.districts.reduce((sum,q)=>sum+q.population,0),city.population);
+  assert.ok(city.roads.some(r=>r.sourceRouteId===0&&r.points.some(p=>sign*signed(p)>0)),'inherited regional approaches can continue across the boundary');
+ }
+ const ab=a.territory.boundaries.find(q=>q.neighborSiteId===107),ba=b.territory.boundaries.find(q=>q.neighborSiteId===3);
+ assert.deepEqual(ab.point,ba.point);assert.ok(Math.hypot(ab.point.x-expected.x,ab.point.z-expected.z)<1e-8);
+ assert.equal(ab.normal.x,-ba.normal.x);assert.equal(ab.normal.z,-ba.normal.z);assert.equal(ab.offsetKm,-ba.offsetKm);
+});
+
+test('future or abandoned neighbors do not reserve land in an earlier city view',()=>{
+ const f=fixture({population:22000}),early=cityFor(f);
+ f.history.sites.push({id:1,nodeId:f.history.sites[0].nodeId+1,name:'Future center',founded:f.frame.generation+1,groupId:0});
+ f.frame.siteStates.push({siteId:1,population:8800000,status:'city',densityPerKm2:4400,urbanAreaKm2:2000});
+ assert.ok(isDeepStrictEqual(cityFor(f),early),'a future neighbor has no effect');
+ f.history.sites[1].founded=0;f.frame.siteStates[1].status='abandoned';
+ assert.ok(isDeepStrictEqual(cityFor(f),early),'an abandoned neighbor has no effect');
+});
+
+// A neighboring city's inherited route can cross this city's territory even
+// when this settlement is neither endpoint. Its exact corridor must stay clear.
+test('buildings clear active dated through-routes as well as their own city approaches',()=>{
+ const f=fixture({population:22000}),node=f.history.sites[0].nodeId;
+ f.history.sites.push({id:9,nodeId:node-2,name:'West neighbor',founded:0,groupId:0},{id:10,nodeId:node+2,name:'East neighbor',founded:0,groupId:0});
+ f.frame.siteStates.push({siteId:9,population:50,status:'village',urbanAreaKm2:.04},{siteId:10,population:50,status:'village',urbanAreaKm2:.04});
+ const early=cityFor(f);f.history.routes.push({id:40,a:9,b:10,nodes:[node-2,node+2],founded:f.frame.generation+1,kind:'land'});f.frame.routeStates.push({routeId:40,active:true});
+ assert.ok(isDeepStrictEqual(cityFor(f),early),'future through-routes reserve no land');
+ f.history.routes[0].founded=0;f.frame.routeStates[0].active=false;assert.ok(isDeepStrictEqual(cityFor(f),early),'inactive through-routes reserve no land');
+ f.frame.routeStates[0].active=true;const c=cityFor(f),mesh=f.world.mesh,a={x:mesh.x[node-2],z:mesh.z[node-2]},b={x:mesh.x[node+2],z:mesh.z[node+2]},dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz),half=.026/2+.0019;
+ const corridor=[{x:a.x-dz/length*half,z:a.z+dx/length*half},{x:b.x-dz/length*half,z:b.z+dx/length*half},{x:b.x+dz/length*half,z:b.z-dx/length*half},{x:a.x+dz/length*half,z:a.z-dx/length*half}];
+ assert.ok(c.buildings.length>100);for(const building of c.buildings)assert.ok(!intersects(building.polygon,corridor),'buildings clear the shared regional road width');
+ assert.ok(!c.roads.some(r=>r.sourceRouteId===40),'through-route clearance creates no synthetic city route');
+ assert.ok(isDeepStrictEqual(c.blocks,early.blocks)&&isDeepStrictEqual(c.roads,early.roads),'through corridors permit local street intersections and preserve population land accounting');
 });
