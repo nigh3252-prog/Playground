@@ -6,13 +6,13 @@ Repository: `nigh3252-prog/Playground`
 
 Current branch: `codex/parent-settlement-history` (branched directly from PR #26)
 
-Current PR: **#29 — Parent settlement history and regional landforms**
+Current PR: **#29 — Parent history, modern populations, and city neighborhoods**
 
 PR URL: https://github.com/nigh3252-prog/Playground/pull/29
 
 This work is intentionally separate from City Lab / PR #20. Do not collapse or replace PR #20.
 
-Ryan approved parent-level inhabitants and generations of history on September 14. The first version adds settlement growth, migration, finite food sharing, route disputes, abandonment/reoccupation, cultivation and woodland recovery. He then approved improving overly straight parent coastlines and lakes after a comparison with real 1,200 km maps. The September 15 update corrects infinite fault deformation, adds drowned coastal relief, and separates rifts into basins. Detailed streets, districts and buildings remain future work. The independent real-data benchmark pipeline is unchanged.
+Ryan approved parent-level inhabitants and generations of history on September 14. The first version adds settlement growth, migration, finite food sharing, route disputes, abandonment/reoccupation, cultivation and woodland recovery. He then approved improving overly straight parent coastlines and lakes after a comparison with real 1,200 km maps. The September 15 update corrects infinite fault deformation, adds drowned coastal relief, and separates rifts into basins. Ryan then requested modern population density, contextual names, and a view into cities and neighborhoods. That is now implemented as a modern extension of history and an on-demand city map; local playable mech terrain remains future work. The independent real-data benchmark pipeline is unchanged.
 
 ---
 
@@ -68,7 +68,7 @@ Review evidence: [same-scale parent and window comparisons](review/2026-09-15-re
 4. **Human geography / potential**
 5. **Inhabitants** (generated parents only)
 
-The original geography pipeline still returns four stages. The worker caches its Stage 4 result, then runs `simulateHumanHistory()` separately. Human history never changes the geographic input.
+The original geography pipeline still returns four stages. The worker caches its Stage 4 result, then runs `simulateWorldHistory()` separately. The wrapper runs `simulateHumanHistory()` first and optionally appends a modern era. Human history never changes the geographic input.
 
 Stage 4 currently estimates things such as food productivity, overland friction, water / river transport access, reachable agricultural surplus, navigable reaches, and strategic opportunity points such as confluences, mouths, heads of navigation, passes, ferries / fords, and practical shore locations.
 
@@ -76,18 +76,33 @@ The important conceptual rule is that these are **opportunity signals, not towns
 
 ### 3. Parent history controls and model
 
-- `regional-world.html` opens a generated parent at Inhabitants by default, with 12 generations of 25 years. Use the slider, previous/next, or play to inspect a date. Date selection only repaints stored snapshots.
+- `regional-world.html` opens a generated parent at Inhabitants by default, with 12 early generations followed by 12 modern-transition generations of 25 years (Year 600). Use the slider, previous/next, or play to inspect a date. Date selection only repaints stored snapshots.
 - Settlement marker size follows population; abandoned sites are hollow. Land use follows reachable countryside on the physical graph. Routes follow traversable graph edges; disused routes are dashed. Community influence is optional and is not a national border.
 - Tap a settlement or use Explore a place for a collapsible history card. Event buttons jump to the recorded date and place. If a generation event is outside the current window, selecting it reveals the parent.
-- History options contains a separate seed, 4/8/12/20 generations, layer toggles, New history, and Apply settings. History regeneration reuses solved terrain. `historySeed`, `historyGenerations`, and `generation` are saved in the URL; `mode=history` still means geological families.
+- History options contains a separate seed, modern/early era selection, 4/8/12/20 early generations, layer toggles, New history, and Apply settings. History regeneration reuses solved terrain. `historySeed`, `historyGenerations` (early count), `era`, `generation` (viewed snapshot), and optional `city` (site ID) are saved in the URL; `mode=history` still means geological families.
 - Export includes the complete parent graph, all human-history frames and events, model version, history seed, and viewed generation/window. Export waits for a completed history.
-- `human-history.mjs` owns simulation; `history-presentation.mjs` owns date filtering and map overlays; `history-controls.mjs` owns timeline/card state. Tests cover deterministic replay, immutable geography, migration/population/food accounting, finite land cover, reachable routes, abandonment/reuse, no future leaks, and stale reroll controls.
+- `human-history.mjs` owns early simulation; `modern-history.mjs` adds modern populations, rural residents, city footprints and regional connections; `place-names.mjs` supplies names with geography/community origins; `history-presentation.mjs` owns date filtering and map overlays; `history-controls.mjs` owns timeline/card state. Tests cover deterministic replay, immutable geography, migration/population/food accounting, finite land cover, reachable routes, abandonment/reuse, no future leaks, and stale reroll controls.
 
-This is an exploratory game model: aggregate populations, five-year internal updates, at most 240 sites, no individual biographies or calibrated historical forecasts. Routes support land travel and navigable river links. Sea travel is not implemented. Woodland recovery approaches the original biome's capacity; farms and woodland cannot occupy more than the available cell area. Trade events report accounted transfers, not forecast route capacity. The model does not schedule a mandatory collapse.
+Early history is an exploratory game model: aggregate populations, five-year internal updates, at most 240 early sites, no individual biographies or calibrated historical forecasts. Routes support land travel and navigable river links. Sea travel is not implemented. Woodland recovery approaches the original biome's capacity; farms and woodland cannot occupy more than the available cell area. Trade events report accounted transfers, not forecast route capacity. The model does not schedule a mandatory collapse.
 
 A normal 66,049-node parent history runs in roughly 0.2 seconds in the Node runtime (browser hardware varies). After the geography update, all 159 Node tests pass and the offline deployment build passes. Six complete terrain → water → ecology → potential → history runs cover the four comparison seeds plus 103,041-node dry/high-relief/east-wind and 37,249-node wet/low-relief cases. They preserve finite fields, acyclic flow, catchment accounting, immutable geography, and dry settlement/route nodes. Complete runs took about 0.75–2.95 seconds in this Node runtime.
 
 The initial history Vercel preview was exercised for playback, earlier dates, place selection, seed changes and window continuity; the cloud browser used the 2D fallback. Mobile CSS is included, but this browser exposes no phone viewport or WebGL context, so phone rendering and 3D still need a device check.
+
+
+### 4. Modern population and neighborhood-scale cities
+
+- The modern endpoint targets 65 people per habitability-weighted dry km² and approximately 72% urban residents. These are explicit game-model parameters, not a fitted demographic forecast. Up to 1,000 representative centers form a population hierarchy; rural residents occupy the suitable countryside separately. Water and uninhabitable terrain receive no extra rural allocation.
+- The original agrarian food/population ledger remains intact. Modern accounting explicitly reports modeled population change instead of pretending the old food ledger explains industrial growth. `frame.summary.population = urbanPopulation + ruralPopulation`; modern site budgets sum to urban residents, and the nodal `population` array sums to the total. `populationDensity` and physical `urbanFraction` fields drive the parent view. Modern eras progress through `industrial`, `urbanizing`, and `modern`.
+- Default geography (seed 431970387, Standard) reaches 357,013,380 residents across 10,293,051 dry km², including 256,983,983 urban residents and 1,000 centers. The largest city has 8,857,139 residents. These are generated model outcomes, not real-world observations.
+- Names use local terrain/water or a generated founding household/civic form. Each place carries `nameOrigin`; collision alternatives avoid repeated numeric fantasy-place suffixes. Community influence remains a connection layer, not country borders or a complete political history.
+- **Cities** lists dated inhabited places across the whole parent, sorted by population with search. **Open city & neighborhoods** also appears on each place card. Back returns to the regional view. Opening a city pauses history; a date/world/history change invalidates the city and queued work.
+- `generateCity(world, history, frame, siteId)` in `city-model.mjs` interpolates the actual parent triangles and water fields. Connected buildable blocks grow around the founding location; inherited active routes orient the street plan. Neighborhood populations sum exactly to the selected site's population. Parks have no residents; center, housing, mixed-use and industrial districts have distinct densities.
+- A large metro has up to 96 neighborhoods and at most 24,000 generated blocks, with local street subdivisions. Smaller towns use fewer districts and smaller footprints. Limited island/coastal land is reported as a constrained footprint with correspondingly higher density, rather than drawing buildings across water.
+- `city-view.mjs` draws a Canvas 2D map on demand with drag, pinch/wheel, zoom buttons, district selection, scale, and DPR cap. `city-controls.mjs` owns search, focus/inert background, keyboard selection, lifecycle, and a four-city cache for the current frame. City export includes dated geometry/population and its model note.
+- Fine streets/building fabric are procedural urban content. City terrain and shorelines are interpolated from the coarse parent; zooming does not recover real subgrid terrain, bridges, or playable collision geometry. Sea transport, building-level population, full political simulation, and local Warden terrain remain future work.
+
+The modern population, naming, city conservation, water avoidance, input gestures, dated controls, and module graph have automated checks. Verification for this update is recorded in `docs/review/2026-09-15-modern-cities/README.md`.
 
 
 ---

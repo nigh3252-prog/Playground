@@ -1,6 +1,9 @@
 import {BIOMES,HISTORY_TYPES,clamp,noise,drainageTrace,geologySummary} from './world-core.mjs';
-import {simulateHumanHistory} from './human-history.mjs';
+import {simulateWorldHistory,MODERN_GENERATIONS} from './modern-history.mjs';
 import {createHistoryControls} from './history-controls.mjs';
+import {createCityControls} from './city-controls.mjs';
+import {generateCity} from './city-model.mjs';
+import {createCityView} from './city-view.mjs';
 import {historyNodeColor,drawHumanHistory,nearestHistorySite,describeHistoryPlace} from './history-presentation.mjs';
 import {AtlasView} from './atlas-view.mjs';
 import {meshNormals} from './world-view.mjs';
@@ -15,8 +18,9 @@ import {BOUNDARY_COLORS,tectonicColor,tectonicFacts} from './tectonic-debug.mjs'
 const $=id=>document.getElementById(id),fmt=(n,d=0)=>n===null||n===undefined||!Number.isFinite(Number(n))?'N/A':Number(n).toLocaleString('en-US',{maximumFractionDigits:d}),pct=v=>v===null||v===undefined?'N/A':fmt(v*100,1)+'%',params=new URLSearchParams(location.search);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let world=null,snapshots=[],generation=0,worker=null,suiteWorker=null,selected=-1,stage=clamp(Number(params.get('stage'))||(params.get('source')&&params.get('source')!=='generated'?4:5),1,5),mode=params.get('mode')||'natural',box=null,cropIndex=Number(params.get('crop'))||0,parentView=params.has('parent')?params.get('parent')==='1':stage===5,playing=false,timer=0,lastExag=18,reports=[],selectedReport=null;
-let humanHistory=null,viewedGeneration=12,selectedSite=-1,historyBusy=false;
-const historyControls=createHistoryControls({onDate:setHistoryDate,onSelect:selectHistoryPlace,onGenerate:regenerateHistory,onPaint:paint,onOptions:()=>{$('menu').hidden=false;$('menu').scrollTop=0;$('menuToggle').setAttribute('aria-expanded','true');}});
+let humanHistory=null,viewedGeneration=12,selectedSite=-1,historyBusy=false,pendingCity=params.has('city')?Number(params.get('city')):null;
+const historyControls=createHistoryControls({onDate:setHistoryDate,onSelect:selectHistoryPlace,onGenerate:regenerateHistory,onPaint:paint,onOpenCity:id=>{historyControls.stop();cityControls.open(id);},onOptions:()=>{$('menu').hidden=false;$('menu').scrollTop=0;$('menuToggle').setAttribute('aria-expanded','true');}});
+const cityControls=createCityControls({buildCity:generateCity,createView:createCityView,onEnter:()=>historyControls.stop(),onOpen:id=>{selectHistoryPlace(id,true);updateURL({city:id});},onClose:()=>updateURL({city:null}),onError:error=>toast(error.message)});
 const view=new AtlasView($('world'),{onPick:inspect,onChange:({yaw})=>{$('compass').style.transform=`rotate(${-yaw}rad)`;}});
 if(stage===5){view.map=true;$('mapView').textContent='3D';}
 if(!view.gl){$('mapView').textContent='2D';$('mapView').disabled=true;}
@@ -24,14 +28,15 @@ for(const id of ['seed','continentCount','crustScale','size','resolution','relie
 if([...$('mapMode').options].some(o=>o.value===mode))$('mapMode').value=mode;else mode='natural';
 if(params.has('historySeed'))$('historySeed').value=Number(params.get('historySeed'))>>>0;
 if(['4','8','12','20'].includes(params.get('historyGenerations')))$('historyGenerations').value=params.get('historyGenerations');
-viewedGeneration=params.has('generation')?clamp(Number(params.get('generation'))||0,0,20):Number($('historyGenerations').value);
-function updateURL(values){try{const u=new URL(location.href);u.searchParams.delete('history');for(const[k,v]of Object.entries(values))u.searchParams.set(k,String(v));history.replaceState(null,'',u);}catch{}}
+if(['modern','agrarian'].includes(params.get('era')))$('historyEra').value=params.get('era');
+viewedGeneration=params.has('generation')?clamp(Number(params.get('generation'))||0,0,20+MODERN_GENERATIONS):Number($('historyGenerations').value)+($('historyEra').value==='modern'?MODERN_GENERATIONS:0);
+function updateURL(values){try{const u=new URL(location.href);u.searchParams.delete('history');for(const[k,v]of Object.entries(values)){if(v===null)u.searchParams.delete(k);else u.searchParams.set(k,String(v));}history.replaceState(null,'',u);}catch{}}
 function busy(text){$('notice').textContent=text;$('notice').hidden=false;}
 function fail(error){busy(error?.message||String(error));$('status').textContent='Generation failed; no fake replacement data';stop();historyBusy=false;historyControls.stop();renderHistory();}
 function settings(){const source=$('worldSource').value;return{source,seed:Number($('seed').value)>>>0,continentCount:Number($('continentCount').value),crustScale:Number($('crustScale').value),sizeKm:Number($('size').value),n:Number($('resolution').value),rain:Number($('rain').value),relief:Number($('relief').value),wind:$('wind').value,climate:$('climate').value};}
-function historyOptions(){return{seed:Number($('historySeed').value)>>>0,generations:Number($('historyGenerations').value),yearsPerGeneration:25};}
+function historyOptions(){return{seed:Number($('historySeed').value)>>>0,generations:Number($('historyGenerations').value),yearsPerGeneration:25,era:$('historyEra').value};}
 function historyFrame(){return humanHistory?.snapshots[viewedGeneration];}
-function renderHistory(){historyControls.render({world:snapshots[4],data:humanHistory,generation:viewedGeneration,box,selectedSite,enabled:stage===5,busy:historyBusy});}
+function renderHistory(){historyControls.render({world:snapshots[4],data:humanHistory,generation:viewedGeneration,box,selectedSite,enabled:stage===5,busy:historyBusy});cityControls.setContext({world:snapshots[4],history:humanHistory,frame:historyFrame(),enabled:stage===5,busy:historyBusy});}
 function setHistoryDate(value){if(!humanHistory)return;viewedGeneration=clamp(value|0,0,humanHistory.generations);if(!describeHistoryPlace(humanHistory,historyFrame(),selectedSite))selectedSite=-1;updateURL({generation:viewedGeneration});document.body.dataset.historyGeneration=String(viewedGeneration);renderHistory();paint();}
 function selectHistoryPlace(id,reveal=false){
  selectedSite=id;selected=-1;$('inspect').hidden=true;
@@ -39,12 +44,12 @@ function selectHistoryPlace(id,reveal=false){
  renderHistory();paint();
 }
 async function fallbackHistory(options,token){
- try{const result=await simulateHumanHistory(snapshots[4],options,p=>accept({progress:`History · generation ${p.generation} of ${p.generations}`},token),()=>token!==generation);if(result)accept({humanHistory:result},token);}catch(e){if(token===generation)fail(e);}
+ try{const result=await simulateWorldHistory(snapshots[4],options,p=>accept({progress:`History · generation ${p.generation} of ${p.generations}`},token),()=>token!==generation);if(result)accept({humanHistory:result},token);}catch(e){if(token===generation)fail(e);}
 }
 function regenerateHistory(options){
  if(!snapshots[4]?.parentDomain)return;
- stop();historyControls.stop();historyBusy=true;$('export').disabled=true;humanHistory=null;selectedSite=-1;selected=-1;viewedGeneration=options.generations;
- const token=++generation;document.body.dataset.ready='false';updateURL({historySeed:options.seed,historyGenerations:options.generations,generation:viewedGeneration});
+ stop();historyControls.stop();historyBusy=true;$('export').disabled=true;humanHistory=null;selectedSite=-1;selected=-1;pendingCity=null;viewedGeneration=options.generations+(options.era==='modern'?MODERN_GENERATIONS:0);
+ const token=++generation;document.body.dataset.ready='false';updateURL({historySeed:options.seed,historyGenerations:options.generations,era:options.era,generation:viewedGeneration,city:null});
  $('menu').hidden=true;$('menuToggle').setAttribute('aria-expanded','false');showStage(5);busy('Generating another history on the same parent…');renderHistory();
  if(worker){worker.onmessage=({data})=>accept(data,data.requestId);worker.onerror=e=>{e.preventDefault();worker?.terminate();worker=null;fallbackHistory(options,token);};worker.postMessage({job:'humanHistory',requestId:token,historyOptions:options});}
  else fallbackHistory(options,token);
@@ -53,7 +58,7 @@ function syncControls(){const reference=$('worldSource').value!=='generated';for
  $('sourceHelp').textContent=reference?'Benchmark mode: raw real elevation; water and population are withheld until scoring. No known lake shapes are imposed.':'A larger parent landmass is solved first. New window changes only what you see—not the parent rivers or basins.';
  for(const id of ['rain','relief'])$(id+'Out').value=Number($(id).value).toFixed(1)+'×';}
 function accept(data,token){if(token!==generation)return;if(data.error)return fail(data.error);if(data.progress){$('status').textContent=data.progress;return;}
- if(data.humanHistory){humanHistory=data.humanHistory;historyBusy=false;$('export').disabled=false;viewedGeneration=clamp(viewedGeneration,0,humanHistory.generations);document.body.dataset.historySeed=String(humanHistory.seed);document.body.dataset.historyGeneration=String(viewedGeneration);updateURL({historySeed:humanHistory.seed,historyGenerations:humanHistory.generations,generation:viewedGeneration});if(stage===5)showStage(5);else renderHistory();return;}
+ if(data.humanHistory){humanHistory=data.humanHistory;historyBusy=false;$('export').disabled=false;viewedGeneration=clamp(viewedGeneration,0,humanHistory.generations);document.body.dataset.historySeed=String(humanHistory.seed);document.body.dataset.historyGeneration=String(viewedGeneration);updateURL({historySeed:humanHistory.seed,historyGenerations:humanHistory.earlyGenerations??humanHistory.generations,era:humanHistory.era,generation:viewedGeneration});if(stage===5)showStage(5);else renderHistory();if(pendingCity!==null){const id=pendingCity;pendingCity=null;if(!cityControls.open(id))updateURL({city:null});}return;}
  snapshots[data.stage]=data.world;
  if(data.stage===4&&data.world.parentDomain){snapshots[5]=data.world;if(stage===5)showStage(5);}
  if(data.stage===4&&!data.world.parentDomain)historyBusy=false;
@@ -61,8 +66,8 @@ function accept(data,token){if(token!==generation)return;if(data.error)return fa
  if(data.stage===stage)showStage(stage);
  if(data.stage===4){$('export').disabled=!!data.world.parentDomain;document.body.dataset.computeMs=String(Math.round(data.elapsed));const b=data.world.benchmark;if(b?.status==='scored'){addReport(portableReport(b));selectedReport=portableReport(b);renderBenchmarks();}}
 }
-async function generate(){stop();historyControls.stop();const opts=settings(),token=++generation;if(opts.source!=='generated'&&stage===5)stage=4;worker?.terminate();worker=null;world=null;snapshots=[];humanHistory=null;selectedSite=-1;historyBusy=opts.source==='generated';selected=-1;renderHistory();document.body.dataset.stage=String(stage);$('inspect').hidden=true;$('export').disabled=true;document.body.dataset.ready='false';
- busy(opts.source==='generated'?'Building the parent landmass before choosing a window…':'Loading raw elevation and independent benchmark sources…');$('status').textContent='Terrain → Water → Ecology → Potential → Inhabitants';syncControls();updateURL({...opts,stage,mode,crop:cropIndex,parent:parentView?1:0,exag:view.exag,historySeed:historyOptions().seed,historyGenerations:historyOptions().generations,generation:viewedGeneration});
+async function generate(){stop();historyControls.stop();const opts=settings(),token=++generation;if(token>1){pendingCity=null;updateURL({city:null});}if(opts.source!=='generated'&&stage===5)stage=4;worker?.terminate();worker=null;world=null;snapshots=[];humanHistory=null;selectedSite=-1;historyBusy=opts.source==='generated';selected=-1;renderHistory();document.body.dataset.stage=String(stage);$('inspect').hidden=true;$('export').disabled=true;document.body.dataset.ready='false';
+ busy(opts.source==='generated'?'Building the parent landmass before choosing a window…':'Loading raw elevation and independent benchmark sources…');$('status').textContent='Terrain → Water → Ecology → Potential → Inhabitants';syncControls();updateURL({...opts,stage,mode,crop:cropIndex,parent:parentView?1:0,exag:view.exag,historySeed:historyOptions().seed,historyGenerations:historyOptions().generations,era:historyOptions().era,generation:viewedGeneration});
  let fallbackStarted=false;const fallback=async()=>{if(fallbackStarted||token!==generation)return;fallbackStarted=true;worker?.terminate();worker=null;try{const solved=await generateStagesV6(opts,m=>accept(m,token),()=>token!==generation);if(solved?.parentDomain&&token===generation)await fallbackHistory(historyOptions(),token);}catch(e){if(token===generation)fail(e);}};
  try{worker=new Worker(new URL('./world-worker-v6.mjs',import.meta.url),{type:'module'});worker.onmessage=({data})=>accept(data,data.requestId);worker.onerror=e=>{e.preventDefault();fallback();};worker.postMessage({...opts,requestId:token,historyOptions:historyOptions()});}catch{fallback();}
 }
@@ -82,7 +87,7 @@ function showStage(value){
  if(!snapshots[stage]){busy('Preparing this generation stage…');return;}
  const previous=world;world=snapshots[stage];$('notice').hidden=true;
  applyWindow(!previous||previous.config.source!==world.config.source||previous.config.sizeKm!==world.config.sizeKm);
- if(stage===5){$('status').textContent=historyBusy?'Generating parent history…':'Generated history · 25 years per generation';if(historyBusy)busy('Tracing generations of life on the parent…');}
+ if(stage===5){$('status').textContent=historyBusy?'Generating parent history…':'Choose Cities to explore neighborhoods · 25 years per generation';if(historyBusy)busy('Tracing generations of life on the parent…');}
  else $('status').textContent=stage===4?world.benchmark?.status==='scored'?`Benchmark ready · ${world.benchmark.role}`:world.benchmark?.status==='unavailable'?'Map ready; benchmark observations unavailable':`${world.strategicNodes.length} transport opportunities · parent solution`:stage===1?world.parentDomain?'Parent landmass → view window':'Raw measured elevation':`${world.lakeBodies?.length||0} retained / mapped lakes`;
  document.body.dataset.ready=String(!(stage===5&&historyBusy));document.body.dataset.source=world.config.source||'generated';
 }
@@ -130,7 +135,7 @@ function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=act
  view.setTexture(canvas);renderLegend(kind);
 }
 function renderLegend(kind){
- if(stage===5&&kind==='natural'){$('legend').innerHTML='<h2>Life on the parent</h2><div class="swatch-row"><span>● Settlement · size follows population</span></div><div class="swatch-row"><span>○ Abandoned place</span></div><div class="swatch-row"><i style="background:#d2b873"></i><span>Cultivated countryside</span></div><div class="swatch-row"><span>— Active trade · thicker means more use</span></div><div class="swatch-row"><span>┄ Old route</span></div><p class="note">Tap a place to follow its past. Routes and land use follow the parent terrain. Community influence is an optional layer.</p>';return;}
+ if(stage===5&&kind==='natural'){$('legend').innerHTML='<h2>Cities and countryside</h2><div class="swatch-row"><span>● Place · size follows population</span></div><div class="swatch-row"><span>○ Abandoned place</span></div><div class="swatch-row"><i style="background:#d2b873"></i><span>Cultivated countryside</span></div><div class="swatch-row"><i style="background:#c1a88f"></i><span>Urban concentration</span></div><div class="swatch-row"><span>— Active trade · thicker means more use</span></div><div class="swatch-row"><span>┄ Old route</span></div><p class="note">Tap a place to follow its past, or choose Cities to explore neighborhoods. Routes and land use follow the parent terrain. Community influence is an optional layer.</p>';return;}
 let rows=[],title='';if(kind==='agreement'){title='Predicted versus mapped water';rows=[['Correct predicted water','#65beb3'],['Model-only water','#e89e52'],['Missed mapped water','#b488d2'],['Dry agreement','#7b8568'],['Excluded / unknown','#324148']];}
  else if(kind==='observed'){title='Held-out natural-lake water';rows=[['Mapped water','#53a0bc'],['Evaluated dry land','#929977'],['Excluded / unknown','#324148']];}
  else if(kind==='water'){title='Modeled basin states';rows=WATER_STATES;}
@@ -178,7 +183,8 @@ $('mapMode').onchange=()=>{mode=$('mapMode').value;updateURL({mode});if(['agreem
 for(const id of ['rain','relief'])$(id).oninput=syncControls;$('trueScale').onclick=()=>setVisualScale(view.exag===1?lastExag:1);$('exaggerate').onchange=()=>setVisualScale($('exaggerate').checked?lastExag:1);$('exaggeration').oninput=()=>setVisualScale($('exaggeration').value);
 $('openBenchmarks').onclick=()=>{$('benchmarks').hidden=false;$('menu').hidden=true;selectedReport=world?.benchmark?.status==='scored'?portableReport(world.benchmark):selectedReport;renderBenchmarks();};$('closeBenchmarks').onclick=()=>{$('benchmarks').hidden=true;};$('runSuite').onclick=()=>startSuite(false);$('runSweep').onclick=()=>startSuite(true);$('saveReports').onclick=()=>saveJSON('watershed-benchmark-results.json',{protocol:PROTOCOL,reports});
 $('copyLink').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);toast('View link copied');}catch{toast('Copy the address bar to share this view');}};
-$('export').onclick=()=>{const w=snapshots[4];if(!w)return;saveJSON(humanHistory?'watershed-parent-history.json':'watershed-r6-geography.json',{version:w.version,config:w.config,parentDomain:w.parentDomain||null,viewWindow:box,viewedGeneration,humanHistory,mesh:w.mesh,height:w.height,receiver:w.receiver,upstreamArea:w.area,lake:w.lake,waterSurface:w.waterSurface,basinBudgets:w.basinWater,runoff:w.runoff,humanPotential:w.humanPotential,benchmark:w.benchmark?portableReport(w.benchmark):null,note:'Full physical parent graph retained; the viewWindow does not alter it.'});};
+$('export').onclick=()=>{const w=snapshots[4];if(!w)return;saveJSON(humanHistory?'watershed-parent-history.json':'watershed-r6-geography.json',{version:w.version,config:w.config,parentDomain:w.parentDomain||null,viewWindow:box,viewedGeneration,humanHistory,city:cityControls.current,mesh:w.mesh,height:w.height,receiver:w.receiver,upstreamArea:w.area,lake:w.lake,waterSurface:w.waterSurface,basinBudgets:w.basinWater,runoff:w.runoff,humanPotential:w.humanPotential,benchmark:w.benchmark?portableReport(w.benchmark):null,note:'Full physical parent graph retained; the viewWindow does not alter it.'});};
+$('exportCity').onclick=()=>{const city=cityControls.current;if(city)saveJSON(`watershed-city-${city.siteId}-year-${city.year}.json`,city);};
 addEventListener('keydown',e=>{if(e.key==='Escape'){$('benchmarks').hidden=true;$('menu').hidden=true;}});
 addEventListener('unhandledrejection',e=>fail(e.reason));document.addEventListener('world-view-error',e=>fail(e.detail));
 window.__regionalWorldLab={get world(){return world;},get snapshots(){return snapshots;},get humanHistory(){return humanHistory;},get viewedGeneration(){return viewedGeneration;},get stage(){return stage;},get generation(){return generation;},get box(){return box;},get reports(){return reports;},view,generate,showStage,inspect,watch,stop,setVisualScale,chooseWindow:()=>{cropIndex++;applyWindow(true);}};

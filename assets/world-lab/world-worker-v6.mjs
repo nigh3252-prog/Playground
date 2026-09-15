@@ -1,5 +1,5 @@
 import {generateStagesV6,runSuite} from './benchmark-pipeline.mjs';
-import {simulateHumanHistory} from './human-history.mjs';
+import {simulateWorldHistory} from './modern-history.mjs';
 
 let parent=null,job=0;
 self.onmessage=async({data})=>{
@@ -17,7 +17,7 @@ self.onmessage=async({data})=>{
       parent=result?.parentDomain?result:null;
     }
     if(!parent){if(data.job==='humanHistory')throw new Error('Generate a parent world before its history.');return;}
-    const humanHistory=await simulateHumanHistory(parent,data.historyOptions,
+    const humanHistory=await simulateWorldHistory(parent,data.historyOptions,
       p=>send({progress:`History · generation ${p.generation} of ${p.generations}`}),cancelled);
     if(humanHistory)send({humanHistory});
   }catch(e){send({error:e.message});}

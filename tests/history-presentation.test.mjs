@@ -53,3 +53,12 @@ test('land-use and influence tints leave water unchanged and remain optional',()
   assert.notDeepEqual(historyNodeColor(base,world,history,frame,0,{influence:true}),base);
   assert.deepEqual(base,[80,110,75]);
 });
+
+test('modern built fractions change urban land coloring without painting water or empty countryside',()=>{
+  const base=[80,110,75],frame={cultivation:[0,0,0,0],settled:[0,0,0,0],woodland:[1,1,1,1],influence:[-1,-1,-1,-1],urbanFraction:[0,.2,.7,.8]};
+  const tint=id=>historyNodeColor(base,world,history,frame,id,{landUse:true});
+  assert.deepEqual(tint(0),base);
+  assert.notDeepEqual(tint(1),base);
+  assert.ok(tint(2)[0]>tint(1)[0]);
+  assert.deepEqual(tint(3),base);
+});

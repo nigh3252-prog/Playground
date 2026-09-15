@@ -49,6 +49,9 @@ export function historyNodeColor(base,world,history,frame,id,{landUse=false,infl
     c=mix(c,[151,152,102],Math.max(0,initial-frame.woodland[id])*.65);
     c=mix(c,[210,184,115],frame.cultivation[id]*.8);
     c=mix(c,[208,199,144],frame.settled[id]*.12);
+    // A parent sample stores a physical built-area fraction, not an invented
+    // circular city footprint that could spill across the shoreline.
+    if(frame.urbanFraction)c=mix(c,[193,168,143],Math.sqrt(frame.urbanFraction[id])*.85);
   }
   const group=history.groups[frame.influence[id]];
   if(influence&&group)c=mix(c,rgb(group.color),frame.settled[id]*.48);
@@ -60,18 +63,20 @@ export function drawHumanHistory(ctx,world,history,frame,box,{routes=true,traces
   const scale=ctx.canvas.width/box.size,xy=id=>[(world.mesh.x[id]-box.x)*scale,(world.mesh.z[id]-box.z)*scale];
   ctx.save();ctx.beginPath();ctx.rect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.clip();
   ctx.lineCap='round';ctx.lineJoin='round';
+  const modern=!!frame.urbanFraction;
   if(routes)for(const {route,state} of visibleHistoryRoutes(history,frame,traces)){
     ctx.strokeStyle=state.active?(route.kind==='land'?'#eed3a4b8':'#b7e4dfbf'):'#ddc9a585';
-    ctx.lineWidth=(state.active?1.5+Math.min(5,Math.sqrt(state.traffic)/40):1.7)*symbolScale;
+    ctx.lineWidth=(state.active?(modern ? .7+Math.min(2,Math.log10(1+state.traffic)*.3):1.5+Math.min(5,Math.sqrt(state.traffic)/40)):1.7)*symbolScale*(modern?Math.max(.5,Math.min(1,1200/box.size)):1);
     ctx.setLineDash(state.active?[]:[8*symbolScale,7*symbolScale]);
     ctx.beginPath();route.nodes.forEach((id,i)=>{const [x,y]=xy(id);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
   }
   ctx.setLineDash([]);
   const sites=visibleHistorySites(world,history,frame,box).filter(p=>traces||p.state.status!=='abandoned').sort((a,b)=>b.state.population-a.state.population);
   const labelBoxes=[];
+  const crowdScale=modern?Math.max(.35,Math.min(1,Math.sqrt(120/Math.max(1,sites.length)))):1;
   for(const {site,state} of sites){
     const [x,y]=xy(site.nodeId),abandoned=state.status==='abandoned',chosen=site.id===selectedSite;
-    const radius=(abandoned?4.5:Math.min(14,3.8+Math.sqrt(state.population)/55))*symbolScale;
+    const radius=(abandoned?4.5:modern?(3+Math.log10(1+state.population))*crowdScale:Math.min(14,3.8+Math.sqrt(state.population)/55))*symbolScale;
     ctx.strokeStyle=chosen?'#ffffff':abandoned?'#ded2b5':'#283a36';
     ctx.lineWidth=(chosen?3:1.8)*symbolScale;
     ctx.fillStyle=influence?(history.groups[state.groupId]?.color||'#efdbab'):'#f3e3bc';

@@ -3,7 +3,7 @@ import {visibleHistorySites,describeHistoryPlace} from './history-presentation.m
 const $=id=>document.getElementById(id);
 const number=n=>Math.round(n||0).toLocaleString('en-US');
 
-export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOptions}){
+export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOptions,onOpenCity}){
   let history=null,frame=null,playing=false,timer=0,pending=false,active=false;
   function stop(){playing=false;clearTimeout(timer);$('historyPlay').textContent='▶';$('historyPlay').setAttribute('aria-label','Play history');}
   function advance(){
@@ -27,7 +27,7 @@ export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOpti
   function generate(random){
     if(random)$('historySeed').value=crypto.getRandomValues(new Uint32Array(1))[0];
     if(!$('historySeed').reportValidity())return;
-    stop();onGenerate({seed:Number($('historySeed').value)>>>0,generations:Number($('historyGenerations').value),yearsPerGeneration:25});
+    stop();onGenerate({seed:Number($('historySeed').value)>>>0,generations:Number($('historyGenerations').value),yearsPerGeneration:25,era:$('historyEra').value});
   }
   $('newHistory').onclick=()=>generate(true);$('applyHistory').onclick=()=>generate(false);
   for(const id of ['historyLandUse','historyRoutes','historyTraces','historyLabels','historyInfluence'])$(id).onchange=onPaint;
@@ -42,12 +42,12 @@ export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOpti
   function render({world,data,generation,box,selectedSite=-1,enabled=false,busy=false}){
     history=data;frame=data?.snapshots[generation];pending=busy;active=enabled;
     $('historyTimeline').hidden=!enabled;$('historySettings').hidden=!world?.parentDomain;
-    $('placeCard').hidden=true;
+    $('placeCard').hidden=true;$('openCity').disabled=true;$('openCity').onclick=null;
     for(const id of ['newHistory','applyHistory'])$(id).disabled=busy||!world?.parentDomain;
     for(const id of ['historyDate','historyPlay','historyPrevious','historyNext','historyPlace'])$(id).disabled=!frame||busy;
     if(!frame){
       stop();$('historyYear').textContent=busy?'Generating…':'History unavailable';$('historyGeneration').textContent='';
-      $('historySummary').textContent='';$('historyDate').value='0';
+      $('historySummary').textContent='';$('historyPopulationBreakdown').textContent='';$('historyEraLabel').textContent='';$('historyDate').value='0';
       $('historyPlace').replaceChildren(new Option('Explore a place…','-1'));
       $('historyEvents').replaceChildren();$('placeEvents').replaceChildren();
       $('historyEventCount').textContent='This generation';$('generationEvents').open=false;
@@ -57,9 +57,12 @@ export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOpti
     $('historyDate').max=String(history.generations);$('historyDate').value=String(generation);
     $('historyDate').setAttribute('aria-valuetext',`Year ${frame.year}, generation ${generation}`);
     $('historyYear').textContent=`Year ${frame.year}`;
+    $('historyEraLabel').textContent=frame.eraLabel||'Early settlements';
     $('historyGeneration').textContent=`Generation ${generation} of ${history.generations}`;
     $('historyPrevious').disabled=busy||generation===0;$('historyNext').disabled=busy||generation===history.generations;
-    $('historySummary').textContent=`Parent · ${number(frame.summary.population)} people · ${number(frame.summary.settlements)} settlements · ${number(frame.summary.abandoned)} abandoned`;
+    const modern=!!frame.era&&frame.era!=='agrarian',classified=Number.isFinite(frame.summary.urbanPopulation);
+    $('historySummary').textContent=`Parent · ${number(frame.summary.population)} people · ${number(frame.summary.settlements)} ${modern?'cities and towns':'settlements'}${frame.summary.abandoned?` · ${number(frame.summary.abandoned)} abandoned`:''}`;
+    $('historyPopulationBreakdown').textContent=classified?`${number(frame.summary.urbanPopulation)} urban · ${number(frame.summary.ruralPopulation)} rural · ${Number(frame.summary.densityPerKm2).toLocaleString('en-US',{maximumFractionDigits:1})} people/km² of land`:'';
     const visible=visibleHistorySites(world,history,frame,box).sort((a,b)=>b.state.population-a.state.population);
     $('historyPlace').replaceChildren(new Option(visible.length?'Explore a place…':'No recorded places here · choose Parent','-1'));
     $('historyPlace').disabled=busy||!visible.length;
@@ -74,8 +77,12 @@ export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOpti
     if(!place)return;
     $('placeCard').hidden=false;$('placeName').textContent=place.site.name;
     $('placeOverview').textContent=`${place.state.status} · ${number(place.state.population)} people · ${place.age} years old`;
-    $('placeFacts').textContent=`Founded in year ${place.site.founded*history.yearsPerGeneration} · ${place.group?.name||'Unaffiliated'} · ${number(place.state.farmAreaKm2)} km² cultivated${place.traces.length?` · ${place.traces.length} old route${place.traces.length===1?'':'s'}`:''}`;
+    $('placeFacts').textContent=`Founded in year ${place.site.founded*history.yearsPerGeneration} · ${place.group?.name||'Unaffiliated'} · ${modern?`${number(place.state.urbanAreaKm2)} km² urban · ${number(place.state.densityPerKm2)} people/km²`:`${number(place.state.farmAreaKm2)} km² cultivated`}${place.traces.length?` · ${place.traces.length} old route${place.traces.length===1?'':'s'}`:''}`;
     $('placeReason').textContent=place.site.reason||'';
+    $('placeNameOrigin').textContent=place.site.nameOrigin||'';
+    const origin=history,siteId=selectedSite;
+    $('openCity').disabled=busy||place.state.population<=0||place.state.status==='abandoned';
+    $('openCity').onclick=()=>{if(origin!==history||pending||!active||$('openCity').disabled)return;stop();onOpenCity?.(siteId);};
     $('placeEvents').replaceChildren(...place.events.slice().reverse().map(eventButton));
   }
   return {render,stop,openPlace(){ $('placeDetails').open=true; },

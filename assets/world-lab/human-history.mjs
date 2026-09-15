@@ -6,6 +6,7 @@
  * River freight is allowed only on navigable receiver edges. This version has no
  * open-water capability: coasts do not automatically unlock trans-oceanic travel.
  */
+import {createCommunityIdentity,namePlace} from './place-names.mjs';
 export const HUMAN_HISTORY_VERSION='human-history-v1';
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const pause=()=>new Promise(resolve=>setTimeout(resolve,0));
@@ -39,13 +40,11 @@ function validate(world,options){
 // grassland, steppe, scrub, mountain forest, alpine tundra, snow/ice.
 const BIOME_WOODLAND=[0,0,.22,.9,.85,.5,.15,.05,.025,.75,0,0];
 const COLORS=['#d5a65b','#70a9b1','#b88bba','#a3b36b','#dc896a','#819bd2','#bbad89','#77b59c'];
-const PREFIX=['Ash','Alder','Willow','Stone','Reed','Oak','Fern','Hazel','Birch','Raven','Moss','Elm','Cedar','Flint','Amber','Pine'];
-const SUFFIX=['ford','mere','stead','brook','field','haven','bank','grove','hill','wick','vale','well'];
 
 export async function simulateHumanHistory(world,options={},progress=()=>{},cancelled=()=>false){
  const {N,seed,generations,yearsPerGeneration}=validate(world,options);
  if(cancelled())return null;
- const rng=random32(seed),mesh=world.mesh,sites=[],routes=[],groups=[],snapshots=[],states=[],routeStates=[],searches=[],generationTrade=[],nameCounts=new Map(),blockedUntil=[],abandonedAt=[],siteAt=new Int32Array(N).fill(-1);
+ const rng=random32(seed),mesh=world.mesh,sites=[],routes=[],groups=[],snapshots=[],states=[],routeStates=[],searches=[],generationTrade=[],usedNames=new Set(),blockedUntil=[],abandonedAt=[],siteAt=new Int32Array(N).fill(-1);
  const dry=i=>!world.ocean[i]&&!world.lake[i];
  const viable=i=>dry(i)&&world.productivity[i]>=.075&&world.slope[i]<.085;
  const riverEdge=(a,b)=>(world.receiver[a]===b&&world.navigableRiver[a])||(world.receiver[b]===a&&world.navigableRiver[b]);
@@ -62,16 +61,16 @@ export async function simulateHumanHistory(world,options={},progress=()=>{},canc
  function event(g,type,ids,text,extra={}){events.push({id:eventId++,generation:g,year:g*yearsPerGeneration,type,siteIds:ids,routeId:null,text,...extra});}
  function found(node,groupId,g,population){
   const id=sites.length,reason=world.navigableRiver[node]?'A navigable river reach offered food and transport.':world.productivity[node]>.4?'Productive, accessible countryside supported the founding households.':'Households settled workable land within reach of their neighbors.';
-  const stem=PREFIX[(Math.floor(rng()*PREFIX.length)+id)%PREFIX.length]+SUFFIX[Math.floor(rng()*SUFFIX.length)],nameCount=(nameCounts.get(stem)||0)+1;
-  nameCounts.set(stem,nameCount);const name=stem+(nameCount>1?` ${nameCount}`:'');
-  sites.push({id,nodeId:node,name,groupId,founded:g,reason});siteAt[node]=id;searches.push(search(node));states.push({siteId:id,population,peakPopulation:population,status:'village',groupId,farmAreaKm2:0,foodRatio:1});
+  // Preserve the existing demographic random stream when replacing names.
+  rng();rng();const named=namePlace(world,{nodeId:node,id,seed,group:groups[groupId],usedNames}),{name}=named;usedNames.add(name);
+  sites.push({id,nodeId:node,...named,groupId,founded:g,reason});siteAt[node]=id;searches.push(search(node));states.push({siteId:id,population,peakPopulation:population,status:'village',groupId,farmAreaKm2:0,foodRatio:1});
   event(g,'founding',[id],`${name} was founded. ${reason}`);return id;
  }
  const candidates=[];for(let i=0;i<N;i++)if(viable(i))candidates.push({node:i,key:-Math.log(Math.max(1e-9,rng()))/(.15+world.productivity[i])});
  candidates.sort((a,b)=>a.key-b.key||a.node-b.node);
  const origins=Math.min(8,Math.max(1,Math.round(Math.sqrt(candidates.length)/32))),anchors=[];
  for(const c of candidates){if(groups.length>=origins)break;if(anchors.some(a=>Math.hypot(mesh.x[c.node]-mesh.x[a],mesh.z[c.node]-mesh.z[a])<world.parentDomain.sizeKm/7))continue;
-  const groupId=groups.length;groups.push({id:groupId,name:`${PREFIX[Math.floor(rng()*PREFIX.length)]} kinship`,color:COLORS[groupId]});anchors.push(c.node);
+  const groupId=groups.length;rng();groups.push({...createCommunityIdentity(world,c.node,groupId,seed),founded:0,color:COLORS[groupId]});anchors.push(c.node);
   const initial=node=>Math.max(90,Math.round(mesh.nodeArea[node]*85*world.productivity[node]*.12));
   const origin=found(c.node,groupId,0,initial(c.node));
   const near=[...searches[origin].costs].filter(([node,d])=>d>spacing&&d<170&&viable(node)).map(([node,d])=>({node,key:hash(node,seed+groupId)*(.3+world.productivity[node])/(1+d/100)})).sort((a,b)=>b.key-a.key);
