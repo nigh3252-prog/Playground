@@ -1,0 +1,51 @@
+/* History controls stay compact until a place or generation is opened. */
+nav{grid-template-columns:repeat(5,1fr)}
+.dock{max-height:calc(100dvh - 170px);overflow:auto}
+.history-heading,.place-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.history-heading strong{font-size:18px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.history-heading span{font-size:10px;color:#aabfb2;margin-left:10px}
+#historyTimeline{padding:2px 5px 4px}
+.history-scrubber{display:flex;align-items:center;gap:7px}
+.history-scrubber button{min-width:40px;min-height:40px;padding:6px;font-size:18px}
+.history-scrubber input{flex:1;min-width:30px;height:32px}
+#historySummary{font-size:11px;color:#d0dfc7;margin:7px 0 10px;font-variant-numeric:tabular-nums}
+#historyPlace{font-size:12px;min-height:36px;padding:6px 9px}
+#generationEvents{margin:8px 0 0;padding-top:7px}
+#generationEvents summary{min-height:27px;color:#b6cdb6}
+.history-event-list{max-height:150px;overflow:auto;overscroll-behavior:contain}
+.history-event{display:grid;grid-template-columns:60px 1fr;gap:8px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #c7d9b51c;color:#dfe8d6;padding:10px 2px;font-size:11px;line-height:1.45;min-height:42px}
+.history-event span:first-child{color:#a4c9be;font-variant-numeric:tabular-nums}
+.history-event:hover{background:#c7d9b50c}
+#placeCard{padding:5px 8px 10px;margin-bottom:6px;border-bottom:1px solid #c7d9b539}
+.place-heading strong{font-size:16px}.place-heading span{display:block;font-size:11px;color:#bfcdb8;margin-top:4px;text-transform:capitalize}
+#placeDetails{margin-top:6px;padding-top:6px;border:0}
+#placeDetails summary{color:#d5e3c6}
+#placeDetails .note{margin:4px 0 9px}
+body[data-stage="5"] #stageDescription,body[data-stage="5"] #play,body[data-stage="5"] #terrainStats,body[data-stage="5"] #inputNote{display:none}
+body[data-stage="5"] .play-row{justify-content:center;padding:0 3px}
+body[data-stage="5"] .status{font-size:9px}
+body[data-stage="5"] .brand .eyebrow{display:none}
+body[data-stage="5"] .brand h1{font-size:16px;margin:0 0 3px}
+body[data-stage="5"] .layer-meta{top:88px}
+body[data-stage="5"] .bottom-left,body[data-stage="5"] .bottom-right{bottom:20px}
+body[data-stage="5"] .bottom-right{font-size:9px}
+@media(max-width:700px){
+  .dock{padding:6px;width:calc(100vw - 20px);border-radius:14px}
+  nav small{display:none}nav button{min-height:34px;font-size:10px}
+  .history-heading strong{font-size:16px}.history-heading span{font-size:9px;margin-left:7px}
+  body[data-stage="5"] .brand p{font-size:8px}
+  body[data-stage="5"] .brand h1{font-size:14px}
+  body[data-stage="5"] .layer-meta{top:76px;left:12px;right:12px;max-width:none;display:flex;flex-wrap:wrap;gap:5px}
+  body[data-stage="5"] .mini-actions{gap:5px}
+  body[data-stage="5"] .mini-actions button{min-height:32px;padding:5px 8px;font-size:10px}
+  body[data-stage="5"] #legend,body[data-stage="5"] #inspect{position:absolute;top:39px;max-height:calc(100dvh - 420px)}
+  body[data-stage="5"] .bottom-left,body[data-stage="5"] .bottom-right{display:none}
+  #menu{max-height:calc(100dvh - 95px)}
+  #historySummary{font-size:10px;margin:5px 0 8px}
+  .history-event-list{max-height:120px}
+  .history-scrubber button{min-width:38px}
+}
+@media(max-height:600px){
+  body[data-stage="5"] .dock{left:auto;right:10px;transform:none;width:min(370px,48vw);max-height:calc(100dvh - 75px)}
+  .history-event-list{max-height:90px}.history-heading span{display:none}
+}

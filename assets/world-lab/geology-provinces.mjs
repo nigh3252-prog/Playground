@@ -42,9 +42,26 @@ export function planGeology({seed,sizeKm,northAxis,eastAxis,baseAt,tectonics=nul
     }
   }
   function riftProvince(){
-    const boundary=riftBoundaries[riftIndex++%Math.max(1,riftBoundaries.length)],first=boundary?.points?.[0],last=boundary?.points?.at(-1),middle=boundary?.points?.[Math.floor(boundary.points.length/2)],angle=first&&last?Math.atan2(last.z-first.z,last.x-first.x):(r()-.5)*1.1+Math.PI/2,center=middle?{x:middle.x,z:middle.z}:{x:(.35+r()*.34)*sizeKm,z:(.35+r()*.32)*sizeKm};
-    add({type:2,label:'Meandering rift',...center,angle,lengthKm:(.30+r()*.18)*sizeKm,widthKm:(.018+r()*.017)*sizeKm,
-      depthM:320+r()*430,shoulderM:260+r()*440,wiggleKm:(.012+r()*.020)*sizeKm,wiggles:1.3+r()*1.7,phase:r()*Math.PI*2,sourceBoundaryId:boundary?.id??null});
+    // A fault owns one basin chain, even when the province lottery draws
+    // rifting repeatedly. Stacking chains would erase their intervening sills.
+    if(riftBoundaries.length&&riftIndex>=riftBoundaries.length)return;
+    const boundary=riftBoundaries[riftIndex++],first=boundary?.points?.[0],last=boundary?.points?.at(-1),middle=boundary?.points?.[Math.floor(boundary.points.length/2)],angle=first&&last?Math.atan2(last.z-first.z,last.x-first.x):(r()-.5)*1.1+Math.PI/2,center=middle?{x:middle.x,z:middle.z}:{x:(.35+r()*.34)*sizeKm,z:(.35+r()*.32)*sizeKm};
+    const f={type:2,label:'Segmented rift basins',...center,angle,lengthKm:(.30+r()*.18)*sizeKm,widthKm:(.018+r()*.017)*sizeKm,
+      depthM:320+r()*430,shoulderM:260+r()*440,wiggleKm:(.012+r()*.020)*sizeKm,wiggles:1.3+r()*1.7,phase:r()*Math.PI*2,sourceBoundaryId:boundary?.id??null};
+    f.points=boundary?.points?.map(p=>({...p}))||Array.from({length:13},(_,i)=>{
+      const t=i/12-.5,along=t*f.lengthKm,across=f.wiggleKm*Math.sin(t*Math.PI*2*f.wiggles+f.phase);
+      return{x:f.x+along*Math.cos(angle)-across*Math.sin(angle),z:f.z+along*Math.sin(angle)+across*Math.cos(angle)};
+    });
+    f.lengthKm=0;for(let i=1;i<f.points.length;i++)f.lengthKm+=Math.hypot(f.points[i].x-f.points[i-1].x,f.points[i].z-f.points[i-1].z);
+    const count=clamp(Math.round(f.lengthKm/380),3,8);f.basins=[];
+    for(let i=0;i<count;i++){
+      const t=.12+i/(count-1)*.76+(r()-.5)*.035,widthKm=f.widthKm*(.65+r()*.55);
+      f.basins.push({t,offsetKm:(r()-.5)*f.widthKm*.65,lengthKm:f.lengthKm/(count-1)*(.24+r()*.12),widthKm,depthM:f.depthM*(.85+r()*.5)});
+      // Offset, overlapping lobes make occasional side basins. The shallow
+      // stretches between depocenters remain sills instead of one long cut.
+      if(r()<.55)f.basins.push({t:t+(r()-.5)*.06,offsetKm:(r()<.5?-1:1)*widthKm*.95,lengthKm:f.lengthKm/(count-1)*.17,widthKm:widthKm*.85,depthM:f.depthM*(.60+r()*.25)});
+    }
+    add(f);
   }
   function volcanicProvince(){
     const wanted=1+Math.floor(r()*2),candidates=[];
@@ -74,14 +91,14 @@ export function planGeology({seed,sizeKm,northAxis,eastAxis,baseAt,tectonics=nul
 }
 
 function nearestPolyline(feature,x,z){
-  const p=feature.points;let best=Infinity,bestT=0,total=0,lengths=[];
+  const p=feature.points;let best=Infinity,bestT=0,bestSigned=0,total=0,lengths=[];
   for(let i=1;i<p.length;i++){const L=Math.hypot(p[i].x-p[i-1].x,p[i].z-p[i-1].z);lengths.push(L);total+=L;}
   let before=0;
   for(let i=1;i<p.length;i++){
     const a=p[i-1],b=p[i],dx=b.x-a.x,dz=b.z-a.z,L2=dx*dx+dz*dz,t=L2?clamp(((x-a.x)*dx+(z-a.z)*dz)/L2,0,1):0,px=a.x+t*dx,pz=a.z+t*dz,d=Math.hypot(x-px,z-pz);
-    if(d<best){best=d;bestT=(before+t*lengths[i-1])/Math.max(1e-9,total);}before+=lengths[i-1];
+    if(d<best){best=d;bestSigned=((-dz*(x-px)+dx*(z-pz))<0?-1:1)*d;bestT=(before+t*lengths[i-1])/Math.max(1e-9,total);}before+=lengths[i-1];
   }
-  return{distance:best,t:bestT};
+  return{distance:best,signed:bestSigned,t:bestT};
 }
 function corridor(feature,x,z){
   const dx=x-feature.x,dz=z-feature.z,c=Math.cos(feature.angle),s=Math.sin(feature.angle),along=dx*c+dz*s,across=-dx*s+dz*c,t=along/(feature.lengthKm/2);
@@ -100,9 +117,15 @@ export function applyGeology(plan,x,z,baseHeight){
       const overdeep=f.overdeepM*Math.exp(-(((q.t-.68)/.15)**2)),carve=(120+210*q.t+overdeep)*influence,sill=f.sillM*Math.exp(-(((q.t-.91)/.055)**2))*Math.exp(-((d/.85)**4));
       land+=-carve+sill;
     }else if(f.type===2){
-      const q=corridor(f,x,z),d=Math.abs(q.dist);influence=Math.exp(-(d**3.3))*q.envelope;
-      land-=f.depthM*Math.exp(-((d/.78)**3.5))*q.envelope;
-      land+=f.shoulderM*Math.exp(-(((d-1.45)/.34)**2))*q.envelope;
+      const q=nearestPolyline(f,x,z),envelope=ease(q.t/.08)*ease((1-q.t)/.08),d=q.distance/f.widthKm;
+      let carve=0;
+      for(const basin of f.basins){
+        const along=(q.t-basin.t)*f.lengthKm/basin.lengthKm,across=(q.signed-basin.offsetKm)/basin.widthKm;
+        carve=Math.max(carve,basin.depthM*Math.exp(-(along**2)-(across**4)));
+      }
+      influence=Math.max(Math.exp(-(d**3.3))*.35,carve/f.depthM)*envelope;
+      land-=carve*envelope;
+      land+=f.shoulderM*Math.exp(-(((d-1.45)/.48)**2))*envelope*(.55+.25*noise(q.t*6,0,f.salt));
     }else if(f.type===3){
       const dx=x-f.x,dz=z-f.z,c=Math.cos(f.angle),s=Math.sin(f.angle),a=(dx*c+dz*s)/f.radiusKm,b=(-dx*s+dz*c)/(f.radiusKm*f.axis),theta=Math.atan2(b,a);
       let rr=Math.hypot(a,b);rr*=1+.10*noise(x/f.radiusKm,z/f.radiusKm,f.salt)+.045*Math.sin(theta*5+f.offsetAngle);

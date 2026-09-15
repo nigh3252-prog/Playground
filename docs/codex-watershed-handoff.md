@@ -4,15 +4,17 @@
 
 Repository: `nigh3252-prog/Playground`
 
-Current branch: `regional-world-lab`
+Current branch: `codex/parent-settlement-history` (branched directly from PR #26)
 
-Current PR: **#21 — Watershed r6: parent worlds + frozen benchmark calibration**
+Current PR: **#29 — Parent history, modern populations, and city neighborhoods**
 
-PR URL: https://github.com/nigh3252-prog/Playground/pull/21
+PR URL: https://github.com/nigh3252-prog/Playground/pull/29
 
 This work is intentionally separate from City Lab / PR #20. Do not collapse or replace PR #20.
 
-The immediate goal is **not** to build settlements yet. The goal is to make the large-scale geography believable enough that later settlements, roads, districts, and Warden gameplay spaces inherit plausible causes instead of feeling random.
+Latest approved update: the map now starts at the full parent and explicitly loads **Window → Metro → Streets** for the visible area without moving the camera. Metro plans contain districts and principal roads; Streets refines those same plans. Land-road access is separate from river transport, growth follows inherited corridors, early lanes retain dated geometry, and ordinary planned districts share cardinal survey axes. See [area-detail behavior, evidence, and limits](review/2026-09-15-area-detail/README.md). This replaces the earlier automatic nearby-city refinement workflow described in the connected-city review. PR #29 remains open; do not merge without a request.
+
+Ryan approved parent-level inhabitants and generations of history on September 14. The first version adds settlement growth, migration, finite food sharing, route disputes, abandonment/reoccupation, cultivation and woodland recovery. He then approved improving overly straight parent coastlines and lakes after a comparison with real 1,200 km maps. The September 15 update corrects infinite fault deformation, adds drowned coastal relief, and separates rifts into basins. Ryan then requested modern population density, contextual names, and a view into cities and neighborhoods. That is now implemented as a modern extension of history and an on-demand city map; local playable mech terrain remains future work. The independent real-data benchmark pipeline is unchanged.
 
 ---
 
@@ -44,22 +46,66 @@ Key files include:
 - `assets/world-lab/world-core.mjs`
 - `assets/world-lab/world-mesh.mjs`
 - `assets/world-lab/geology-provinces.mjs`
+- `assets/world-lab/regional-landforms.mjs`
 - `assets/world-lab/world-pipeline.mjs`
 - `assets/world-lab/world-app-v6.mjs`
 - `assets/world-lab/world-worker-v6.mjs`
 
-### 2. Current four-stage pipeline
+The September 15 geography update changes the generated elevations for existing seeds:
+
+- `tectonic-history.mjs` measures distance to finite fault polylines. Local normals determine polarity, with a continuous cross-track coordinate and separate decay beyond each endpoint. Previously, projection onto the plate-center direction extended troughs/mountains beyond fault endpoints and broadened them at bends. Endpoint continuity has explicit rift and subduction regressions.
+- `regional-landforms.mjs` anchors coastal provinces to the actual parent terrain triangles. Submerged shelf and adjacent land receive bedrock ribs and connected valley branches before erosion. Sea level then determines exposed headlands/islands and flooded inlets. Gentler coastal lowlands use lower relief. The process has no child-window input.
+- `geology-provinces.mjs` follows the source rift polyline with offset, variable-depth basins, side lobes, and intervening higher ground. A source fault receives one basin chain, even if rifting is drawn repeatedly. Inland glacial and volcanic basins retain their drainage protection.
+- Parent mesh resolution and the four-stage geography pipeline are unchanged. Water, ecology, potential and human history use the modified physical terrain. The province plan remains on `world.geology.regionalLandforms` with model identifier `regional-drowned-relief-v1`.
+
+These are bounded procedural landform approximations, not simulated ice sheets, sea-level history, sediment transport, or a reconstruction of Earth's geography. At the default 4,800 km / 257² parent, nominal spacing is 18.75 km; tiny islands and channels remain below the model's resolution. Long simple shores can still occur.
+
+Review evidence: [same-scale parent and window comparisons](review/2026-09-15-regional-landforms/README.md). Fixed seeds 431970387, 1, 42, and 0 show removed radial streaks, new islands and branching embayments, and retained gentler stretches. The first default window becomes simpler when the false faults disappear; the update does not force every window to contain an archipelago.
+
+### 2. Current stages
 
 1. **Terrain / geology**
 2. **Water**
 3. **Ecology**
 4. **Human geography / potential**
+5. **Inhabitants** (generated parents only)
 
-There are still **no generated settlements**.
+The original geography pipeline still returns four stages. The worker caches its Stage 4 result, then runs `simulateWorldHistory()` separately. The wrapper runs `simulateHumanHistory()` first and optionally appends a modern era. Human history never changes the geographic input.
 
 Stage 4 currently estimates things such as food productivity, overland friction, water / river transport access, reachable agricultural surplus, navigable reaches, and strategic opportunity points such as confluences, mouths, heads of navigation, passes, ferries / fords, and practical shore locations.
 
 The important conceptual rule is that these are **opportunity signals, not towns**.
+
+### 3. Parent history controls and model
+
+- `regional-world.html` opens a generated parent at Inhabitants by default, with 12 early generations followed by 12 modern-transition generations of 25 years (Year 600). Use the slider, previous/next, or play to inspect a date. Date selection only repaints stored snapshots.
+- Settlement marker size follows population; abandoned sites are hollow. Land use follows reachable countryside on the physical graph. Routes follow traversable graph edges; disused routes are dashed. Community influence is optional and is not a national border.
+- Tap a settlement or use Explore a place for a collapsible history card. Event buttons jump to the recorded date and place. If a generation event is outside the current window, selecting it reveals the parent.
+- History options contains a separate seed, modern/early era selection, 4/8/12/20 early generations, layer toggles, New history, and Apply settings. History regeneration reuses solved terrain. `historySeed`, `historyGenerations` (early count), `era`, `generation` (viewed snapshot), and optional `city` (site ID) are saved in the URL; `mode=history` still means geological families.
+- Export includes the complete parent graph, all human-history frames and events, model version, history seed, and viewed generation/window. Export waits for a completed history.
+- `human-history.mjs` owns early simulation; `modern-history.mjs` adds modern populations, rural residents, city footprints and regional connections; `place-names.mjs` supplies names with geography/community origins; `history-presentation.mjs` owns date filtering and map overlays; `history-controls.mjs` owns timeline/card state. Tests cover deterministic replay, immutable geography, migration/population/food accounting, finite land cover, reachable routes, abandonment/reuse, no future leaks, and stale reroll controls.
+
+Early history is an exploratory game model: aggregate populations, five-year internal updates, at most 240 early sites, no individual biographies or calibrated historical forecasts. Routes support land travel and navigable river links. Sea travel is not implemented. Woodland recovery approaches the original biome's capacity; farms and woodland cannot occupy more than the available cell area. Trade events report accounted transfers, not forecast route capacity. The model does not schedule a mandatory collapse.
+
+A normal 66,049-node parent history runs in roughly 0.2 seconds in the Node runtime (browser hardware varies). After the geography update, all 159 Node tests pass and the offline deployment build passes. Six complete terrain → water → ecology → potential → history runs cover the four comparison seeds plus 103,041-node dry/high-relief/east-wind and 37,249-node wet/low-relief cases. They preserve finite fields, acyclic flow, catchment accounting, immutable geography, and dry settlement/route nodes. Complete runs took about 0.75–2.95 seconds in this Node runtime.
+
+The initial history Vercel preview was exercised for playback, earlier dates, place selection, seed changes and window continuity; the cloud browser used the 2D fallback. Mobile CSS is included, but this browser exposes no phone viewport or WebGL context, so phone rendering and 3D still need a device check.
+
+
+### 4. Modern population and neighborhood-scale cities
+
+- The modern endpoint targets 65 people per habitability-weighted dry km² and approximately 72% urban residents. These are explicit game-model parameters, not a fitted demographic forecast. Up to 1,000 representative centers form a population hierarchy; rural residents occupy the suitable countryside separately. Water and uninhabitable terrain receive no extra rural allocation.
+- The original agrarian food/population ledger remains intact. Modern accounting explicitly reports modeled population change instead of pretending the old food ledger explains industrial growth. `frame.summary.population = urbanPopulation + ruralPopulation`; modern site budgets sum to urban residents, and the nodal `population` array sums to the total. `populationDensity` and physical `urbanFraction` fields drive the parent view. Modern eras progress through `industrial`, `urbanizing`, and `modern`.
+- Default geography (seed 431970387, Standard) reaches 357,013,380 residents across 10,293,051 dry km², including 256,983,983 urban residents and 1,000 centers. The largest city has 8,857,139 residents. These are generated model outcomes, not real-world observations.
+- Names use local terrain/water or a generated founding household/civic form. Each place carries `nameOrigin`; collision alternatives avoid repeated numeric fantasy-place suffixes. Community influence remains a connection layer, not country borders or a complete political history.
+- **Cities** lists dated inhabited places across the whole parent, sorted by population with search. **Open city & neighborhoods** also appears on each place card. Back returns to the regional view. Opening a city pauses history; a date/world/history change invalidates the city and queued work.
+- `generateCity(world, history, frame, siteId)` in `city-model.mjs` interpolates the actual parent triangles and water fields. Connected buildable blocks grow around the founding location; inherited active routes orient the street plan. Neighborhood populations sum exactly to the selected site's population. Parks have no residents; center, housing, mixed-use and industrial districts have distinct densities.
+- A large metro has up to 96 neighborhoods and at most 24,000 generated blocks, with local street subdivisions. Smaller towns use fewer districts and smaller footprints. Limited island/coastal land is reported as a constrained footprint with correspondingly higher density, rather than drawing buildings across water.
+- `city-view.mjs` draws a Canvas 2D map on demand with drag, pinch/wheel, zoom buttons, district selection, scale, and DPR cap. `city-controls.mjs` owns search, focus/inert background, keyboard selection, lifecycle, and a four-city cache for the current frame. City export includes dated geometry/population and its model note.
+- Fine streets/building fabric are procedural urban content. City terrain and shorelines are interpolated from the coarse parent; zooming does not recover real subgrid terrain, bridges, or playable collision geometry. Sea transport, building-level population, full political simulation, and local Warden terrain remain future work.
+
+The modern population, naming, city conservation, water avoidance, input gestures, dated controls, and module graph have automated checks. Verification for this update is recorded in `docs/review/2026-09-15-modern-cities/README.md`.
+
 
 ---
 
