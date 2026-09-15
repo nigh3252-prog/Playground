@@ -4,6 +4,7 @@ import {createHistoryControls} from './history-controls.mjs';
 import {createCityControls} from './city-controls.mjs';
 import {generateCity} from './city-model.mjs';
 import {createCityView} from './city-view.mjs';
+import {regionalCityContext} from './city-context.mjs';
 import {historyNodeColor,drawHumanHistory,nearestHistorySite,describeHistoryPlace} from './history-presentation.mjs';
 import {AtlasView} from './atlas-view.mjs';
 import {meshNormals} from './world-view.mjs';
@@ -18,9 +19,10 @@ import {BOUNDARY_COLORS,tectonicColor,tectonicFacts} from './tectonic-debug.mjs'
 const $=id=>document.getElementById(id),fmt=(n,d=0)=>n===null||n===undefined||!Number.isFinite(Number(n))?'N/A':Number(n).toLocaleString('en-US',{maximumFractionDigits:d}),pct=v=>v===null||v===undefined?'N/A':fmt(v*100,1)+'%',params=new URLSearchParams(location.search);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let world=null,snapshots=[],generation=0,worker=null,suiteWorker=null,selected=-1,stage=clamp(Number(params.get('stage'))||(params.get('source')&&params.get('source')!=='generated'?4:5),1,5),mode=params.get('mode')||'natural',box=null,cropIndex=Number(params.get('crop'))||0,parentView=params.has('parent')?params.get('parent')==='1':stage===5,playing=false,timer=0,lastExag=18,reports=[],selectedReport=null;
+let localMapColors=null;
 let humanHistory=null,viewedGeneration=12,selectedSite=-1,historyBusy=false,pendingCity=params.has('city')?Number(params.get('city')):null;
 const historyControls=createHistoryControls({onDate:setHistoryDate,onSelect:selectHistoryPlace,onGenerate:regenerateHistory,onPaint:paint,onOpenCity:id=>{historyControls.stop();cityControls.open(id);},onOptions:()=>{$('menu').hidden=false;$('menu').scrollTop=0;$('menuToggle').setAttribute('aria-expanded','true');}});
-const cityControls=createCityControls({buildCity:generateCity,createView:createCityView,onEnter:()=>historyControls.stop(),onOpen:id=>{selectHistoryPlace(id,true);updateURL({city:id});},onClose:()=>updateURL({city:null}),onError:error=>toast(error.message)});
+const cityControls=createCityControls({buildCity:generateCity,createView:createCityView,buildContext:(w,h,f)=>regionalCityContext(w,h,f,localMapColors),getViewport:()=>view.getMapViewport(),onEnter:()=>historyControls.stop(),onOpen:id=>{selectHistoryPlace(id,true);updateURL({city:id});},onClose:()=>updateURL({city:null}),onError:error=>toast(error.message)});
 const view=new AtlasView($('world'),{onPick:inspect,onChange:({yaw})=>{$('compass').style.transform=`rotate(${-yaw}rad)`;}});
 if(stage===5){view.map=true;$('mapView').textContent='3D';}
 if(!view.gl){$('mapView').textContent='2D';$('mapView').disabled=true;}
@@ -66,7 +68,7 @@ function accept(data,token){if(token!==generation)return;if(data.error)return fa
  if(data.stage===stage)showStage(stage);
  if(data.stage===4){$('export').disabled=!!data.world.parentDomain;document.body.dataset.computeMs=String(Math.round(data.elapsed));const b=data.world.benchmark;if(b?.status==='scored'){addReport(portableReport(b));selectedReport=portableReport(b);renderBenchmarks();}}
 }
-async function generate(){stop();historyControls.stop();const opts=settings(),token=++generation;if(token>1){pendingCity=null;updateURL({city:null});}if(opts.source!=='generated'&&stage===5)stage=4;worker?.terminate();worker=null;world=null;snapshots=[];humanHistory=null;selectedSite=-1;historyBusy=opts.source==='generated';selected=-1;renderHistory();document.body.dataset.stage=String(stage);$('inspect').hidden=true;$('export').disabled=true;document.body.dataset.ready='false';
+async function generate(){stop();historyControls.stop();const opts=settings(),token=++generation;if(token>1){pendingCity=null;updateURL({city:null});}if(opts.source!=='generated'&&stage===5)stage=4;worker?.terminate();worker=null;world=null;localMapColors=null;snapshots=[];humanHistory=null;selectedSite=-1;historyBusy=opts.source==='generated';selected=-1;renderHistory();document.body.dataset.stage=String(stage);$('inspect').hidden=true;$('export').disabled=true;document.body.dataset.ready='false';
  busy(opts.source==='generated'?'Building the parent landmass before choosing a window…':'Loading raw elevation and independent benchmark sources…');$('status').textContent='Terrain → Water → Ecology → Potential → Inhabitants';syncControls();updateURL({...opts,stage,mode,crop:cropIndex,parent:parentView?1:0,exag:view.exag,historySeed:historyOptions().seed,historyGenerations:historyOptions().generations,era:historyOptions().era,generation:viewedGeneration});
  let fallbackStarted=false;const fallback=async()=>{if(fallbackStarted||token!==generation)return;fallbackStarted=true;worker?.terminate();worker=null;try{const solved=await generateStagesV6(opts,m=>accept(m,token),()=>token!==generation);if(solved?.parentDomain&&token===generation)await fallbackHistory(historyOptions(),token);}catch(e){if(token===generation)fail(e);}};
  try{worker=new Worker(new URL('./world-worker-v6.mjs',import.meta.url),{type:'module'});worker.onmessage=({data})=>accept(data,data.requestId);worker.onerror=e=>{e.preventDefault();fallback();};worker.postMessage({...opts,requestId:token,historyOptions:historyOptions()});}catch{fallback();}
@@ -87,7 +89,7 @@ function showStage(value){
  if(!snapshots[stage]){busy('Preparing this generation stage…');return;}
  const previous=world;world=snapshots[stage];$('notice').hidden=true;
  applyWindow(!previous||previous.config.source!==world.config.source||previous.config.sizeKm!==world.config.sizeKm);
- if(stage===5){$('status').textContent=historyBusy?'Generating parent history…':'Choose Cities to explore neighborhoods · 25 years per generation';if(historyBusy)busy('Tracing generations of life on the parent…');}
+ if(stage===5){$('status').textContent=historyBusy?'Generating parent history…':'Explore map to zoom from the region into streets · 25 years per generation';if(historyBusy)busy('Tracing generations of life on the parent…');}
  else $('status').textContent=stage===4?world.benchmark?.status==='scored'?`Benchmark ready · ${world.benchmark.role}`:world.benchmark?.status==='unavailable'?'Map ready; benchmark observations unavailable':`${world.strategicNodes.length} transport opportunities · parent solution`:stage===1?world.parentDomain?'Parent landmass → view window':'Raw measured elevation':`${world.lakeBodies?.length||0} retained / mapped lakes`;
  document.body.dataset.ready=String(!(stage===5&&historyBusy));document.body.dataset.source=world.config.source||'generated';
 }
@@ -95,7 +97,7 @@ const rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.sli
 function ramp(v,colors){const t=clamp(v,0,1)*(colors.length-1),i=Math.min(colors.length-2,Math.floor(t));return blend(colors[i],colors[i+1],t-i);}
 const potentialColors=[[48,64,63],[89,108,76],[148,151,79],[214,184,87],[244,213,135]],terrainColors=[[123,149,113],[157,165,124],[160,150,123],[143,145,135],[220,223,211]];
 function actualMode(){if(['agreement','observed','population'].includes(mode)&&(!world.benchmark||world.benchmark.status!=='scored'))return'natural';if(['potential','productivity','travel','transport'].includes(mode)&&stage<4)return'natural';if(mode==='water'&&stage<2||mode==='rainfall'&&stage<3)return'natural';return mode;}
-function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=actualMode(),historyOverlays=historyControls.overlays(),colors=new Uint8ClampedArray(N*4),normal=!view.gl?meshNormals(w.mesh,Float32Array.from(view.modelHeights,h=>h/1000*view.exag)):null;
+function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=actualMode(),historyOverlays=historyControls.overlays(),colors=new Uint8ClampedArray(N*4),normal=!view.gl?meshNormals(w.mesh,Float32Array.from(view.modelHeights,h=>h/1000*view.exag)):null,localColors=stage===5?new Uint8ClampedArray(N*4):null,localNormals=stage===5&&view.gl?meshNormals(w.mesh,Float32Array.from(view.modelHeights,h=>h/1000*view.exag)):normal;
  for(let i=0;i<N;i++){let c,alpha=255;
   if(kind==='tectonics')c=tectonicColor(w,i);
   else if(w.ocean[i]){c=[34,73,91];alpha=100;}else if(stage>=2&&w.lake[i]){c=biomes[1];alpha=110;}
@@ -109,7 +111,13 @@ function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=act
   else if(stage>=3&&kind==='natural')c=biomes[w.biome[i]];else c=ramp(w.height[i]/5000,terrainColors);
   if(stage===5&&kind==='natural'&&historyFrame())c=historyNodeColor(c,w,humanHistory,historyFrame(),i,historyOverlays);
   let shade=1;if(alpha===255&&normal){const j=i*3;shade=.69+.38*clamp((-.6*normal[j]+normal[j+1]-.35*normal[j+2])/Math.hypot(.6,1,.35),0,1);}colors.set([c[0]*shade,c[1]*shade,c[2]*shade,alpha],i*4);
+  if(localColors){
+   const wet=w.ocean[i]||w.lake[i],base=w.ocean[i]?[34,73,91]:biomes[w.lake[i]?1:w.biome[i]],natural=historyFrame()?historyNodeColor(base,w,humanHistory,historyFrame(),i,historyOverlays):base,j=i*3;
+   const localShade=wet?(view.gl ? .94 : 1):localNormals? .69+.38*clamp((-.6*localNormals[j]+localNormals[j+1]-.35*localNormals[j+2])/Math.hypot(.6,1,.35),0,1):1;
+   localColors.set([natural[0]*localShade,natural[1]*localShade,natural[2]*localShade,wet&&!view.gl?(w.ocean[i]?100:110):255],i*4);
+  }
  }
+ if(localColors)localMapColors=localColors;
  const canvas=document.createElement('canvas');canvas.width=canvas.height=2048;const ctx=canvas.getContext('2d'),base=document.createElement('canvas');base.width=base.height=1024;base.getContext('2d').putImageData(new ImageData(rasterizeWindow(w.mesh,colors,1024,box),1024,1024),0,0);ctx.drawImage(base,0,0,2048,2048);
  const scale=2048/box.size,xy=(x,z)=>[(x-box.x)*scale,(z-box.z)*scale],node=i=>xy(w.mesh.x[i],w.mesh.z[i]);ctx.lineCap='round';ctx.lineJoin='round';
  const line=points=>{ctx.beginPath();points.forEach(([x,z],i)=>i?ctx.lineTo(x,z):ctx.moveTo(x,z));ctx.stroke();};
@@ -135,7 +143,7 @@ function paint(){if(!world||!box)return;const w=world,N=w.height.length,kind=act
  view.setTexture(canvas);renderLegend(kind);
 }
 function renderLegend(kind){
- if(stage===5&&kind==='natural'){$('legend').innerHTML='<h2>Cities and countryside</h2><div class="swatch-row"><span>● Place · size follows population</span></div><div class="swatch-row"><span>○ Abandoned place</span></div><div class="swatch-row"><i style="background:#d2b873"></i><span>Cultivated countryside</span></div><div class="swatch-row"><i style="background:#c1a88f"></i><span>Urban concentration</span></div><div class="swatch-row"><span>— Active trade · thicker means more use</span></div><div class="swatch-row"><span>┄ Old route</span></div><p class="note">Tap a place to follow its past, or choose Cities to explore neighborhoods. Routes and land use follow the parent terrain. Community influence is an optional layer.</p>';return;}
+ if(stage===5&&kind==='natural'){$('legend').innerHTML='<h2>Cities and countryside</h2><div class="swatch-row"><span>● Place · size follows population</span></div><div class="swatch-row"><span>○ Abandoned place</span></div><div class="swatch-row"><i style="background:#d2b873"></i><span>Cultivated countryside</span></div><div class="swatch-row"><i style="background:#c1a88f"></i><span>Urban concentration</span></div><div class="swatch-row"><span>— Active trade · thicker means more use</span></div><div class="swatch-row"><span>┄ Old route</span></div><p class="note">Explore map to zoom into streets and neighboring towns. Tap a place to follow its past. Routes and land use follow the parent terrain. Community influence is an optional layer.</p>';return;}
 let rows=[],title='';if(kind==='agreement'){title='Predicted versus mapped water';rows=[['Correct predicted water','#65beb3'],['Model-only water','#e89e52'],['Missed mapped water','#b488d2'],['Dry agreement','#7b8568'],['Excluded / unknown','#324148']];}
  else if(kind==='observed'){title='Held-out natural-lake water';rows=[['Mapped water','#53a0bc'],['Evaluated dry land','#929977'],['Excluded / unknown','#324148']];}
  else if(kind==='water'){title='Modeled basin states';rows=WATER_STATES;}

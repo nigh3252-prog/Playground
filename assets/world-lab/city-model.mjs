@@ -2,6 +2,7 @@
  * generated; the ground and water come from the parent's actual triangles.
  * This does not claim to recover terrain below the parent mesh resolution. */
 import {indexMesh,locateTriangle} from './world-mesh.mjs';
+import {generateUrbanStructure} from './city-structure.mjs';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const indexes=new WeakMap();
@@ -80,7 +81,7 @@ function validate(world,history,frame,siteId){
 
 function inheritedOrientation(world,history,frame,site,seed){
  const {mesh}=world,active=new Set((frame.routeStates||[]).filter(r=>r.active).map(r=>r.routeId));
- const routes=(history.routes||[]).filter(r=>r.founded<=frame.generation&&(r.a===site.id||r.b===site.id)&&active.has(r.id));
+ const routes=(history.routes||[]).filter(r=>r.kind==='land'&&r.founded<=frame.generation&&(r.a===site.id||r.b===site.id)&&active.has(r.id));
  for(const route of routes){const ids=route.a===site.id?route.nodes:[...route.nodes].reverse(),next=ids.find(id=>id!==site.nodeId&&id>=0&&id<mesh.x.length);if(next!==undefined)return{angle:Math.atan2(mesh.z[next]-mesh.z[site.nodeId],mesh.x[next]-mesh.x[site.nodeId]),source:'inherited route',ids:routes.map(r=>r.id)};}
  const r=world.receiver?.[site.nodeId];if(r>=0&&world.slope?.[site.nodeId]>.035)return{angle:Math.atan2(mesh.z[r]-mesh.z[site.nodeId],mesh.x[r]-mesh.x[site.nodeId])+Math.PI/2,source:'terrain',ids:[]};
  return{angle:(hash(site.id+17,seed)-.5)*Math.PI,source:'local street plan',ids:[]};
@@ -97,7 +98,7 @@ function makeGrid(world,index,origin,length,n,angle,seed,blocked){
   const a=row*(n+1)+col,ids=[a,a+1,a+n+2,a+n+1],polygon=ids.map(i=>vertices[i]),center={x:polygon.reduce((s,p)=>s+p.x,0)/4,z:polygon.reduce((s,p)=>s+p.z,0)/4},middle=at(center.x,center.z),samples=[middle,...ids.map(i=>sample[i])];
   const valid=samples.every(p=>p&&p.slope<MAX_SLOPE&&p.ocean<.5&&p.lake<.5),buildable=valid&&!blocked(polygon);
   cells.push({id:row*n+col,row,col,polygon,center,buildable,height:middle?.height||0,slope:middle?.slope||0,areaKm2:polygonArea(polygon),cost:Infinity,districtId:-1,developed:false});
- }return{cells,vertices,n,step};
+ }return{cells,vertices,n,step,origin,angle};
 }
 function neighbors(grid,id){const {n}=grid,row=Math.floor(id/n),col=id%n,out=[];if(col>0)out.push(id-1);if(col<n-1)out.push(id+1);if(row>0)out.push(id-n);if(row<n-1)out.push(id+n);return out;}
 function growCity(grid,origin,target,seed){
@@ -161,22 +162,6 @@ function assignDistricts(grid,growth,population,era,seed,origin){
  return{districts,blocks};
 }
 
-function makeRoads(grid,start,population){
- const {n,cells,vertices,step}=grid,roads=[],center=cells[start],widthScale=clamp(step/.13,.3,1.9),has=(row,col)=>row>=0&&col>=0&&row<n&&col<n&&cells[row*n+col].developed&&grid.districtKinds[cells[row*n+col].districtId]!=='park';
- for(const vertical of[false,true])for(let lane=0;lane<=n;lane++){
-  const central=vertical?center.col:center.row,delta=lane-central,kind=delta===0||delta===1||delta%12===0?'arterial':delta%4===0?'collector':'local';let points=[];
-  const finish=()=>{if(points.length>1)roads.push({id:roads.length,kind,name:kind==='arterial'?(population>50000?'Main avenue':'Main street'):kind==='collector'?'Neighborhood road':'Local street',widthKm:(kind==='arterial'?.026:kind==='collector'?.016:.009)*widthScale,points});points=[];};
-  for(let pos=0;pos<n;pos++){
-   const present=vertical?(has(pos,lane-1)||has(pos,lane)):(has(lane-1,pos)||has(lane,pos));
-   if(!present){finish();continue;}
-   const a=vertical?pos*(n+1)+lane:lane*(n+1)+pos,b=vertical?a+n+1:a+1;
-   if(!points.length)points.push(vertices[a]);points.push(vertices[b]);
-  }finish();
- }
- if(grid.divisions>1)for(const c of cells)if(c.developed&&grid.districtKinds[c.districtId]!=='park'){for(let k=1;k<grid.divisions;k++)for(const vertical of[false,true]){const t=k/grid.divisions,points=vertical?[bilerp(c.polygon,t,0),bilerp(c.polygon,t,1)]:[bilerp(c.polygon,0,t),bilerp(c.polygon,1,t)];roads.push({id:roads.length,kind:'local',name:'Local street',widthKm:clamp(step/grid.divisions*.075,.005,.012),points});}}
- return roads;
-}
-
 export function generateCity(world,history,frame,siteId){
  const {site,state,size}=validate(world,history,frame,siteId),population=state.population,seed=((world.config?.seed||0)^(history.seed||0)^Math.imul(siteId+1,2891336453))>>>0;
  let index=indexes.get(world.mesh);if(!index){index=indexMesh({...world.mesh,sizeKm:size,n:world.mesh.n||Math.round(Math.sqrt(world.mesh.x.length))});indexes.set(world.mesh,index);}
@@ -186,10 +171,11 @@ export function generateCity(world,history,frame,siteId){
  const length=Math.min(size*1.5,Math.max(.35,Math.sqrt(targetAreaKm2)*2.65)),grain=population<1500?.035:population<50000?.065:.13,n=Math.min(MAX_GRID,Math.max(33,Math.round(length/grain)))|1;
  const initialSize=Math.min(size,length*1.5),initialBounds={x:clamp(origin.x-initialSize/2,0,size-initialSize),z:clamp(origin.z-initialSize/2,0,size-initialSize),size:initialSize};
  const terrain=parentTerrain(world,initialBounds),blocked=polygonIndex([...terrain.water,...terrain.steep],initialBounds),orientation=inheritedOrientation(world,history,frame,site,seed);
- const grid=makeGrid(world,index,origin,length,n,orientation.angle,seed,blocked),growth=growCity(grid,origin,targetAreaKm2,seed),{districts,blocks}=assignDistricts(grid,growth,population,era,seed,origin),roads=makeRoads(grid,growth.start,population);
+ const grid=makeGrid(world,index,origin,length,n,orientation.angle,seed,blocked),growth=growCity(grid,origin,targetAreaKm2,seed),{districts,blocks}=assignDistricts(grid,growth,population,era,seed,origin);
  const developed=boxOf(blocks.flatMap(b=>b.polygon)),span=Math.max(developed.right-developed.x,developed.bottom-developed.z),extent=Math.min(size,Math.max(.3,span*1.32)),bounds={x:clamp((developed.x+developed.right-extent)/2,0,size-extent),z:clamp((developed.z+developed.bottom-extent)/2,0,size-extent),size:extent};
+ const blockedWithoutRiver=polygonIndex([...terrain.water.filter(w=>w.kind!=='river'),...terrain.steep],initialBounds),structure=generateUrbanStructure({world,history,frame,site,grid,growth,districts,bounds,terrain,blocked,blockedWithoutRiver,orientation,seed,population});
  // The initial context covers every generated block; crop rendering to the
  // final view without re-solving drainage or assigning extra population.
  delete terrain.steep;
- return{version:'neighborhood-city-v1',siteId,name:site.name,nameOrigin:site.nameOrigin||null,population,year:frame.year,generation:frame.generation,era,eraLabel:frame.eraLabel||era,groupId:state.groupId??site.groupId,origin,center:grid.cells[growth.start].center,bounds,areaKm2:growth.area,targetAreaKm2,densityPerKm2:population/growth.area,footprintLimited:growth.area<targetAreaKm2*.96,districts,blocks,roads,terrain,cellKm:grid.step/grid.divisions,orientationRadians:orientation.angle,orientationSource:orientation.source,inheritedRouteIds:orientation.ids,geographyNote:'Neighborhoods and streets are generated at city scale. Terrain and water are interpolated from the unchanged parent mesh; no finer terrain observations are implied.'};
+ return{version:'neighborhood-city-v2',siteId,name:site.name,nameOrigin:site.nameOrigin||null,population,year:frame.year,generation:frame.generation,era,eraLabel:frame.eraLabel||era,groupId:state.groupId??site.groupId,origin,center:grid.cells[growth.start].center,bounds,areaKm2:growth.area,targetAreaKm2,densityPerKm2:population/growth.area,footprintLimited:growth.area<targetAreaKm2*.96,districts,blocks,...structure,terrain,cellKm:grid.step/grid.divisions,orientationRadians:orientation.angle,orientationSource:orientation.source,inheritedRouteIds:orientation.ids,geographyNote:'Neighborhoods, streets and building footprints are generated at city scale. Terrain and water are interpolated from the unchanged parent mesh; no finer terrain observations are implied.'};
 }

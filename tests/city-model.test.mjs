@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {isDeepStrictEqual} from 'node:util';
 import {createTerrainMesh,indexMesh,locateTriangle} from '../assets/world-lab/world-mesh.mjs';
 import {generateCity} from '../assets/world-lab/city-model.mjs';
 
@@ -84,6 +85,115 @@ test('inherited active land connections orient major streets without using futur
  assert.ok(c.roads.some(r=>r.kind==='arterial'));
 });
 
+// Replacing a route with a bearing-only street would detach the close view
+// from the regional polyline even if the orientation remained plausible.
+test('dated regional approaches retain their exact parent geometry and join the street network',()=>{
+ const f=fixture({population:35000}),node=f.history.sites[0].nodeId;
+ f.history.routes=[
+  {id:2,a:0,b:1,nodes:[node,node+1,node+2,node+3,node+4],founded:2,kind:'land'},
+  {id:3,a:2,b:0,nodes:[node-75,node-50,node-25,node],founded:3,kind:'land'},
+  {id:4,a:0,b:3,nodes:[node,node-1],founded:30,kind:'land'},
+  {id:5,a:0,b:4,nodes:[node,node+25],founded:4,kind:'land'}
+ ];
+ f.frame.routeStates=f.history.routes.map(r=>({routeId:r.id,active:r.id!==5,traffic:100}));
+ const c=cityFor(f);assert.deepEqual(c.approaches.map(a=>a.routeId),[2,3]);
+ for(const approach of c.approaches){
+  const route=f.history.routes.find(r=>r.id===approach.routeId),source=route.nodes.map(i=>({x:f.world.mesh.x[i],z:f.world.mesh.z[i]}));
+  assert.ok(approach.points.length>=2);assert.deepEqual(approach.connection,c.origin);
+  for(const p of approach.points)assert.ok(source.slice(1).some((b,i)=>segmentDistance(p,source[i],b)<1e-8),'approach follows actual regional segments');
+  const road=c.roads.find(r=>r.id===approach.roadIds[0]);assert.equal(road.sourceRouteId,route.id);assert.deepEqual(road.points,approach.points);
+  assert.ok(c.roads.some(r=>r.sourceRouteId==null&&r.points.some(p=>Math.hypot(p.x-c.origin.x,p.z-c.origin.z)<1e-8)),'city streets meet the dated route endpoint');
+ }
+ const replay=cityFor(f);assert.deepEqual(replay,c);
+ f.frame.routeStates[0].active=false;assert.deepEqual(cityFor(f).approaches.map(a=>a.routeId),[3]);
+});
+
+// A navigable route is not permission to pave a lake or sea. Only inherited
+// land corridors become streets, and only narrow rivers permit bridge flags.
+test('non-land routes never create city roads and broad-water land corridors stay regional',()=>{
+ const f=fixture({population:35000,coast:true}),node=f.history.sites[0].nodeId;
+ const early=cityFor(f);
+ f.history.routes=[
+  {id:2,a:0,b:1,nodes:[node,node+1],founded:2,kind:'ferry'},
+  {id:3,a:0,b:2,nodes:[node,node-25],founded:2,kind:'river'},
+ ];
+ f.frame.routeStates=f.history.routes.map(r=>({routeId:r.id,active:true,traffic:100}));
+ assert.ok(isDeepStrictEqual(cityFor(f),early),'water transport remains in the regional route context');
+ f.history.routes.push({id:4,a:0,b:3,nodes:[node,node-1,node-2,node-3],founded:2,kind:'land'});f.frame.routeStates.push({routeId:4,active:true});
+ const c=cityFor(f);assert.ok(c.approaches.some(a=>a.routeId===4));assert.ok(!c.roads.some(r=>r.sourceRouteId===4),'a land-labelled route over broad water is not paved');
+ assert.ok(c.roads.every(r=>!r.bridge||r.bridges?.every(b=>b.kind==='river')));
+});
+
+test('river bridges describe short crossing spans and never pave a river longitudinally',()=>{
+ const f=fixture({population:35000,river:true}),node=f.history.sites[0].nodeId;
+ f.history.routes=[{id:2,a:0,b:1,nodes:[node,node+1,node+2],founded:2,kind:'land'}];f.frame.routeStates=[{routeId:2,active:true}];
+ const crossing=cityFor(f),road=crossing.roads.find(r=>r.sourceRouteId===2);assert.ok(road?.bridge);
+ assert.ok(road.bridges.length>0&&road.bridges.every(b=>b.kind==='river'&&b.points?.length===2&&Math.hypot(b.points[1].x-b.points[0].x,b.points[1].z-b.points[0].z)<=.4),'bridge spans only the narrow inherited channel');
+ f.history.routes[0].nodes=[node,node+25,node+50];
+ const alongRiver=cityFor(f);assert.ok(!alongRiver.roads.some(r=>r.sourceRouteId===2),'a river-following corridor stays regional transport');
+});
+
+const segmentDistance=(p,a,b)=>{const dx=b.x-a.x,dz=b.z-a.z,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);};
+const intersects=(a,b)=>{for(const p of [a,b])for(let i=0;i<p.length;i++){const q=p[(i+1)%p.length],nx=q.z-p[i].z,nz=p[i].x-q.x,A=a.map(v=>v.x*nx+v.z*nz),B=b.map(v=>v.x*nx+v.z*nz);if(Math.max(...A)<Math.min(...B)-1e-10||Math.max(...B)<Math.min(...A)-1e-10)return false;}return true;};
+
+// A single rotated or warped grid cannot supply a curved core and independently
+// oriented, bounded planned and industrial quarters.
+test('urban fabric has inherited central lanes and several local plans instead of whole-city grid lines',()=>{
+ const c=cityFor(fixture({population:220000}));
+ const local=c.roads.filter(r=>r.kind==='local'),bearings=new Set(local.flatMap(r=>r.points.slice(1).map((b,i)=>Math.round((((Math.atan2(b.z-r.points[i].z,b.x-r.points[i].x)%Math.PI)+Math.PI)%Math.PI)*12/Math.PI))));
+ assert.ok(bearings.size>=7,'local streets use multiple directions');
+ assert.ok(c.roads.some(r=>r.phase==='old center'&&r.points.length>3));
+ assert.ok(c.roads.some(r=>r.phase==='planned expansion'));
+ assert.ok(c.roads.some(r=>r.phase==='industrial access'));
+ assert.ok(c.roads.some(r=>r.phase==='later arterial'));
+ assert.ok(new Set(local.map(r=>r.patternId)).size>=4);
+ assert.ok(c.roads.some(r=>r.districtIds?.length===2),'local street connections continue between different neighborhood plans');
+ assert.ok(c.development?.note&&c.development?.sourceGeneration===c.generation);
+ assert.ok(local.every(r=>Math.hypot(r.points.at(-1).x-r.points[0].x,r.points.at(-1).z-r.points[0].z)<c.bounds.size*.55),'local plans remain neighborhood scale');
+});
+
+// A visually adjacent neighborhood is still detached if its streets never
+// actually touch the city's network. Test geometric intersections, not IDs.
+test('neighborhood streets form one physically connected network, including along a coast',()=>{
+ for(const coast of [false,true]){
+  const c=cityFor(fixture({population:22000,coast})),parent=c.roads.map((r,i)=>i),root=i=>parent[i]===i?i:(parent[i]=root(parent[i]));
+  const segments=c.roads.flatMap((r,road)=>r.points.slice(1).map((b,i)=>({a:r.points[i],b,road})));
+  const touch=(a,b,c,d)=>{
+   const ax=b.x-a.x,az=b.z-a.z,bx=d.x-c.x,bz=d.z-c.z,den=ax*bz-az*bx;
+   if(Math.abs(den)>1e-12){const t=((c.x-a.x)*bz-(c.z-a.z)*bx)/den,u=((c.x-a.x)*az-(c.z-a.z)*ax)/den;if(t>=-1e-7&&t<=1+1e-7&&u>=-1e-7&&u<=1+1e-7)return true;}
+   return Math.min(segmentDistance(a,c,d),segmentDistance(b,c,d),segmentDistance(c,a,b),segmentDistance(d,a,b))<1e-7;
+  };
+  for(let i=0;i<segments.length;i++)for(let j=i+1;j<segments.length;j++){
+   const a=segments[i],b=segments[j];if(root(a.road)===root(b.road)||Math.max(a.a.x,a.b.x)+1e-7<Math.min(b.a.x,b.b.x)||Math.max(b.a.x,b.b.x)+1e-7<Math.min(a.a.x,a.b.x)||Math.max(a.a.z,a.b.z)+1e-7<Math.min(b.a.z,b.b.z)||Math.max(b.a.z,b.b.z)+1e-7<Math.min(a.a.z,a.b.z))continue;
+   if(touch(a.a,a.b,b.a,b.b))parent[root(a.road)]=root(b.road);
+  }
+  assert.equal(new Set(c.roads.map((r,i)=>root(i))).size,1,'every street connects through actual shared geometry');
+ }
+});
+
+// Offsetting roofs from their own street alone leaves buildings crossing other
+// streets at junctions; pairwise footprint and all-road clearance are required.
+test('road-frontage buildings share the street geometry and clear every street, water polygon and other roof',()=>{
+ const c=cityFor(fixture({population:18000,river:true}));
+ assert.ok(c.buildings.length>100&&c.buildings.length<=48000);
+ const roadById=new Map(c.roads.map(r=>[r.id,r])),segments=c.roads.flatMap(r=>r.points.slice(1).map((b,i)=>({a:r.points[i],b,width:r.widthKm})));
+ const bounds=p=>({x:Math.min(...p.map(v=>v.x)),z:Math.min(...p.map(v=>v.z)),r:Math.max(...p.map(v=>v.x)),b:Math.max(...p.map(v=>v.z))});
+ const roofs=c.buildings.map(b=>({...b,box:bounds(b.polygon)}));
+ for(let i=0;i<roofs.length;i++){
+  const roof=roofs[i],road=roadById.get(roof.roadId);assert.ok(road);assert.ok(roof.areaKm2>0);assert.ok(c.districts.some(d=>d.id===roof.districtId&&d.kind!=='park'));
+  assert.ok(road.points.slice(1).some((b,j)=>{const a=road.points[j],edge={x:roof.polygon[1].x-roof.polygon[0].x,z:roof.polygon[1].z-roof.polygon[0].z};return Math.abs(edge.x*(b.z-a.z)-edge.z*(b.x-a.x))<1e-8;}),'frontage is parallel to a source street segment');
+  for(const s of segments){
+   if(Math.max(s.a.x,s.b.x)+s.width<roof.box.x||Math.min(s.a.x,s.b.x)-s.width>roof.box.r||Math.max(s.a.z,s.b.z)+s.width<roof.box.z||Math.min(s.a.z,s.b.z)-s.width>roof.box.b)continue;
+   const dx=s.b.x-s.a.x,dz=s.b.z-s.a.z,len=Math.hypot(dx,dz),half=s.width/2+.0019;
+   if(!len)continue;
+   const corridor=[{x:s.a.x-dz/len*half,z:s.a.z+dx/len*half},{x:s.b.x-dz/len*half,z:s.b.z+dx/len*half},{x:s.b.x+dz/len*half,z:s.b.z-dx/len*half},{x:s.a.x+dz/len*half,z:s.a.z-dx/len*half}];
+   assert.ok(!intersects(roof.polygon,corridor),`roof ${roof.id} clears every street`);
+  }
+  for(const water of c.terrain.water)assert.ok(!intersects(roof.polygon,water.polygon));
+  for(let j=i+1;j<roofs.length;j++){const other=roofs[j];if(roof.box.r<other.box.x||roof.box.x>other.box.r||roof.box.b<other.box.z||roof.box.z>other.box.b)continue;assert.ok(!intersects(roof.polygon,other.polygon),`roofs ${roof.id}/${other.id} do not overlap`);}
+ }
+});
+
 // Metropolitan population must add inspectable neighborhoods and fine local
 // streets, not just scale a town's handful of districts to million-person size.
 test('a large metropolis retains neighborhood and local-block detail within finite budgets',()=>{
@@ -94,7 +204,10 @@ test('a large metropolis retains neighborhood and local-block detail within fini
  assert.ok(c.districts.length>=80&&c.districts.length<=96);
  assert.ok(c.blocks.length>8000&&c.blocks.length<=24000);
  assert.ok(c.blocks.every(b=>Math.sqrt(b.areaKm2)<.5),'local blocks stay below half a kilometer');
- assert.ok(c.roads.filter(r=>r.kind==='local').length>1000,'local streets subdivide metropolitan blocks');
+ assert.ok(c.roads.filter(r=>r.kind==='local').length>1000,'local streets reach metropolitan neighborhoods');
+ assert.ok(c.roads.length<=12000&&c.buildings.length<=48000,'roads and roofs have finite geometry budgets');
+ assert.ok(c.buildings.length>15000,'the metropolis retains fine urban fabric');
+ assert.ok(new Set(c.buildings.map(b=>b.districtId)).size>=75,'frontage detail reaches the whole metropolis');
  assert.equal(c.districts.reduce((v,d)=>v+d.population,0),8800000);
  assert.equal(new Set(c.districts.map(d=>d.name)).size,c.districts.length);
  assert.ok(c.districts.every(d=>! /\s\d+$/.test(d.name)),'neighborhoods use distinct local names instead of repeated numbered suffixes');

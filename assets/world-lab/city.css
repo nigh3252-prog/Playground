@@ -39,3 +39,7 @@ body[data-city="true"]>.bottom-left,body[data-city="true"]>.bottom-right,body[da
 @media(max-height:500px){#cityDistrictPanel{left:auto;right:66px;max-height:calc(100% - 90px);width:300px}.city-header{max-width:65%}}
 
 #exportCity{margin-top:10px}
+.city-panel-toggle{display:block;width:100%;min-height:40px;padding:4px 2px;background:none;border:0;color:#d7e3cd;font-size:12px;text-align:left;font-weight:600}
+#cityDistrictBody{padding-top:5px}
+#cityDistrictPanel:has(#cityDistrictBody[hidden]){padding:2px 12px;width:auto;min-width:170px}
+@media(max-width:700px){#cityDistrictPanel:has(#cityDistrictBody[hidden]){left:auto;right:10px;max-width:calc(100% - 20px)}.city-header h2{font-size:14px}}
