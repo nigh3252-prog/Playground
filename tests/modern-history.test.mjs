@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import {simulateHumanHistory} from '../assets/world-lab/human-history.mjs';
 import {simulateWorldHistory} from '../assets/world-lab/modern-history.mjs';
 
-function fixture({n=31,spacing=8,water=false,allWater=false}={}) {
+function fixture({n=31,spacing=8,water=false,allWater=false,riverNetwork=false}={}) {
  const N=n*n,f=v=>new Float32Array(N).fill(v),offsets=[0],neighbors=[],distances=[];
  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx>=0&&yy>=0&&xx<n&&yy<n){neighbors.push(yy*n+xx);distances.push(spacing);}}
   offsets.push(neighbors.length);
  }
  const w={stage:4,parentDomain:{sizeKm:n*spacing,nominalSpacingKm:spacing},config:{seed:8,sizeKm:n*spacing},height:f(100),ocean:new Uint8Array(N),lake:new Uint8Array(N),slope:f(.002),biome:new Uint8Array(N).fill(6),productivity:f(.75),productiveArea:f(spacing*spacing*.75),travelFriction:f(1),humanPotential:f(.8),transportAccess:f(.5),wetDistanceKm:f(5),navigableRiver:new Uint8Array(N),receiver:new Int32Array(N).fill(-1),mesh:{x:f(0),z:f(0),nodeArea:f(spacing*spacing),offsets:Uint32Array.from(offsets),neighbors:Uint32Array.from(neighbors),distances:Float32Array.from(distances)}};
- for(let i=0;i<N;i++){const x=i%n;w.mesh.x[i]=x*spacing;w.mesh.z[i]=Math.floor(i/n)*spacing;if(allWater||(water&&x===Math.floor(n/2)))w.ocean[i]=1;}
+ for(let i=0;i<N;i++){const x=i%n,y=Math.floor(i/n);w.mesh.x[i]=x*spacing;w.mesh.z[i]=y*spacing;if(allWater||(water&&x===Math.floor(n/2)))w.ocean[i]=1;if(riverNetwork){w.navigableRiver[i]=1;w.receiver[i]=x?i-1:y?i-n:-1;}}
  return w;
 }
 const sum=a=>a.reduce((n,v)=>n+v,0);
@@ -68,6 +68,37 @@ test('modern population spreads across suitable land without crossing water or c
   const node=r.nodes[k];assert.equal(w.ocean[node],0);
   if(k){const a=r.nodes[k-1];assert.ok(w.mesh.neighbors.slice(w.mesh.offsets[a],w.mesh.offsets[a+1]).includes(node));}
  }
+});
+
+// A city's river trade must not use up its overland approach budget. The seed
+// gives site 0 three old river links and no road on one connected dry grid.
+test('a modern city gains dated land access without replacing its three older river links',async()=>{
+ const w=fixture({riverNetwork:true}),options={seed:2,generations:4},early=await simulateHumanHistory(w,options),modern=await simulateWorldHistory(w,{...options,era:'modern'}),siteId=0;
+ const incident=(history,kind)=>history.routes.filter(r=>r.kind===kind&&(r.a===siteId||r.b===siteId));
+ assert.equal(incident(early,'river').length,3);assert.equal(incident(early,'land').length,0);
+ assert.equal(modern.snapshots.at(-1).siteStates[siteId].status,'city');assert.ok(incident(modern,'land').length>3);
+ assert.deepEqual(modern.routes.slice(0,early.routes.length),early.routes);
+ for(const route of incident(modern,'land')){
+  assert.ok(route.founded>options.generations);
+  assert.ok(modern.snapshots.slice(0,route.founded).every(frame=>!frame.routeStates.some(state=>state.routeId===route.id)));
+ }
+});
+
+test('land roads upgrade from dated endpoint importance without changing their geometry',async()=>{
+ const h=await simulateWorldHistory(fixture(),{generations:4,seed:11,era:'modern'}),widths={trail:.012,road:.018,arterial:.026},upgraded=[];
+ for(const route of h.routes.filter(r=>r.kind==='land')){
+  const geometry=[...route.nodes],states=[];
+  for(const frame of h.snapshots){
+   const state=frame.routeStates.find(s=>s.routeId===route.id);
+   if(frame.generation<route.founded){assert.equal(state,undefined);continue;}
+   if(frame.era==='agrarian')continue;
+   assert.ok(state);assert.ok(state.roadClass in widths);assert.equal(state.widthKm,widths[state.roadClass]);states.push(state);
+  }
+  assert.deepEqual(route.nodes,geometry);
+  for(let i=1;i<states.length;i++)assert.ok(states[i].widthKm>=states[i-1].widthKm);
+  if(new Set(states.map(s=>s.widthKm)).size>1)upgraded.push(route.id);
+ }
+ assert.ok(upgraded.length>0);
 });
 
 test('modern replay ignores display choices, changes with seed, and cancels within later frames',async()=>{

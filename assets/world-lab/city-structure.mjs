@@ -1,5 +1,6 @@
 /** Visible urban form, in parent kilometers. Accounting cells constrain the
  * occupied land but never supply street edges or building orientations. */
+import {datedLandRoutes,routeWidth} from './city-plan.mjs';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const hash=(n,seed)=>{let t=(n^seed)>>>0;t=Math.imul(t^t>>>16,0x45d9f3b);t=Math.imul(t^t>>>16,0x45d9f3b);return((t^t>>>16)>>>0)/4294967296;};
@@ -75,16 +76,16 @@ function riverBridges(points,width,water){
 }
 
 function inheritedApproaches(world,history,frame,site,bounds){
- const active=new Map((frame.routeStates||[]).filter(r=>r.active).map(r=>[r.routeId,r])),approaches=[];
- for(const route of history.routes||[]){
-  if(route.kind!=='land'||route.founded>frame.generation||!active.has(route.id)||(route.a!==site.id&&route.b!==site.id))continue;
-  const sourceNodeIds=route.a===site.id?[...route.nodes]:[...route.nodes].reverse(),source=sourceNodeIds.filter(i=>i>=0&&i<world.mesh.x.length).map(i=>({x:world.mesh.x[i],z:world.mesh.z[i]})),points=[];
+ const approaches=[];
+ for(const {route,state} of datedLandRoutes(history,frame)){
+  const through=route.a!==site.id&&route.b!==site.id;
+  const sourceNodeIds=route.a===site.id||through?[...route.nodes]:[...route.nodes].reverse(),source=sourceNodeIds.filter(i=>i>=0&&i<world.mesh.x.length).map(i=>({x:world.mesh.x[i],z:world.mesh.z[i]})),points=[];
   for(let i=1;i<source.length;i++){
    const clipped=clipSegment(source[i-1],source[i],bounds);if(!clipped){if(points.length)break;continue;}
    if(!points.length)points.push(clipped[0]);if(distance(points.at(-1),clipped[1])>1e-10)points.push(clipped[1]);
    if(distance(clipped[1],source[i])>1e-8)break;
   }
-  if(points.length>1)approaches.push({routeId:route.id,sourceRouteKind:route.kind,sourceNodeIds,points,connection:{...points[0]},entry:{...points.at(-1)},foundedGeneration:route.founded,traffic:active.get(route.id).traffic||0,roadIds:[]});
+  if(points.length>1)approaches.push({routeId:route.id,sourceRouteKind:route.kind,sourceNodeIds,points,connection:{...points[0]},entry:{...points.at(-1)},foundedGeneration:route.founded,sourceGeneration:frame.generation,through,roadClass:state.roadClass||'road',widthKm:routeWidth(state,frame.era||'agrarian'),traffic:state.traffic||0,roadIds:[]});
  }return approaches;
 }
 
@@ -144,21 +145,22 @@ function sampleLine(points,along){
  return{point:points[0],angle:0,segment:0};
 }
 
-export function generateUrbanStructure({world,history,frame,site,grid,growth,districts,bounds,terrain,blocked,buildingBlocked=blocked,blockedWithoutRiver,regionalRoadWidthKm,orientation,seed,population}){
+export function generateUrbanStructure({world,history,frame,site,grid,growth,districts,bounds,terrain,blocked,buildingBlocked=blocked,blockedWithoutRiver,owned=()=>true,orientation,seed,population,detail='streets',historicRecipes=[]}){
  const roads=[],center=grid.cells[growth.start].center,origin=grid.origin,modern=(frame.era||'agrarian')!=='agrarian',land=landNetwork(grid,growth,blocked),approaches=inheritedApproaches(world,history,frame,site,bounds);
- const streetWidth=clamp(Math.sqrt(growth.area)*.0018,.0035,.009),collectorWidth=Math.max(streetWidth*1.5,.006),arterialWidth=modern?Math.max(.012,streetWidth*2.8):Math.max(.006,streetWidth*1.8),approachWidth=regionalRoadWidthKm??(modern?.026:.012);
+ const streetWidth=clamp(Math.sqrt(growth.area)*.0018,.0035,.009),collectorWidth=Math.max(streetWidth*1.5,.006),arterialWidth=modern?Math.max(.012,streetWidth*2.8):Math.max(.006,streetWidth*1.8);
  const add=(points,options={})=>{
   const clean=points?.filter((p,i)=>!i||distance(p,points[i-1])>1e-8);if(!clean||clean.length<2||roads.length>=12000)return null;
   const road={id:roads.length,kind:'local',name:'Local street',widthKm:streetWidth,phase:'neighborhood connector',patternId:'connections',sourceRouteId:null,bridge:false,...options,points:clean.map(p=>({x:p.x,z:p.z}))};roads.push(road);return road;
  };
  for(const approach of approaches){
+  const approachWidth=approach.widthKm;
   // Preserve a problematic regional polyline as provenance, but never invent
   // a broad-water bridge or pave a steep inherited travel corridor.
   if(approach.points.slice(1).some((b,i)=>blockedWithoutRiver(corridor(approach.points[i],b,approachWidth/2)))){approach.streetEligible=false;continue;}
   const bridges=riverBridges(approach.points,approachWidth,terrain.water);if(!bridges){approach.streetEligible=false;continue;}approach.streetEligible=true;
-  const road=add(approach.points,{kind:'arterial',name:'Regional approach',widthKm:approachWidth,phase:'inherited approach',patternId:`route-${approach.routeId}`,sourceRouteId:approach.routeId,bridge:bridges.length>0,bridges});if(road)approach.roadIds.push(road.id);
+  const road=add(approach.points,{kind:'arterial',name:'Regional approach',widthKm:approachWidth,phase:'inherited approach',patternId:`route-${approach.routeId}`,sourceRouteId:approach.routeId,provenance:{kind:'regional route',sourceGeneration:frame.generation,foundedGeneration:approach.foundedGeneration,routeId:approach.routeId,roadClass:approach.roadClass},bridge:bridges.length>0,bridges});if(road)approach.roadIds.push(road.id);
  }
- if(approaches.length&&distance(origin,center)>.00001){
+ if((approaches.length||historicRecipes.length)&&distance(origin,center)>.00001){
   const join=land.path(origin,center,collectorWidth);
   if(join)add(join,{kind:'collector',name:'Approach junction',widthKm:collectorWidth});
   else if(distance(origin,center)<Math.max(.5,grid.step*3)&&!blockedWithoutRiver(corridor(origin,center,collectorWidth/2))){const bridges=riverBridges([origin,center],collectorWidth,terrain.water);if(bridges)add([origin,center],{kind:'collector',name:'Approach crossing',widthKm:collectorWidth,bridge:bridges.length>0,bridges});}
@@ -166,6 +168,12 @@ export function generateUrbanStructure({world,history,frame,site,grid,growth,dis
 
  // Connected district centers supply a sparse city skeleton, then local
  // streets grow from it. They are not a tessellation of accounting cells.
+ for(const approach of approaches.filter(a=>a.through&&a.streetEligible)){
+  let nearest=null,best=Infinity;
+  for(let i=1;i<approach.points.length;i++){const a=approach.points[i-1],b=approach.points[i],dx=b.x-a.x,dz=b.z-a.z,t=clamp(((center.x-a.x)*dx+(center.z-a.z)*dz)/(dx*dx+dz*dz||1),0,1),p=lerp(a,b,t),d=distance(p,center);if(d<best){best=d;nearest=p;}}
+  const join=nearest&&land.path(nearest,center,collectorWidth);
+  if(join)add(join,{kind:'collector',name:'Through-road junction',widthKm:collectorWidth,phase:'through-route connection',sourceConnectionRouteId:approach.routeId});
+ }
  const connected=new Set([0]),hubs=districts.map(d=>d.center);
  const connection=(a,b,token,width=collectorWidth)=>{
   const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),bend=(hash(token,seed)-.5)*len*.19;
@@ -183,13 +191,23 @@ export function generateUrbanStructure({world,history,frame,site,grid,growth,dis
   for(let k=0;k<Math.min(3,Math.ceil(Math.log10(population/1000)));k++){const a=ordered[Math.floor(k*ordered.length/6)],b=ordered[Math.floor((k/6+.5)*ordered.length)%ordered.length];add(connection(a.center,b.center,991+k,arterialWidth),{kind:'arterial',name:'Cross-town avenue',widthKm:arterialWidth,phase:'later arterial',patternId:'later-arteries'});}
  }
 
+ const connectedHistoric=[];
+ for(const recipe of historicRecipes){
+  const anchor=recipe.anchor;if(!anchor)continue;
+  if(distance(anchor,center)<1e-8){connectedHistoric.push(recipe);continue;}
+  let join=land.path(anchor,center,collectorWidth),bridges=[];
+  // Fine retained paths may lie on dry land that a coarser current occupancy
+  // cell omits. A short, terrain-checked join can reach that inherited bank.
+  if(!join){const strip=corridor(anchor,center,collectorWidth/2);if(owned(strip)&&!blockedWithoutRiver(strip)){const spans=riverBridges([anchor,center],collectorWidth,terrain.water);if(spans){join=[anchor,center];bridges=spans;}}}
+  if(join){add(join,{kind:'collector',name:'Founding quarter connection',phase:'retained path connection',widthKm:collectorWidth,bridge:bridges.length>0,bridges,sourceGeneration:recipe.sourceGeneration});connectedHistoric.push(recipe);}
+ }
  const maturity=clamp((frame.generation-site.founded)/18,0,1),coreRadius=clamp(Math.sqrt(growth.area)*(.08+.04*maturity),.028,1.25),spokes=[],spokeCount=5+Math.floor(maturity*2+hash(77,seed)*2),base=orientation.angle;
- for(let i=0;i<spokeCount;i++){
+ for(let i=0;i<(detail==='metro'?1:spokeCount);i++){
   const angle=base+i*Math.PI*2/spokeCount+(hash(i+48,seed)-.5)*.3,len=coreRadius*(.8+hash(i+92,seed)*.5),bend=(hash(i+26,seed)-.5)*.35;
   const points=Array.from({length:13},(_,k)=>{const t=k/12,a=angle+Math.sin(Math.PI*t)*bend;return{x:center.x+Math.cos(a)*len*t,z:center.z+Math.sin(a)*len*t};});
   const valid=land.trace(points,i===0?arterialWidth:streetWidth),road=add(valid,{kind:i===0?'arterial':'local',name:i===0?'Market street':'Old town lane',widthKm:i===0?arterialWidth:streetWidth,phase:'old center',patternId:'old-center'});if(road)spokes.push(road);
  }
- for(const fraction of[.43,.79])for(let i=0;i<spokes.length;i++){
+ if(detail==='streets')for(const fraction of[.43,.79])for(let i=0;i<spokes.length;i++){
   const a=sampleLine(spokes[i].points,lengthOf(spokes[i].points)*fraction).point,b=sampleLine(spokes[(i+1)%spokes.length].points,lengthOf(spokes[(i+1)%spokes.length].points)*fraction).point;
   const points=connection(a,b,310+i+Math.round(fraction*100),streetWidth);add(points,{name:'Old town connection',phase:'old center',patternId:'old-center'});
  }
@@ -197,11 +215,11 @@ export function generateUrbanStructure({world,history,frame,site,grid,growth,dis
  // Each quarter has its own plan. Curved residential branches and irregular
  // crosslinks dominate; compact straight grids belong to selected planned
  // quarters and more widely spaced industrial access streets.
- const spacing=clamp(Math.sqrt(growth.area/26000),population<1500?.024:.065,.29),patterns=[];
+ const spacing=clamp(Math.sqrt(growth.area/26000),population<1500?.024:.065,.29),patterns=[],localPlans=[];
  for(const district of districts){
   if(district.kind==='park')continue;
   const id=district.id,industrial=district.kind==='industrial',planned=modern&&(industrial||id!==0&&(id%3===2||id%7===3)),phase=industrial?'industrial access':planned?'planned expansion':id===0?'old center':'neighborhood connector',patternId=`quarter-${id}`;
-  const angle=base+(hash(id+382,seed)-.5)*1.9+(industrial?.28:id%2?.34:-.21),cos=Math.cos(angle),sin=Math.sin(angle),hub=district.center,curvature=planned?0:.1+hash(id+121,seed)*.14,localSpacing=spacing*(industrial?1.75:planned?1.07:.9+hash(id+71,seed)*.35);
+  const surveyAngle=orientation.source==='terrain'?base:0,angle=planned?surveyAngle:base+(hash(id+382,seed)-.5)*1.9+(id%2?.34:-.21),cos=Math.cos(angle),sin=Math.sin(angle),hub=district.center,curvature=planned?0:.1+hash(id+121,seed)*.14,localSpacing=spacing*(industrial?1.75:planned?1.07:.9+hash(id+71,seed)*.35);
   let extent=0;for(const c of growth.chosen)if(c.districtId===id)extent=Math.max(extent,distance(c.center,hub)+grid.step);extent=Math.max(extent,localSpacing*2);
   const spineParts=[];
   for(const sign of[-1,1]){
@@ -209,7 +227,10 @@ export function generateUrbanStructure({world,history,frame,site,grid,growth,dis
    spineParts.push(land.trace(points,collectorWidth,id));
   }
   const spinePoints=[...spineParts[0].slice(1).reverse(),...spineParts[1]],spine=add(spinePoints,{kind:'collector',name:industrial?'Works access':'Neighborhood high street',widthKm:collectorWidth,phase,patternId,districtId:id});
-  if(!spine)continue;patterns.push({id:patternId,districtId:id,phase,angleRadians:angle});
+  if(!spine)continue;patterns.push({id:patternId,districtId:id,phase,angleRadians:angle,surveyId:planned?'founding-survey':null,surveySource:planned?(orientation.source==='terrain'?'terrain contour':'cardinal survey'):null});
+  if(detail==='streets')localPlans.push({spine,id,industrial,planned,phase,patternId,curvature,localSpacing,extent});
+ }
+ if(detail==='streets')for(const {spine,id,industrial,planned,phase,patternId,curvature,localSpacing,extent} of localPlans){
   const spineLength=lengthOf(spine.points),branches=[];
   for(let along=localSpacing*.55;along<spineLength-localSpacing*.15;along+=localSpacing*(planned?1:.86+hash(branches.length+id*97,seed)*.3)){
    const source=sampleLine(spine.points,along),root=source.point,parts=[];
@@ -234,6 +255,15 @@ export function generateUrbanStructure({world,history,frame,site,grid,growth,dis
 
  // Stitch local plans across their shared edges. This retains the separate
  // survey directions without treating administrative boundaries as barriers.
+ if(detail==='streets'){
+ // Replay only a bounded early path skeleton, never historical roofs or
+ // whole historical cities. Coordinates and widths come from dated recipes.
+ for(const recipe of connectedHistoric)for(let spoke=0;spoke<7;spoke++){
+  const angle=recipe.angleRadians+spoke*Math.PI*2/7,bend=(hash(spoke+701+recipe.phase*31,seed)-.5)*.36,radius=recipe.radiusKm*(.85+hash(spoke+88,seed)*.3);
+  const points=Array.from({length:13},(_,k)=>{const t=k/12,a=angle+Math.sin(Math.PI*t)*bend;return{x:recipe.anchor.x+Math.cos(a)*radius*t,z:recipe.anchor.z+Math.sin(a)*radius*t};});
+  const widthKm=.0035;
+  if(points.every(p=>p.x>=bounds.x&&p.x<=bounds.x+bounds.size&&p.z>=bounds.z&&p.z<=bounds.z+bounds.size)&&points.slice(1).every((p,i)=>!blocked(corridor(points[i],p,widthKm/2+.0005))))add(points,{name:'Retained founding lane',widthKm,phase:'old center',patternId:`historic-${recipe.phase}`,provenance:{kind:'retained local path',pathId:`${site.id}:${recipe.sourceGeneration}:${spoke}`,sourceGeneration:recipe.sourceGeneration,sourceYear:recipe.sourceYear,foundedGeneration:recipe.sourceGeneration,sourceRouteId:recipe.sourceRouteId}});
+ }
  const reach=spacing*2.4,endpoints=spatialIndex(Math.max(.1,reach)),ends=[];
  for(const road of roads){
   if(road.districtId==null)continue;
@@ -256,10 +286,16 @@ export function generateUrbanStructure({world,history,frame,site,grid,growth,dis
   add([end.point,best.point],{name:'Joining street',phase:'neighborhood connector',districtIds:[end.districtId,best.districtId]});end.used=true;best.used=true;stitched++;
  }
 
- const buildings=makeBuildings({roads,land,blocked:buildingBlocked,districts,growth,population,seed,spacing,streetWidth});
+ }
+ // Principal identifiers stay stable when local detail is added.
+ roads.sort((a,b)=>(a.kind==='local')-(b.kind==='local')||a.id-b.id);
+ const roadIds=new Map(roads.map((road,id)=>[road.id,id]));
+ for(let id=0;id<roads.length;id++)roads[id].id=id;
+ for(const approach of approaches)approach.roadIds=approach.roadIds.map(id=>roadIds.get(id));
+ const buildings=detail==='metro'?[]:makeBuildings({roads,land,blocked:buildingBlocked,districts,growth,population,seed,spacing,streetWidth});
  const phases=[...new Set(roads.map(r=>r.phase))].map(phase=>({phase,roadCount:roads.filter(r=>r.phase===phase).length}));
  const routeCount=approaches.filter(a=>a.streetEligible).length,summary=`${routeCount?`${routeCount} dated land approach${routeCount===1?'':'es'} connect to the local streets. `:''}An irregular center connects to ${modern?'curved residential streets and locally planned quarters':'lanes shaped around the occupied land'}.`;
- return{roads,buildings,approaches,development:{sourceGeneration:frame.generation,settlementFoundedGeneration:site.founded,phases,patterns,buildingCount:buildings.length,summary,note:'Street phases and building footprints are procedural interpretations of the dated settlement, active regional routes and inherited terrain. They are not recorded construction events or a census of individual buildings. District populations reconcile exactly to the selected date.'}};
+ return{roads,buildings,approaches,development:{sourceGeneration:frame.generation,settlementFoundedGeneration:site.founded,phases,patterns,buildingCount:buildings.length,localStreetCount:roads.filter(r=>r.kind==='local').length,summary,note:'Up to three dated early path skeletons are retained where present-day terrain and settlement territory permit; later neighborhood streets and roofs are regenerated. Shared survey axes organize planned quarters. Street phases and building footprints are procedural interpretations of the dated settlement, active regional routes and inherited terrain. They are not recorded construction events or a census of individual buildings. District populations reconcile exactly to the selected date.'}};
 }
 
 function makeBuildings({roads,land,blocked,districts,growth,population,seed,spacing,streetWidth}){

@@ -17,6 +17,7 @@ export const MODERN_GENERATIONS=12;
 export const MODERN_YEARS_PER_GENERATION=25;
 export const MODERN_HISTORY_VERSION='modern-history-v1';
 const TARGET_DENSITY=65,TARGET_URBAN_SHARE=.72,MAX_CENTERS=1000;
+const ROAD_CLASSES=[['trail',.012],['road',.018],['arterial',.026]];
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const pause=()=>new Promise(resolve=>setTimeout(resolve,0));
 const sum=a=>a.reduce((v,x)=>v+x,0);
@@ -92,9 +93,11 @@ function chooseCenters(world,history,land){
  return [...bins.values()].sort((a,b)=>hash(a.nodeId,seed^0x417a)-hash(b.nodeId,seed^0x417a)||a.nodeId-b.nodeId).slice(0,MAX_CENTERS-history.sites.length).sort((a,b)=>a.step-b.step||a.nodeId-b.nodeId);
 }
 
-function connectCenters(world,history,ownership,earlyGenerations){
+function connectCenters(world,history,ownership,earlyGenerations,targetDegree){
  const {mesh}=world,{owner,distance,previous}=ownership,pairs=new Map();
- const known=new Set(history.routes.map(r=>`${Math.min(r.a,r.b)},${Math.max(r.a,r.b)}`));
+ // A river link records water transport, not a paved approach. Keep land pairs,
+ // degree, and connectivity separate so river-connected cities can gain roads.
+ const landRoutes=history.routes.filter(r=>r.kind==='land'),known=new Set(landRoutes.map(r=>`${Math.min(r.a,r.b)},${Math.max(r.a,r.b)}`));
  for(let i=0;i<world.height.length;i++)if(owner[i]>=0)for(let k=mesh.offsets[i];k<mesh.offsets[i+1];k++){
   const j=mesh.neighbors[k];if(owner[j]<0||owner[i]===owner[j])continue;
   const a=Math.min(owner[i],owner[j]),b=Math.max(owner[i],owner[j]),key=`${a},${b}`;if(known.has(key))continue;
@@ -102,13 +105,20 @@ function connectCenters(world,history,ownership,earlyGenerations){
   if(!old||cost<old.cost)pairs.set(key,{a,b,i:owner[i]===a?i:j,j:owner[i]===a?j:i,cost});
  }
  const parent=Int32Array.from(history.sites,(_,i)=>i),degree=new Uint16Array(history.sites.length),root=x=>{while(parent[x]!==x){parent[x]=parent[parent[x]];x=parent[x];}return x;};
- for(const r of history.routes){parent[root(r.a)]=root(r.b);degree[r.a]++;degree[r.b]++;}
- const selected=[];
- for(const p of [...pairs.values()].sort((a,b)=>a.cost-b.cost||a.a-b.a||a.b-b.b)){
-  const ra=root(p.a),rb=root(p.b);if(ra===rb&&(degree[p.a]>=3||degree[p.b]>=3))continue;
-  parent[ra]=rb;degree[p.a]++;degree[p.b]++;
+ for(const r of landRoutes){parent[root(r.a)]=root(r.b);degree[r.a]++;degree[r.b]++;}
+ const ordered=[...pairs.values()].sort((a,b)=>a.cost-b.cost||a.a-b.a||a.b-b.b),selected=[],selectedPairs=new Set();
+ const add=p=>{
+  selectedPairs.add(`${p.a},${p.b}`);degree[p.a]++;degree[p.b]++;
   const left=[p.i],right=[p.j];while(previous[left.at(-1)]>=0)left.push(previous[left.at(-1)]);while(previous[right.at(-1)]>=0)right.push(previous[right.at(-1)]);
   selected.push({a:p.a,b:p.b,nodes:[...left.reverse(),...right],kind:'land',founded:Math.max(earlyGenerations+2,history.sites[p.a].founded,history.sites[p.b].founded)});
+ };
+ // First connect each dry component using only overland edges.
+ for(const p of ordered){const ra=root(p.a),rb=root(p.b);if(ra===rb)continue;parent[ra]=rb;add(p);}
+ // Then spend bounded extra degree on important centers before local ones.
+ // Candidate discovery remains the same O(mesh edges) ownership-boundary pass.
+ for(const p of [...ordered].sort((a,b)=>Math.max(targetDegree[b.a],targetDegree[b.b])-Math.max(targetDegree[a.a],targetDegree[a.b])||a.cost-b.cost||a.a-b.a||a.b-b.b)){
+  if(selectedPairs.has(`${p.a},${p.b}`)||degree[p.a]>=targetDegree[p.a]||degree[p.b]>=targetDegree[p.b])continue;
+  add(p);
  }
  selected.sort((a,b)=>a.founded-b.founded||a.a-b.a||a.b-b.b);
  for(const route of selected)history.routes.push({id:history.routes.length,...route});
@@ -181,10 +191,15 @@ export async function simulateWorldHistory(world,options={},progress=()=>{},canc
   ownedNodes[site.id].sort((a,b)=>ownership.distance[a]-ownership.distance[b]||a-b);
   land.components[land.component[site.nodeId]].centers.push(site.id);
  }
- connectCenters(world,history,ownership,earlyGenerations);
  const weights=new Float64Array(history.sites.length);
  const score=id=>{const site=history.sites[id],old=early.siteStates[id];return (.7+land.habitability[site.nodeId]+accessAt(world,site.nodeId)*.4+Math.log1p(old?.population||0)*.06)*(.65+hash(site.nodeId,history.seed^0x179a));};
  for(const part of land.components){part.centers.sort((a,b)=>score(b)-score(a)||a-b);part.centers.forEach((id,rank)=>{weights[id]=Math.pow(Math.max(1,masses[id]),.65)/Math.pow(rank+1,.88);});}
+ const targetLandDegree=new Uint8Array(history.sites.length).fill(3);
+ for(const part of land.components){
+  const ranked=[...part.centers].sort((a,b)=>weights[b]-weights[a]||a-b),major=Math.max(1,Math.ceil(ranked.length*.05)),regional=Math.max(major,Math.ceil(ranked.length*.2));
+  ranked.forEach((id,rank)=>targetLandDegree[id]=rank<major?5:rank<regional?4:3);
+ }
+ connectCenters(world,history,ownership,earlyGenerations,targetLandDegree);
  const targetPopulation=Math.max(early.summary.population,Math.round(land.suitableAreaKm2*TARGET_DENSITY));
  const componentWeights=land.components.map(p=>p.mass||sum(p.centers.map(id=>early.siteStates[id]?.population||0)));
  history.version=MODERN_HISTORY_VERSION;history.generations=totalGenerations;
@@ -223,7 +238,12 @@ export async function simulateWorldHistory(world,options={},progress=()=>{},canc
   }
   const routeStates=history.routes.filter(r=>r.founded<=generation).map(route=>{
    const a=siteStates[route.a],b=siteStates[route.b],active=!!(a?.population&&b?.population);
-   return {routeId:route.id,active,traffic:active?(a.population+b.population)*(.025+.025*t):0,lastUsed:active?generation:previous.routeStates[route.id]?.lastUsed??route.founded};
+   const state={routeId:route.id,active,traffic:active?(a.population+b.population)*(.025+.025*t):0,lastUsed:active?generation:previous.routeStates[route.id]?.lastUsed??route.founded};
+   if(route.kind==='land'){
+    const demand=active?a.population+b.population:0,desired=demand>=100000?2:demand>=10000?1:0,prior=ROAD_CLASSES.findIndex(([name])=>name===previous.routeStates[route.id]?.roadClass),level=Math.max(desired,prior);
+    [state.roadClass,state.widthKm]=ROAD_CLASSES[level];
+   }
+   return state;
   });
   const era=step<=4?'industrial':step<=8?'urbanizing':'modern',eraLabel=era==='industrial'?'Industrial transition':era==='urbanizing'?'Urban expansion':'Modern day';
   const events=[],addEvent=(type,siteIds,text,extra={})=>events.push({id:eventId++,generation,year,type,siteIds,routeId:null,text,...extra});

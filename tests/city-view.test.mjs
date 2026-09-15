@@ -13,7 +13,34 @@ class TestCanvas extends EventTarget{
 }
 function pointer(canvas,type,id,x,y){const e=new Event(type,{cancelable:true});Object.assign(e,{pointerId:id,clientX:x,clientY:y,button:0});canvas.dispatchEvent(e);}
 const polygon=[{x:0,z:0},{x:10,z:0},{x:10,z:10},{x:0,z:10}];
-const city={bounds:{x:0,z:0,size:10},center:{x:5,z:5},districts:[{id:7,name:'Downtown',kind:'downtown',center:{x:5,z:5},population:9000,areaKm2:100,color:'#bcaa90',boundary:[]}],blocks:[{id:0,districtId:7,polygon,center:{x:5,z:5}}],roads:[],terrain:{patches:[],water:[]}};
+const city={bounds:{x:0,z:0,size:10},center:{x:5,z:5},districts:[{id:7,name:'Downtown',kind:'downtown',center:{x:5,z:5},population:9000,areaKm2:100,color:'#bcaa90',boundary:[]}],blocks:[{id:0,districtId:7,kind:'downtown',polygon,center:{x:5,z:5}}],roads:[],terrain:{patches:[],water:[]}};
+
+test('explicit area mode never requests city geometry from zooming and keeps its camera between levels',()=>{
+ const canvas=new TestCanvas(),requests=[],view=createCityView(canvas,{autoDetail:false,onDetailRequest:id=>requests.push(id)});
+ view.show(null,{context:{bounds:{x:0,z:0,size:1200},sites:[{id:2,point:{x:600,z:400},radiusKm:5}],routes:[],rivers:[]},viewport:{center:{x:600,z:400},kmAcross:400},detailLevel:'parent'});
+ view.zoomBy(10);assert.deepEqual(requests,[],'zoom alone must not build a city');
+ const before=view.getView();assert.equal(typeof view.setDetailLevel,'function');view.setDetailLevel('metro');
+ assert.deepEqual(view.getView().center,before.center);assert.equal(view.getView().kmAcross,before.kmAcross);
+ assert.ok(Math.abs(view.getView().kmHigh-view.getView().kmAcross*.75)<1e-9);
+ view.destroy();
+});
+
+test('lower detail levels hide already cached roofs and local streets without losing the principal roads',()=>{
+ const previousRequest=globalThis.requestAnimationFrame,previousCancel=globalThis.cancelAnimationFrame,queued=[];
+ globalThis.requestAnimationFrame=fn=>(queued.push(fn),queued.length);globalThis.cancelAnimationFrame=()=>{};
+ const paths=[];let current=[];
+ const ctx=new Proxy({beginPath(){current=[];},moveTo(x,y){current.push([x,y]);},lineTo(x,y){current.push([x,y]);},fill(){paths.push(JSON.stringify(current));},stroke(){paths.push(JSON.stringify(current));},measureText(){return{width:20};}},{get:(object,key)=>key in object?object[key]:(()=>{})});
+ const canvas=new TestCanvas();canvas.getContext=()=>ctx;
+ const local=[{x:1,z:1},{x:2,z:2}],major=[{x:6,z:6},{x:7,z:7}],roof=[{x:8,z:8},{x:8.2,z:8},{x:8.2,z:8.2},{x:8,z:8.2}];
+ const encoded=points=>JSON.stringify(points.map(p=>[p.x,p.z])),draw=()=>{paths.length=0;while(queued.length)queued.shift()();};
+ const view=createCityView(canvas,{autoDetail:false});
+ try{
+  view.show({...city,roads:[{kind:'local',points:local,widthKm:.006},{kind:'arterial',points:major,widthKm:.026}],buildings:[{polygon:roof,center:{x:8.1,z:8.1},areaKm2:.04,kind:'residential'}]});draw();
+  assert.ok(paths.includes(encoded(local))&&paths.includes(encoded(roof)));
+  view.setDetailLevel('metro');draw();assert.ok(paths.includes(encoded(major)));assert.ok(!paths.includes(encoded(local))&&!paths.includes(encoded(roof)));
+  view.setDetailLevel('window');draw();assert.ok(!paths.includes(encoded(major))&&!paths.includes(encoded(roof)));
+ }finally{view.destroy();if(previousRequest)globalThis.requestAnimationFrame=previousRequest;else delete globalThis.requestAnimationFrame;if(previousCancel)globalThis.cancelAnimationFrame=previousCancel;else delete globalThis.cancelAnimationFrame;}
+});
 
 // A screen/world transform error would make the same tap choose the wrong neighborhood after zoom.
 test('city zoom reports the actual visible kilometers and district taps use map coordinates',()=>{

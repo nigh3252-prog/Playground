@@ -11,7 +11,7 @@ export function regionalCityContext(world,history,frame,colors){
   return [{id:site.id,name:site.name,population:state.population,point:point(site.nodeId),radiusKm:Math.sqrt((state.urbanAreaKm2||state.population/3000)/Math.PI)}];
  });
  const active=new Map((frame.routeStates||[]).filter(r=>r.active).map(r=>[r.routeId,r]));
- const routes=history.routes.filter(r=>r.founded<=frame.generation&&active.has(r.id)).map(r=>({id:r.id,a:r.a,b:r.b,kind:r.kind,widthKm:(frame.era||'agrarian')==='agrarian'?.012:.026,points:r.nodes.map(point),traffic:active.get(r.id).traffic||0}));
+ const routes=history.routes.filter(r=>r.founded<=frame.generation&&active.has(r.id)).map(r=>({id:r.id,a:r.a,b:r.b,kind:r.kind,widthKm:active.get(r.id).widthKm??((frame.era||'agrarian')==='agrarian'?.012:.026),roadClass:active.get(r.id).roadClass,points:r.nodes.map(point),traffic:active.get(r.id).traffic||0}));
  const rivers=[];
  for(let i=0;i<world.height.length;i++){
   const j=world.receiver?.[i];
@@ -21,6 +21,12 @@ export function regionalCityContext(world,history,frame,colors){
  // Store terrain alone: dots and labels must retain their own zoom behavior.
  const width=1536,pixels=colors?rasterizeWindow(world.mesh,colors,width,bounds):null;
  return {bounds,sites,routes,rivers,pixels,pixelWidth:width,year:frame.year};
+}
+
+export function regionalWindowContext(world,colors,viewport){
+ const size=world.mesh.sizeKm||world.config.sizeKm,span=Math.min(size,Math.max(viewport.kmAcross,viewport.kmHigh||viewport.kmAcross)*1.2);
+ const bounds={x:Math.max(0,Math.min(size-span,viewport.center.x-span/2)),z:Math.max(0,Math.min(size-span,viewport.center.z-span/2)),size:span},pixelWidth=1536;
+ return{bounds,pixelWidth,pixels:colors?rasterizeWindow(world.mesh,colors,pixelWidth,bounds):null};
 }
 
 export function contextTexture(context,makeCanvas=()=>document.createElement('canvas')){

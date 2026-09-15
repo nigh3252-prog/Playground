@@ -3,9 +3,11 @@
  * This does not claim to recover terrain below the parent mesh resolution. */
 import {indexMesh,locateTriangle} from './world-mesh.mjs';
 import {generateUrbanStructure} from './city-structure.mjs';
+import {datedLandRoutes,routeWidth,urbanArea,historicPathRecipes,planSignature,roadAccess,anchorHistoricPaths,datedStructureInputs} from './city-plan.mjs';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const indexes=new WeakMap();
+const indexes=new WeakMap(),plans=new WeakMap();
+const MAX_CACHED_PLANS=8;
 const MAX_SLOPE=.22,MAX_GRID=129;
 const COLORS={downtown:'#c2a886',mixed:'#c4b297',residential:'#c8c0a6',industrial:'#a6b6b7',park:'#8aac87'};
 const hash=(n,seed)=>{let t=(n^seed)>>>0;t=Math.imul(t^t>>>16,0x45d9f3b);t=Math.imul(t^t>>>16,0x45d9f3b);return((t^t>>>16)>>>0)/4294967296;};
@@ -87,10 +89,7 @@ function inheritedOrientation(world,history,frame,site,seed){
  return{angle:(hash(site.id+17,seed)-.5)*Math.PI,source:'local street plan',ids:[]};
 }
 
-function datedUrbanArea(state,era){
- const population=state.population,defaultDensity=era==='agrarian'?900:population<5000?1800:population<50000?3000:5000,density=Number.isFinite(state.densityPerKm2)&&state.densityPerKm2>0?state.densityPerKm2:defaultDensity;
- return Number.isFinite(state.urbanAreaKm2)&&state.urbanAreaKm2>0?state.urbanAreaKm2:population/density;
-}
+const datedUrbanArea=urbanArea;
 
 function settlementTerritory(world,history,frame,site,state,bounds){
  const states=new Map(frame.siteStates.map(s=>[s.siteId,s])),boundaries=[],era=frame.era||'agrarian',ownRadius=Math.sqrt(datedUrbanArea(state,era)/Math.PI),{mesh}=world;
@@ -112,10 +111,10 @@ function settlementTerritory(world,history,frame,site,state,bounds){
  return{sourceGeneration:frame.generation,rule:'dated urban area weighted half-planes',boundaries};
 }
 
-function regionalRouteMasks(world,history,frame,bounds,widthKm){
- const active=new Set((frame.routeStates||[]).filter(r=>r.active).map(r=>r.routeId)),masks=[],half=widthKm/2,{mesh}=world,box={x:bounds.x,z:bounds.z,right:bounds.x+bounds.size,bottom:bounds.z+bounds.size};
- for(const route of history.routes||[]){
-  if(route.kind!=='land'||!(route.founded<=frame.generation)||!active.has(route.id))continue;
+function regionalRouteMasks(world,history,frame,bounds){
+ const masks=[],{mesh}=world,box={x:bounds.x,z:bounds.z,right:bounds.x+bounds.size,bottom:bounds.z+bounds.size};
+ for(const {route,state} of datedLandRoutes(history,frame)){
+  const half=routeWidth(state,frame.era||'agrarian')/2;
   for(let i=1;i<route.nodes.length;i++){
    const a={x:mesh.x[route.nodes[i-1]],z:mesh.z[route.nodes[i-1]]},b={x:mesh.x[route.nodes[i]],z:mesh.z[route.nodes[i]]},length=distance(a,b);if(!(length>0))continue;
    if(!overlaps({x:Math.min(a.x,b.x)-half,z:Math.min(a.z,b.z)-half,right:Math.max(a.x,b.x)+half,bottom:Math.max(a.z,b.z)+half},box))continue;
@@ -139,14 +138,14 @@ function makeGrid(world,index,origin,length,n,angle,seed,blocked){
  }return{cells,vertices,n,step,origin,angle};
 }
 function neighbors(grid,id){const {n}=grid,row=Math.floor(id/n),col=id%n,out=[];if(col>0)out.push(id-1);if(col<n-1)out.push(id+1);if(row>0)out.push(id-n);if(row<n-1)out.push(id+n);return out;}
-function growCity(grid,origin,target,seed){
+function growCity(grid,origin,target,seed,access){
  const {cells}=grid;let start=-1,nearest=Infinity;
  for(const c of cells)if(c.buildable){const d=distance(c.center,origin);if(d<nearest){nearest=d;start=c.id;}}
  if(start<0)throw new Error('No buildable neighborhood land is available around this settlement');
  const heap=new Heap(),chosen=[];cells[start].cost=0;heap.push(start,0);let area=0;
  while(heap.a.length&&area<target){const {id,key}=heap.pop(),c=cells[id];if(c.developed||key!==c.cost)continue;c.developed=true;chosen.push(c);area+=c.areaKm2;
   for(const j of neighbors(grid,id)){const b=cells[j];if(!b.buildable||b.developed)continue;
-   const avenue=Math.min(Math.abs(b.col-cells[start].col),Math.abs(b.row-cells[start].row)),edge=1+b.slope*13+.13*Math.sin(b.col*.24+seed%19)+.16*Math.sin(b.row*.31+seed%13)+(avenue<2?-.24:0)+hash(j,seed)*.12;
+   const avenue=Math.min(Math.abs(b.col-cells[start].col),Math.abs(b.row-cells[start].row)),edge=Math.max(.2,1+b.slope*13+.13*Math.sin(b.col*.24+seed%19)+.16*Math.sin(b.row*.31+seed%13)+(avenue<2?-.24:0)+hash(j,seed)*.12-access(b.center));
    const cost=key+distance(c.center,b.center)*edge;if(cost<b.cost){b.cost=cost;heap.push(j,cost);}
   }
  }return{chosen,start,area};
@@ -200,7 +199,7 @@ function assignDistricts(grid,growth,population,era,seed,origin){
  return{districts,blocks};
 }
 
-export function generateCity(world,history,frame,siteId){
+function buildCityPlan(world,history,frame,siteId){
  const {site,state,size}=validate(world,history,frame,siteId),population=state.population,seed=((world.config?.seed||0)^(history.seed||0)^Math.imul(siteId+1,2891336453))>>>0;
  let index=indexes.get(world.mesh);if(!index){index=indexMesh({...world.mesh,sizeKm:size,n:world.mesh.n||Math.round(Math.sqrt(world.mesh.x.length))});indexes.set(world.mesh,index);}
  const origin={x:world.mesh.x[site.nodeId],z:world.mesh.z[site.nodeId]},era=frame.era||'agrarian',targetAreaKm2=datedUrbanArea(state,era);
@@ -209,12 +208,26 @@ export function generateCity(world,history,frame,siteId){
  const terrain=parentTerrain(world,initialBounds),terrainBlocked=polygonIndex([...terrain.water,...terrain.steep],initialBounds),territory=settlementTerritory(world,history,frame,site,state,initialBounds),owned=polygon=>territory.boundaries.every(({normal,offsetKm})=>polygon.every(p=>p.x*normal.x+p.z*normal.z<=offsetKm+1e-9)),blocked=polygon=>!owned(polygon)||terrainBlocked(polygon),orientation=inheritedOrientation(world,history,frame,site,seed);
  // Every dated regional land corridor uses the same width in every city.
  // Through-route masks constrain roofs, while allowing street intersections.
- const regionalRoadWidthKm=era==='agrarian'?.012:.026,corridorBlocked=polygonIndex(regionalRouteMasks(world,history,frame,initialBounds,regionalRoadWidthKm),initialBounds),buildingBlocked=polygon=>blocked(polygon)||corridorBlocked(polygon);
- const grid=makeGrid(world,index,origin,length,n,orientation.angle,seed,blocked),growth=growCity(grid,origin,targetAreaKm2,seed),{districts,blocks}=assignDistricts(grid,growth,population,era,seed,origin);
+ const corridorBlocked=polygonIndex(regionalRouteMasks(world,history,frame,initialBounds),initialBounds),buildingBlocked=polygon=>blocked(polygon)||corridorBlocked(polygon);
+ const grid=makeGrid(world,index,origin,length,n,orientation.angle,seed,blocked),growth=growCity(grid,origin,targetAreaKm2,seed,roadAccess(world,datedLandRoutes(history,frame),grid.step,initialBounds)),{districts,blocks}=assignDistricts(grid,growth,population,era,seed,origin);
  const developed=boxOf(blocks.flatMap(b=>b.polygon)),span=Math.max(developed.right-developed.x,developed.bottom-developed.z),extent=Math.min(size,Math.max(.3,span*1.32)),bounds={x:clamp((developed.x+developed.right-extent)/2,0,size-extent),z:clamp((developed.z+developed.bottom-extent)/2,0,size-extent),size:extent};
- const blockedWithoutRiver=polygonIndex([...terrain.water.filter(w=>w.kind!=='river'),...terrain.steep],initialBounds),structure=generateUrbanStructure({world,history,frame,site,grid,growth,districts,bounds,terrain,blocked,buildingBlocked,blockedWithoutRiver,regionalRoadWidthKm,orientation,seed,population});
+ const blockedWithoutRiver=polygonIndex([...terrain.water.filter(w=>w.kind!=='river'),...terrain.steep],initialBounds),structureOptions={world,...datedStructureInputs(history,frame,site),grid,growth,districts,bounds,terrain,blocked,buildingBlocked,blockedWithoutRiver,owned,orientation,seed,population,historicRecipes:anchorHistoricPaths(historicPathRecipes(world,history,frame,site,seed),origin,terrainBlocked)};
  // The initial context covers every generated block; crop rendering to the
  // final view without re-solving drainage or assigning extra population.
  delete terrain.steep;
- return{version:'neighborhood-city-v2',siteId,name:site.name,nameOrigin:site.nameOrigin||null,population,year:frame.year,generation:frame.generation,era,eraLabel:frame.eraLabel||era,groupId:state.groupId??site.groupId,origin,center:grid.cells[growth.start].center,bounds,areaKm2:growth.area,targetAreaKm2,densityPerKm2:population/growth.area,footprintLimited:growth.area<targetAreaKm2*.96,districts,blocks,...structure,terrain,territory,cellKm:grid.step/grid.divisions,orientationRadians:orientation.angle,orientationSource:orientation.source,inheritedRouteIds:orientation.ids,geographyNote:'Neighborhoods, streets and building footprints are generated at city scale. Terrain and water are interpolated from the unchanged parent mesh; no finer terrain observations are implied.'};
+ const base={version:'neighborhood-city-v3',siteId,name:site.name,nameOrigin:site.nameOrigin||null,population,year:frame.year,generation:frame.generation,era,eraLabel:frame.eraLabel||era,groupId:state.groupId??site.groupId,origin,center:grid.cells[growth.start].center,bounds,areaKm2:growth.area,targetAreaKm2,densityPerKm2:population/growth.area,footprintLimited:growth.area<targetAreaKm2*.96,districts,blocks,terrain,territory,cellKm:grid.step/grid.divisions,orientationRadians:orientation.angle,orientationSource:orientation.source,inheritedRouteIds:orientation.ids,geographyNote:'Neighborhoods, streets and building footprints are generated at city scale. Terrain and water are interpolated from the unchanged parent mesh; no finer terrain observations are implied.'};
+ return{base,structureOptions,results:new Map()};
+}
+
+export function generateCity(world,history,frame,siteId,options={}){
+ const detail=options.detail??'streets';
+ if(detail!=='metro'&&detail!=='streets')throw new Error('City detail must be metro or streets');
+ const {site}=validate(world,history,frame,siteId),key=planSignature(world,history,frame,site);
+ let histories=plans.get(world);if(!histories){histories=new WeakMap();plans.set(world,histories);}
+ let cache=histories.get(history);if(!cache){cache=new Map();histories.set(history,cache);}
+ let plan=cache.get(key);
+ if(!plan){plan=buildCityPlan(world,history,frame,siteId);cache.set(key,plan);if(cache.size>MAX_CACHED_PLANS)cache.delete(cache.keys().next().value);}
+ else{cache.delete(key);cache.set(key,plan);}
+ if(!plan.results.has(detail))plan.results.set(detail,{...plan.base,...generateUrbanStructure({...plan.structureOptions,detail}),detailLevel:detail});
+ return plan.results.get(detail);
 }

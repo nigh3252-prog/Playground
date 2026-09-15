@@ -1,15 +1,18 @@
+import {DETAIL_LEVELS,planAreaDetail} from './area-detail.mjs';
 const $=id=>document.getElementById(id);
 const number=(n,d=0)=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:d});
 
 // The shell owns dated selection and focus. Geometry and drawing are supplied
 // by the model/view, so a queued open cannot survive a history replacement.
-export function createCityControls({buildCity,createView,buildContext=()=>null,getViewport=()=>null,onEnter=()=>{},onOpen=()=>{},onClose=()=>{},onError=()=>{},schedule=fn=>requestAnimationFrame(fn)}){
+export function createCityControls({buildCity,createView,buildContext=()=>null,buildWindow=()=>null,getViewport=()=>null,onEnter=()=>{},onOpen=()=>{},onClose=()=>{},onError=()=>{},schedule=fn=>requestAnimationFrame(()=>setTimeout(fn,0))}){
   let context={},scene=null,view=null,city=null,request=0,modal=null,opener=null;
+  let level='parent',areaBusy=false;
   const pendingDetails=new Set();
   const cache=new Map(),inertBefore=new Map();
+  function ready(){return !!(context.enabled&&context.world&&context.history&&context.frame&&!context.busy);}
   function available(){
-    const {world,history,frame,enabled,busy}=context;
-    if(!world||!history||!frame||!enabled||busy)return [];
+    const {history,frame}=context;
+    if(!ready())return [];
     return frame.siteStates.flatMap(state=>{
       const site=history.sites[state.siteId];
       return site&&site.founded<=frame.generation&&state.population>0&&state.status!=='abandoned'?[{site,state}]:[];
@@ -24,7 +27,7 @@ export function createCityControls({buildCity,createView,buildContext=()=>null,g
     }
   }
   function close({restoreFocus=true}={}){
-    ++request;pendingDetails.clear();const wasOpen=!!modal;modal=null;city=null;
+    ++request;pendingDetails.clear();areaBusy=false;const wasOpen=!!modal;modal=null;city=null;
     $('cityScreen').hidden=true;$('cityChooser').hidden=true;
     document.body.dataset.city='false';view?.setActive(false);
     for(const [element,previous] of inertBefore)element.inert=previous;
@@ -70,9 +73,9 @@ export function createCityControls({buildCity,createView,buildContext=()=>null,g
   function ensureView(){
     if(!scene)scene=buildContext(context.world,context.history,context.frame);
     if(!view)view=createView($('cityCanvas'),{
-      onSelect:id=>selectDistrict(id,false),
-      onSelectSite:id=>loadDetail(id),onDetailRequest:id=>loadDetail(id,{select:false}),
-      onChange:({kmAcross})=>{$('cityScale').textContent=`${number(kmAcross,kmAcross<10?1:0)} km across`;},
+      autoDetail:false,onSelect:id=>selectDistrict(id,false),
+      onSelectSite:id=>loadDetail(id,{detail:level==='streets'?'streets':'metro'}),onDetailRequest:id=>loadDetail(id,{select:false}),
+      onChange:({kmAcross})=>{$('cityScale').textContent=`${number(kmAcross,kmAcross<10?1:0)} km across`;updateDetailControls();},
     });
   }
   function cityInfo(place){
@@ -85,26 +88,36 @@ export function createCityControls({buildCity,createView,buildContext=()=>null,g
     $('cityDistrict').replaceChildren(new Option('City overview','-1'),...city.districts.map(d=>new Option(`${d.name} · ${number(d.population)}`,String(d.id))));
     $('cityDistrictPanel').hidden=false;selectDistrict(-1);onOpen(city.siteId,city);
   }
-  function built(place){
-    const id=place.site.id,value=cache.get(id)||buildCity(context.world,context.history,context.frame,id);
-    if(!value)throw new Error('This place has no inhabited city at this date.');
-    cache.set(id,value);if(cache.size>6)cache.delete(cache.keys().next().value);return value;
+  function areaInfo(detail,siteCount=0){
+    $('cityTitle').textContent={parent:'Parent map',window:'Window map',metro:'Metro overview',streets:'Street map'}[detail];
+    $('citySummary').textContent=`Year ${number(context.frame.year)} · ${detail==='parent'?'Zoom to an area':siteCount?`${number(siteCount)} place${siteCount===1?'':'s'} in this area`:'Terrain and regional connections'}`;
+    for(const id of ['cityNameOrigin','cityModelNote','cityDistrictName','cityDistrictFacts','cityDistrictKind'])$(id).textContent='';
+    $('cityDistrict').disabled=true;$('cityDistrict').replaceChildren();$('cityDistrict').value='';
+    $('cityDistrictPanel').hidden=true;setPanel(false);
   }
-  function loadDetail(siteId,{select=true}={}){
-    if(modal!==$('cityScreen')||pendingDetails.has(siteId))return;
+  function built(place,detail='streets'){
+    const id=place.site.id,key=`${detail}:${id}`,value=cache.get(key)||buildCity(context.world,context.history,context.frame,id,{detail});
+    if(!value)throw new Error('This place has no inhabited city at this date.');
+    cache.delete(key);cache.set(key,value);
+    const keys=[...cache.keys()].filter(k=>k.startsWith(detail+':')),limit=detail==='streets'?8:64;
+    if(keys.length>limit){const expired=keys.find(k=>cache.get(k)!==city)||keys[0],old=cache.get(expired);cache.delete(expired);const overview=cache.get(`metro:${old.siteId}`);if(overview)view?.addCity(overview);else view?.removeCity?.(old.siteId);}
+    return value;
+  }
+  function loadDetail(siteId,{select=true,detail='streets'}={}){
+    if(areaBusy||modal!==$('cityScreen')||pendingDetails.has(siteId))return;
     const place=available().find(p=>p.site.id===siteId);if(!place)return;
     const token=request,origin=context;pendingDetails.add(siteId);
     $('cityLoading').textContent=`Building ${place.site.name}…`;$('cityLoading').hidden=false;
     schedule(()=>{
       if(token!==request||context!==origin)return;
       pendingDetails.delete(siteId);
-      try{const detail=built(place);if(select){city=detail;view.setCity(city);cityInfo(place);}else view.addCity(detail);}
+      try{const value=built(place,detail);if(select){city=value;level=detail;view.setDetailLevel?.(level);view.setCity(city);cityInfo(place);}else view.addCity(value);}
       catch(error){onError(error);}
-      $('cityLoading').hidden=pendingDetails.size===0;
+      $('cityLoading').hidden=pendingDetails.size===0;updateDetailControls();
     });
   }
   function showScreen(){
-    onEnter();++request;pendingDetails.clear();
+    onEnter();++request;pendingDetails.clear();areaBusy=false;
     $('cityChooser').hidden=true;$('cityScreen').hidden=false;activate($('cityScreen'));
     document.body.dataset.city='true';$('cityBack').focus();setPanel(false);
     $('cityCanvas').style.visibility='hidden';$('cityDistrictPanel').hidden=true;
@@ -112,40 +125,82 @@ export function createCityControls({buildCity,createView,buildContext=()=>null,g
   }
   function open(siteId){
     const place=available().find(p=>p.site.id===siteId);if(!place)return false;
-    showScreen();const token=request,origin=context;
+    showScreen();level='streets';const token=request,origin=context;
     $('cityTitle').textContent=place.site.name;$('citySummary').textContent='Building neighborhoods…';
     schedule(()=>{
       if(token!==request||context!==origin)return;
       try{
         city=built(place);ensureView();
-        $('cityCanvas').style.visibility='visible';view.setActive(true);view.show(city,{context:scene});
-        $('cityLoading').hidden=pendingDetails.size===0;cityInfo(place);
+        $('cityCanvas').style.visibility='visible';view.setActive(true);view.show(city,{context:scene,detailLevel:level});
+        $('cityLoading').hidden=pendingDetails.size===0;cityInfo(place);updateDetailControls();
       }catch(error){close();onError(error);}
     });return true;
   }
   function openMap(viewport=getViewport()){
-    if(!available().length||!viewport)return false;
-    showScreen();const token=request,origin=context;city=null;
-    $('cityTitle').textContent='Explore map';$('citySummary').textContent=`Year ${number(context.frame.year)} · Zoom toward a town or city`;
+    if(!ready())return false;
+    showScreen();const token=request,origin=context;city=null;level='parent';
+    areaInfo(level);
     schedule(()=>{
       if(token!==request||context!==origin)return;
       try{
-        ensureView();$('cityCanvas').style.visibility='visible';view.setActive(true);view.show(null,{context:scene,viewport});
-        $('cityLoading').hidden=pendingDetails.size===0;$('cityReset').disabled=true;
+        ensureView();$('cityCanvas').style.visibility='visible';view.setActive(true);view.show(null,{context:scene,viewport,detailLevel:level});
+        $('cityLoading').hidden=pendingDetails.size===0;$('cityReset').disabled=false;updateDetailControls();
       }catch(error){close();onError(error);}
     });return true;
+  }
+  function updateDetailControls(message){
+    const next=DETAIL_LEVELS[Math.min(3,DETAIL_LEVELS.indexOf(level)+1)],viewport=view?.getView?.(),plan=planAreaDetail(requestSites(),viewport,next);
+    for(const name of DETAIL_LEVELS){const button=$('cityLevel'+name[0].toUpperCase()+name.slice(1));if(!button)continue;button.setAttribute('aria-pressed',String(name===level));button.disabled=areaBusy;}
+    const load=$('loadArea');if(load){load.textContent=`Load ${next==='streets'?'streets':next+' detail'} here`;load.disabled=areaBusy||!plan.allowed;}
+    const hint=$('cityDetailHint');if(hint)hint.textContent=(level==='window'?'Same terrain, sharper map. ':'')+(message||(areaBusy?'Preparing the selected area…':!plan.allowed?plan.reason:level==='parent'?'Zoom to an area, then load window detail.':level==='window'?'Load metro detail to see districts and major roads.':level==='metro'?'Zoom closer, then load streets and buildings.':'Pan to another area and load its streets.'));
+    document.body.dataset.mapDetail=level;
+  }
+  function requestSites(){return(scene?.sites||[]).map(site=>{const known=cache.get(`metro:${site.id}`)||cache.get(`streets:${site.id}`);return known?{...site,bounds:known.bounds}:site;});}
+  function loadArea(targetLevel){
+    if(areaBusy||modal!==$('cityScreen')||!view)return false;
+    if(targetLevel==='parent'){
+      ++request;pendingDetails.clear();city=null;level='parent';view.setCity?.(null);view.setDetailLevel?.(level);
+      $('cityLoading').hidden=true;areaInfo(level);updateDetailControls();return true;
+    }
+    const viewport=view.getView?.(),plan=planAreaDetail(requestSites(),viewport,targetLevel);
+    if(!plan.allowed){updateDetailControls(plan.reason);return false;}
+    const token=++request,origin=context;pendingDetails.clear();areaBusy=true;
+    if(city&&!plan.siteIds.includes(city.siteId)){city=null;view.setCity?.(null);areaInfo(targetLevel,plan.siteIds.length);}
+    $('cityLoading').hidden=false;$('cityLoading').textContent=`Preparing ${targetLevel} detail…`;updateDetailControls();
+    const places=new Map(available().map(p=>[p.site.id,p]));let cursor=0,failures=0;
+    const finish=()=>{
+      areaBusy=false;level=targetLevel;view.setDetailLevel?.(level);
+      $('cityLoading').hidden=true;$('cityReset').disabled=false;
+      if(!city)areaInfo(level,plan.siteIds.length);
+      $('cityDistrictPanel').hidden=!city||!['metro','streets'].includes(level);
+      updateDetailControls(failures?`${failures} place${failures===1?'':'s'} could not load. Try this area again.`:plan.siteIds.length===0&&targetLevel!=='window'?'Countryside · no urban footprints in this area.':undefined);
+    };
+    const step=()=>{
+      if(token!==request||context!==origin||modal!==$('cityScreen'))return;
+      if(cursor===0&&targetLevel==='window'){
+        try{const patch=buildWindow(context.world,viewport);if(patch)view.addTerrainWindow?.(patch);}catch(error){failures++;onError(error);}
+      }
+      if(cursor>=plan.siteIds.length){finish();return;}
+      const id=plan.siteIds[cursor++],place=places.get(id);
+      $('cityLoading').textContent=`${targetLevel==='metro'?'Planning districts':'Building streets'} · ${cursor} of ${plan.siteIds.length}${place?' · '+place.site.name:''}`;
+      try{if(place){const value=built(place,targetLevel);view.addCity(value);if(city?.siteId===id){city=value;view.setCity(city);cityInfo(place);}}}catch(error){failures++;onError(error);}
+      schedule(step);
+    };
+    schedule(step);return true;
   }
   function setContext(next){
     const changed=context.world!==next.world||context.history!==next.history||context.frame!==next.frame||context.enabled!==next.enabled||context.busy!==next.busy;
     if(changed){close({restoreFocus:false});cache.clear();scene=null;context=next;}
     $('openCities').hidden=!next.enabled;$('openCities').disabled=!available().length;
-    $('exploreMap').hidden=!next.enabled;$('exploreMap').disabled=!available().length;
+    $('exploreMap').hidden=!next.enabled;$('exploreMap').disabled=!ready();
   }
   $('exploreMap').onclick=()=>openMap();$('cityPanelToggle').onclick=()=>setPanel($('cityDistrictBody').hidden);
   $('openCities').onclick=showChooser;$('closeCityChooser').onclick=()=>close();
   $('citySearch').oninput=renderChoices;$('cityBack').onclick=()=>close();
   $('cityDistrict').onchange=()=>selectDistrict($('cityDistrict').value);
-  $('cityZoomIn').onclick=()=>view?.zoomBy(1.6);$('cityZoomOut').onclick=()=>view?.zoomBy(1/1.6);$('cityReset').onclick=()=>view?.reset();
+  $('cityZoomIn').onclick=()=>view?.zoomBy(1.6);$('cityZoomOut').onclick=()=>view?.zoomBy(1/1.6);$('cityReset').onclick=()=>view?.fitParent?.();
+  for(const name of DETAIL_LEVELS){const button=$('cityLevel'+name[0].toUpperCase()+name.slice(1));if(button)button.onclick=()=>loadArea(name);}
+  if($('loadArea'))$('loadArea').onclick=()=>loadArea(DETAIL_LEVELS[Math.min(3,DETAIL_LEVELS.indexOf(level)+1)]);
   document.addEventListener('keydown',event=>{
     if(!modal)return;
     if(event.key==='Escape'){event.preventDefault();close();return;}
@@ -155,5 +210,5 @@ export function createCityControls({buildCity,createView,buildContext=()=>null,g
     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
   });
-  return {setContext,open,openMap,close,showChooser,get current(){return city;}};
+  return {setContext,open,openMap,openParent:()=>openMap(null),loadArea,close,showChooser,get current(){return city;},get detailLevel(){return level;}};
 }

@@ -42,8 +42,12 @@
 </section>
 <section id="cityScreen" hidden role="dialog" aria-modal="true" aria-labelledby="cityTitle">
   <canvas id="cityCanvas" aria-label="Regional and city map: drag to pan, pinch to zoom, tap a town or neighborhood"></canvas>
-  <div class="city-header glass"><button id="cityBack" class="action" aria-label="Back to regional map">‹ Map</button><div><h2 id="cityTitle"></h2><p id="citySummary"></p></div></div>
-  <div class="city-navigation"><button id="cityZoomIn" class="action glass" aria-label="Zoom into city">+</button><button id="cityZoomOut" class="action glass" aria-label="Zoom out of city">−</button><button id="cityReset" class="action glass" aria-label="Fit whole city">⌂</button></div>
+  <div class="city-header glass"><button id="cityBack" class="action" aria-label="Back to atlas and history">‹ Atlas</button><div><h2 id="cityTitle"></h2><p id="citySummary"></p></div></div>
+  <div class="city-detail-controls">
+    <nav class="city-detail-levels glass" aria-label="Map detail"><button id="cityLevelParent" aria-pressed="true">Parent</button><button id="cityLevelWindow" aria-pressed="false">Window</button><button id="cityLevelMetro" aria-pressed="false">Metro</button><button id="cityLevelStreets" aria-pressed="false">Streets</button></nav>
+    <div class="city-refine-row"><button id="loadArea" class="action glass">Load window detail here</button><p id="cityDetailHint" class="glass" role="status">Zoom to an area, then load window detail.</p></div>
+  </div>
+  <div class="city-navigation"><button id="cityZoomIn" class="action glass" aria-label="Zoom in">+</button><button id="cityZoomOut" class="action glass" aria-label="Zoom out">−</button><button id="cityReset" class="action glass" aria-label="Fit parent map">⌂</button></div>
   <p id="cityScale" class="glass"></p><div id="cityLoading" class="glass" role="status">Building neighborhoods…</div>
   <section id="cityDistrictPanel" class="glass" hidden>
     <button id="cityPanelToggle" class="city-panel-toggle" aria-expanded="false" aria-controls="cityDistrictBody">Neighborhoods ▴</button><div id="cityDistrictBody" hidden><label class="city-search-label" for="cityDistrict">Explore neighborhoods</label><select id="cityDistrict"></select>

@@ -263,6 +263,107 @@ test('buildings clear active dated through-routes as well as their own city appr
  f.frame.routeStates[0].active=true;const c=cityFor(f),mesh=f.world.mesh,a={x:mesh.x[node-2],z:mesh.z[node-2]},b={x:mesh.x[node+2],z:mesh.z[node+2]},dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz),half=.026/2+.0019;
  const corridor=[{x:a.x-dz/length*half,z:a.z+dx/length*half},{x:b.x-dz/length*half,z:b.z+dx/length*half},{x:b.x+dz/length*half,z:b.z-dx/length*half},{x:a.x+dz/length*half,z:a.z-dx/length*half}];
  assert.ok(c.buildings.length>100);for(const building of c.buildings)assert.ok(!intersects(building.polygon,corridor),'buildings clear the shared regional road width');
- assert.ok(!c.roads.some(r=>r.sourceRouteId===40),'through-route clearance creates no synthetic city route');
- assert.ok(isDeepStrictEqual(c.blocks,early.blocks)&&isDeepStrictEqual(c.roads,early.roads),'through corridors permit local street intersections and preserve population land accounting');
+ assert.ok(c.roads.some(r=>r.sourceRouteId===40),'active through route becomes an exact inherited city corridor');
+ assert.ok(c.roads.some(r=>r.phase==='through-route connection'),'through routes connect to the urban skeleton');
+});
+
+
+test('Metro shares the dated plan with Streets without realizing local streets or roofs',()=>{
+ const f=fixture({population:35000});
+ const metro=generateCity(f.world,f.history,f.frame,0,{detail:'metro'}),streets=cityFor(f);
+ assert.equal(metro.detailLevel,'metro');assert.equal(streets.detailLevel,'streets');
+ assert.deepEqual(metro.blocks,streets.blocks);assert.deepEqual(metro.districts,streets.districts);assert.deepEqual(metro.bounds,streets.bounds);
+ assert.equal(metro.areaKm2,streets.areaKm2);assert.deepEqual(metro.buildings,[]);
+ assert.ok(metro.roads.every(r=>r.kind!=='local'));
+ const principal=c=>c.roads.filter(r=>r.kind!=='local');
+ assert.deepEqual(principal(metro),principal(streets));
+ assert.equal(metro.development.localStreetCount,0);assert.ok(streets.development.localStreetCount>0);
+ // Shared objects demonstrate plan reuse, independent of requesting order.
+ assert.equal(metro.blocks,streets.blocks);
+ const reverse=structuredClone(f),fine=cityFor(reverse),broad=generateCity(reverse.world,reverse.history,reverse.frame,0,{detail:'metro'});
+ assert.deepEqual(broad,metro);assert.deepEqual(fine,streets);
+});
+
+test('dated founding lanes survive expansion with unchanged geometry and provenance',()=>{
+ for(const river of [false,true]){
+ const f=fixture({population:1800,river}),early=structuredClone(f.frame);early.generation=2;early.year=50;
+ const later=structuredClone(early);later.generation=14;later.year=350;later.siteStates[0].population=45000;later.siteStates[0].urbanAreaKm2=45000/4400;
+ f.history.snapshots=[early,later];
+ const old=generateCity(f.world,f.history,early,0),expanded=generateCity(f.world,f.history,later,0);
+ const paths=old.roads.filter(r=>r.kind==='local'&&r.provenance?.kind==='retained local path');
+ assert.ok(paths.length>=4,'retain a meaningful founding network');
+ for(const path of paths){
+  const retained=expanded.roads.find(r=>r.provenance?.pathId===path.provenance.pathId);
+  assert.ok(retained);assert.deepEqual(retained.points,path.points);assert.deepEqual(retained.provenance,path.provenance);
+  assert.equal(path.provenance.sourceGeneration,2);assert.equal(path.provenance.sourceYear,50);
+ }
+ const reverse=structuredClone(f);assert.deepEqual(generateCity(reverse.world,reverse.history,later,0),expanded);
+ }
+});
+
+test('planned adjacent districts use a shared survey direction',()=>{
+ const c=cityFor(fixture({population:420000})),planned=c.development.patterns.filter(p=>['planned expansion','industrial access'].includes(p.phase));
+ assert.ok(planned.length>=4);assert.ok(planned.every(p=>p.surveyId==='founding-survey'));
+ assert.equal(new Set(planned.map(p=>p.angleRadians)).size,1);assert.equal(planned[0].angleRadians,0);assert.equal(planned[0].surveySource,'cardinal survey');
+ const aligned=c.roads.filter(r=>r.kind==='local'&&r.phase==='planned expansion');
+ assert.ok(aligned.length>10);
+});
+
+test('dated road widths are honored and road access changes growth beyond its initial bearing',()=>{
+ const f=fixture({population:220000}),node=f.history.sites[0].nodeId;
+ // Keep the first approach (hence orientation) unchanged; a second bent road
+ // should pull occupied cells into its actual corridor.
+ f.history.routes=[{id:1,a:0,b:1,nodes:[node,node+1,node+2],founded:1,kind:'land'}];
+ f.frame.routeStates=[{routeId:1,active:true,roadClass:'trail',widthKm:.012}];
+ const before=generateCity(f.world,f.history,f.frame,0,{detail:'metro'});
+ assert.equal(before.roads.find(r=>r.sourceRouteId===1).widthKm,.012);
+ f.history.routes.push({id:2,a:0,b:2,nodes:[node,node-25,node-50,node-49,node-48],founded:2,kind:'land'});
+ f.frame.routeStates.push({routeId:2,active:true,roadClass:'arterial',widthKm:.026});
+ const after=generateCity(f.world,f.history,f.frame,0,{detail:'metro'});
+ assert.equal(after.orientationRadians,before.orientationRadians);assert.notDeepEqual(after.blocks,before.blocks);
+ assert.equal(after.roads.find(r=>r.sourceRouteId===2).widthKm,.026);
+ const route=f.history.routes[1].nodes.map(i=>({x:f.world.mesh.x[i],z:f.world.mesh.z[i]}));
+ const accessibleArea=city=>city.blocks.filter(b=>route.slice(1).some((p,i)=>segmentDistance(b.center,route[i],p)<.6)).reduce((sum,b)=>sum+b.areaKm2,0);
+ assert.ok(accessibleArea(after)>accessibleArea(before),'new occupied area favors the actual bent corridor');
+});
+
+
+test('dated plan reuse is bounded and eviction preserves deterministic geometry',()=>{
+ const f=fixture({population:180}),first=generateCity(f.world,f.history,f.frame,0,{detail:'metro'});
+ assert.equal(generateCity(f.world,f.history,f.frame,0,{detail:'metro'}),first);
+ for(let i=1;i<=8;i++){const frame={...f.frame,generation:24+i,year:2025+25*i};generateCity(f.world,f.history,frame,0,{detail:'metro'});}
+ const replay=generateCity(f.world,f.history,f.frame,0,{detail:'metro'});
+ assert.notEqual(replay,first);assert.deepEqual(replay,first);
+});
+
+// A cached Metro must refine its original dated inputs even if callers later
+// mutate objects and request the original date through equivalent fresh data.
+test('cached Metro refinement isolates dated route, frame and site inputs',()=>{
+ for(const mutation of ['frame','route and site']){
+  const f=fixture({population:35000}),node=f.history.sites[0].nodeId;
+  f.history.routes=[{id:1,a:0,b:1,nodes:[node,node+1,node+2],founded:1,kind:'land'}];
+  f.frame.routeStates=[{routeId:1,active:true,roadClass:'trail',widthKm:.012}];
+  const original=structuredClone({history:f.history,frame:f.frame}),metro=generateCity(f.world,f.history,f.frame,0,{detail:'metro'});
+  if(mutation==='frame')Object.assign(f.frame.routeStates[0],{roadClass:'arterial',widthKm:.026});
+  else{
+   f.history.routes[0].nodes[1]=node+25;f.history.sites[0].founded=20;
+   f.history.routes=original.history.routes;f.history.sites=original.history.sites;
+  }
+  const streets=generateCity(f.world,f.history,original.frame,0,{detail:'streets'});
+  assert.equal(streets.blocks,metro.blocks,'the equivalent original date reuses its land plan');
+  assert.deepEqual(streets.roads.filter(r=>r.kind!=='local'),metro.roads,mutation);
+  assert.equal(streets.roads.find(r=>r.sourceRouteId===1).widthKm,.012);
+ }
+});
+
+test('changing an early source era invalidates fallback historical lane geometry',()=>{
+ const f=fixture({population:35000}),early=structuredClone(f.frame);
+ early.generation=2;early.year=50;early.era='agrarian';early.siteStates[0].population=1800;
+ delete early.siteStates[0].urbanAreaKm2;delete early.siteStates[0].densityPerKm2;
+ f.history.snapshots=[early,f.frame];
+ const before=cityFor(f),historic=c=>c.roads.filter(r=>r.provenance?.kind==='retained local path').map(r=>r.points);
+ assert.ok(historic(before).length>=4);
+ early.era='modern';const after=cityFor(f);
+ assert.notDeepEqual(historic(after),historic(before),'the source-era fallback changes the retained lane radius');
+ const fresh=structuredClone(f);assert.deepEqual(after,cityFor(fresh),'cached generation agrees with fresh generation');
 });

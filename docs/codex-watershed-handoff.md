@@ -12,6 +12,8 @@ PR URL: https://github.com/nigh3252-prog/Playground/pull/29
 
 This work is intentionally separate from City Lab / PR #20. Do not collapse or replace PR #20.
 
+Latest approved update: the map now starts at the full parent and explicitly loads **Window → Metro → Streets** for the visible area without moving the camera. Metro plans contain districts and principal roads; Streets refines those same plans. Land-road access is separate from river transport, growth follows inherited corridors, early lanes retain dated geometry, and ordinary planned districts share cardinal survey axes. See [area-detail behavior, evidence, and limits](review/2026-09-15-area-detail/README.md). This replaces the earlier automatic nearby-city refinement workflow described in the connected-city review. PR #29 remains open; do not merge without a request.
+
 Ryan approved parent-level inhabitants and generations of history on September 14. The first version adds settlement growth, migration, finite food sharing, route disputes, abandonment/reoccupation, cultivation and woodland recovery. He then approved improving overly straight parent coastlines and lakes after a comparison with real 1,200 km maps. The September 15 update corrects infinite fault deformation, adds drowned coastal relief, and separates rifts into basins. Ryan then requested modern population density, contextual names, and a view into cities and neighborhoods. That is now implemented as a modern extension of history and an on-demand city map; local playable mech terrain remains future work. The independent real-data benchmark pipeline is unchanged.
 
 ---

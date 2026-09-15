@@ -6,8 +6,16 @@ body[data-city="true"]>.bottom-left,body[data-city="true"]>.bottom-right,body[da
 .city-header{position:absolute;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:12px;padding:8px;border-radius:13px;width:fit-content;max-width:calc(100% - 24px)}
 .city-header>div{min-width:0;padding-right:10px}.city-header .action{min-width:62px;min-height:44px;flex-shrink:0}
 .city-header h2{margin:0;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.city-detail-controls{position:absolute;top:82px;left:12px;width:min(540px,calc(100% - 24px))}
+.city-detail-levels{display:flex;width:fit-content;padding:3px;border-radius:12px;gap:3px}
+.city-detail-levels button{border:0;background:transparent;color:#dce7d5;min-height:34px;padding:5px 14px;font-size:12px;border-radius:8px}
+.city-detail-levels button[aria-pressed="true"]{background:#c7d9b5;color:#203733;font-weight:700}
+.city-refine-row{display:flex;align-items:stretch;gap:7px;margin-top:7px}
+#loadArea{font-size:11px;min-height:40px;flex-shrink:0;padding:7px 12px}
+#cityDetailHint{font-size:10px;line-height:1.4;color:#d1dfc8;padding:6px 9px;border-radius:9px;margin:0;max-width:250px;align-content:center}
+.city-detail-controls button:disabled{opacity:.55}
 #citySummary{font-size:11px;color:#c2d2c3;margin:5px 0 0;font-variant-numeric:tabular-nums}
-.city-navigation{position:absolute;right:12px;top:100px;display:grid;gap:6px}
+.city-navigation{position:absolute;right:12px;top:182px;display:grid;gap:6px}
 .city-navigation button{width:44px;height:44px;font-size:22px;background:#162c32f0;border-color:#c0d0be45;color:#ecf0e8;box-shadow:0 3px 12px #10282f30}
 #cityScale{position:absolute;left:14px;bottom:max(12px,env(safe-area-inset-bottom));font-size:11px;color:#e0e6d3;margin:0;padding:7px 11px;border-radius:8px;font-variant-numeric:tabular-nums}
 #cityDistrictPanel{position:absolute;bottom:max(12px,env(safe-area-inset-bottom));right:12px;width:min(350px,calc(100% - 24px));padding:13px;border-radius:14px;max-height:44%;overflow:auto}
@@ -30,8 +38,10 @@ body[data-city="true"]>.bottom-left,body[data-city="true"]>.bottom-right,body[da
 @media(max-width:700px){
  .city-header{left:8px;right:8px;top:max(8px,env(safe-area-inset-top));gap:8px;padding:5px;max-width:calc(100% - 16px)}
  .city-header h2{font-size:15px}#citySummary{font-size:9px}.city-header>div{padding-right:5px}
- .city-navigation{right:10px;top:86px}#cityDistrictPanel{left:10px;right:10px;width:auto;bottom:max(10px,env(safe-area-inset-bottom));max-height:35%;padding:10px 12px}
- #cityScale{left:10px;top:86px;bottom:auto;max-width:calc(100% - 76px);font-size:10px}
+ .city-detail-controls{left:10px;top:70px;width:calc(100% - 20px)}.city-detail-levels{width:100%}.city-detail-levels button{flex:1;padding:5px 8px;min-height:32px;font-size:11px}
+ #loadArea{font-size:10px;max-width:48%;white-space:normal}#cityDetailHint{font-size:9px}
+ .city-navigation{right:10px;top:166px}#cityDistrictPanel{left:10px;right:10px;width:auto;bottom:max(10px,env(safe-area-inset-bottom));max-height:35%;padding:10px 12px}
+ #cityScale{left:10px;top:166px;bottom:auto;max-width:calc(100% - 76px);font-size:10px}
  .city-district-heading{margin-top:8px}#cityDistrictFacts{font-size:10px}
  #cityChooser{padding:13px;max-height:calc(100dvh - 24px)}
  #historyEraLabel{font-size:9px}#historyPopulationBreakdown{font-size:9px}

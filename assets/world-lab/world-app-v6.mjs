@@ -4,7 +4,7 @@ import {createHistoryControls} from './history-controls.mjs';
 import {createCityControls} from './city-controls.mjs';
 import {generateCity} from './city-model.mjs';
 import {createCityView} from './city-view.mjs';
-import {regionalCityContext} from './city-context.mjs';
+import {regionalCityContext,regionalWindowContext} from './city-context.mjs';
 import {historyNodeColor,drawHumanHistory,nearestHistorySite,describeHistoryPlace} from './history-presentation.mjs';
 import {AtlasView} from './atlas-view.mjs';
 import {meshNormals} from './world-view.mjs';
@@ -22,7 +22,7 @@ let world=null,snapshots=[],generation=0,worker=null,suiteWorker=null,selected=-
 let localMapColors=null;
 let humanHistory=null,viewedGeneration=12,selectedSite=-1,historyBusy=false,pendingCity=params.has('city')?Number(params.get('city')):null;
 const historyControls=createHistoryControls({onDate:setHistoryDate,onSelect:selectHistoryPlace,onGenerate:regenerateHistory,onPaint:paint,onOpenCity:id=>{historyControls.stop();cityControls.open(id);},onOptions:()=>{$('menu').hidden=false;$('menu').scrollTop=0;$('menuToggle').setAttribute('aria-expanded','true');}});
-const cityControls=createCityControls({buildCity:generateCity,createView:createCityView,buildContext:(w,h,f)=>regionalCityContext(w,h,f,localMapColors),getViewport:()=>view.getMapViewport(),onEnter:()=>historyControls.stop(),onOpen:id=>{selectHistoryPlace(id,true);updateURL({city:id});},onClose:()=>updateURL({city:null}),onError:error=>toast(error.message)});
+const cityControls=createCityControls({buildCity:generateCity,createView:createCityView,buildContext:(w,h,f)=>regionalCityContext(w,h,f,localMapColors),buildWindow:(w,v)=>regionalWindowContext(w,localMapColors,v),getViewport:()=>view.getMapViewport(),onEnter:()=>historyControls.stop(),onOpen:id=>{selectHistoryPlace(id,true);updateURL({city:id});},onClose:()=>updateURL({city:null}),onError:error=>toast(error.message)});
 const view=new AtlasView($('world'),{onPick:inspect,onChange:({yaw})=>{$('compass').style.transform=`rotate(${-yaw}rad)`;}});
 if(stage===5){view.map=true;$('mapView').textContent='3D';}
 if(!view.gl){$('mapView').textContent='2D';$('mapView').disabled=true;}
@@ -60,7 +60,7 @@ function syncControls(){const reference=$('worldSource').value!=='generated';for
  $('sourceHelp').textContent=reference?'Benchmark mode: raw real elevation; water and population are withheld until scoring. No known lake shapes are imposed.':'A larger parent landmass is solved first. New window changes only what you see—not the parent rivers or basins.';
  for(const id of ['rain','relief'])$(id+'Out').value=Number($(id).value).toFixed(1)+'×';}
 function accept(data,token){if(token!==generation)return;if(data.error)return fail(data.error);if(data.progress){$('status').textContent=data.progress;return;}
- if(data.humanHistory){humanHistory=data.humanHistory;historyBusy=false;$('export').disabled=false;viewedGeneration=clamp(viewedGeneration,0,humanHistory.generations);document.body.dataset.historySeed=String(humanHistory.seed);document.body.dataset.historyGeneration=String(viewedGeneration);updateURL({historySeed:humanHistory.seed,historyGenerations:humanHistory.earlyGenerations??humanHistory.generations,era:humanHistory.era,generation:viewedGeneration});if(stage===5)showStage(5);else renderHistory();if(pendingCity!==null){const id=pendingCity;pendingCity=null;if(!cityControls.open(id))updateURL({city:null});}return;}
+ if(data.humanHistory){humanHistory=data.humanHistory;historyBusy=false;$('export').disabled=false;viewedGeneration=clamp(viewedGeneration,0,humanHistory.generations);document.body.dataset.historySeed=String(humanHistory.seed);document.body.dataset.historyGeneration=String(viewedGeneration);updateURL({historySeed:humanHistory.seed,historyGenerations:humanHistory.earlyGenerations??humanHistory.generations,era:humanHistory.era,generation:viewedGeneration});if(stage===5)showStage(5);else renderHistory();if(pendingCity!==null){const id=pendingCity;pendingCity=null;if(!cityControls.open(id))updateURL({city:null});}else if(stage===5)cityControls.openParent();return;}
  snapshots[data.stage]=data.world;
  if(data.stage===4&&data.world.parentDomain){snapshots[5]=data.world;if(stage===5)showStage(5);}
  if(data.stage===4&&!data.world.parentDomain)historyBusy=false;
