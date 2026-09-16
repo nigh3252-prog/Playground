@@ -1,9 +1,11 @@
 import {visibleHistorySites,describeHistoryPlace} from './history-presentation.mjs';
+import {installWorldMenu} from './world-menu.mjs';
 
 const $=id=>document.getElementById(id);
 const number=n=>Math.round(n||0).toLocaleString('en-US');
 
 export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOptions,onOpenCity}){
+  const menuShell=installWorldMenu();
   let history=null,frame=null,playing=false,timer=0,pending=false,active=false;
   function stop(){playing=false;clearTimeout(timer);$('historyPlay').textContent='▶';$('historyPlay').setAttribute('aria-label','Play history');}
   function advance(){
@@ -22,7 +24,7 @@ export function createHistoryControls({onDate,onSelect,onGenerate,onPaint,onOpti
   $('historyNext').onclick=()=>{stop();onDate(frame.generation+1);};
   $('historyDate').oninput=()=>{stop();onDate(Number($('historyDate').value));};
   $('historyPlace').onchange=()=>onSelect(Number($('historyPlace').value));
-  $('historyOptions').onclick=onOptions;
+  $('historyOptions').onclick=()=>{menuShell?.show('history');onOptions?.();};
   $('closePlace').onclick=()=>onSelect(-1);
   function generate(random){
     if(random)$('historySeed').value=crypto.getRandomValues(new Uint32Array(1))[0];
