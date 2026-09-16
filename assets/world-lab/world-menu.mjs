@@ -87,8 +87,8 @@ export function installWorldMenu({document=globalThis.document}={}){
   move('cityScale',city.detail);
   move('cityDistrictPanel',city.places);
   const cityKey=document.querySelector('.city-key');if(cityKey)city.layers.append(cityKey);
-  const cityReset=document.createElement('button');cityReset.type='button';cityReset.className='action';cityReset.textContent='Reset city view';cityReset.onclick=()=>document.getElementById('cityReset')?.click();city.tools.append(cityReset);
-  const cityToolsNote=document.createElement('p');cityToolsNote.className='note';cityToolsNote.textContent='Zoom controls stay on the map; reset and exports live here or with the selected place.';city.tools.append(cityToolsNote);
+  const cityReset=move('cityReset',city.tools);if(cityReset){cityReset.classList.add('wide');cityReset.textContent='Reset city view';}
+  const cityToolsNote=document.createElement('p');cityToolsNote.className='note';cityToolsNote.textContent='Zoom stays on the map. Reset and exports live in the menu.';city.tools.append(cityToolsNote);
 
   const cityScreen=document.getElementById('cityScreen');
   let cityMenuToggle=document.getElementById('cityMenuToggle');
