@@ -49,3 +49,71 @@ body[data-stage="5"] .bottom-right{font-size:9px}
   body[data-stage="5"] .dock{left:auto;right:10px;transform:none;width:min(370px,48vw);max-height:calc(100dvh - 75px)}
   .history-event-list{max-height:90px}.history-heading span{display:none}
 }
+
+/* Compact shared map menu: a thin category rail plus one active submenu. */
+:root{--world-menu-edge:max(10px,env(safe-area-inset-right));--world-menu-rail:86px;--world-menu-top:max(66px,calc(env(safe-area-inset-top) + 56px));--world-menu-bottom:max(10px,env(safe-area-inset-bottom))}
+#menu.menu-shell{position:fixed;inset:0;width:auto;max-height:none;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;overflow:visible;z-index:58;pointer-events:none}
+#menu.menu-shell .world-menu-rail{position:absolute;right:var(--world-menu-edge);top:var(--world-menu-top);bottom:var(--world-menu-bottom);width:var(--world-menu-rail);display:flex!important;grid-template-columns:none!important;flex-direction:column;gap:6px;padding:2px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;pointer-events:auto}
+#menu.menu-shell .world-menu-rail-button{flex:none;width:100%;min-height:50px;padding:8px 5px;border-radius:10px;background:#162c32f2;border:1px solid #c0d0be30;color:#afc2b7;font-size:12px;line-height:1.15;overflow-wrap:anywhere;box-shadow:0 5px 15px #0d20262e}
+#menu.menu-shell .world-menu-rail-button[aria-expanded="true"]{background:#c7d9b51c;border-color:#c7d9b5;color:#eaf1e3;box-shadow:inset 3px 0 #c7d9b5,0 5px 15px #0d20262e}
+#menu.menu-shell .world-menu-panel{position:absolute;right:calc(var(--world-menu-edge) + var(--world-menu-rail) + 8px);top:var(--world-menu-top);bottom:var(--world-menu-bottom);width:min(310px,calc(100vw - var(--world-menu-rail) - 36px));padding:0 13px 14px;border:1px solid #c0d0be26;border-radius:13px;background:#162c32f4;box-shadow:0 12px 38px #0005;backdrop-filter:blur(12px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;pointer-events:auto}
+#menu.menu-shell .world-menu-panel-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:54px;margin:0 0 8px;padding:8px 0;background:#162c32;border-bottom:1px solid #c0d0be22}
+#menu.menu-shell .world-menu-panel-head h2{margin:0;font-size:15px;letter-spacing:.02em}
+#menu.menu-shell .world-menu-panel-close{width:42px;min-width:42px;min-height:42px;padding:0;border:0;background:transparent;color:#cad8c8;font-size:24px}
+#menu.menu-shell .world-menu-section{min-width:0}
+#menu.menu-shell .world-menu-group{display:grid;gap:8px;min-width:0}
+#menu.menu-shell .world-menu-group>.two,#menu.menu-shell .world-menu-group .two{grid-template-columns:1fr}
+#menu.menu-shell .world-menu-group>.row,#menu.menu-shell .world-menu-group>.check,#menu.menu-shell .world-menu-group>.info-card,#menu.menu-shell .world-menu-group>details{margin:5px 0}
+#menu.menu-shell .world-menu-group>.action,#menu.menu-shell .world-menu-group>button{width:100%}
+#menu.menu-shell nav:not(.world-menu-rail){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+#menu.menu-shell nav:not(.world-menu-rail) button{min-height:40px}
+#menu.menu-shell #historySettings{display:block}
+#menu.menu-shell #historySettings[hidden],#menu.menu-shell #historyTimeline[hidden],#menu.menu-shell #placeCard[hidden]{display:none!important}
+#menu.menu-shell #legend,#menu.menu-shell #inspect,#menu.menu-shell #terrainStats{position:static;width:auto;max-width:none;max-height:none;padding:10px;border-radius:10px}
+#menu.menu-shell #legendToggle,#menu.menu-shell #openBenchmarks,#menu.menu-shell #mapView,#menu.menu-shell #trueScale,#menu.menu-shell #newWindow,#menu.menu-shell #parentMap,#menu.menu-shell #exploreMap,#menu.menu-shell #openCities{width:100%;min-height:42px}
+#menu.menu-shell #historyTimeline{padding:0}
+#menu.menu-shell #placeCard{padding:2px 0 10px}
+#menu.menu-shell .progress{margin:3px 0}
+#menu.menu-shell #stageDescription{margin:4px 0 8px}
+#menu.menu-shell .play-row{display:grid;gap:7px;padding:0}
+#menu.menu-shell .play-row #play{width:100%}
+#menu.menu-shell .status{text-align:left;line-height:1.35}
+#menu.menu-shell .city-detail-controls,#menu.menu-shell #cityDistrictPanel,#menu.menu-shell #cityScale{position:static!important;inset:auto!important;width:auto!important;max-width:none!important;max-height:none!important;margin:0!important}
+#menu.menu-shell .city-detail-controls{display:grid;gap:7px}
+#menu.menu-shell .city-detail-levels{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));width:100%!important}
+#menu.menu-shell .city-detail-levels button{min-height:40px;padding:6px 7px}
+#menu.menu-shell .city-refine-row{display:grid;grid-template-columns:1fr;gap:6px;margin:0}
+#menu.menu-shell #loadArea{max-width:none;width:100%}
+#menu.menu-shell #cityDetailHint{max-width:none;width:100%}
+#menu.menu-shell #cityDistrictPanel{display:block;padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;overflow:visible}
+#menu.menu-shell #cityDistrictPanel[hidden]{display:none!important}
+#menu.menu-shell #cityDistrictPanel .city-panel-toggle{display:none}
+#menu.menu-shell #cityDistrictBody{display:block!important;padding-top:0}
+#menu.menu-shell #cityScale{padding:8px 9px}
+#menu.menu-shell .city-key{padding:8px 0}
+#cityMenuToggle{position:absolute;right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));z-index:61;width:44px;min-width:44px;height:44px;padding:0;font-size:21px;color:#e6edde}
+body:not([data-city="true"]) #cityMenuToggle{display:none!important}
+body[data-city="true"]>#menu.menu-shell{visibility:visible!important}
+body:not([data-city="true"]) .brand{padding:7px 9px}
+body:not([data-city="true"]) .brand .eyebrow{display:none}
+body:not([data-city="true"]) .brand h1{font-size:15px;margin:0}
+body:not([data-city="true"]) .brand p{font-size:9px;margin:2px 0 0}
+
+@media(max-width:700px){
+  :root{--world-menu-rail:min(78px,22vw);--world-menu-top:max(60px,calc(env(safe-area-inset-top) + 52px));--world-menu-edge:max(7px,env(safe-area-inset-right))}
+  #menu.menu-shell{max-height:none}
+  #menu.menu-shell .world-menu-rail{gap:5px}
+  #menu.menu-shell .world-menu-rail-button{min-height:46px;padding:7px 3px;font-size:11px}
+  #menu.menu-shell .world-menu-panel{right:calc(var(--world-menu-edge) + var(--world-menu-rail) + 6px);width:calc(100vw - var(--world-menu-rail) - 26px);padding:0 10px 12px;border-radius:11px}
+  #menu.menu-shell .world-menu-panel-head{min-height:48px;padding:5px 0}
+  #menu.menu-shell .world-menu-panel-head h2{font-size:14px}
+  #menu.menu-shell nav:not(.world-menu-rail){grid-template-columns:repeat(2,minmax(0,1fr))}
+  #menu.menu-shell .history-scrubber{gap:4px}
+  #menu.menu-shell .history-scrubber button{min-width:36px}
+  #menu.menu-shell .history-event-list{max-height:160px}
+}
+@media(max-height:530px){
+  :root{--world-menu-top:max(8px,env(safe-area-inset-top))}
+  #menu.menu-shell .world-menu-rail-button{min-height:42px}
+  #menu.menu-shell .world-menu-panel{bottom:max(8px,env(safe-area-inset-bottom))}
+}
