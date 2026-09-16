@@ -7,24 +7,26 @@ test('atlas and city expose the approved compact menu categories',()=>{
   assert.deepEqual(CITY_MENU_SECTIONS,['detail','places','layers','tools']);
 });
 
-test('menu opens one category at a time and remembers the last category',()=>{
-  let state={open:false,context:'atlas',active:'explore',last:{atlas:'explore',city:'detail'}};
+test('menu opens one category at a time, can collapse to the rail, and remembers the last category',()=>{
+  let state={open:false,panelOpen:false,context:'atlas',active:'explore',last:{atlas:'explore',city:'detail'}};
   state=reduceMenuState(state,{type:'toggle-menu'});
-  assert.deepEqual(state,{open:true,context:'atlas',active:'explore',last:{atlas:'explore',city:'detail'}});
+  assert.deepEqual(state,{open:true,panelOpen:true,context:'atlas',active:'explore',last:{atlas:'explore',city:'detail'}});
   state=reduceMenuState(state,{type:'select',section:'history'});
-  assert.equal(state.open,true);assert.equal(state.active,'history');assert.equal(state.last.atlas,'history');
+  assert.equal(state.open,true);assert.equal(state.panelOpen,true);assert.equal(state.active,'history');assert.equal(state.last.atlas,'history');
+  state=reduceMenuState(state,{type:'select',section:'history'});
+  assert.equal(state.open,true);assert.equal(state.panelOpen,false,'choosing the active category leaves a rail-only menu');
   state=reduceMenuState(state,{type:'select',section:'layers'});
-  assert.equal(state.active,'layers');assert.equal(state.last.atlas,'layers');
+  assert.equal(state.panelOpen,true);assert.equal(state.active,'layers');assert.equal(state.last.atlas,'layers');
   state=reduceMenuState(state,{type:'toggle-menu'});
-  assert.equal(state.open,false);assert.equal(state.active,'layers');
+  assert.equal(state.open,false);assert.equal(state.panelOpen,false);assert.equal(state.active,'layers');
   state=reduceMenuState(state,{type:'toggle-menu'});
-  assert.equal(state.open,true);assert.equal(state.active,'layers');
+  assert.equal(state.open,true);assert.equal(state.panelOpen,true);assert.equal(state.active,'layers');
 });
 
 test('switching map context uses the appropriate category set without leaking atlas-only panels',()=>{
-  let state={open:true,context:'atlas',active:'world',last:{atlas:'world',city:'detail'}};
+  let state={open:true,panelOpen:true,context:'atlas',active:'world',last:{atlas:'world',city:'detail'}};
   state=reduceMenuState(state,{type:'context',context:'city'});
-  assert.equal(state.context,'city');assert.equal(state.active,'detail');assert.equal(state.open,true);
+  assert.equal(state.context,'city');assert.equal(state.active,'detail');assert.equal(state.open,true);assert.equal(state.panelOpen,true);
   state=reduceMenuState(state,{type:'select',section:'places'});
   assert.equal(state.active,'places');assert.equal(state.last.city,'places');
   state=reduceMenuState(state,{type:'context',context:'atlas'});
@@ -32,6 +34,6 @@ test('switching map context uses the appropriate category set without leaking at
 });
 
 test('invalid categories are ignored in the current context',()=>{
-  const state={open:true,context:'city',active:'detail',last:{atlas:'explore',city:'detail'}};
+  const state={open:true,panelOpen:true,context:'city',active:'detail',last:{atlas:'explore',city:'detail'}};
   assert.deepEqual(reduceMenuState(state,{type:'select',section:'world'}),state);
 });
