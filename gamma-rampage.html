@@ -2,16 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Gamma Rampage — Escalating City Run</title>
 <style>
   :root{--bg:#0b0f14;--ink:#e8efe6;--dim:#8a9a90;--gamma:#7CFC00;--panel:rgba(10,14,18,.86);--line:rgba(255,255,255,.12)}
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;user-select:none;-webkit-user-select:none}
-  canvas#c{display:block;position:fixed;inset:0;cursor:crosshair}
+  html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;background:var(--bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;user-select:none;-webkit-user-select:none}
+  canvas#c{display:block;position:fixed;inset:0;width:100vw;height:100vh;width:100dvw;height:100dvh;cursor:crosshair;touch-action:none}
   #hud{position:fixed;inset:0;pointer-events:none;font-size:12px}
   .box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
-  #vitals{position:absolute;left:10px;top:10px;width:250px}
+  #vitals{position:absolute;left:calc(10px + env(safe-area-inset-left));top:10px;width:250px}
   .bar{height:12px;background:#222;border-radius:3px;overflow:hidden;margin:3px 0 6px;position:relative}
   .bar>i{display:block;height:100%;width:50%}
   .bar>span{position:absolute;left:4px;top:-1px;font-size:10px;color:#fff;text-shadow:0 1px 0 #000}
@@ -29,18 +32,26 @@
   .tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(0,0,0,.6)}
   #heatstat{font-size:11px;margin-top:3px;color:var(--dim)}
   #heatstat b.s{color:#ff5b5b}#heatstat b.h{color:#8fe08f}
-  #contracts{position:absolute;right:10px;top:10px;width:280px}
+  #contracts{position:absolute;right:calc(10px + env(safe-area-inset-right));top:10px;width:280px}
   .ct{border-left:3px solid #888;padding:3px 0 3px 7px;margin:5px 0;line-height:1.35}
   .ct .t{font-weight:bold}.ct .d{color:var(--dim);font-size:11px}
   .ct.black{background:rgba(120,40,200,.15)}
-  #mods{position:absolute;left:10px;bottom:10px;max-width:320px;font-size:11px;line-height:1.5}
+  #mods{position:absolute;left:calc(10px + env(safe-area-inset-left));bottom:10px;max-width:320px;font-size:11px;line-height:1.5}
   .mod{display:inline-block;padding:1px 5px;margin:1px;border-radius:3px;border:1px solid #444}
   #msgs{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);text-align:center;font-size:13px;width:60vw}
   #msgs div{margin:2px;text-shadow:0 1px 2px #000,0 0 6px #000;transition:opacity .4s}
   #banner{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%);font-size:34px;font-weight:bold;letter-spacing:.2em;text-align:center;text-shadow:0 2px 12px #000;opacity:0;transition:opacity .3s}
   #banner small{display:block;font-size:13px;letter-spacing:.1em;color:#ddd;margin-top:6px}
-  #mm{position:absolute;right:10px;bottom:10px;border:1px solid var(--line);border-radius:4px;background:#000}
-  .ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(3,6,8,.82);z-index:5;overflow:auto;padding:20px}
+  #mm{position:absolute;right:calc(10px + env(safe-area-inset-right));bottom:10px;width:224px;height:168px;border:1px solid var(--line);border-radius:4px;background:#000}
+  .ov{position:fixed;inset:0;display:none;background:rgba(3,6,8,.82);z-index:5;overflow:auto;padding:20px calc(20px + env(safe-area-inset-right)) 20px calc(20px + env(safe-area-inset-left));touch-action:pan-y;-webkit-overflow-scrolling:touch}
+  .ov>*{margin:auto}
+  button,.mut{touch-action:manipulation}
+  .padfocus{outline:3px solid var(--gamma)!important;outline-offset:3px}
+  #padstat{margin-top:8px;text-align:center;font-size:12px;color:var(--dim)}
+  #padstat b{color:var(--gamma)}
+  #rotate{display:none;position:fixed;inset:0;z-index:20;background:#0b0f14;color:var(--ink);align-items:center;justify-content:center;text-align:center;font-size:16px;padding:30px;line-height:1.6}
+  @media (orientation:portrait) and (max-width:700px){#rotate{display:flex}}
+  .ct .ds{display:block}
   .ov.on{display:flex}
   .card{background:#0f151b;border:1px solid var(--line);border-radius:10px;padding:22px 26px;max-width:880px;width:100%}
   h1{margin:0;font-size:44px;letter-spacing:.12em;color:var(--gamma);text-shadow:0 0 18px rgba(124,252,0,.4)}
@@ -65,6 +76,19 @@
   .mut .fm{font-size:11px;margin-bottom:8px}
   .mut .ds{color:#c9d3cc;font-size:12px;line-height:1.45}
   .stat{display:flex;justify-content:space-between;border-bottom:1px solid #1d252d;padding:4px 0}
+  @media (max-height:520px),(max-width:820px){
+    #hud{font-size:10px}
+    #vitals{width:175px;padding:5px 7px;top:6px}
+    .bar{height:9px;margin:2px 0 4px}.bar>span{font-size:8px;top:-2px}
+    #heatbox{width:min(330px,38vw);padding:4px 6px;top:6px}#heatname{font-size:11px;letter-spacing:.08em}#heatbar{height:8px;margin-top:2px}#heatstat{font-size:9px}
+    #contracts{width:185px;padding:5px 7px;top:6px}.ct{margin:3px 0;padding:1px 0 1px 5px}.ct .ds{display:none}.ct .d{font-size:9px}
+    #mods{display:none}
+    #mm{width:132px;height:99px;bottom:6px}
+    #msgs{font-size:11px;bottom:4px;width:50vw}#banner{font-size:20px}#banner small{font-size:10px}
+    .card{padding:14px 16px}h1{font-size:28px}h2{font-size:15px}.keys{font-size:11px;line-height:1.5}.sub{font-size:12px;margin:2px 0 10px}
+    .mut{min-height:0;padding:10px}.mut .nm{font-size:14px}.mut .ds{font-size:11px}
+    #choices{grid-template-columns:repeat(3,1fr);gap:8px}
+  }
   #bigmap canvas{max-width:92vw;max-height:80vh;image-rendering:pixelated;border:1px solid var(--line)}
 </style>
 </head>
@@ -94,7 +118,7 @@
   <div class="cols">
     <div>
       <h2>Controls</h2>
-      <div class="keys">
+      <div class="keys" id="kbkeys">
         <div><b>WASD</b> move · <b>Shift</b> sprint (sprint into walls to climb)</div>
         <div><b>Mouse</b> aim · <b>LMB</b> punch / throw / fire</div>
         <div><b>E / RMB</b> grab · drop (cars, lampposts, crates, scientists…)</div>
@@ -103,6 +127,15 @@
         <div><b>Q</b> ground pound (in the air: meteor slam)</div>
         <div><b>R</b> Gamma Surge when Rage is full</div>
         <div><b>M</b> city map · <b>Esc</b> pause</div>
+      </div>
+      <h2 style="margin-top:14px">Controller <span style="font-size:12px;color:var(--dim)">(Backbone or any standard gamepad)</span></h2>
+      <div class="keys" id="padkeys">
+        <div><b>Left stick</b> move · <b>LT</b> or click <b>L3</b> sprint</div>
+        <div><b>Right stick</b> aim (it follows your movement if you leave it alone, with light aim assist)</div>
+        <div><b>RT / X</b> punch · throw · fire</div>
+        <div><b>A</b> tap to hop · hold to super-leap · <b>B</b> ground pound / slam</div>
+        <div><b>Y</b> grab · drop · <b>LB</b> weaponize · <b>RB</b> Gamma Surge</div>
+        <div><b>View</b> city map · <b>Menu</b> pause · menus: <b>D-pad/stick</b> move, <b>A</b> select, <b>B</b> back, <b>Y</b> reroll</div>
       </div>
       <h2 style="margin-top:14px">How it works</h2>
       <div class="keys" style="color:#c9d3cc">
@@ -117,6 +150,7 @@
       <div class="sub" style="margin:0 0 6px">Permanent upgrades bought with gamma. You keep all of it on extraction and half if you fall.</div>
       <div id="shop"></div>
       <div style="margin-top:18px;text-align:center"><button class="go" id="startBtn">START RUN</button></div>
+      <div id="padstat"></div>
       <div id="lastrun" class="sub" style="margin-top:10px;text-align:center"></div>
     </div>
   </div>
@@ -141,6 +175,8 @@
   <div id="endStats"></div>
   <div style="margin-top:16px;text-align:center"><button class="go" id="endBtn">BACK TO THE LAB</button></div>
 </div></div>
+
+<div id="rotate"><div>Rotate your phone to landscape.<br><span style="color:var(--dim);font-size:13px">Connect your controller, then press any button on it.</span></div></div>
 
 <div id="bigmap" class="ov"><div style="text-align:center"><canvas id="bm"></canvas><div class="sub" id="bmleg"></div></div></div>
 
@@ -426,7 +462,7 @@ function flowDir(x,y){const tx=toT(x),ty=toT(y);if(!inB(tx,ty))return null;const
 function ring(x,y,r,col,dur=.35,w=4){fx.push({t:'ring',x,y,r,col,dur,w,age:0})}
 function burst(x,y,n,col,spd=160,life=.6,size=3){for(let k=0;k<n&&parts.length<900;k++){const a=Math.random()*6.283,s=spd*(.3+Math.random());parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:life*(.5+Math.random()),max:life,col,size})}}
 function ftext(x,y,s,col='#fff'){texts.push({x,y,s,col,age:0})}
-function shake(v){cam.shake=Math.max(cam.shake,v)}
+function shake(v){cam.shake=Math.max(cam.shake,v);if(v>=3)rumble(Math.min(1,v/12),80+v*12)}
 function later(delay,fn){sched.push({t:time+delay,fn})}
 const msgEl=document.getElementById('msgs');
 function msg(s,col='#e8efe6'){const d=document.createElement('div');d.textContent=s;d.style.color=col;msgEl.appendChild(d);while(msgEl.children.length>5)msgEl.firstChild.remove();setTimeout(()=>{d.style.opacity=0;setTimeout(()=>d.remove(),450)},4200)}
@@ -668,14 +704,15 @@ function updatePlayer(dt){
   const p=player;if(p.dead)return;const m=p.mods;
   p.aim=Math.atan2(mouse.wy-p.y,mouse.wx-p.x);
   let ix=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),iy=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);
-  const il=Math.hypot(ix,iy);if(il){ix/=il;iy/=il}
-  const sprint=!!(keys.ShiftLeft||keys.ShiftRight)&&il>0;p.sprinting=sprint;
+  if(pad.lx||pad.ly){ix+=pad.lx;iy+=pad.ly}
+  const il=Math.hypot(ix,iy);const amt=il>0?clamp(il,.45,1):0;if(il){ix/=il;iy/=il}
+  const sprint=!!(keys.ShiftLeft||keys.ShiftRight||pad.sprint)&&il>0;p.sprinting=sprint;
   let spd=sprint?330:205;if(p.held){const w=p.held.prop?p.held.prop.wt:1;spd*=w>=3?.8:w>=2?.9:1}
   if(p.surgeT>0)spd*=1.25;if(p.slowT>0)spd*=.5;if(p.charging)spd*=.35;
   const gh=groundH(p.x,p.y);const ti=tileAt(p.x,p.y);
   const grounded=p.z<=gh+.5&&p.vz<=0&&!p.climbing;
   if(grounded&&ti>=0&&tiles[ti]===T_WATER)spd*=.55;
-  if(grounded){p.vx=ix*spd;p.vy=iy*spd}else{const as=spd*1.2;p.vx+=(ix*as-p.vx)*Math.min(1,3*dt);p.vy+=(iy*as-p.vy)*Math.min(1,3*dt)}
+  if(grounded){p.vx=ix*spd*amt;p.vy=iy*spd*amt}else{const as=spd*1.2;p.vx+=(ix*as-p.vx)*Math.min(1,3*dt);p.vy+=(iy*as-p.vy)*Math.min(1,3*dt)}
   p.hitX=p.hitY=false;
   const hit=moveCircle(p,p.vx*dt,p.vy*dt,p.z,'player');
   // climbing
@@ -694,7 +731,7 @@ function updatePlayer(dt){
   // timers
   p.punchCd-=dt;p.comboT-=dt;p.poundCd-=dt;p.hurtT-=dt;p.slowT-=dt;p.swingT-=dt;
   if(p.surgeT>0){p.surgeT-=dt;if(m.radioactive&&chance(dt*6))gammaArea(p.x,p.y,1,8)}
-  if(mouse.down&&p.punchCd<=0)attack();
+  if((mouse.down||pad.fire)&&p.punchCd<=0)attack();
   // regen
   const hidden=time-director.lastSeenT>4;let reg=(m.regen||0)*3+(hidden?4:0);
   if(ti>=0&&gam[ti]>0&&m.radioactive)reg+=8;
@@ -785,7 +822,7 @@ function tryGrab(){const p=player;
   if(!best&&grip()>=3){const a=p.aim;const i=tileAt(p.x+Math.cos(a)*(p.r+20),p.y+Math.sin(a)*(p.r+20));if(i>=0&&occ[i]>=0){const b=buildings[occ[i]];if(b.hz>p.z){const pr=addProp('chunk',p.x,p.y);damageBuilding(b,Math.max(90,b.maxHp*.18),'player');burst(p.x+Math.cos(a)*20,p.y+Math.sin(a)*20,14,'#a8a29e',180,.6);shake(5);best={prop:pr};msg('You tear a chunk out of the building','#ddd')}}}
   if(!best){ftext(p.x,p.y-24,grip()<2?'grip 1: cars, lampposts, debris':'nothing to grab','#aaa');return}
   if(best.liveVeh){const u=best.liveVeh;const k=u.k==='tank'?'tank':'heli';u.silent=true;killUnit(u,'player');const pr=addProp(k,p.x,p.y);best={prop:pr};msg(k==='tank'?'You rip the tank off its treads':'You pull the gunship out of the sky','#ffd166')}
-  if(best.unit){best.unit.carried=true;p.held=best.unit.k==='sci'?{unit:best.unit}:null;msg('Scientist grabbed: get to the drop zone (E to set down)','#fff');return}
+  if(best.unit){best.unit.carried=true;p.held=best.unit.k==='sci'?{unit:best.unit}:null;msg('Scientist grabbed: get to the drop zone ('+K('grab')+' to set down)','#fff');return}
   const pr=best.prop;pr.held=true;p.held={prop:pr};
   if(pr.kind==='crate'&&pr.contract){const c=contracts.find(c=>c.id===pr.contract);pr.dead=true;p.held=null;if(c)completeContract(c)}
 }
@@ -1114,11 +1151,12 @@ function update(dt){
 
 // ================================================================ render
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
-function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;cam.zoom=clamp(Math.min(innerWidth/1500,innerHeight/950),.5,1.1)}
+const DPR=()=>Math.min(2,devicePixelRatio||1);
+function resize(){cv.width=innerWidth*DPR();cv.height=innerHeight*DPR();const small=Math.min(innerWidth,innerHeight)<600;cam.zoom=small?clamp(Math.min(innerWidth/1150,innerHeight/620),.42,1):clamp(Math.min(innerWidth/1500,innerHeight/950),.5,1.1)}
 addEventListener('resize',resize);resize();
 function drawMMTiles(x0,y0,w,h){for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){const i=tIdx(x,y);let c=TILECOL[tiles[i]];if(tiles[i]===T_ROAD)c='#3a3f46';if(occ[i]>=0)c=buildings[occ[i]].col;if(tiles[i]===T_WATER)c='#1d4a75';if(tiles[i]===T_RUBBLE)c='#5a4d42';mmx.fillStyle=c;mmx.fillRect(x,y,1,1)}}
 function render(){
-  const W=cv.width,H=cv.height,dpr=devicePixelRatio,z=cam.zoom*dpr;
+  const W=cv.width,H=cv.height,dpr=DPR(),z=cam.zoom*dpr;
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#0b0f14';ctx.fillRect(0,0,W,H);
   if(state!=='play'&&state!=='end'){drawTitleBg();return}
   const sx=(Math.random()-.5)*cam.shake*2,sy=(Math.random()-.5)*cam.shake*2;
@@ -1259,8 +1297,8 @@ function updateHUD(dt){hudT-=dt;const p=player;if(!p||state!=='play')return;
   const mmc=$('mm').getContext('2d');drawMinimap(mmc,224,168,false);
   if(hudT>0)return;hudT=.1;
   $('hpb').firstChild.style.width=(100*p.hp/p.maxHp)+'%';$('hpt').textContent='HP '+Math.ceil(p.hp)+'/'+p.maxHp;
-  $('rgb').firstChild.style.width=(p.surgeT>0?100*p.surgeT/(10+5*(p.mods.surgeplus||0)):p.rage)+'%';$('rgt').textContent=p.surgeT>0?'GAMMA SURGE '+p.surgeT.toFixed(1)+'s':p.rage>=100?'RAGE FULL: press R':'RAGE';$('rgb').classList.toggle('full',p.rage>=100);
-  const held=p.held?(p.held.prop?`<b>${p.held.prop.kind.toUpperCase()}</b> · LMB throw${WEAPONIZE[p.held.prop.kind]?' · F weaponize':''} · E drop`:'<b>SCIENTIST</b> · carry to drop zone · E set down'):'hands free';
+  $('rgb').firstChild.style.width=(p.surgeT>0?100*p.surgeT/(10+5*(p.mods.surgeplus||0)):p.rage)+'%';$('rgt').textContent=p.surgeT>0?'GAMMA SURGE '+p.surgeT.toFixed(1)+'s':p.rage>=100?'RAGE FULL: press '+K('surge'):'RAGE';$('rgb').classList.toggle('full',p.rage>=100);
+  const held=p.held?(p.held.prop?`<b>${p.held.prop.kind.toUpperCase()}</b> · ${K('throw')} throw${WEAPONIZE[p.held.prop.kind]?' · '+K('weapon')+' weaponize':''} · ${K('grab')} drop`:'<b>SCIENTIST</b> · carry to drop zone · '+K('grab')+' set down'):'hands free';
   const wp=p.weapon?`<br>Weapon: <b>${WEAPONS[p.weapon.k].n}</b> (${p.weapon.uses})`:'';
   $('held').innerHTML=`Grip <b>${grip()}</b> ${['','(cars)','(buses, tanks, gunships)','(buildings)','(anything)'][Math.min(4,grip())]}<br>${held}${wp}<br>Pound ${p.poundCd>0?p.poundCd.toFixed(1)+'s':'<b>ready</b>'} · ${fmtTime(time)}`;
   const t=tier(),T=TIERS[t],d=director;$('heatname').textContent='HEAT '+t+' · '+T.n;$('heatname').style.color=T.c;
@@ -1270,7 +1308,7 @@ function updateHUD(dt){hudT-=dt;const p=player;if(!p||state!=='play')return;
   $('contracts').innerHTML=`<div style="color:var(--dim);margin-bottom:2px">CONTRACTS ${runStats.contracts}/${CONTRACTS_NEEDED}${rerolls?' · rerolls '+rerolls:''}</div>`+
     (extraction?`<div class="ct" style="border-color:#7CFC00"><div class="t" style="color:#7CFC00">EXTRACTION</div><div class="d">Hold the zone: ${extraction.prog.toFixed(1)}/${extraction.need}s</div></div>`:'')+
     contracts.map(c=>{const dd=Math.round(dist(p.x,p.y,c.x,c.y)/TILE);let extra='';if(c.type==='protect'&&c.stage==='hold')extra=` · ${Math.ceil(c.timer)}s · friend HP ${Math.ceil(c.wit.hp)}`;if(c.type==='sabotage')extra=` · ${3-c.left}/3`;
-      return`<div class="ct${c.black?' black':''}" style="border-color:${FAM[c.fam].c}"><div class="t">${c.title} <span style="color:${FAM[c.fam].c};font-weight:normal">${FAM[c.fam].n}</span></div><div class="d">${districts[c.d].type.name} · ${dd}m${extra}<br>${c.desc}</div></div>`}).join('');
+      return`<div class="ct${c.black?' black':''}" style="border-color:${FAM[c.fam].c}"><div class="t">${c.title} <span style="color:${FAM[c.fam].c};font-weight:normal">${FAM[c.fam].n}</span></div><div class="d">${districts[c.d].type.name} · ${dd}m${extra}<span class="ds">${c.desc}</span></div></div>`}).join('');
   const mods=Object.entries(p.mods).filter(([k])=>k!=='sabotage');
   $('mods').innerHTML=mods.length?mods.map(([k,v])=>{const m=MUTS.find(x=>x.id===k);return`<span class="mod" style="border-color:${FAM[m.f].c};color:${RAR[m.r].c}" title="${m.d}">${m.n}${v>1?' '+v:''}</span>`}).join(''):'<span style="color:var(--dim)">No mutations yet: complete contracts</span>';
 }
@@ -1298,43 +1336,118 @@ $('endBtn').onclick=()=>{$('end').classList.remove('on');state='title';$('title'
 $('resumeBtn').onclick=()=>togglePause(false);
 $('quitBtn').onclick=()=>{togglePause(false);if(state==='play'){player.dead=true;endRun(false)}};
 function togglePause(v){if(state!=='play')return;paused=v;$('pause').classList.toggle('on',v);
-  $('pausekeys').innerHTML=document.querySelector('#title .keys').innerHTML+`<div style="margin-top:8px;color:var(--dim)">Mutations:</div>`+(Object.keys(player.mods).filter(k=>k!=='sabotage').map(k=>{const m=MUTS.find(x=>x.id===k);return`<div><b style="color:${RAR[m.r].c}">${m.n}</b> ${m.d}</div>`}).join('')||'<div>none</div>')}
+  $('pausekeys').innerHTML=(inputMode==='pad'?$('padkeys'):$('kbkeys')).innerHTML+`<div style="margin-top:8px;color:var(--dim)">Mutations:</div>`+(Object.keys(player.mods).filter(k=>k!=='sabotage').map(k=>{const m=MUTS.find(x=>x.id===k);return`<div><b style="color:${RAR[m.r].c}">${m.n}</b> ${m.d}</div>`}).join('')||'<div>none</div>')}
 renderShop();
 
 // ================================================================ input
+let inputMode='kb';
+function K(a){return(inputMode==='pad'?{grab:'Y',throw:'RT',weapon:'LB',surge:'RB',pound:'B',jump:'A',map:'View'}:{grab:'E',throw:'LMB',weapon:'F',surge:'R',pound:'Q',jump:'Space',map:'M'})[a]}
+function canAct(){return state==='play'&&!paused&&!modal&&player&&!player.dead}
+const act={
+  grab(){if(canAct())tryGrab()},
+  weapon(){if(canAct())weaponize()},
+  surge(){if(!canAct())return;const p=player;if(p.rage>=100)startSurge(false);else ftext(p.x,p.y-24,'rage not full','#aaa')},
+  pound(){if(!canAct())return;const p=player,gh=groundH(p.x,p.y);if(p.z>gh+18){p.slamming=true;p.vz=-1100;p.climbing=false}else if(p.poundCd<=0){pound(p.x,p.y,1,false);p.poundCd=3*Math.pow(.7,p.mods.quickquake||0)}},
+  jumpDown(){if(!canAct())return;const p=player,gh=groundH(p.x,p.y);if(p.z<=gh+1||p.climbing){p.charging=true;p.chargeT=0}},
+  jumpUp(){if(!canAct()||!player.charging)return;const p=player;p.charging=false;const pw=clamp(p.chargeT/.7,0,1);p.vz=300+pw*430*(1+.3*(p.mods.thunderleap||0));p.climbing=false;
+    const b=1+pw*.7;p.vx*=b;p.vy*=b;if(p.sprinting){p.vx*=1.2;p.vy*=1.2}if(pw>.6){ring(p.x,p.y,50,'#7CFC00',.3,3);burst(p.x,p.y,10,'#8d8378',150,.4)}},
+  map(){if(state!=='play'||modal)return;const on=!$('bigmap').classList.contains('on');if(on){if(paused)return;openBigMap();paused=true}else{$('bigmap').classList.remove('on');paused=false}},
+  pause(){if(state!=='play')return;if($('bigmap').classList.contains('on')){$('bigmap').classList.remove('on');paused=false;return}if(!modal)togglePause(!paused)},
+};
 addEventListener('keydown',e=>{
   if(e.code==='Tab'||e.code==='Space')e.preventDefault();
+  inputMode='kb';
   if(state==='play'&&modal&&/^Digit[123]$/.test(e.code)){const m=choiceOpts[+e.code.slice(5)-1];if(m)pickMut(m);return}
   if(e.repeat){keys[e.code]=true;return}
   keys[e.code]=true;
   if(state!=='play')return;
-  if(e.code==='Escape'||e.code==='KeyP'){if($('bigmap').classList.contains('on')){$('bigmap').classList.remove('on');paused=false;return}if(!modal)togglePause(!paused);return}
-  if(e.code==='KeyM'||e.code==='Tab'){const on=!$('bigmap').classList.contains('on');if(on){openBigMap();paused=true}else{$('bigmap').classList.remove('on');paused=false}return}
-  if(paused||modal||player.dead)return;
-  const p=player;
-  if(e.code==='KeyE')tryGrab();
-  if(e.code==='KeyF')weaponize();
-  if(e.code==='KeyR'){if(p.rage>=100)startSurge(false);else ftext(p.x,p.y-24,'rage not full','#aaa')}
-  if(e.code==='KeyQ'){const gh=groundH(p.x,p.y);if(p.z>gh+18){p.slamming=true;p.vz=-1100;p.climbing=false}else if(p.poundCd<=0){pound(p.x,p.y,1,false);p.poundCd=3*Math.pow(.7,p.mods.quickquake||0)}}
-  if(e.code==='Space'){const gh=groundH(p.x,p.y);if(p.z<=gh+1||p.climbing){p.charging=true;p.chargeT=0}}
+  if(e.code==='Escape'||e.code==='KeyP')act.pause();
+  else if(e.code==='KeyM'||e.code==='Tab')act.map();
+  else if(e.code==='KeyE')act.grab();
+  else if(e.code==='KeyF')act.weapon();
+  else if(e.code==='KeyR')act.surge();
+  else if(e.code==='KeyQ')act.pound();
+  else if(e.code==='Space')act.jumpDown();
 });
-addEventListener('keyup',e=>{keys[e.code]=false;
-  if(e.code==='Space'&&state==='play'&&player&&player.charging&&!paused&&!modal){const p=player;p.charging=false;const pw=clamp(p.chargeT/.7,0,1);p.vz=300+pw*430*(1+.3*(p.mods.thunderleap||0));p.climbing=false;
-    const b=1+pw*.7;p.vx*=b;p.vy*=b;if(p.sprinting){p.vx*=1.2;p.vy*=1.2}if(pw>.6){ring(p.x,p.y,50,'#7CFC00',.3,3);burst(p.x,p.y,10,'#8d8378',150,.4)}}});
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space')act.jumpUp()});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouse.down=false});
-cv.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
-cv.addEventListener('mousedown',e=>{if(state!=='play'||paused||modal)return;if(e.button===0)mouse.down=true;if(e.button===2&&!player.dead)tryGrab()});
-addEventListener('mouseup',e=>{if(e.button===0)mouse.down=false});
+// pointer events so phone taps (e.g. on menus) never hijack aim or trigger punches
+cv.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;mouse.x=e.clientX;mouse.y=e.clientY;inputMode='kb'});
+cv.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||!canAct())return;inputMode='kb';mouse.x=e.clientX;mouse.y=e.clientY;if(e.button===0)mouse.down=true;if(e.button===2)tryGrab()});
+addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&e.button===0)mouse.down=false});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
+
+// ---------------- gamepad (standard mapping: Backbone, Xbox, DualSense, 8BitDo…)
+// 0 A · 1 B · 2 X · 3 Y · 4 LB · 5 RB · 6 LT · 7 RT · 8 View · 9 Menu · 10 L3 · 11 R3 · 12-15 D-pad up/down/left/right
+const pad={connected:false,name:'',lx:0,ly:0,rx:0,ry:0,fire:false,sprint:false,sprintToggle:false,prev:[],aim:0,aimHold:0,navT:0,focusEl:null,focusIdx:-1,focusOv:null};
+const deadzone=(v,d=.2)=>Math.abs(v)<d?0:(v-Math.sign(v)*d)/(1-d);
+function readPad(){const list=navigator.getGamepads?navigator.getGamepads():[];for(const g of list)if(g&&g.connected)return g;return null}
+addEventListener('gamepadconnected',e=>{inputMode='pad';if(state==='play')msg('Controller connected','#7CFC00');updatePadStat()});
+addEventListener('gamepaddisconnected',()=>{pad.connected=false;pad.lx=pad.ly=0;pad.fire=pad.sprint=false;if(state==='play'&&!paused&&!modal)togglePause(true);updatePadStat()});
+function updatePadStat(){const g=readPad();$('padstat').innerHTML=g?`🎮 <b>Controller connected.</b> Press A to start.`:`🎮 Using a controller? Press any button on it to connect.`}
+updatePadStat();
+let rumbleUntil=0;
+function rumble(str,ms){if(inputMode!=='pad')return;const now=performance.now();if(now<rumbleUntil)return;rumbleUntil=now+70;const g=readPad();const va=g&&g.vibrationActuator;
+  if(va&&va.playEffect){try{const r=va.playEffect('dual-rumble',{duration:ms,strongMagnitude:clamp(str,0,1),weakMagnitude:clamp(str*.6,0,1)});if(r&&r.catch)r.catch(()=>{})}catch(e){}}}
+function activeOverlay(){const list=[...document.querySelectorAll('.ov.on')];return list[list.length-1]||null}
+function setPadFocus(el,ov,items){if(pad.focusEl)pad.focusEl.classList.remove('padfocus');pad.focusEl=el;pad.focusOv=ov;pad.focusIdx=items.indexOf(el);if(el){el.classList.add('padfocus');el.scrollIntoView({block:'nearest',inline:'nearest'})}}
+function clearPadFocus(){if(pad.focusEl)pad.focusEl.classList.remove('padfocus');pad.focusEl=null;pad.focusOv=null}
+function menuNav(ov,edge,lx,ly,dt){
+  const items=[...ov.querySelectorAll('button:not(:disabled),.mut')].filter(e=>e.offsetParent!==null);
+  const back=()=>{if(ov.id==='pause')togglePause(false);else if(ov.id==='bigmap'){ov.classList.remove('on');paused=false}};
+  if(edge(1)||edge(9)||(edge(8)&&ov.id==='bigmap')){back();return}
+  if(!items.length)return;
+  let cur=items.indexOf(pad.focusEl);
+  if(cur<0){const def=pad.focusOv===ov&&pad.focusIdx>=0?Math.min(pad.focusIdx,items.length-1):Math.max(0,items.findIndex(e=>e.classList.contains('go')||e.classList.contains('mut')));setPadFocus(items[def],ov,items);cur=def}
+  let dx=(edge(15)?1:0)-(edge(14)?1:0),dy=(edge(13)?1:0)-(edge(12)?1:0);
+  if(!dx&&!dy){if(Math.hypot(lx,ly)<.3)pad.navT=0;else{pad.navT-=dt;if(pad.navT<=0){pad.navT=.24;if(Math.abs(lx)>Math.abs(ly))dx=Math.sign(lx);else dy=Math.sign(ly)}}}
+  if(dx||dy){const r0=items[cur].getBoundingClientRect(),cx=r0.left+r0.width/2,cy=r0.top+r0.height/2;let best=null,bs=1e9;
+    for(const el of items){if(el===items[cur])continue;const r=el.getBoundingClientRect(),ex=r.left+r.width/2-cx,ey=r.top+r.height/2-cy;
+      const main=dx?ex*dx:ey*dy,side=Math.abs(dx?ey:ex);if(main<=4)continue;const sc=main+side*2;if(sc<bs){bs=sc;best=el}}
+    if(best)setPadFocus(best,ov,items)}
+  if(edge(0)&&pad.focusEl){const el=pad.focusEl;clearPadFocus();el.click()}
+  if(edge(3)&&ov.id==='choice')$('rerollBtn').click();
+}
+function pollPad(dt){
+  const g=readPad();
+  if(!g){if(pad.connected){pad.connected=false;pad.lx=pad.ly=0;pad.fire=pad.sprint=false}return}
+  if(!pad.connected){pad.connected=true;pad.name=g.id;updatePadStat()}
+  const cur=g.buttons.map(b=>!!b&&(b.pressed||b.value>.4));
+  const edge=i=>!!cur[i]&&!pad.prev[i],rel=i=>!cur[i]&&!!pad.prev[i];
+  const lx=deadzone(g.axes[0]||0),ly=deadzone(g.axes[1]||0),rx=deadzone(g.axes[2]||0),ry=deadzone(g.axes[3]||0);
+  if(cur.some(v=>v)||lx||ly||rx||ry)inputMode='pad';
+  const ov=activeOverlay();
+  if(ov&&ov.id!=='rotate'){pad.fire=false;pad.lx=pad.ly=0;pad.sprint=false;if(pad.charging){}menuNav(ov,edge,lx,ly,dt);pad.prev=cur;return}
+  if(pad.focusEl)clearPadFocus();
+  if(state!=='play'){pad.prev=cur;return}
+  const dxp=(cur[15]?1:0)-(cur[14]?1:0),dyp=(cur[13]?1:0)-(cur[12]?1:0);
+  pad.lx=lx||dxp;pad.ly=ly||dyp;pad.rx=rx;pad.ry=ry;
+  pad.fire=!!(cur[7]||cur[2]);
+  if(edge(10))pad.sprintToggle=!pad.sprintToggle;if(!pad.lx&&!pad.ly)pad.sprintToggle=false;
+  pad.sprint=!!cur[6]||pad.sprintToggle;
+  if(edge(0))act.jumpDown();if(rel(0))act.jumpUp();
+  if(edge(1))act.pound();if(edge(3))act.grab();if(edge(4))act.weapon();if(edge(5))act.surge();
+  if(edge(9))act.pause();if(edge(8))act.map();
+  pad.prev=cur;
+  // aiming: right stick wins; otherwise face your movement, with light aim assist while attacking
+  if(inputMode==='pad'&&player&&!player.dead){const p=player;
+    if(Math.hypot(rx,ry)>.3){pad.aim=Math.atan2(ry,rx);pad.aimHold=.7}
+    else{pad.aimHold-=dt;if(pad.aimHold<=0&&(pad.lx||pad.ly))pad.aim=Math.atan2(pad.ly,pad.lx);
+      if(pad.fire||p.held){let best=null,bs=1e9;for(const u of units){if(u.dead||u.carried||UD[u.k].fac==='civ'||!hostileToPlayer(u))continue;const d=dist(u.x,u.y,p.x,p.y);if(d>(p.held?520:300))continue;
+        const da=Math.abs(angDiff(Math.atan2(u.y-p.y,u.x-p.x),pad.aim));if(da>.55)continue;const sc=d*(1+da*2);if(sc<bs){bs=sc;best=u}}
+        if(best){const ta=Math.atan2(best.y-p.y,best.x-p.x);pad.aim+=angDiff(ta,pad.aim)*Math.min(1,dt*14)}}}
+    mouse.wx=p.x+Math.cos(pad.aim)*220;mouse.wy=p.y+Math.sin(pad.aim)*220}
+}
 
 // ================================================================ loop
 let last=performance.now(),acc=0;
 function frame(now){const dt=Math.min(.1,(now-last)/1000);last=now;
-  if(state==='play'&&player){mouse.wx=cam.x+(mouse.x-innerWidth/2)/cam.zoom;mouse.wy=cam.y+(mouse.y-innerHeight/2)/cam.zoom}
+  pollPad(dt);
+  if(state==='play'&&player&&inputMode==='kb'){mouse.wx=cam.x+(mouse.x-innerWidth/2)/cam.zoom;mouse.wy=cam.y+(mouse.y-innerHeight/2)/cam.zoom}
   if((state==='play'||state==='end')&&!paused&&!modal){acc+=dt;let n=0;while(acc>=1/60&&n<5){update(1/60);acc-=1/60;n++}if(n>=5)acc=0}
   render();updateHUD(dt);requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
-window.__GR={get player(){return player},get director(){return director},get units(){return units},get contracts(){return contracts},get buildings(){return buildings},get props(){return props},get state(){return state},get runStats(){return runStats},newRun,update,addHeat,completeContract,openChoice,pickMut:m=>pickMut(m),get choiceOpts(){return choiceOpts},keys,mouse,tryGrab,throwHeld,weaponize,pound,MUTS};
+window.__GR={get player(){return player},get director(){return director},get units(){return units},get contracts(){return contracts},get buildings(){return buildings},get props(){return props},get state(){return state},get runStats(){return runStats},newRun,update,addHeat,completeContract,openChoice,pickMut:m=>pickMut(m),get choiceOpts(){return choiceOpts},keys,mouse,pad,tryGrab,throwHeld,weaponize,pound,MUTS};
 </script>
 </body>
 </html>
