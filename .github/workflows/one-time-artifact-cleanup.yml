@@ -1,0 +1,54 @@
+name: One-time artifact cleanup
+on:
+  push:
+    paths:
+      - '.github/workflows/one-time-artifact-cleanup.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete only verified obsolete test captures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          import json, os, urllib.request, urllib.error
+          repo = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          targets = [[10368665677,"watershed-continuity-review"],
+              [10308802031,"armory-browser-review"],
+              [10308746367,"armory-browser-review"],
+              [10308631334,"armory-browser-review"],
+              [10309046776,"armory-browser-review"]]
+          headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10"}
+          total = 0
+          for artifact_id, expected_name in targets:
+              url = f"https://api.github.com/repos/{repo}/actions/artifacts/{artifact_id}"
+              req = urllib.request.Request(url, headers=headers)
+              try:
+                  with urllib.request.urlopen(req) as response:
+                      artifact = json.load(response)
+              except urllib.error.HTTPError as e:
+                  if e.code == 404:
+                      print(f"Already gone: {artifact_id}")
+                      continue
+                  raise
+              if artifact["name"] != expected_name or artifact.get("created_at", "9999") >= "2026-09-20":
+                  raise RuntimeError(f"Safety check failed for {artifact_id}: {artifact['name']}")
+              if artifact.get("expired"):
+                  print(f"Already expired: {artifact_id}")
+                  continue
+              delete_req = urllib.request.Request(url, method="DELETE", headers=headers)
+              with urllib.request.urlopen(delete_req) as response:
+                  if response.status != 204:
+                      raise RuntimeError(f"Unexpected DELETE response for {artifact_id}: {response.status}")
+              size = artifact.get("size_in_bytes",0)
+              total += size
+              print(f"Deleted {artifact_id}: {expected_name} ({size} bytes)")
+          print(f"Verified deletion total: {total} bytes")
