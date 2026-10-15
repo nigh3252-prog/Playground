@@ -18,6 +18,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          python3 - <<'PY'
           import json, os, urllib.request, urllib.error
           repo = os.environ["GITHUB_REPOSITORY"]
           token = os.environ["GH_TOKEN"]
@@ -52,3 +53,4 @@ jobs:
               total += size
               print(f"Deleted {artifact_id}: {expected_name} ({size} bytes)")
           print(f"Verified deletion total: {total} bytes")
+          PY
