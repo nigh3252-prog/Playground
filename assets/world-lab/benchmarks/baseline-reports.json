@@ -13637,24 +13637,25 @@
         },
         "sampledPeakM": 564.8184814453125,
         "p05ElevationM": 171.30337524414062,
-        "medianElevationM": 222.94598388671875,
-        "p95ElevationM": 458.94879150390625,
-        "centralReliefM": 287.6454162597656,
-        "p95SlopePercent": 1.370322611182928,
+        "medianElevationM": 221.98690795898438,
+        "p95ElevationM": 459.4786071777344,
+        "centralReliefM": 288.17523193359375,
+        "p95SlopePercent": 1.3545703142881393,
         "nominalSpacingKm": 5.46875,
-        "landAreaKm2": 489999.9999999989,
+        "landAreaKm2": 485008.2011121468,
+        "landFraction": 0.989812655330914,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 481366.9171496351,
-            "landFraction": 0.9823814635706861
+            "areaKm2": 476375.1182617826,
+            "landFraction": 0.9822001301615765
           },
           {
             "minM": 500,
             "maxM": 1000,
             "areaKm2": 8633.082850363922,
-            "landFraction": 0.017618536429314168
+            "landFraction": 0.01779986983842305
           },
           {
             "minM": 1000,
@@ -19300,43 +19301,44 @@
           "zKm": 555.0056983932453
         },
         "sampledPeakM": 3945.32080078125,
-        "p05ElevationM": 1026.8116455078125,
-        "medianElevationM": 1679.8101806640625,
-        "p95ElevationM": 2498.51708984375,
-        "centralReliefM": 1471.7054443359375,
+        "p05ElevationM": 1020.0826416015625,
+        "medianElevationM": 1681.3106689453125,
+        "p95ElevationM": 2502.72705078125,
+        "centralReliefM": 1482.6444091796875,
         "p95SlopePercent": 13.129322230815887,
         "nominalSpacingKm": 5.46875,
-        "landAreaKm2": 489630.1133665688,
+        "landAreaKm2": 481847.0491320177,
+        "landFraction": 0.983361324759222,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 8347.719988338651,
-            "landFraction": 0.017049033056692343
+            "areaKm2": 8316.800050420068,
+            "landFraction": 0.017260249005159746
           },
           {
             "minM": 500,
             "maxM": 1000,
-            "areaKm2": 15180.409856495738,
-            "landFraction": 0.03100383216244443
+            "areaKm2": 15049.191239929502,
+            "landFraction": 0.031232299268073933
           },
           {
             "minM": 1000,
             "maxM": 2000,
-            "areaKm2": 363297.82707263576,
-            "landFraction": 0.7419842390303463
+            "areaKm2": 356286.0605973967,
+            "landFraction": 0.7394173342748448
           },
           {
             "minM": 2000,
             "maxM": 3000,
-            "areaKm2": 96507.90361896345,
-            "landFraction": 0.19710369314379034
+            "areaKm2": 95898.74441413641,
+            "landFraction": 0.19902320578051694
           },
           {
             "minM": 3000,
             "maxM": 4000,
             "areaKm2": 6296.252830134698,
-            "landFraction": 0.01285920260672553
+            "landFraction": 0.013066911671403916
           },
           {
             "minM": 4000,
@@ -23248,37 +23250,38 @@
           "zKm": 116.53389416082817
         },
         "sampledPeakM": 2725.6650390625,
-        "p05ElevationM": 76.25428771972656,
-        "medianElevationM": 825.873291015625,
-        "p95ElevationM": 1729.80615234375,
-        "centralReliefM": 1653.5518646240234,
-        "p95SlopePercent": 12.183362245559692,
+        "p05ElevationM": 76.22543334960938,
+        "medianElevationM": 826.6452026367188,
+        "p95ElevationM": 1730.753662109375,
+        "centralReliefM": 1654.5282287597656,
+        "p95SlopePercent": 12.144174426794052,
         "nominalSpacingKm": 5.078125,
-        "landAreaKm2": 333040.7793286864,
+        "landAreaKm2": 331542.0303123893,
+        "landFraction": 0.7847148646447097,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 107205.23316515691,
-            "landFraction": 0.3218982173331793
+            "areaKm2": 106584.39298446068,
+            "landFraction": 0.3214807874706972
           },
           {
             "minM": 500,
             "maxM": 1000,
-            "areaKm2": 78934.3578231426,
-            "landFraction": 0.23701108909921292
+            "areaKm2": 78333.15017510785,
+            "landFraction": 0.2362691393947847
           },
           {
             "minM": 1000,
             "maxM": 2000,
-            "areaKm2": 142285.12461666545,
-            "landFraction": 0.4272303376885887
+            "areaKm2": 142008.4234290994,
+            "landFraction": 0.42832706096205847
           },
           {
             "minM": 2000,
             "maxM": 3000,
             "areaKm2": 3697.490161688224,
-            "landFraction": 0.011102214476981741
+            "landFraction": 0.011152402481834151
           },
           {
             "minM": 3000,
@@ -27708,31 +27711,32 @@
           "zKm": 634.41463241626
         },
         "sampledPeakM": 1801.947021484375,
-        "p05ElevationM": 45.999027252197266,
+        "p05ElevationM": 46.155067443847656,
         "medianElevationM": 306.53009033203125,
         "p95ElevationM": 838.599609375,
-        "centralReliefM": 792.6005821228027,
-        "p95SlopePercent": 6.290607154369354,
+        "centralReliefM": 792.4445419311523,
+        "p95SlopePercent": 6.285706162452698,
         "nominalSpacingKm": 5.078125,
-        "landAreaKm2": 422333.8055406933,
+        "landAreaKm2": 422066.6082464127,
+        "landFraction": 0.9989742207015702,
         "elevationBands": [
           {
             "minM": 0,
             "maxM": 500,
-            "areaKm2": 335928.24785397487,
-            "landFraction": 0.7954093265726204
+            "areaKm2": 335812.97858409566,
+            "landFraction": 0.7956397687543193
           },
           {
             "minM": 500,
             "maxM": 1000,
-            "areaKm2": 77080.85595682722,
-            "landFraction": 0.18251168849281288
+            "areaKm2": 76928.92793242588,
+            "landFraction": 0.1822672687897473
           },
           {
             "minM": 1000,
             "maxM": 2000,
             "areaKm2": 8980.596353430314,
-            "landFraction": 0.021264213841307104
+            "landFraction": 0.021277675556335942
           },
           {
             "minM": 2000,

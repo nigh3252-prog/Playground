@@ -225,6 +225,40 @@ Future terrain calibration should compare distributions rather than screenshots 
 - drainage density
 - lake fraction / size distribution
 
+### Tectonic parent terrain (September 13, 2026)
+
+Generated parent worlds no longer paint mountains from arbitrary range polylines. The fictional terrain path now begins with a padded plate graph and derives relief from relative plate motion:
+
+- `assets/world-lab/tectonic-plates.mjs` creates deterministic plate ownership, crust, age, velocity, continental crust blocks, and shared boundaries.
+- `assets/world-lab/tectonic-history.mjs` classifies subduction, continental collision, rifting, transform motion, and inactive boundaries from normal/shear velocity, then accumulates uplift, subsidence, volcanism, shear, and deformation age.
+- `assets/world-lab/tectonic-terrain.mjs` converts crustal buoyancy plus those deformation fields into parent elevation.
+- `assets/world-lab/terrain-erosion.mjs` rounds old relief and moves a bounded amount of sediment downslope before regional drainage conditioning.
+- `assets/world-lab/geology-provinces.mjs` anchors generated rift provinces to actual extensional boundaries and weights volcanic provinces toward the volcanic-arc field.
+
+`generateParentTerrain()` keeps its downstream contract and exposes the causal model under `world.geology.tectonics`. Real frozen benchmark terrain still bypasses fictional plate generation.
+
+The browser has a **Tectonic plates and boundaries** map. It shows plate/crust coloring, boundary classes, velocity arrows, and causal inspector fields for relative motion, uplift, subsidence, volcanism, and tectonic age.
+
+Plate ownership and its traced margins are warped at continental and regional wavelengths before deformation is calculated. Boundary samples are reconstructed into deterministic curved centerlines, so collision, subduction, rift, and transform responses follow the same irregular geometry shown in the diagnostic map rather than axis-aligned grid steps or straight Voronoi chords.
+
+Generated parents also expose two reproducible tuning inputs: **Continental blocks** (`1`–`4`) and **Crust footprint** (`0.75×`–`1.45×`). They alter the seeded initial continental crust before tectonic relief, erosion, drainage, ecology, or human geography runs; they do not move sea level after generation. The defaults are `3` blocks and `1.15×`. A 40-seed quick-mesh calibration with the curved margins produced about `35%` mean parent land with a roughly `30%`–`41%` middle-68% range. The browser reports measured land/water coverage for the current view, and the URL/export retain both inputs for exact replay.
+
+Visual calibration used seed `431970387`, parent `4,800 km`, crop `2`, and true physical height (`1×`). The final crop sampled a `2,927 m` peak with `1,961 m` middle-90% relief at the browser's `18.75 km` parent spacing. It reads most closely as a coarse central/southern Andes–Altiplano or Patagonian-transition story: a broken convergent-margin cordillera, drier interior highland, enclosed lakes, and outward drainage. This is an analogue, not a reconstruction.
+
+The visual loop caught and corrected three artifacts:
+
+1. Whole-plate crust produced polygonal coastlines, so irregular continental blocks now ride on plates and allow passive margins away from plate boundaries.
+2. Legacy rifts cut unrelated parallel troughs, so rift provinces now inherit real extensional boundaries.
+3. Constant boundary response produced a white mountain ribbon, so convergence strength, belt width, and local offset now vary along strike before erosion.
+
+Remaining limitations:
+
+- The model uses several coarse geologic episodes, not continuous plate advection or spherical tectonics.
+- Plate boundaries remain macro-scale; the debug map is intentionally schematic.
+- The 18.75 km parent sampling cannot produce mech-scale cliffs, passes, talus, or walkable ground.
+- Continental blocks are geologically motivated initial conditions, but they are not yet assembled through a long supercontinent cycle.
+- Local terrain synthesis and gameplay collision/navigation are still the next layer before a Warden can traverse these regions.
+
 ---
 
 ## User workflow / collaboration preferences
@@ -239,7 +273,7 @@ The user likes:
 - mobile-friendly review, especially Android
 - keeping promising systems flexible rather than prematurely locking them
 
-The user recently removed the strict “only deploy when explicitly requested” Vercel restriction, so previews may happen more freely again. However, do not make Vercel depend on live benchmark-source APIs.
+The user removed the explicit Vercel preview workflow because it was intrusive. Keep `vercel.json` absent unless the user asks for a new deployment configuration. Do not make any deployment depend on live benchmark-source APIs.
 
 When changing geography behavior, prefer this loop:
 
@@ -254,7 +288,7 @@ When changing geography behavior, prefer this loop:
 
 ## Suggested Codex starting point
 
-1. Checkout / inspect `regional-world-lab` and PR #21.
+1. Start from main after merged PRs #20 and #21, then inspect the tectonic-terrain branch/commit lineage if it has not yet been integrated.
 2. Read this handoff plus:
    - `docs/frozen-benchmark-architecture.md`
    - `docs/watershed-water-calibration-r6.md`
@@ -266,19 +300,20 @@ When changing geography behavior, prefer this loop:
 
 Unless the user redirects the work, the safest progression is:
 
-**A. Visual / browser verification of r6**
-- inspect generated parent-world windows
-- inspect Michigan / Great Basin / Cascades / Appalachians maps
-- check the new Through-drainage state reads sensibly
-- confirm no obvious new river / lake artifacts on phone
+**A. Local terrain synthesis for a playable level**
+- choose a bounded gameplay tile from a solved parent crop
+- synthesize meter-scale relief constrained by parent elevation, drainage, geology, and tectonic ruggedness
+- produce stable collision terrain, walkable slopes, and explicit no-go cliffs without changing parent hydrology
+- add deterministic spawn/test routes for the Warden mech
 
 **B. Add a new independent holdout region before further aggressive water tuning**
 - useful choices would be a humid lake-rich / glaciated region or another arid closed-basin region
 - do not fit against it before the first score
 
-**C. Terrain calibration next**
-- compare generated elevation / relief / slope distributions with the real benchmark ranges
-- especially verify generated mountain amplitudes are physically plausible
+**C. Continue tectonic calibration without returning to range painting**
+- compare generated elevation / relief / slope distributions with real benchmark ranges
+- sample additional seeds across subduction, collision, and rift stories
+- keep the generate → screenshot → analogue → causal-tuning loop for every terrain pass
 
 **D. Then return to Stage 4 human geography**
 - benchmark the spatial relationship between human-potential output and historical settlement / population where data quality allows
