@@ -1,0 +1,10 @@
+{
+  "name": "Coverfire",
+  "short_name": "Coverfire",
+  "start_url": "../coverfire.html",
+  "scope": "../",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10"
+}
