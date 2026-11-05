@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Backbone Arcade">
+<meta name="theme-color" content="#06070c">
+<title>Backbone Arcade</title>
+<style>
+  :root{--bg:#06070c;--fg:#eef2fb;--mut:#8f9ab3}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  canvas#bg{position:fixed;inset:0;z-index:0}
+  .wrap{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;gap:clamp(6px,1.6vh,12px);
+    padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand h1{margin:0;font-size:clamp(18px,4.6vh,30px);font-weight:900;letter-spacing:.14em;background:linear-gradient(90deg,#7fb1ff,#ff8be0 45%,#3ee6b4 75%,#ff6b7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand span{font-size:11px;letter-spacing:.3em;color:var(--mut);font-weight:700}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .status b{color:#3ee6b4}
+  .dot{width:8px;height:8px;border-radius:50%;background:#555c70;flex:none}
+  .dot.on{background:#3ee6b4;box-shadow:0 0 10px #3ee6b4}
+  .label{font-size:10px;letter-spacing:.32em;color:var(--mut);font-weight:800;margin:0 2px -4px}
+  .row{display:grid;gap:clamp(6px,1.2vw,12px)}
+  .featured{grid-template-columns:repeat(5,1fr);flex:1.7;min-height:0}
+  .classics{grid-template-columns:repeat(5,1fr);flex:1;min-height:0}
+  .card{position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#10131c;cursor:pointer;
+    transition:transform .18s cubic-bezier(.2,1.3,.4,1),border-color .18s,box-shadow .18s;display:flex;flex-direction:column;justify-content:flex-end;min-height:0;text-decoration:none;color:inherit}
+  .card .art{position:absolute;inset:0;transition:transform .5s ease}
+  .card .art svg{width:100%;height:100%;display:block}
+  .card .txt{position:relative;padding:10px 12px;background:linear-gradient(180deg,transparent,rgba(5,6,12,.92) 45%)}
+  .card h2{margin:0;font-size:clamp(12px,3vh,17px);font-weight:900;letter-spacing:.08em}
+  .card p{margin:2px 0 0;font-size:clamp(9px,2vh,11.5px);color:#b8c0d6;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .best{position:absolute;top:8px;right:9px;font-size:10px;font-weight:800;letter-spacing:.08em;color:#ffd76a;background:rgba(5,6,12,.6);padding:3px 7px;border-radius:99px;display:none}
+  .card .best.on{display:block}
+  .card .tag{position:absolute;top:8px;left:9px;font-size:9px;font-weight:900;letter-spacing:.2em;color:#06070c;background:var(--c);padding:3px 7px;border-radius:99px}
+  .classics .card h2{font-size:clamp(11px,2.6vh,14px)}
+  .classics .card p{-webkit-line-clamp:1}
+  .card.sel{transform:translateY(-3px) scale(1.035);border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 10px 40px -8px var(--c);z-index:2}
+  .card.sel .art{transform:scale(1.06)}
+  footer{display:flex;gap:16px;justify-content:center;align-items:center;font-size:12px;color:#c6cde0;flex-wrap:wrap}
+  footer span{display:inline-flex;align-items:center;gap:6px}
+  .bbg{display:inline-block;vertical-align:middle}
+  .tip{position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;background:rgba(4,5,9,.86);padding:24px;text-align:center}
+  .tip.on{display:flex}
+  .tip div{max-width:560px;font-size:14px;line-height:1.55;color:#cfd6e6}
+  .tip h3{margin:0 0 8px;font-size:20px;letter-spacing:.1em;color:#fff}
+  #bb-rotate{position:fixed;inset:0;z-index:99;background:#07080d;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#cfd6e6;font-weight:700;text-align:center;padding:24px}
+  @media (orientation:portrait) and (pointer:coarse){#bb-rotate{display:flex}}
+  #bb-rotate .ph{width:46px;height:80px;border:3px solid #cfd6e6;border-radius:9px;animation:rot 2s ease-in-out infinite}
+  @keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+  @media (max-height:330px){.card p{display:none}.label{display:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="wrap">
+  <header>
+    <div class="brand"><h1>BACKBONE ARCADE</h1><span>10 GAMES</span></div>
+    <div class="status"><i class="dot" id="dot"></i><span id="st">Connect your Backbone and press any button</span></div>
+  </header>
+  <div class="label">SHOWCASE</div>
+  <div class="row featured" id="featured"></div>
+  <div class="label">CLASSICS</div>
+  <div class="row classics" id="classics"></div>
+  <footer>
+    <span><i data-g="dpad" data-s="20"></i> Browse</span>
+    <span><i data-g="cross" data-s="20"></i> Play</span>
+    <span><i data-g="triangle" data-s="20"></i> How to</span>
+    <span><i data-g="create" data-s="20"></i> Sound</span>
+  </footer>
+</div>
+<div class="tip" id="tip"><div>
+  <h3>HOW TO PLAY</h3>
+  Snap your phone into the Backbone and open this page in Safari or Chrome. Press any button so the browser sees the controller, then tap the screen once to allow sound.<br><br>
+  Every game uses PlayStation symbols: <i data-g="cross" data-s="18"></i> confirms, <i data-g="circle" data-s="18"></i> backs out, <i data-g="options" data-s="18"></i> pauses. <i data-g="create" data-s="18"></i> toggles sound, and <i data-g="l3" data-s="18"></i>+<i data-g="r3" data-s="18"></i> toggles haptics.<br><br>
+  For true fullscreen, use <b>Share → Add to Home Screen</b> and launch from the icon.<br><br>
+  <i data-g="cross" data-s="18"></i> Close
+</div></div>
+<div id="bb-rotate"><div class="ph"></div><div>Rotate to landscape<br><span style="font-weight:500;color:#8590a8">and snap in your Backbone</span></div></div>
+<script src="bb.js"></script>
+<script>
+(() => {
+'use strict';
+const { Pad, BTN, Audio } = BB;
+const ART = {
+  void: `<svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="v1" cx=".5" cy=".55" r=".7"><stop offset="0" stop-color="#1a2160"/><stop offset="1" stop-color="#05060f"/></radialGradient></defs><rect width="200" height="140" fill="url(#v1)"/><g stroke="#4a63ff" stroke-opacity=".35" stroke-width=".8">${Array.from({ length: 11 }, (_, i) => `<path d="M${i * 20} 0V140"/>`).join('')}${Array.from({ length: 8 }, (_, i) => `<path d="M0 ${i * 20}H200"/>`).join('')}</g><g fill="none" stroke-linejoin="round" stroke-width="2.5"><path d="M118 62l-26 14 6-14-6-14z" stroke="#fff"/><path d="M40 30l10 8-10 8-10-8z" stroke="#c77dff"/><path d="M160 100l8-8 8 8-8 8z" stroke="#7cff6b"/><circle cx="150" cy="38" r="9" stroke="#ffe66d"/><path d="M60 104l12 4-12 8 4-6z" stroke="#ff9f1c"/></g><g stroke="#ffe9a8" stroke-width="2.5" stroke-linecap="round"><path d="M126 58l12-6M132 66l12-6"/></g></svg>`,
+  drift: `<svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="d1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0320"/><stop offset=".55" stop-color="#4a0d5a"/><stop offset=".62" stop-color="#ff3fa4"/><stop offset=".63" stop-color="#14062a"/></linearGradient><linearGradient id="d2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff2a8a"/></linearGradient></defs><rect width="200" height="140" fill="url(#d1)"/><circle cx="100" cy="72" r="30" fill="url(#d2)"/><g fill="#4a0d5a">${[52, 58, 64, 70, 76, 82].map((y, i) => `<rect x="60" y="${y + 6}" width="80" height="${1 + i * 0.6}"/>`).join('')}</g><path d="M0 88L30 70 46 80 70 64 86 88z M114 88l22-20 18 12 22-18 24 26z" fill="#14042a" stroke="#3df2ff" stroke-width=".8"/><path d="M90 88L40 140M110 88l50 52" stroke="#ff3fa4" stroke-width="2.5"/><path d="M100 92v6M100 104v9M100 120v14" stroke="#b8f6ff" stroke-width="2"/><g stroke="#ff3fa4" stroke-opacity=".5" stroke-width=".7">${[96, 104, 114, 128].map((y) => `<path d="M0 ${y}H200"/>`).join('')}</g></svg>`,
+  pulse: `<svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice"><rect width="200" height="140" fill="#140a26"/><g fill="none" stroke="#ff8be0" stroke-opacity=".25"><ellipse cx="100" cy="14" rx="40" ry="20"/><ellipse cx="100" cy="14" rx="80" ry="40"/><ellipse cx="100" cy="14" rx="130" ry="65"/></g><path d="M88 14L30 140H170L112 14z" fill="#0a0716" stroke="#ff8be0" stroke-width="2"/><g stroke="#fff" stroke-opacity=".12"><path d="M94 14L65 140M100 14v126M106 14l29 126"/></g><g fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="46" y="112" width="12" height="12" stroke="#ff8be0"/><path d="M79 112l12 12M91 112l-12 12" stroke="#7fb1ff"/><path d="M121 111l7 13h-14z" stroke="#3ee6b4"/><circle cx="148" cy="118" r="6.5" stroke="#ff6b7a"/><path d="M98 50l5 5M103 50l-5 5" stroke="#7fb1ff"/><rect x="88" y="72" width="8" height="8" stroke="#ff8be0"/><path d="M113 86l5 9h-10z" stroke="#3ee6b4"/></g></svg>`,
+  ember: `<svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="e1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b0f2e"/><stop offset=".7" stop-color="#5a2140"/><stop offset="1" stop-color="#ff8a4c"/></linearGradient></defs><rect width="200" height="140" fill="url(#e1)"/><circle cx="150" cy="34" r="12" fill="#fff6ea"/><path d="M0 100L30 60 54 84 84 44 120 90 150 62 200 96V140H0z" fill="#2c1835"/><path d="M0 116L40 92 70 108 110 86 150 110 200 94V140H0z" fill="#170b1f"/><rect x="20" y="110" width="50" height="30" fill="#2a1d2f"/><rect x="20" y="110" width="50" height="3" fill="#ff9a4a"/><rect x="96" y="96" width="60" height="44" fill="#2a1d2f"/><rect x="96" y="96" width="60" height="3" fill="#ff9a4a"/><rect x="70" y="134" width="26" height="6" fill="#ff5a1e"/><g><rect x="82" y="78" width="9" height="11" fill="#2b2238"/><rect x="83" y="79" width="7" height="5" fill="#f2e6d8"/><circle cx="80" cy="76" r="3.4" fill="#ff8a3d"/><circle cx="77" cy="77" r="2.6" fill="#ff8a3d" opacity=".7"/></g><g fill="#ffcf6a">${[[40, 70], [120, 60], [170, 80], [60, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6"/>`).join('')}</g></svg>`,
+  sky: `<svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3370"/><stop offset=".45" stop-color="#9e6a9a"/><stop offset=".6" stop-color="#ffa070"/></linearGradient></defs><rect width="200" height="140" fill="url(#s1)"/><circle cx="118" cy="62" r="9" fill="#fff2d6"/><path d="M0 0H70L84 70 60 140H0z" fill="#b5523a"/><path d="M0 0H50L66 70 40 140H0z" fill="#8a3a30"/><path d="M200 0H140L120 70 146 140H200z" fill="#d9844f"/><path d="M200 0H160L140 70 168 140H200z" fill="#a84a35"/><path d="M60 140L84 70H120L146 140z" fill="#2a6f86"/><path d="M98 50l3-26 4 26z" fill="#6e2f35"/><circle cx="104" cy="88" r="7" fill="none" stroke="#ffd76a" stroke-width="1.8"/><path d="M100 112l-18 6 18-2 18 2z" fill="#f2efe8"/><path d="M100 104v14" stroke="#f2efe8" stroke-width="3"/><circle cx="100" cy="119" r="2" fill="#9fd8ff"/></svg>`,
+  serpent: `<svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid slice"><rect width="200" height="100" fill="#071a13"/><path d="M30 70H90V40H140V60" fill="none" stroke="#1fa883" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 70H90V40H140V60" fill="none" stroke="#3ee6b4" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="140" cy="60" r="7" fill="#c9fff0"/><circle cx="168" cy="60" r="5" fill="#ff6b7a"/></svg>`,
+  breakline: `<svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid slice"><rect width="200" height="100" fill="#120b26"/>${['#ff6b7a', '#ff9f43', '#ffd76a', '#3ee6b4'].map((c, r) => Array.from({ length: 8 }, (_, i) => `<rect x="${12 + i * 22.5}" y="${12 + r * 10}" width="20" height="8" rx="1" fill="${c}" opacity="${(i + r) % 5 ? 1 : 0}"/>`).join('')).join('')}<circle cx="112" cy="70" r="4" fill="#fff"/><rect x="80" y="86" width="44" height="6" rx="3" fill="#7fb1ff"/></svg>`,
+  puck: `<svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid slice"><rect width="200" height="100" fill="#0a1426"/><rect x="10" y="8" width="180" height="84" rx="14" fill="none" stroke="#9fb6ff" stroke-width="2"/><path d="M100 8v84" stroke="#3d6bff" stroke-width="1.5"/><circle cx="100" cy="50" r="16" fill="none" stroke="#3d6bff" stroke-width="1.5"/><circle cx="52" cy="58" r="11" fill="#7fb1ff"/><circle cx="52" cy="58" r="4.5" fill="#1b2c55"/><circle cx="154" cy="40" r="11" fill="#ff6b7a"/><circle cx="154" cy="40" r="4.5" fill="#4a1720"/><circle cx="86" cy="44" r="6" fill="#111" stroke="#ffd76a" stroke-width="2"/></svg>`,
+  echo: `<svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid slice"><rect width="200" height="100" fill="#160d26"/><g fill="#0e0c1a" stroke-width="2.4"><circle cx="100" cy="24" r="14" stroke="#3ee6b4"/><circle cx="128" cy="50" r="14" stroke="#ff6b7a"/><circle cx="100" cy="76" r="14" stroke="#7fb1ff"/><circle cx="72" cy="50" r="14" stroke="#ff8be0"/></g><g fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M100 17l6.5 11h-13z" stroke="#3ee6b4"/><circle cx="128" cy="50" r="5.5" stroke="#ff6b7a"/><path d="M95 71l10 10M105 71l-10 10" stroke="#7fb1ff"/><rect x="67" y="45" width="10" height="10" stroke="#ff8be0"/></g><circle cx="128" cy="50" r="20" fill="none" stroke="#ff6b7a" stroke-opacity=".4" stroke-width="2"/></svg>`,
+  stacker: `<svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid slice"><rect width="200" height="100" fill="#1a1530"/>${[0, 1, 2, 3, 4].map((i) => { const y = 82 - i * 12, h = 250 + i * 18; return `<path d="M100 ${y - 10}l34 -10 34 10 -34 10z" transform="translate(-34 0)" fill="hsl(${h},70%,62%)"/><path d="M66 ${y - 10}l34 10v8l-34 -10z" fill="hsl(${h},55%,42%)"/><path d="M134 ${y - 10}l-34 10v8l34 -10z" fill="hsl(${h},55%,32%)"/>`; }).join('')}</svg>`,
+};
+const GAMES = [
+  { f: 'void-lancer.html', t: 'VOID LANCER', d: 'Twin-stick survival on a warping neon grid.', c: '#7fb1ff', a: 'void', k: 'void-lancer', tag: 'TWIN-STICK' },
+  { f: 'neon-drift.html', t: 'NEON DRIFT', d: '3D synthwave racer. Analog triggers, drift to charge nitro.', c: '#ff3fa4', a: 'drift', k: 'neon-drift', tag: '3D RACING' },
+  { f: 'pulse.html', t: 'PULSE', d: 'Rhythm highway for ✕○□△ with procedurally composed tracks.', c: '#ff8be0', a: 'pulse', k: null, tag: 'RHYTHM' },
+  { f: 'emberfall.html', t: 'EMBERFALL', d: 'Precision platformer: dash, wall-jump, eight realms.', c: '#ffb35c', a: 'ember', k: null, tag: 'PLATFORMER' },
+  { f: 'skyrift.html', t: 'SKYRIFT', d: '3D flight through an endless procedural canyon.', c: '#ffb38a', a: 'sky', k: 'skyrift', tag: '3D FLIGHT' },
+  { f: 'serpent.html', t: 'SERPENT', d: 'Smooth neon snake with boost.', c: '#3ee6b4', a: 'serpent', k: 'serpent' },
+  { f: 'breakline.html', t: 'BREAKLINE', d: 'Analog brick breaker with power-ups.', c: '#c77dff', a: 'breakline', k: 'breakline' },
+  { f: 'puck-rush.html', t: 'PUCK RUSH', d: 'Air hockey vs an adaptive CPU.', c: '#7fb1ff', a: 'puck', k: null },
+  { f: 'echo.html', t: 'ECHO', d: 'Memory sequences on the face buttons.', c: '#ff8be0', a: 'echo', k: 'echo' },
+  { f: 'stacker.html', t: 'STACKER', d: 'One-button tower stacking.', c: '#ffd76a', a: 'stacker', k: 'stacker' },
+];
+const fe = document.getElementById('featured'), cl = document.getElementById('classics');
+GAMES.forEach((g, i) => {
+  const a = document.createElement('a');
+  a.className = 'card'; a.href = g.f; a.style.setProperty('--c', g.c); a.dataset.i = i;
+  const best = g.k ? BB.load('best:' + g.k, null) : null;
+  a.innerHTML = `<div class="art">${ART[g.a]}</div>${g.tag ? `<div class="tag">${g.tag}</div>` : ''}<div class="best${best ? ' on' : ''}">BEST ${best ? Number(best).toLocaleString() : ''}</div><div class="txt"><h2>${g.t}</h2><p>${g.d}</p></div>`;
+  a.addEventListener('mouseenter', () => select(i, true));
+  (i < 5 ? fe : cl).appendChild(a);
+});
+BB.hydrate();
+const cards = [...document.querySelectorAll('.card')];
+let sel = BB.load('arcade:sel', 0), tipOn = false;
+function select(i, quiet) {
+  sel = (i + cards.length) % cards.length; BB.save('arcade:sel', sel);
+  cards.forEach((c, k) => c.classList.toggle('sel', k === sel));
+  if (!quiet) { Audio.tone({ f: 880, dur: 0.04, type: 'square', vol: 0.03 }); Pad.rumble(0.05, 0.15, 25); }
+}
+select(sel, true);
+function launch() {
+  Audio.unlock();
+  Audio.tone({ f: 660, f2: 1320, dur: 0.15, type: 'triangle', vol: 0.08 });
+  Pad.rumble(0.3, 0.4, 90);
+  cards[sel].style.transform = 'scale(.96)';
+  setTimeout(() => { location.href = GAMES[sel].f; }, 140);
+}
+const tip = document.getElementById('tip');
+tip.addEventListener('click', () => { tipOn = false; tip.classList.remove('on'); });
+
+// animated background
+const cv = document.getElementById('bg'), ctx = cv.getContext('2d');
+const blobs = Array.from({ length: 5 }, (_, i) => ({ x: Math.random(), y: Math.random(), r: 0.3 + Math.random() * 0.3, ph: Math.random() * 6, c: ['#7fb1ff', '#ff8be0', '#3ee6b4', '#ff6b7a', '#c77dff'][i] }));
+let last = 0, conn = null;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t;
+  Pad.update();
+  // status
+  const c = Pad.connected ? Pad.id : '';
+  if (c !== conn) {
+    conn = c;
+    document.getElementById('dot').classList.toggle('on', !!c);
+    document.getElementById('st').innerHTML = c ? `<b>Ready</b> · ${c.replace(/\(.*?Vendor.*?\)/i, '').trim().slice(0, 44)}` : 'Connect your Backbone and press any button';
+  }
+  if (tipOn) { if (Pad.pressed(BTN.CROSS) || Pad.pressed(BTN.CIRCLE) || Pad.pressed(BTN.TRIANGLE)) { tipOn = false; tip.classList.remove('on'); } }
+  else {
+    const n = Pad.nav(dt);
+    if (n.x) { const row = sel < 5 ? 0 : 5; select(row + ((sel - row + n.x + 5) % 5)); }
+    if (n.y) select(sel < 5 ? Math.min(sel + 5, 9) : sel - 5);
+    if (Pad.pressed(BTN.CROSS) || Pad.pressed(BTN.OPTIONS)) launch();
+    if (Pad.pressed(BTN.TRIANGLE)) { tipOn = true; tip.classList.add('on'); }
+    if (Pad.pressed(BTN.R1)) select(sel + 1); if (Pad.pressed(BTN.L1)) select(sel - 1);
+  }
+  if (Pad.pressed(BTN.CREATE)) { Audio.unlock(); Audio.setMuted(!BB.Settings.muted); }
+  // background
+  const dpr = Math.min(devicePixelRatio || 1, 1.5), w = innerWidth, h = innerHeight;
+  if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + 'px'; cv.style.height = h + 'px'; }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#06070c'; ctx.fillRect(0, 0, w, h);
+  ctx.globalCompositeOperation = 'lighter';
+  const accent = GAMES[sel].c;
+  blobs.forEach((b, i) => {
+    b.ph += dt * 0.15;
+    const x = (b.x + Math.sin(b.ph + i) * 0.12) * w, y = (b.y + Math.cos(b.ph * 0.8 + i) * 0.12) * h, r = b.r * Math.max(w, h);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, (i === 0 ? accent : b.c) + '2a'); g.addColorStop(1, '#00000000');
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  });
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.strokeStyle = 'rgba(255,255,255,0.035)'; ctx.lineWidth = 1;
+  const off = (t / 60) % 40;
+  ctx.beginPath(); for (let x = -40 + off; x < w; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, h); } for (let y = -40 + off; y < h; y += 40) { ctx.moveTo(0, y); ctx.lineTo(w, y); } ctx.stroke();
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
