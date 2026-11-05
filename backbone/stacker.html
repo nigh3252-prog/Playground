@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0b1a">
+<title>Stacker</title>
+<style>canvas{position:fixed;inset:0;display:block}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script src="bb.js"></script>
+<script>
+(() => {
+'use strict';
+const { Pad, BTN, Audio, rand, clamp, lerp } = BB;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const SLAB = 10, START = 100;
+let stack, cur, falling, camY, perfects, score, hue0, alive, popT, popTxt, ripple;
+function reset() {
+  hue0 = rand(0, 360);
+  stack = [{ x: 0, z: 0, w: START, d: START, y: 0 }];
+  falling = []; camY = 0; perfects = 0; score = 0; alive = true; popT = 0; ripple = [];
+  spawn();
+}
+function spawn() {
+  const top = stack[stack.length - 1], axis = stack.length % 2 ? 'x' : 'z';
+  cur = { ...top, y: top.y + SLAB, axis, t: 0, dir: 1, speed: Math.min(1.25 + stack.length * 0.03, 3.2) };
+  cur[axis] = -150;
+}
+function place() {
+  const top = stack[stack.length - 1], a = cur.axis, size = a === 'x' ? 'w' : 'd';
+  const delta = cur[a] - top[a];
+  const over = Math.abs(delta);
+  if (over >= top[size]) { // missed entirely
+    falling.push({ ...cur, vy: 0, rot: 0 }); alive = false;
+    Audio.tone({ f: 200, f2: 60, dur: 0.6, type: 'sawtooth', vol: 0.1, lp: 900 }); Pad.rumble(0.9, 0.6, 350);
+    const b = BB.best('stacker', score);
+    BB.over({ title: 'TOPPLED', color: `hsl(${(hue0 + score * 8) % 360},80%,70%)`, isNew: b.isNew, stats: [['Height', score], ['Best', b.best || 0]] });
+    cur = null; return;
+  }
+  const tol = 3;
+  if (over <= tol) {
+    cur[a] = top[a]; perfects++;
+    if (perfects >= 3) { cur[size] = Math.min(START, cur[size] + 6); cur[a] = top[a]; }
+    popTxt = perfects > 1 ? `PERFECT ×${perfects}` : 'PERFECT'; popT = 1;
+    ripple.push({ ...cur, t: 0.6 });
+    Audio.tone({ f: 440 * Math.pow(2, Math.min(perfects, 12) / 12), dur: 0.25, type: 'triangle', vol: 0.12 });
+    Pad.rumble(0.2, 0.5, 70);
+  } else {
+    perfects = 0;
+    const keep = top[size] - over;
+    const cut = { ...cur, vy: 0 };
+    cut[size] = over;
+    if (delta > 0) cut[a] = top[a] + top[size] / 2 + over / 2;
+    else cut[a] = top[a] - top[size] / 2 - over / 2;
+    cur[size] = keep; cur[a] = top[a] + delta / 2;
+    falling.push(cut);
+    Audio.tone({ f: 300 + stack.length * 5, dur: 0.08, type: 'square', vol: 0.06 }); Audio.noise({ dur: 0.1, vol: 0.08, freq: 2000 });
+    Pad.rumble(0.15, 0.2, 40);
+  }
+  delete cur.t; stack.push(cur); score++;
+  spawn();
+}
+function update(dt) {
+  if (cur) {
+    cur.t += dt * cur.speed;
+    cur[cur.axis] = -150 + (1 - Math.abs(((cur.t * 0.5) % 2) - 1)) * 300;
+    if (Pad.pressed(BTN.CROSS) || Pad.pressed(BTN.R2) || Pad.pressed(BTN.SQUARE) || Pad.pressed(BTN.CIRCLE) || Pad.pressed(BTN.TRIANGLE)) place();
+  }
+  for (const f of falling) { f.vy += 600 * dt; f.y -= f.vy * dt; }
+  falling = falling.filter((f) => f.y > camY - 600);
+  popT = Math.max(0, popT - dt);
+  for (const r of ripple) r.t -= dt; ripple = ripple.filter((r) => r.t > 0);
+}
+// iso projection
+let S, ox, oy, k;
+const iso = (x, y, z) => [ox + (x - z) * 0.866 * k, oy + ((x + z) * 0.5 - y) * k];
+function box(b, col, alpha) {
+  const { x, z, w, d, y } = b;
+  const x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2, y0 = y - SLAB, y1 = y;
+  const P = (a, b2, c) => iso(a, b2, c);
+  const h = col;
+  ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+  // left face (z = z1)
+  ctx.fillStyle = `hsl(${h},55%,42%)`; poly([P(x0, y1, z1), P(x1, y1, z1), P(x1, y0, z1), P(x0, y0, z1)]);
+  // right face (x = x1)
+  ctx.fillStyle = `hsl(${h},55%,32%)`; poly([P(x1, y1, z0), P(x1, y1, z1), P(x1, y0, z1), P(x1, y0, z0)]);
+  // top
+  ctx.fillStyle = `hsl(${h},70%,62%)`; poly([P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)]);
+  ctx.globalAlpha = 1;
+}
+function poly(p) { ctx.beginPath(); p.forEach(([a, b], i) => (i ? ctx.lineTo(a, b) : ctx.moveTo(a, b))); ctx.closePath(); ctx.fill(); }
+function render(dt, t, state) {
+  S = BB.fitCanvas(cv, 2);
+  ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+  const h = stack ? (hue0 + score * 8) % 360 : 260;
+  const bg = ctx.createLinearGradient(0, 0, 0, S.ch);
+  bg.addColorStop(0, `hsl(${h},45%,22%)`); bg.addColorStop(1, `hsl(${(h + 40) % 360},50%,8%)`);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, S.cw, S.ch);
+  if (!stack) return;
+  k = S.ch / 360;
+  const topY = stack[stack.length - 1].y;
+  camY = lerp(camY, topY, 1 - Math.exp(-4 * dt));
+  ox = S.cw / 2; oy = S.ch * 0.58 + camY * k;
+  // base column
+  const b0 = stack[0];
+  ctx.fillStyle = `hsl(${hue0},35%,20%)`;
+  const l = iso(b0.x - b0.w / 2, -10, b0.z + b0.d / 2), r = iso(b0.x + b0.w / 2, -10, b0.z - b0.d / 2), bot = iso(b0.x + b0.w / 2, -10, b0.z + b0.d / 2);
+  poly([l, bot, r, [r[0], S.ch + 10], [l[0], S.ch + 10]]);
+  stack.forEach((s, i) => { if (s.y > camY - 400) box(s, (hue0 + i * 8) % 360); });
+  for (const f of falling) box(f, (hue0 + stack.length * 8) % 360, 0.9);
+  if (cur) box(cur, (hue0 + stack.length * 8) % 360);
+  for (const r of ripple) { const f = 1 - r.t / 0.6; ctx.strokeStyle = `rgba(255,255,255,${1 - f})`; ctx.lineWidth = 2; const g = (r.w + 20 * f) / 2, gd = (r.d + 20 * f) / 2; const pts = [iso(r.x - g, r.y, r.z - gd), iso(r.x + g, r.y, r.z - gd), iso(r.x + g, r.y, r.z + gd), iso(r.x - g, r.y, r.z + gd)]; ctx.beginPath(); pts.forEach(([a, b], i) => (i ? ctx.lineTo(a, b) : ctx.moveTo(a, b))); ctx.closePath(); ctx.stroke(); }
+  if (state === 'title') return;
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = `900 ${Math.round(S.ch * 0.12)}px ui-sans-serif,system-ui,sans-serif`;
+  ctx.fillText(score, S.cw / 2, S.ch * 0.17);
+  if (popT > 0) { ctx.globalAlpha = popT; ctx.font = '900 18px ui-sans-serif,system-ui,sans-serif'; ctx.fillText(popTxt, S.cw / 2, S.ch * 0.17 + 26); ctx.globalAlpha = 1; }
+}
+BB.run({
+  title: 'STACKER', accent: '#ffd76a',
+  tagline: 'One button. Drop the slab, trim the overhang, build to the sky. Three perfects in a row grow it back.',
+  controls: [['cross', 'Drop (any face button)'], ['options', 'Pause']],
+  init() { reset(); cur = null; },
+  start() { reset(); },
+  update, render,
+});
+})();
+</script>
+</body>
+</html>

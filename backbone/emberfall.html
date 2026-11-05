@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0716">
+<title>Emberfall</title>
+<style>
+  canvas{position:fixed;inset:0;display:block}
+  .stagesel{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.12em;font-size:clamp(13px,3vh,17px)}
+  .stagesel em{font-style:normal;color:#ffb35c;min-width:5.5em;display:inline-block}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script src="bb.js"></script>
+<script>
+(() => {
+'use strict';
+const { Pad, BTN, Audio, rand, clamp, lerp } = BB;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const TAU = Math.PI * 2;
+const T = 16, ROWS = 22, STAGES = 8, VIEW_ROWS = 14;
+
+// ============================================================ physics constants
+const RUN = 132, ACC_G = 1500, ACC_A = 1050, FRIC = 1800, GRAV = 1500, JUMP_V = 440, MAX_FALL = 430;
+const COYOTE = 0.1, BUFFER = 0.13, WALL_SLIDE = 85, WJ_VX = 175, WJ_VY = 410, DASH_V = 330, DASH_T = 0.16, SPRING_V = 650;
+const PW = 10, PH = 13;
+
+const THEMES = [
+  { name: 'Ashen Dusk', sky: ['#1b0f2e', '#5a2140', '#ff8a4c'], rock: '#2a1d2f', rock2: '#3b2840', crust: '#ff9a4a', far: '#2c1835', mid: '#22122b', near: '#170b1f', haz: 'lava' },
+  { name: 'Hollow Caves', sky: ['#060b1a', '#0f2240', '#2c5a7a'], rock: '#18222f', rock2: '#22303f', crust: '#6fd3ff', far: '#0f1a2c', mid: '#0b1422', near: '#070d17', haz: 'spike' },
+  { name: 'Mossglow', sky: ['#04140f', '#0b2e25', '#3a8a62'], rock: '#162420', rock2: '#1f332c', crust: '#7dffa8', far: '#0d2620', mid: '#0a1d18', near: '#061210', haz: 'spike' },
+  { name: 'Crimson Forge', sky: ['#1a0507', '#4a0d14', '#ff4a2a'], rock: '#2d1416', rock2: '#40191c', crust: '#ff5a3a', far: '#36121a', mid: '#280c12', near: '#19070b', haz: 'lava' },
+  { name: 'Violet Rift', sky: ['#0d0620', '#2b1050', '#9a5aff'], rock: '#1f1630', rock2: '#2c2045', crust: '#c49aff', far: '#1c1036', mid: '#140a28', near: '#0b0518', haz: 'spike' },
+  { name: 'Frostfall', sky: ['#0a1424', '#2a4a6a', '#bfe6ff'], rock: '#1e2a38', rock2: '#2c3c50', crust: '#e6f6ff', far: '#2a3a52', mid: '#1c2a3c', near: '#121c28', haz: 'spike' },
+  { name: 'Gilded Deep', sky: ['#120b02', '#3d2a08', '#ffc94a'], rock: '#2a2214', rock2: '#3a2f1c', crust: '#ffd76a', far: '#2c200c', mid: '#211808', near: '#140e04', haz: 'lava' },
+  { name: 'The Summit', sky: ['#05040c', '#1c1838', '#ff7ad9'], rock: '#1c1a2a', rock2: '#2a2740', crust: '#ffffff', far: '#1a1730', mid: '#121024', near: '#0a0816', haz: 'lava' },
+];
+const INTRO = [
+  [['cross', 'Jump — hold for height'], ['ls', 'Run']],
+  [['square', 'Dash in 8 directions'], ['r1', 'also dashes']],
+  [['cross', 'Slide down a wall, then jump off it']],
+  ['Glowing crystals refill your dash in mid-air'],
+  ['Cracked stone crumbles — keep moving'],
+  ['Floating ledges: jump up through them'],
+  ['Everything you have learned'],
+  ['The final climb'],
+];
+
+// ============================================================ level generation (feasible by construction)
+function generate(stage) {
+  const r = BB.rng(1000 + stage * 7919);
+  const ri = (a, b) => a + Math.floor(r() * (b - a + 1));
+  const len = 96 + stage * 14;
+  const g = Array.from({ length: ROWS }, () => new Array(len).fill('.'));
+  const set = (x, y, c) => { if (x >= 0 && x < len && y >= 0 && y < ROWS) g[y][x] = c; };
+  const ground = (x0, x1, ys) => { for (let x = x0; x <= x1; x++) for (let y = ys; y < ROWS; y++) set(x, y, '#'); };
+  const pit = (x0, x1) => { for (let x = x0; x <= x1; x++) set(x, ROWS - 1, THEMES[stage].haz === 'lava' ? 'L' : '^'); };
+  const embers = [], crystals = [], checkpoints = [];
+  let ys = 16, x = 0;
+  for (let y = 0; y < ROWS; y++) set(0, y, '#');
+  ground(0, 7, ys);
+  const spawn = { x: 3, y: ys };
+  x = 8;
+  let sinceCP = 0;
+  const types = ['gap', 'spikes'];
+  if (stage >= 1) types.push('dash', 'gap');
+  if (stage >= 2) types.push('chimney');
+  if (stage >= 3) types.push('double');
+  if (stage >= 4) types.push('crumble', 'crumble');
+  if (stage >= 5) types.push('oneway');
+  if (stage >= 0) types.push('spring');
+  const intro = [null, 'dash', 'chimney', 'double', 'crumble', 'oneway', null, null][stage];
+  let first = true;
+  while (x < len - 16) {
+    let type = first && intro ? intro : types[Math.floor(r() * types.length)];
+    first = false;
+    const start = x;
+    switch (type) {
+      case 'gap': {
+        const gw = ri(2, stage === 0 ? 3 : 4);
+        const up = gw <= 3 ? 2 : 1;
+        const ny = clamp(ys + ri(-up, 3), 9, 18);
+        pit(x, x + gw - 1);
+        const w = ri(3, 6);
+        ground(x + gw, x + gw + w - 1, ny);
+        embers.push([x + gw / 2, Math.min(ys, ny) - 3]);
+        x += gw + w; ys = ny; break;
+      }
+      case 'spikes': {
+        const w = ri(10, 16);
+        ground(x, x + w - 1, ys);
+        let sx = x + 2;
+        while (sx < x + w - 3) { const sw = ri(1, stage < 2 ? 1 : 2); for (let i = 0; i < sw; i++) set(sx + i, ys - 1, '^'); embers.push([sx + sw / 2, ys - 4]); sx += sw + ri(3, 5); }
+        x += w; break;
+      }
+      case 'dash': {
+        const gw = ri(6, 7);
+        pit(x, x + gw - 1);
+        const ny = clamp(ys + ri(0, 1), 9, 18);
+        const w = ri(4, 6);
+        ground(x + gw, x + gw + w - 1, ny);
+        embers.push([x + gw / 2, ys - 3]);
+        x += gw + w; ys = ny; break;
+      }
+      case 'double': {
+        ground(x, x + 2, ys); x += 3;
+        const gw = ri(8, 9);
+        pit(x, x + gw - 1);
+        crystals.push([x + 4.5, ys - 4]);
+        const ny = clamp(ys + ri(0, 1), 9, 18);
+        const w = ri(4, 6);
+        ground(x + gw, x + gw + w - 1, ny);
+        x += gw + w; ys = ny; break;
+      }
+      case 'chimney': {
+        const k = ri(5, 7);
+        const ny = Math.max(4, ys - k);
+        if (ys - ny < 4) { ground(x, x + 5, ys); x += 6; break; }
+        ground(x, x + 4, ys); // floor under the hanging block + chimney
+        for (let cx = x; cx <= x + 1; cx++) for (let y = ny - 1; y <= ys - 3; y++) set(cx, y, '#');
+        const w = ri(5, 7);
+        ground(x + 5, x + 5 + w - 1, ny);
+        for (let y = ny; y < ys; y++) set(x + 5, y, '#');
+        embers.push([x + 3.5, ny - 1]);
+        x += 5 + w; ys = ny;
+        // give the next segment a way back down
+        break;
+      }
+      case 'crumble': {
+        const gw = ri(6, 9);
+        pit(x, x + gw - 1);
+        for (let i = 0; i < gw; i++) set(x + i, ys, 'C');
+        embers.push([x + gw / 2, ys - 2]);
+        const w = ri(3, 5);
+        ground(x + gw, x + gw + w - 1, ys);
+        x += gw + w; break;
+      }
+      case 'oneway': {
+        const gw = ri(10, 13);
+        pit(x, x + gw - 1);
+        let px = x + 1, py = ys - 1;
+        while (px < x + gw - 1) {
+          for (let i = 0; i < 3 && px + i < x + gw; i++) set(px + i, py, '=');
+          embers.push([px + 1.5, py - 2]);
+          px += ri(4, 5); py = clamp(py + ri(-2, 1), Math.max(5, ys - 5), ys + 1);
+        }
+        const ny = clamp(py + 1, 9, 18);
+        const w = ri(4, 6);
+        ground(x + gw, x + gw + w - 1, ny);
+        x += gw + w; ys = ny; break;
+      }
+      case 'spring': {
+        const k = ri(4, 7);
+        const ny = clamp(ys - k, 5, 18);
+        if (ys - ny < 3) { ground(x, x + 4, ys); x += 5; break; }
+        ground(x, x + 3, ys); set(x + 2, ys - 1, 'S');
+        ground(x + 4, x + 4 + ri(4, 6), ny);
+        embers.push([x + 2.5, ny - 3]);
+        const nx = x + 4; x = nx + 1; while (g[ny][x] === '#') x++;
+        ys = ny; break;
+      }
+    }
+    // occasional descents so we don't climb forever
+    if (ys < 9 && r() < 0.7) {
+      const ny = ri(13, 17);
+      pit(x, x + 1); ground(x + 2, x + 6, ny); x += 7; ys = ny;
+    }
+    sinceCP += x - start;
+    if (sinceCP > 34 && x < len - 24) {
+      ground(x, x + 3, ys); checkpoints.push([x + 1, ys]); x += 4; sinceCP = 0;
+    }
+  }
+  ground(x, len - 1, ys);
+  for (let y = 0; y < ROWS; y++) set(len - 1, y, '#');
+  const exit = { x: len - 6, y: ys };
+  return { g, len, spawn, exit, embers: embers.map(([ex, ey]) => ({ x: ex * T + T / 2, y: ey * T + T / 2, got: false })).filter((e) => e.y > 8), crystals: crystals.map(([cx, cy]) => ({ x: cx * T + T / 2, y: cy * T + T / 2, t: 0 })), checkpoints: checkpoints.map(([cx, cy]) => ({ x: cx * T + T / 2, y: cy * T, lit: false })), crumbles: new Map() };
+}
+
+// ============================================================ state
+let stage = 0, L = null, pl = null, cam = { x: 0, y: 8 * 16, shake: 0 }, totalTime = 0, deaths = 0, stageTime = 0, embersGot = 0, embersTotal = 0;
+let parts = [], tilesCanvas = null, bgCanvas = null, hitstop = 0, stageBanner = 0, clearT = 0, unlocked = BB.load('ember:unlocked', 0), pickStage = 0;
+const solidAt = (tx, ty) => {
+  if (tx < 0 || tx >= L.len) return true;
+  if (ty < 0 || ty >= ROWS) return false;
+  const c = L.g[ty][tx];
+  if (c === '#') return true;
+  if (c === 'C') { const s = L.crumbles.get(ty * 10000 + tx); return !s || s.state !== 2; }
+  return false;
+};
+const tileAt = (tx, ty) => (tx < 0 || tx >= L.len || ty < 0 || ty >= ROWS ? '.' : L.g[ty][tx]);
+
+function loadStage(n, fresh) {
+  stage = n; L = generate(n); pl = null;
+  stageTime = 0; stageBanner = 3.2; clearT = 0;
+  embersTotal = L.embers.length;
+  respawnAt(L.spawn.x * T + T / 2, L.spawn.y * T);
+  cam.x = pl.x - 200; cam.y = clamp(pl.y - VIEW_ROWS * T * 0.58, 0, (ROWS - VIEW_ROWS) * T);
+  buildTiles(); buildBg();
+  if (fresh) { totalTime = 0; deaths = 0; embersGot = 0; }
+  music.setTheme(n);
+}
+function respawnAt(x, y) {
+  pl = { x, y, vx: 0, vy: 0, face: 1, ground: false, coyote: 0, buffer: 0, dash: 1, dashT: 0, dx: 0, dy: 0, wall: 0, wallLock: 0, sx: 1, sy: 1, dead: 0, cp: pl && pl.cp ? pl.cp : { x, y }, trail: [], jumpHeld: false, inv: 0.2 };
+}
+
+// ============================================================ prerender tiles
+function buildTiles() {
+  const th = THEMES[stage];
+  tilesCanvas = document.createElement('canvas');
+  tilesCanvas.width = L.len * T; tilesCanvas.height = ROWS * T;
+  const x = tilesCanvas.getContext('2d');
+  const r = BB.rng(stage * 31 + 5);
+  for (let ty = 0; ty < ROWS; ty++) for (let tx = 0; tx < L.len; tx++) {
+    const c = L.g[ty][tx], px = tx * T, py = ty * T;
+    if (c === '#') {
+      x.fillStyle = th.rock; x.fillRect(px, py, T, T); if (r() < 0.3) { x.fillStyle = th.rock2; x.fillRect(px + 1 + Math.floor(r() * 4), py + 3 + Math.floor(r() * 4), 6 + Math.floor(r() * 6), 4 + Math.floor(r() * 5)); }
+      for (let i = 0; i < 5; i++) { x.fillStyle = r() < 0.5 ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.05)'; x.fillRect(px + Math.floor(r() * 14), py + Math.floor(r() * 14), 2, 2); }
+      const open = (ax, ay) => { const cc = tileAt(ax, ay); return cc !== '#' && cc !== 'C'; };
+      if (open(tx, ty - 1)) { x.fillStyle = th.crust; x.fillRect(px, py, T, 2); x.fillStyle = 'rgba(255,255,255,0.18)'; x.fillRect(px, py + 2, T, 1); for (let i = 0; i < 3; i++) if (r() < 0.5) { x.fillStyle = th.crust; x.fillRect(px + Math.floor(r() * 14), py - 2, 1, 2 + Math.floor(r() * 2)); } }
+      if (open(tx - 1, ty)) { x.fillStyle = 'rgba(255,255,255,0.08)'; x.fillRect(px, py, 1, T); }
+      if (open(tx + 1, ty)) { x.fillStyle = 'rgba(0,0,0,0.35)'; x.fillRect(px + T - 2, py, 2, T); }
+      if (open(tx, ty + 1)) { x.fillStyle = 'rgba(0,0,0,0.4)'; x.fillRect(px, py + T - 2, T, 2); }
+    } else if (c === '^') {
+      x.fillStyle = '#c9cede';
+      for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(px + i * 5.33, py + T); x.lineTo(px + i * 5.33 + 2.66, py + 7); x.lineTo(px + (i + 1) * 5.33, py + T); x.fill(); }
+      x.fillStyle = 'rgba(0,0,0,0.3)'; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(px + i * 5.33 + 2.66, py + 7); x.lineTo(px + (i + 1) * 5.33, py + T); x.lineTo(px + i * 5.33 + 2.66, py + T); x.fill(); }
+    } else if (c === '=') {
+      x.fillStyle = th.rock2; x.fillRect(px, py, T, 5); x.fillStyle = th.crust; x.fillRect(px, py, T, 1.5);
+      x.fillStyle = 'rgba(0,0,0,0.4)'; x.fillRect(px, py + 5, T, 1);
+    }
+  }
+}
+function buildBg() {
+  const th = THEMES[stage];
+  bgCanvas = [];
+  const r = BB.rng(stage * 101 + 3);
+  for (let layer = 0; layer < 3; layer++) {
+    const c = document.createElement('canvas'); c.width = 1200; c.height = ROWS * T;
+    const x = c.getContext('2d');
+    const col = [th.far, th.mid, th.near][layer];
+    x.fillStyle = col; x.beginPath(); x.moveTo(0, c.height);
+    const base = [150, 210, 270][layer], amp = [110, 80, 50][layer];
+    const f1 = r() * 10, f2 = r() * 10;
+    for (let px = 0; px <= 1200; px += 8) {
+      const t = px / 1200 * TAU;
+      let h = base - amp * (0.5 + 0.3 * Math.sin(t * (2 + layer) + f1) + 0.2 * Math.sin(t * (5 + layer * 2) + f2));
+      if (layer === 0) h -= Math.max(0, Math.sin(t * 3 + f1)) * 40;
+      x.lineTo(px, h);
+    }
+    x.lineTo(1200, c.height); x.fill();
+    if (layer === 2) for (let i = 0; i < 30; i++) { const px = r() * 1200, h = 260 - r() * 40; x.fillRect(px, h - 30, 3, 40); x.beginPath(); x.moveTo(px - 10, h - 20); x.lineTo(px + 1.5, h - 50 - r() * 20); x.lineTo(px + 13, h - 20); x.fill(); }
+    bgCanvas.push(c);
+  }
+}
+
+// ============================================================ particles
+function puff(x, y, n, col, sp, life, grav) {
+  for (let i = 0; i < n; i++) { const a = rand(0, TAU), s = rand(sp * 0.3, sp); parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: rand(life * 0.5, life), m: life, col, g: grav === undefined ? 300 : grav, sz: rand(1.5, 3) }); }
+}
+
+// ============================================================ player update (fixed step)
+function step(h) {
+  const p = pl;
+  stageTime += h; totalTime += h;
+  if (p.dead > 0) { p.dead -= h; if (p.dead <= 0) { const cp = p.cp; respawnAt(cp.x, cp.y); pl.cp = cp; puff(pl.x, pl.y - 6, 18, '#ffcf8a', 120, 0.5, 0); } return; }
+  if (clearT > 0) return;
+  const m = Pad.move();
+  const mx = Math.abs(m.x) > 0.3 ? Math.sign(m.x) : 0;
+  const jumpH = Pad.down(BTN.CROSS) || Pad.down(BTN.R2);
+  p.buffer -= h; p.dashBuf = (p.dashBuf || 0) - h; p.coyote -= h; p.wallLock -= h; p.inv -= h;
+
+  // dash
+  if (p.dashBuf > 0 && p.dash > 0 && p.dashT <= 0) {
+    let dx = Math.abs(m.x) > 0.35 ? Math.sign(m.x) : 0, dy = Math.abs(m.y) > 0.35 ? Math.sign(m.y) : 0;
+    if (!dx && !dy) dx = p.face;
+    const l = Math.hypot(dx, dy); p.dx = dx / l; p.dy = dy / l;
+    p.dash--; p.dashT = DASH_T; p.dashBuf = 0;
+    hitstop = 0.035; cam.shake = 3;
+    Pad.rumble(0.35, 0.5, 90);
+    sfx.dash();
+    puff(p.x, p.y - 6, 14, '#9ad8ff', 160, 0.4, 0);
+  }
+  if (p.dashT > 0) {
+    p.dashT -= h;
+    p.vx = p.dx * DASH_V; p.vy = p.dy * DASH_V;
+    if (Math.random() < 0.6) p.trail.push({ x: p.x, y: p.y, t: 0.25, sx: p.sx, sy: p.sy });
+    if (p.dashT <= 0) { p.vx = p.dx * DASH_V * 0.55; p.vy = p.dy * DASH_V * (p.dy < 0 ? 0.55 : 0.4); }
+  } else {
+    // horizontal
+    const target = mx * RUN;
+    const acc = p.ground ? (mx ? ACC_G : FRIC) : ACC_A;
+    if (p.wallLock <= 0) {
+      if (p.vx < target) p.vx = Math.min(target, p.vx + acc * h);
+      else if (p.vx > target) p.vx = Math.max(target, p.vx - acc * h);
+    }
+    if (mx) p.face = mx;
+    // gravity
+    let gmul = 1;
+    if (p.vy < 0 && !jumpH) gmul = 2.6;
+    if (Math.abs(p.vy) < 40 && jumpH) gmul = 0.55; // apex hang
+    p.vy = Math.min(p.vy + GRAV * gmul * h, MAX_FALL);
+    // wall slide
+    p.wall = 0;
+    if (!p.ground) {
+      if (touching(p, 1)) p.wall = 1; else if (touching(p, -1)) p.wall = -1;
+      if (p.wall && mx === p.wall && p.vy > WALL_SLIDE) { p.vy = WALL_SLIDE; if (Math.random() < 0.3) puff(p.x + p.wall * PW / 2, p.y - 4, 1, '#d8c7b0', 30, 0.3, 50); }
+    }
+    // jump
+    if (p.buffer > 0) {
+      if (p.ground || p.coyote > 0) {
+        p.vy = -JUMP_V; p.ground = false; p.coyote = 0; p.buffer = 0; p.sx = 0.7; p.sy = 1.35; sfx.jump();
+        puff(p.x, p.y, 6, '#d8c7b0', 70, 0.35, 100);
+      } else if (p.wall || touching(p, 1, 3) || touching(p, -1, 3)) {
+        const wd = p.wall || (touching(p, 1, 3) ? 1 : -1);
+        p.vx = -wd * WJ_VX; p.vy = -WJ_VY; p.wallLock = 0.13; p.buffer = 0; p.face = -wd; p.sx = 0.75; p.sy = 1.3;
+        sfx.jump(1.2); puff(p.x + wd * PW / 2, p.y - 6, 6, '#d8c7b0', 80, 0.35, 100);
+        Pad.rumble(0.1, 0.25, 40);
+      }
+    }
+  }
+  // move & collide
+  const wasGround = p.ground;
+  moveX(p, p.vx * h);
+  const landed = moveY(p, p.vy * h);
+  if (p.ground) { p.coyote = COYOTE; if (p.dashT <= 0) p.dash = 1; }
+  if (!wasGround && p.ground && landed > 160) { p.sx = 1.35; p.sy = 0.7; puff(p.x, p.y, 6, '#d8c7b0', 60, 0.3, 100); sfx.land(); }
+  p.sx = lerp(p.sx, 1, 1 - Math.exp(-14 * h)); p.sy = lerp(p.sy, 1, 1 - Math.exp(-14 * h));
+
+  // tile interactions
+  const x0 = Math.floor((p.x - PW / 2) / T), x1 = Math.floor((p.x + PW / 2 - 0.01) / T);
+  const y0 = Math.floor((p.y - PH) / T), y1 = Math.floor((p.y - 0.01) / T);
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+    const c = tileAt(tx, ty);
+    if (c === '^' && p.y > ty * T + 8 && p.inv <= 0) return die();
+    if (c === 'L' && p.y > ty * T + 5) return die();
+    if (c === 'S' && p.vy >= 0 && p.y > ty * T + 6) { p.vy = -SPRING_V; p.dash = 1; p.sx = 0.6; p.sy = 1.5; p.ground = false; L.springT = { tx, ty, t: 0.25 }; sfx.spring(); Pad.rumble(0.3, 0.4, 80); }
+  }
+  // crumble trigger
+  if (p.ground) {
+    const ty = Math.floor((p.y + 1) / T);
+    for (let tx = x0; tx <= x1; tx++) if (tileAt(tx, ty) === 'C') {
+      const k = ty * 10000 + tx; const s = L.crumbles.get(k);
+      if (!s || s.state === 0) { L.crumbles.set(k, { tx, ty, state: 1, t: 0.42 }); sfx.crack(); }
+    }
+  }
+  if (p.y > ROWS * T + 20) return die();
+  // pickups
+  for (const e of L.embers) if (!e.got && Math.abs(e.x - p.x) < 11 && Math.abs(e.y - (p.y - 6)) < 13) { e.got = true; embersGot++; sfx.ember(); puff(e.x, e.y, 14, '#ffcf6a', 90, 0.5, -40); }
+  for (const c of L.crystals) if (c.t <= 0 && Math.abs(c.x - p.x) < 13 && Math.abs(c.y - (p.y - 6)) < 15 && p.dash < 1) { c.t = 2.5; p.dash = 1; sfx.crystal(); puff(c.x, c.y, 18, '#7ff2ff', 140, 0.5, 0); Pad.rumble(0.2, 0.4, 60); }
+  for (const c of L.checkpoints) if (!c.lit && Math.abs(c.x - p.x) < 14 && Math.abs(c.y - p.y) < 30) { c.lit = true; p.cp = { x: c.x, y: c.y }; sfx.checkpoint(); puff(c.x, c.y - 22, 26, '#ffb35c', 120, 0.7, -60); BB.toast('Lantern lit — checkpoint'); }
+  // exit
+  const ex = L.exit.x * T + T / 2, ey = L.exit.y * T;
+  if (Math.abs(p.x - ex) < 14 && Math.abs(p.y - ey) < 26) stageClear();
+}
+function die() {
+  const p = pl; if (p.dead > 0) return;
+  p.dead = 0.55; deaths++;
+  puff(p.x, p.y - 6, 40, '#ffb35c', 260, 0.8, 200);
+  puff(p.x, p.y - 6, 20, '#ffffff', 160, 0.5, 0);
+  cam.shake = 8; hitstop = 0.06;
+  Pad.rumble(0.9, 0.7, 260);
+  sfx.die();
+  for (const [, s] of L.crumbles) { s.state = 0; s.t = 0; }
+  L.crumbles.clear();
+}
+function stageClear() {
+  if (clearT > 0) return;
+  clearT = 1.6;
+  sfx.clear(); Pad.rumble(0.5, 0.5, 300);
+  puff(pl.x, pl.y - 10, 60, '#ffe7a8', 220, 1.2, -30);
+  if (stage + 1 > unlocked && stage + 1 < STAGES) { unlocked = stage + 1; BB.save('ember:unlocked', unlocked); }
+  const key = 'ember:stage' + stage;
+  const b = BB.best(key, Math.round(stageTime * 100) / 100, true);
+  BB.toast(`Stage ${stage + 1} clear · ${fmt(stageTime)}${b.isNew ? ' · NEW BEST' : ''}`, 2600);
+}
+function touching(p, dir, extra) {
+  const x = p.x + dir * (PW / 2 + (extra || 1));
+  const tx = Math.floor(x / T);
+  for (const y of [p.y - 2, p.y - PH + 2]) if (solidAt(tx, Math.floor(y / T))) return true;
+  return false;
+}
+function moveX(p, dx) {
+  p.x += dx;
+  const y0 = Math.floor((p.y - PH) / T), y1 = Math.floor((p.y - 0.01) / T);
+  if (dx > 0) { const tx = Math.floor((p.x + PW / 2) / T); for (let ty = y0; ty <= y1; ty++) if (solidAt(tx, ty)) { p.x = tx * T - PW / 2 - 0.001; p.vx = 0; break; } }
+  else if (dx < 0) { const tx = Math.floor((p.x - PW / 2) / T); for (let ty = y0; ty <= y1; ty++) if (solidAt(tx, ty)) { p.x = (tx + 1) * T + PW / 2 + 0.001; p.vx = 0; break; } }
+}
+function moveY(p, dy) {
+  const prevY = p.y; let vyBefore = p.vy;
+  p.y += dy; p.ground = false;
+  const x0 = Math.floor((p.x - PW / 2) / T), x1 = Math.floor((p.x + PW / 2 - 0.01) / T);
+  if (dy > 0) {
+    const ty = Math.floor(p.y / T);
+    for (let tx = x0; tx <= x1; tx++) {
+      const oneway = tileAt(tx, ty) === '=' && prevY <= ty * T + 0.5 && !(Pad.move().y > 0.7 && Pad.down(BTN.CROSS));
+      if (solidAt(tx, ty) || oneway) { p.y = ty * T; p.vy = 0; p.ground = true; return vyBefore; }
+    }
+  } else if (dy < 0) {
+    const ty = Math.floor((p.y - PH) / T);
+    for (let tx = x0; tx <= x1; tx++) if (solidAt(tx, ty)) {
+      // corner correction: nudge around ledges if only a corner was clipped
+      const left = (tx + 1) * T - (p.x - PW / 2), right = (p.x + PW / 2) - tx * T;
+      if (left < 4 && !solidAt(tx + 1, ty)) { p.x += left + 0.01; continue; }
+      if (right < 4 && !solidAt(tx - 1, ty)) { p.x -= right + 0.01; continue; }
+      p.y = (ty + 1) * T + PH; p.vy = 0; return 0;
+    }
+  }
+  return 0;
+}
+const fmt = (s) => `${Math.floor(s / 60)}:${(s % 60).toFixed(2).padStart(5, '0')}`;
+
+// ============================================================ audio
+const sfx = {
+  jump(k = 1) { Audio.tone({ f: 300 * k, f2: 620 * k, dur: 0.1, type: 'square', vol: 0.05, lp: 2400 }); },
+  land() { Audio.noise({ dur: 0.08, vol: 0.08, freq: 600 }); },
+  dash() { Audio.noise({ dur: 0.22, vol: 0.18, freq: 900, f2: 4000, type: 'bandpass', q: 1.5 }); Audio.tone({ f: 200, f2: 90, dur: 0.12, type: 'sine', vol: 0.12 }); },
+  spring() { Audio.tone({ f: 180, f2: 900, dur: 0.25, type: 'triangle', vol: 0.12 }); },
+  crack() { Audio.noise({ dur: 0.12, vol: 0.1, freq: 1400, type: 'bandpass', q: 2 }); },
+  ember() { const n = Audio.now(); [880, 1320, 1760].forEach((f, i) => Audio.tone({ f, dur: 0.12, type: 'sine', vol: 0.05, when: n + i * 0.04 })); },
+  crystal() { Audio.tone({ f: 1200, f2: 2400, dur: 0.2, type: 'sine', vol: 0.08 }); Audio.tone({ f: 600, dur: 0.3, type: 'triangle', vol: 0.05 }); },
+  checkpoint() { const n = Audio.now(); [523, 659, 784, 1047].forEach((f, i) => Audio.tone({ f, dur: 0.4, type: 'triangle', vol: 0.06, when: n + i * 0.07 })); },
+  die() { Audio.noise({ dur: 0.4, vol: 0.2, freq: 2000, f2: 200 }); Audio.tone({ f: 500, f2: 80, dur: 0.35, type: 'square', vol: 0.06, lp: 1500 }); },
+  clear() { const n = Audio.now(); [523, 659, 784, 1047, 1319].forEach((f, i) => Audio.tone({ f, dur: 0.5, type: 'triangle', vol: 0.07, when: n + i * 0.09 })); },
+};
+const music = (() => {
+  const scales = [[0, 3, 5, 7, 10], [0, 2, 3, 7, 8], [0, 2, 4, 7, 9], [0, 1, 5, 7, 8], [0, 2, 3, 7, 10], [0, 2, 4, 7, 11], [0, 4, 5, 7, 11], [0, 3, 5, 7, 10]];
+  let on = false, next = 0, stepI = 0, theme = 0, rr = BB.rng(1);
+  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  return {
+    setTheme(n) { theme = n; rr = BB.rng(n * 13 + 7); },
+    start() { on = true; next = Audio.now() + 0.2; },
+    stop() { on = false; },
+    tick() {
+      if (!on || !Audio.running) return;
+      if (next < Audio.now() - 0.3) next = Audio.now() + 0.05;
+      const sc = scales[theme % scales.length], root = 50 + (theme % 4) * 2, spd = 0.28;
+      while (next < Audio.now() + 0.2) {
+        if (stepI % 16 === 0) { const ch = [0, 2, 4].map((i) => root - 12 + sc[i]); for (const m of ch) Audio.tone({ f: mtof(m), dur: spd * 16, type: 'triangle', vol: 0.025, attack: 1.2, when: next, dest: Audio.music }); }
+        if (rr() < 0.55) { const m = root + 12 + sc[Math.floor(rr() * sc.length)] + (rr() < 0.3 ? 12 : 0); Audio.tone({ f: mtof(m), dur: 0.9, type: 'sine', vol: 0.035, when: next, dest: Audio.music }); Audio.tone({ f: mtof(m) * 2, dur: 0.3, type: 'sine', vol: 0.01, when: next + spd * 3, dest: Audio.music }); }
+        next += spd; stepI++;
+      }
+    },
+  };
+})();
+
+// ============================================================ main update
+let acc = 0;
+function update(dt) {
+  music.tick();
+  if (hitstop > 0) { hitstop -= dt; return; }
+  // buffer edge-triggered input here so no press is lost between fixed steps
+  if (Pad.pressed(BTN.CROSS) || Pad.pressed(BTN.R2)) pl.buffer = BUFFER;
+  if (Pad.pressed(BTN.SQUARE) || Pad.pressed(BTN.R1) || Pad.pressed(BTN.L1)) pl.dashBuf = 0.08;
+  acc += dt;
+  const H = 1 / 120;
+  let n = 0;
+  while (acc >= H && n < 8) { step(H); acc -= H; n++; }
+  // world timers
+  for (const c of L.crystals) c.t -= dt;
+  for (const [k, s] of L.crumbles) {
+    s.t -= dt;
+    if (s.state === 1 && s.t <= 0) { s.state = 2; s.t = 2.6; puff(s.tx * T + 8, s.ty * T + 8, 8, THEMES[stage].rock2, 80, 0.6, 400); }
+    else if (s.state === 2 && s.t <= 0) { const p = pl; const inside = Math.abs(p.x - (s.tx * T + 8)) < 14 && p.y > s.ty * T && p.y - PH < s.ty * T + T; if (!inside) L.crumbles.delete(k); else s.t = 0.2; }
+  }
+  if (L.springT) { L.springT.t -= dt; if (L.springT.t <= 0) L.springT = null; }
+  stageBanner -= dt;
+  if (clearT > 0) {
+    clearT -= dt;
+    if (clearT <= 0) {
+      if (stage + 1 >= STAGES) { finishRun(); }
+      else loadStage(stage + 1, false);
+    }
+  }
+}
+function finishRun() {
+  music.stop();
+  const b = BB.best('emberfall:run', Math.round(totalTime * 100) / 100, true);
+  BB.over({ title: 'SUMMIT REACHED', color: '#ffb35c', isNew: b.isNew, stats: [['Total time', fmt(totalTime)], ['Best', b.best ? fmt(b.best) : '—'], ['Deaths', deaths], ['Embers', `${embersGot}`]] });
+}
+
+// ============================================================ render
+const ambient = Array.from({ length: 70 }, () => ({ x: rand(0, 1), y: rand(0, 1), s: rand(0.3, 1), ph: rand(0, TAU) }));
+const lightCv = document.createElement('canvas');
+const lctx = lightCv.getContext('2d');
+function render(dt, t, state) {
+  const S = BB.fitCanvas(cv, 2);
+  if (!L) loadStage(0, true);
+  const scale = S.ch / (VIEW_ROWS * T);
+  const vw = S.cw / scale, vh = VIEW_ROWS * T;
+  // camera
+  let tx = pl.x - vw / 2 + pl.face * 30;
+  if (state === 'title') tx = (t * 40) % Math.max(1, L.len * T - vw);
+  tx = clamp(tx, 0, L.len * T - vw);
+  cam.x = state === 'title' ? tx : lerp(cam.x, tx, 1 - Math.exp(-5 * dt));
+  const ty = clamp((state === 'title' ? 14 * T : pl.y) - vh * 0.58, 0, ROWS * T - vh);
+  cam.y = state === 'title' ? ty : lerp(cam.y, ty, 1 - Math.exp(-4 * dt));
+  cam.shake *= Math.exp(-10 * dt);
+  const shx = rand(-1, 1) * cam.shake, shy = rand(-1, 1) * cam.shake;
+  const th = THEMES[stage];
+  ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  // sky
+  const sky = ctx.createLinearGradient(0, 0, 0, S.ch);
+  sky.addColorStop(0, th.sky[0]); sky.addColorStop(0.65, th.sky[1]); sky.addColorStop(1, th.sky[2]);
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, S.cw, S.ch);
+  // moon
+  ctx.globalCompositeOperation = 'lighter';
+  const mx = S.cw * 0.72 - cam.x * 0.02 * scale, my = S.ch * 0.22 - cam.y * 0.1 * scale;
+  const mg = ctx.createRadialGradient(mx, my, 0, mx, my, S.ch * 0.35);
+  mg.addColorStop(0, 'rgba(255,240,220,0.35)'); mg.addColorStop(0.15, 'rgba(255,220,200,0.12)'); mg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = mg; ctx.fillRect(0, 0, S.cw, S.ch);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#fff6ea'; ctx.beginPath(); ctx.arc(mx, my, S.ch * 0.06, 0, TAU); ctx.fill();
+  // parallax
+  bgCanvas.forEach((c, i) => {
+    const f = [0.1, 0.25, 0.45][i], w = c.width * scale;
+    let ox = -((cam.x * f * scale) % w);
+    const hh = c.height * scale, oy = -cam.y * scale * (0.3 + f);
+    for (let k = -1; k < Math.ceil(S.cw / w) + 1; k++) ctx.drawImage(c, ox + k * w, oy, w, hh);
+    if (i === 2 && oy + hh < S.ch) { ctx.fillStyle = THEMES[stage].near; ctx.fillRect(0, oy + hh - 1, S.cw, S.ch - oy - hh + 1); }
+  });
+  // world
+  ctx.save();
+  ctx.translate(-cam.x * scale + shx, -cam.y * scale + shy);
+  ctx.scale(scale, scale);
+  // lava glow & surface
+  const x0 = Math.floor(cam.x / T) - 1, x1 = Math.ceil((cam.x + vw) / T) + 1;
+  for (let x = x0; x <= x1; x++) {
+    if (tileAt(x, ROWS - 1) === 'L') {
+      const lx = x * T, ly = (ROWS - 1) * T;
+      const g = ctx.createLinearGradient(0, ly - 30, 0, ly + T);
+      g.addColorStop(0, 'rgba(255,90,30,0)'); g.addColorStop(0.6, 'rgba(255,120,40,0.35)'); g.addColorStop(1, 'rgba(255,200,80,0.6)');
+      ctx.fillStyle = g; ctx.fillRect(lx, ly - 30, T, 30);
+      ctx.fillStyle = '#ff5a1e'; ctx.fillRect(lx, ly + 3, T, T);
+      ctx.fillStyle = '#ffc25a';
+      for (let k = 0; k < 4; k++) { const wy = Math.sin(t * 3 + x * 0.9 + k) * 2; ctx.fillRect(lx + k * 4, ly + 2 + wy, 4, 2); }
+    }
+  }
+  ctx.drawImage(tilesCanvas, x0 * T, 0, (x1 - x0) * T, ROWS * T, x0 * T, 0, (x1 - x0) * T, ROWS * T);
+  // crumbles
+  for (let y = 0; y < ROWS; y++) for (let x = x0; x <= x1; x++) {
+    if (tileAt(x, y) !== 'C') continue;
+    const s = L.crumbles.get(y * 10000 + x);
+    if (s && s.state === 2) continue;
+    const shake = s && s.state === 1 ? rand(-1, 1) * 1.2 : 0;
+    ctx.fillStyle = th.rock2; ctx.fillRect(x * T + shake, y * T, T, T * 0.7);
+    ctx.fillStyle = th.crust; ctx.globalAlpha = 0.7; ctx.fillRect(x * T + shake, y * T, T, 2); ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x * T + 3 + shake, y * T + 2); ctx.lineTo(x * T + 8 + shake, y * T + 7); ctx.lineTo(x * T + 6 + shake, y * T + 11); ctx.moveTo(x * T + 8 + shake, y * T + 7); ctx.lineTo(x * T + 13 + shake, y * T + 5); ctx.stroke();
+  }
+  // springs
+  for (let y = 0; y < ROWS; y++) for (let x = x0; x <= x1; x++) {
+    if (tileAt(x, y) !== 'S') continue;
+    const comp = L.springT && L.springT.tx === x && L.springT.ty === y ? L.springT.t / 0.25 : 0;
+    const top = y * T + 8 - comp * -4 - (comp > 0 ? 6 : 0);
+    ctx.fillStyle = '#5a5f73'; ctx.fillRect(x * T + 2, y * T + 13, 12, 3);
+    ctx.strokeStyle = '#c9cede'; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let k = 0; k < 4; k++) { const yy = lerp(y * T + 13, top + 2, k / 3); ctx.lineTo(x * T + (k % 2 ? 4 : 12), yy); }
+    ctx.stroke();
+    ctx.fillStyle = '#ff6b7a'; ctx.fillRect(x * T + 1, top, 14, 3);
+  }
+  // checkpoints (lanterns)
+  for (const c of L.checkpoints) {
+    ctx.fillStyle = '#4a3f55'; ctx.fillRect(c.x - 1, c.y - 26, 2, 26);
+    ctx.fillStyle = c.lit ? '#ffcf6a' : '#3a3245'; ctx.fillRect(c.x - 5, c.y - 34, 10, 9);
+    ctx.fillStyle = '#4a3f55'; ctx.fillRect(c.x - 6, c.y - 35, 12, 2);
+  }
+  // exit portal
+  const ex = L.exit.x * T + T / 2, ey = L.exit.y * T;
+  ctx.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 5; k++) {
+    ctx.strokeStyle = `rgba(255,${180 + k * 15},${120 + k * 25},${0.5 - k * 0.08})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(ex, ey - 16, 9 + k * 2 + Math.sin(t * 3 + k) * 1.5, 16 + k * 2.5, 0, 0, TAU); ctx.stroke();
+  }
+  // embers
+  for (const e of L.embers) {
+    if (e.got) continue;
+    const by = e.y + Math.sin(t * 2.5 + e.x) * 2;
+    const gl = ctx.createRadialGradient(e.x, by, 0, e.x, by, 12);
+    gl.addColorStop(0, 'rgba(255,200,90,0.9)'); gl.addColorStop(1, 'rgba(255,120,40,0)');
+    ctx.fillStyle = gl; ctx.fillRect(e.x - 12, by - 12, 24, 24);
+    ctx.fillStyle = '#fff2c8'; ctx.save(); ctx.translate(e.x, by); ctx.rotate(t * 2); ctx.fillRect(-2, -2, 4, 4); ctx.restore();
+  }
+  // crystals
+  for (const c of L.crystals) {
+    const a = c.t > 0 ? 0.2 : 1, by = c.y + Math.sin(t * 2 + c.x) * 2;
+    ctx.globalAlpha = a;
+    const gl = ctx.createRadialGradient(c.x, by, 0, c.x, by, 20); gl.addColorStop(0, 'rgba(120,240,255,0.7)'); gl.addColorStop(1, 'rgba(60,140,255,0)');
+    ctx.fillStyle = gl; ctx.fillRect(c.x - 20, by - 20, 40, 40);
+    ctx.fillStyle = '#c8fbff'; ctx.beginPath(); ctx.moveTo(c.x, by - 8); ctx.lineTo(c.x + 5, by); ctx.lineTo(c.x, by + 8); ctx.lineTo(c.x - 5, by); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  // player trail
+  for (let i = pl.trail.length - 1; i >= 0; i--) {
+    const q = pl.trail[i]; q.t -= dt; if (q.t <= 0) { pl.trail.splice(i, 1); continue; }
+    ctx.globalAlpha = q.t * 2.4; ctx.fillStyle = '#7fc8ff';
+    ctx.fillRect(q.x - PW / 2 * q.sx, q.y - PH * q.sy, PW * q.sx, PH * q.sy);
+  }
+  ctx.globalAlpha = 1;
+  // player
+  if (pl.dead <= 0 && state !== 'title') drawPlayer(t);
+  // particles
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const q = parts[i]; q.t -= dt; if (q.t <= 0) { parts.splice(i, 1); continue; }
+    q.vy += q.g * dt; q.vx *= Math.exp(-2 * dt); q.x += q.vx * dt; q.y += q.vy * dt;
+    ctx.globalAlpha = Math.min(1, q.t / q.m * 2); ctx.fillStyle = q.col; ctx.fillRect(q.x - q.sz / 2, q.y - q.sz / 2, q.sz, q.sz);
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
+
+  // lighting: darkness with holes
+  const lw = Math.ceil(S.cw / 4), lh = Math.ceil(S.ch / 4);
+  if (lightCv.width !== lw || lightCv.height !== lh) { lightCv.width = lw; lightCv.height = lh; }
+  lctx.globalCompositeOperation = 'source-over';
+  lctx.clearRect(0, 0, lw, lh);
+  lctx.fillStyle = 'rgba(4,2,10,0.36)'; lctx.fillRect(0, 0, lw, lh);
+  lctx.globalCompositeOperation = 'destination-out';
+  const k = scale / 4;
+  const hole = (wx, wy, r, a) => { const sx = (wx - cam.x) * k, sy = (wy - cam.y) * k; if (sx < -r * k || sx > lw + r * k) return; const gg = lctx.createRadialGradient(sx, sy, 0, sx, sy, r * k); gg.addColorStop(0, `rgba(0,0,0,${a})`); gg.addColorStop(1, 'rgba(0,0,0,0)'); lctx.fillStyle = gg; lctx.fillRect(sx - r * k, sy - r * k, r * 2 * k, r * 2 * k); };
+  if (pl.dead <= 0) hole(pl.x, pl.y - 6, 110, 1);
+  hole(ex, ey - 16, 90, 1);
+  for (const e of L.embers) if (!e.got) hole(e.x, e.y, 40, 0.6);
+  for (const c of L.crystals) if (c.t <= 0) hole(c.x, c.y, 60, 0.8);
+  for (const c of L.checkpoints) if (c.lit) hole(c.x, c.y - 30, 90, 0.9);
+  for (let x = x0; x <= x1; x += 2) if (tileAt(x, ROWS - 1) === 'L') hole(x * T + 16, (ROWS - 1) * T, 70, 0.7);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(lightCv, 0, 0, S.cw, S.ch);
+  // ambient embers floating up
+  ctx.globalCompositeOperation = 'lighter';
+  for (const a of ambient) {
+    a.y -= dt * 0.03 * a.s; a.ph += dt; if (a.y < -0.05) { a.y = 1.05; a.x = rand(0, 1); }
+    const ax = ((a.x * S.cw - cam.x * scale * 0.6 * a.s) % S.cw + S.cw) % S.cw + Math.sin(a.ph) * 8;
+    ctx.fillStyle = `rgba(255,${150 + a.s * 80},90,${0.5 * a.s})`; ctx.fillRect(ax, a.y * S.ch, 2 * a.s + 1, 2 * a.s + 1);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  // HUD
+  if (state === 'title') return;
+  const sa = BB.safe(), HL = Math.max(16, sa.l + 8), HR = S.cw - Math.max(16, sa.r + 8);
+  ctx.font = '800 13px ui-sans-serif,system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(`STAGE ${stage + 1} · ${th.name.toUpperCase()}`, HL, 22);
+  ctx.font = '700 12px ui-sans-serif,system-ui,sans-serif'; ctx.fillStyle = '#ffcf6a';
+  ctx.fillText(`✦ ${embersGot}`, HL, 40); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillText(`☠ ${deaths}`, HL + 50, 40);
+  ctx.textAlign = 'right'; ctx.font = '800 15px ui-sans-serif,system-ui,sans-serif'; ctx.fillStyle = '#fff';
+  ctx.fillText(fmt(totalTime), HR, 22);
+  ctx.font = '700 11px ui-sans-serif,system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillText('stage ' + fmt(stageTime), HR, 38);
+  // dash pip
+  ctx.fillStyle = pl.dash > 0 ? '#ffb35c' : 'rgba(127,200,255,0.5)'; ctx.beginPath(); ctx.arc(HR - 6, 52, 5, 0, TAU); ctx.fill();
+  if (stageBanner > 0) {
+    ctx.globalAlpha = Math.min(1, stageBanner, (3.2 - stageBanner) * 3);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '900 30px ui-sans-serif,system-ui,sans-serif';
+    ctx.fillText(`${stage + 1}. ${th.name.toUpperCase()}`, S.cw / 2, S.ch * 0.3);
+    const tips = INTRO[stage]; ctx.font = '700 14px ui-sans-serif,system-ui,sans-serif'; ctx.fillStyle = '#ffd9a8';
+    let ty = S.ch * 0.3 + 26;
+    for (const tip of tips) {
+      if (typeof tip === 'string') { ctx.fillText(tip, S.cw / 2, ty); }
+      else { const [gl, txt] = tip; const w = ctx.measureText(txt).width; const gx = S.cw / 2 - w / 2 - 14; if (['cross', 'square', 'circle', 'triangle'].includes(gl)) BB.drawGlyph(ctx, gl, gx, ty - 5, 10); else { ctx.fillStyle = '#fff'; ctx.font = '800 11px ui-sans-serif,system-ui,sans-serif'; ctx.fillText(gl.toUpperCase(), gx, ty - 1); ctx.font = '700 14px ui-sans-serif,system-ui,sans-serif'; } ctx.fillStyle = '#ffd9a8'; ctx.fillText(txt, S.cw / 2 + 4, ty); }
+      ty += 22;
+    }
+    ctx.globalAlpha = 1;
+  }
+  if (clearT > 0) { ctx.fillStyle = `rgba(255,236,200,${Math.max(0, 1 - clearT / 0.4) * 0.9})`; if (clearT < 0.4) ctx.fillRect(0, 0, S.cw, S.ch); }
+}
+function drawPlayer(t) {
+  const p = pl;
+  const w = PW * p.sx, h = PH * p.sy;
+  const x = p.x, y = p.y;
+  const ready = p.dash > 0;
+  // flame hair
+  const hairCol = ready ? '#ff8a3d' : '#5fb8ff';
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 4; i++) {
+    const fx = x - p.face * (2 + i * 2.2) - p.vx * 0.012 * i, fy = y - h - 1 + i * 1.2 + Math.sin(t * 14 + i) * 1 - p.vy * 0.006 * i;
+    ctx.fillStyle = hairCol; ctx.globalAlpha = 0.9 - i * 0.18;
+    ctx.beginPath(); ctx.arc(fx, fy, 3.6 - i * 0.6, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  // body
+  ctx.fillStyle = '#2b2238'; ctx.fillRect(x - w / 2, y - h, w, h);
+  ctx.fillStyle = '#f2e6d8'; ctx.fillRect(x - w / 2 + 1, y - h + 1, w - 2, h * 0.45);
+  ctx.fillStyle = ready ? '#ff8a3d' : '#5fb8ff'; ctx.fillRect(x - w / 2, y - h * 0.5, w, 2);
+  // eyes
+  ctx.fillStyle = '#1a1424';
+  const ex = x + p.face * 1.8;
+  ctx.fillRect(ex - 2.5, y - h + 3.5, 1.6, 2.4); ctx.fillRect(ex + 1, y - h + 3.5, 1.6, 2.4);
+  // feet
+  ctx.fillStyle = '#1a1424'; ctx.fillRect(x - w / 2, y - 2, w * 0.4, 2); ctx.fillRect(x + w * 0.1, y - 2, w * 0.4, 2);
+}
+
+// ============================================================ shell
+function stageSelHTML() { return `<div class="stagesel" data-noclick><i data-g="left" data-s="22"></i> START AT <em>STAGE ${pickStage + 1}</em> <i data-g="right" data-s="22"></i></div>`; }
+BB.run({
+  title: 'EMBERFALL', accent: '#ffb35c',
+  tagline: 'A precision platformer through eight generated realms. Dash, wall-jump and climb toward the summit.',
+  titleExtra: '<div id="ssel"></div>',
+  controls: [['ls', 'Run'], ['cross', 'Jump (hold = higher)'], [['square'], 'Dash (8-way)'], ['r1', 'Dash'], ['options', 'Pause']],
+  pauseActions: [{ btn: 'square', label: 'Skip stage', fn: () => { if (stage + 1 < STAGES) { if (stage + 1 > unlocked) { unlocked = stage + 1; BB.save('ember:unlocked', unlocked); } loadStage(stage + 1, false); } else finishRun(); } }],
+  init() { pickStage = unlocked; document.getElementById('ssel').innerHTML = unlocked > 0 ? stageSelHTML() : ''; BB.hydrate(); loadStage(0, true); },
+  titleInput(dt) {
+    const n = Pad.nav(dt);
+    if (n.x && unlocked > 0) { pickStage = clamp(pickStage + n.x, 0, unlocked); document.getElementById('ssel').innerHTML = stageSelHTML(); BB.hydrate(); }
+  },
+  onTitle() { music.stop(); },
+  start() { parts = []; pl = null; loadStage(pickStage, true); music.start(); },
+  pause() { music.stop(); },
+  resume() { music.start(); },
+  update,
+  render,
+});
+window.__ember = () => ({ pl, stage, L, generate });
+})();
+</script>
+</body>
+</html>

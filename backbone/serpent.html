@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#04110c">
+<title>Serpent</title>
+<style>canvas{position:fixed;inset:0;display:block}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script src="bb.js"></script>
+<script>
+(() => {
+'use strict';
+const { Pad, BTN, Audio, rand, clamp, lerp } = BB;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const GW = 32, GH = 16;
+let snake, dir, queue, food, bonus, rocks, score, stepT, stepDur, grow, alive, eaten, parts, flash, boostHeld;
+
+function freeCell() {
+  for (let n = 0; n < 500; n++) {
+    const x = (Math.random() * GW) | 0, y = (Math.random() * GH) | 0;
+    if (!snake.some((s) => s.x === x && s.y === y) && !rocks.some((r) => r.x === x && r.y === y) && !(food && food.x === x && food.y === y)) return { x, y };
+  }
+  return { x: 0, y: 0 };
+}
+function reset() {
+  snake = [{ x: 8, y: 8 }, { x: 7, y: 8 }, { x: 6, y: 8 }, { x: 5, y: 8 }];
+  snake.forEach((s) => { s.px = s.x; s.py = s.y; });
+  dir = { x: 1, y: 0 }; queue = []; rocks = []; food = null; bonus = null;
+  food = freeCell(); score = 0; stepT = 0; stepDur = 0.13; grow = 0; alive = true; eaten = 0; parts = []; flash = 0;
+}
+function burst(x, y, col, n) { for (let i = 0; i < n; i++) { const a = rand(0, 6.28), s = rand(1, 6); parts.push({ x: x + 0.5, y: y + 0.5, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: rand(0.3, 0.7), col }); } }
+
+function update(dt) {
+  if (!alive) return;
+  // input → turn queue (max 2 buffered)
+  const m = Pad.move();
+  let want = null;
+  if (Math.abs(m.x) > 0.5 && Math.abs(m.x) > Math.abs(m.y)) want = { x: Math.sign(m.x), y: 0 };
+  else if (Math.abs(m.y) > 0.5) want = { x: 0, y: Math.sign(m.y) };
+  const last = queue.length ? queue[queue.length - 1] : dir;
+  if (want && !(want.x === last.x && want.y === last.y) && !(want.x === -last.x && want.y === -last.y) && queue.length < 2) queue.push(want);
+  boostHeld = Pad.down(BTN.CROSS) || Pad.r2 > 0.3;
+  stepT += dt * (boostHeld ? 1.8 : 1);
+  if (bonus) { bonus.t -= dt; if (bonus.t <= 0) bonus = null; }
+  flash = Math.max(0, flash - dt * 3);
+  while (stepT >= stepDur && alive) {
+    stepT -= stepDur;
+    if (queue.length) dir = queue.shift();
+    const h = snake[0];
+    const nx = h.x + dir.x, ny = h.y + dir.y;
+    if (nx < 0 || ny < 0 || nx >= GW || ny >= GH || snake.slice(0, -1).some((s) => s.x === nx && s.y === ny) || rocks.some((r) => r.x === nx && r.y === ny)) { die(); break; }
+    snake.forEach((s) => { s.px = s.x; s.py = s.y; });
+    for (let i = snake.length - 1; i > 0; i--) { snake[i].x = snake[i - 1].x; snake[i].y = snake[i - 1].y; }
+    h.x = nx; h.y = ny;
+    if (grow > 0) { const t = snake[snake.length - 1]; snake.push({ x: t.px, y: t.py, px: t.px, py: t.py }); grow--; }
+    if (food && nx === food.x && ny === food.y) {
+      eaten++; score += 10 * (boostHeld ? 2 : 1); grow += 2; burst(nx, ny, '#7dffa8', 16);
+      Audio.tone({ f: 500 + eaten * 12, f2: 900 + eaten * 12, dur: 0.08, type: 'square', vol: 0.06 });
+      Pad.rumble(0.1, 0.3, 40);
+      food = freeCell();
+      stepDur = Math.max(0.06, 0.13 - eaten * 0.0022);
+      if (eaten % 5 === 0) bonus = { ...freeCell(), t: 6 };
+      if (eaten % 4 === 0 && rocks.length < 18) { const r = freeCell(); if (Math.abs(r.x - nx) + Math.abs(r.y - ny) > 4) rocks.push(r); }
+    }
+    if (bonus && nx === bonus.x && ny === bonus.y) {
+      score += 50 + Math.round(bonus.t * 10); grow += 4; burst(nx, ny, '#ffd76a', 30); flash = 1;
+      const n = Audio.now(); [880, 1100, 1320].forEach((f, i) => Audio.tone({ f, dur: 0.12, type: 'triangle', vol: 0.07, when: n + i * 0.05 }));
+      Pad.rumble(0.3, 0.6, 120);
+      bonus = null;
+    }
+  }
+}
+function die() {
+  alive = false;
+  snake.forEach((s, i) => setTimeout(() => burst(s.x, s.y, i === 0 ? '#ffffff' : '#3ee6b4', 6), i * 18));
+  Audio.noise({ dur: 0.5, vol: 0.3, freq: 1500, f2: 100 }); Audio.tone({ f: 300, f2: 60, dur: 0.5, type: 'sawtooth', vol: 0.08, lp: 1200 });
+  Pad.rumble(0.9, 0.8, 300);
+  const b = BB.best('serpent', score);
+  BB.over({ title: 'BITTEN', color: '#3ee6b4', isNew: b.isNew, stats: [['Score', score], ['Best', b.best || 0], ['Length', snake.length]] });
+}
+function render(dt, t, state) {
+  const S = BB.fitCanvas(cv, 2);
+  ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+  ctx.fillStyle = '#04110c'; ctx.fillRect(0, 0, S.cw, S.ch);
+  const sa = BB.safe();
+  const top = 44, availW = S.cw - Math.max(24, sa.l + sa.r + 24), availH = S.ch - top - 14;
+  const cs = Math.floor(Math.min(availW / GW, availH / GH));
+  const ox = Math.round((S.cw - cs * GW) / 2), oy = Math.round(top + (availH - cs * GH) / 2);
+  // board
+  ctx.fillStyle = '#071a13'; ctx.fillRect(ox, oy, cs * GW, cs * GH);
+  ctx.fillStyle = 'rgba(62,230,180,0.05)';
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if ((x + y) % 2) ctx.fillRect(ox + x * cs, oy + y * cs, cs, cs);
+  ctx.strokeStyle = 'rgba(62,230,180,0.5)'; ctx.lineWidth = 2; ctx.strokeRect(ox - 1, oy - 1, cs * GW + 2, cs * GH + 2);
+  if (!snake) return;
+  const f = alive ? clamp(stepT / stepDur, 0, 1) : 1;
+  const P = (s) => [ox + (lerp(s.px, s.x, f) + 0.5) * cs, oy + (lerp(s.py, s.y, f) + 0.5) * cs];
+  // rocks
+  for (const r of rocks) { ctx.fillStyle = '#2b3a40'; ctx.fillRect(ox + r.x * cs + 2, oy + r.y * cs + 2, cs - 4, cs - 4); ctx.fillStyle = '#41545c'; ctx.fillRect(ox + r.x * cs + 2, oy + r.y * cs + 2, cs - 4, 3); }
+  // food
+  ctx.globalCompositeOperation = 'lighter';
+  if (food) { const [fx, fy] = [ox + (food.x + 0.5) * cs, oy + (food.y + 0.5) * cs]; const g = ctx.createRadialGradient(fx, fy, 0, fx, fy, cs * 1.4); g.addColorStop(0, 'rgba(255,107,122,0.7)'); g.addColorStop(1, 'rgba(255,107,122,0)'); ctx.fillStyle = g; ctx.fillRect(fx - cs * 1.4, fy - cs * 1.4, cs * 2.8, cs * 2.8); ctx.fillStyle = '#ff6b7a'; ctx.beginPath(); ctx.arc(fx, fy, cs * (0.3 + Math.sin(t * 6) * 0.04), 0, 6.28); ctx.fill(); }
+  if (bonus) { const [bx, by] = [ox + (bonus.x + 0.5) * cs, oy + (bonus.y + 0.5) * cs]; ctx.globalAlpha = bonus.t < 2 ? (Math.sin(t * 20) > 0 ? 1 : 0.3) : 1; BB.drawGlyph(ctx, 'triangle', bx, by, cs * 0.48, { color: '#ffd76a', ring: '#ffd76a' }); ctx.globalAlpha = 1; }
+  // snake
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const pts = snake.map(P);
+  for (const [w, col] of [[cs * 0.9, 'rgba(62,230,180,0.18)'], [cs * 0.62, '#1fa883'], [cs * 0.4, '#3ee6b4']]) {
+    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath();
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    if (pts.length === 1) ctx.lineTo(pts[0][0] + 0.1, pts[0][1]);
+    ctx.stroke();
+  }
+  const [hx, hy] = pts[0];
+  ctx.fillStyle = '#c9fff0'; ctx.beginPath(); ctx.arc(hx, hy, cs * 0.38, 0, 6.28); ctx.fill();
+  ctx.fillStyle = '#04110c';
+  const ex = dir.y * cs * 0.16, ey = -dir.x * cs * 0.16;
+  ctx.beginPath(); ctx.arc(hx + ex + dir.x * cs * 0.1, hy + ey + dir.y * cs * 0.1, cs * 0.07, 0, 6.28); ctx.arc(hx - ex + dir.x * cs * 0.1, hy - ey + dir.y * cs * 0.1, cs * 0.07, 0, 6.28); ctx.fill();
+  if (boostHeld && alive) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(127,177,255,0.35)'; ctx.beginPath(); ctx.arc(hx, hy, cs * 0.7, 0, 6.28); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+  // particles
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.t -= dt; if (p.t <= 0) { parts.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; ctx.globalAlpha = p.t * 2; ctx.fillStyle = p.col; ctx.fillRect(ox + p.x * cs - 2, oy + p.y * cs - 2, 4, 4); }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  if (flash > 0) { ctx.fillStyle = `rgba(255,215,106,${flash * 0.25})`; ctx.fillRect(0, 0, S.cw, S.ch); }
+  // HUD
+  ctx.font = '900 22px ui-sans-serif,system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#c9fff0';
+  ctx.fillText(score, ox, 30);
+  ctx.textAlign = 'right'; ctx.font = '700 12px ui-sans-serif,system-ui,sans-serif'; ctx.fillStyle = '#6fbfa5';
+  ctx.fillText(`BEST ${BB.best('serpent').best || 0} · LENGTH ${snake.length}`, ox + cs * GW, 30);
+}
+BB.run({
+  title: 'SERPENT', accent: '#3ee6b4',
+  tagline: 'The classic, smoothed out. Eat, grow, dodge the rocks. Hold boost for double points.',
+  controls: [[['dpad', 'ls'], 'Steer'], ['cross', 'Boost (×2 points)'], ['options', 'Pause']],
+  init() { reset(); },
+  start() { reset(); },
+  update, render,
+});
+})();
+</script>
+</body>
+</html>
