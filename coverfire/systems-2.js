@@ -344,7 +344,7 @@ defineSystem({ id: 'contracts', name: 'Contracts', inspo: 'Hitman / CoD challeng
     openChoice({ title: `Contracts: ${(S.done || []).length}/3 complete`, html: `<p>${list}</p>`, options: [{ name: 'Collect & continue', onPick: pay }] });
   },
   hudLines() {
-    const S = run.s; if (!S.active || !room.combat) return [];
+    const S = run.s; if (!S.active || !room.combat || room.peaceful) return [];
     return S.active.map(a => { const st = this.status(a); const icon = st === 'done' ? '✓' : st === 'fail' ? '✗' : st === 'holding' ? '…' : st; return { t: `${icon} ${a.k.desc} → ${this.rewardName(a.reward)}`, c: st === 'done' ? '#4ade80' : st === 'fail' ? '#f87171' : '#cbd5e1' }; });
   },
 });

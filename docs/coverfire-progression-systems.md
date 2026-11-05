@@ -13,6 +13,49 @@ Code layout:
 
 A system is a plain object with optional hooks: `setup`, `preRoom(go)`, `onExit(next)`, `update`, `hudLines`, `drawHud`, `drawWorld`, `onSlot`, `onInteract` and `summary`. Copy one to start a new experiment.
 
+## Enemies, defenses and rooms (shared by every system)
+
+**Enemy look.** This follows Hammer Formation's style: one flat shape per role, a dark outline, a small inner mark, and an HP ring drawn in the enemy's own color. Telegraph rings brighten in the enemy's color as it winds up.
+
+**Defense layers.** These follow Mass Effect 3. Each layer has to be stripped before HP takes damage, which gives every tool a job.
+
+| Layer | Look | Strong against it | Weak against it |
+|---|---|---|---|
+| Shields | blue ring, recharges after 4s | tech ×3 (Overload, Energy Drain), bullets ×1.2 | fire ×0.5 |
+| Barrier | pulsing purple ring | biotics ×3 (Warp, Shockwave, Nova, Charge) | fire ×0.5 |
+| Armor | thick yellow outline | fire ×2.5, explosives ×1.6, heavy single shots (60+) | small bullets ×0.45 |
+
+Any layer makes an enemy immune to Pull/lift (it shows "PROTECTED") and halves stuns.
+
+**Special enemies**
+- **Bulwark:** a riot shield that blocks bullets from the front and turns slowly. Flank it, lob over it, or knock it down.
+- **Skirmisher:** has a barrier and sidesteps when you hold a braced aim on it.
+- **Projector:** recharges shields on every nearby ally. A priority target.
+- **Swarmer:** comes in packs of fragile melee units.
+
+**Heavies** (elite rooms and floor bosses)
+- **Juggernaut:** unstoppable and armored, with a minigun. It crushes low cover it walks into.
+- **Walker:** its armored core is sealed (takes 15% damage) while its two shielded gun pods live. It also lobs mortar shells.
+- **Hive:** stationary, has a barrier, and keeps hatching swarmers.
+
+**Rooms.** Six room sizes and six layout templates: scatter, pillars, trenches, bunker, alley, open. Some rooms are L-shaped, and layouts are randomly mirrored. Tiles:
+- **brush** blocks sight but not bullets
+- **pits** block movement but not bullets or sight
+- **explosive barrels**
+- **breakable crates** (brown low cover)
+
+After each clear you choose between two doors (Hades/Isaac style), each labeled with the next room's type:
+- **Combat**
+- **Elite:** more elites plus a heavy, and a bonus pick
+- **Challenge:** two waves, and a bonus pick
+- **Treasure:** a free pick, no fight
+- **Rest:** heal 40%
+- **Boss:** the 4th room of every floor
+
+**Quality of life**
+- Movement speeds up to 2.5× (tunable) whenever no enemies are alive.
+- A quick bar (◀ system ▶ ⛶) is always in the top right. ◀ and ▶ restart instantly in the previous or next system.
+
 ---
 
 ## The 30
