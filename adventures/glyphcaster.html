@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Glyphcaster — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* GLYPHCASTER — spells are drawn, not selected. Hold the trigger, time slows,
+   trace a rune with the stick or d-pad, let go. Seven floors of a tower teach
+   you one rune each, and the Archivist at the top tests all of them. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx } = K;
+const AR = { x: 60, y: 70, w: 840, h: 420 };
+const SPELLS = [
+  { k: 'bolt', seq: 'UU', name: 'BOLT', col: '#7dd3fc', cost: 0.08, desc: 'Strikes the nearest foe' },
+  { k: 'gale', seq: 'LR', alt: 'RL', name: 'GALE', col: '#e2e8f0', cost: 0.2, desc: 'Hurls everything away from you' },
+  { k: 'ward', seq: 'UD', alt: 'DU', name: 'WARD', col: '#fde047', cost: 0.25, desc: 'A shield that eats three hits' },
+  { k: 'fire', seq: 'URD', name: 'FIREBALL', col: '#fb923c', cost: 0.3, desc: 'Explodes where foes are thickest' },
+  { k: 'frost', seq: 'ULD', name: 'FROST', col: '#a5f3fc', cost: 0.3, desc: 'Freezes all foes nearby' },
+  { k: 'blink', seq: 'RR', alt: 'LL', name: 'BLINK', col: '#c4b5fd', cost: 0.15, desc: 'Step through space, left or right' },
+];
+const FLOORS = [
+  { w: [['imp', 3], ['imp', 5]] }, { w: [['imp', 8], ['imp', 6, 'arch', 2]] }, { w: [['arch', 4], ['arch', 4, 'imp', 5]] },
+  { w: [['imp', 12], ['brute', 2, 'imp', 6]] }, { w: [['brute', 3, 'arch', 3], ['imp', 14]] }, { w: [['arch', 6, 'brute', 2], ['imp', 10, 'arch', 4, 'brute', 2]] }, { boss: true, w: [] },
+];
+const DIRS = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
+let P, foes, shots, floorN, wave, known, cast, mana, beams, blasts, boss, between, kills;
+
+function spawnWave() {
+  const def = FLOORS[floorN].w[wave]; if (!def) return;
+  for (let i = 0; i < def.length; i += 2) for (let n = 0; n < def[i + 1]; n++) {
+    const k = def[i], side = irand(0, 3), x = side === 0 ? AR.x + 14 : side === 1 ? AR.x + AR.w - 14 : rand(AR.x, AR.x + AR.w), y = side === 2 ? AR.y + 14 : side === 3 ? AR.y + AR.h - 14 : rand(AR.y, AR.y + AR.h);
+    foes.push({ k, x, y, r: k === 'brute' ? 18 : 11, hp: k === 'brute' ? 6 : k === 'arch' ? 2 : 1, t: rand(1, 2.5), fr: 0, flash: 0, kx: 0, ky: 0, in: rand(0.2, 1.4) });
+  }
+}
+function enterFloor() {
+  foes = []; shots = []; beams = []; blasts = []; wave = 0; P.x = 480; P.y = 400; P.ward = 0; boss = null; between = 0;
+  const sp = SPELLS[floorN]; if (sp) known = floorN + 1;
+  if (FLOORS[floorN].boss) { boss = { x: 480, y: 170, r: 34, hp: 18, max: 18, need: 'bolt', t: 2, n: 0, flash: 0 }; K.banner('THE ARCHIVIST', 'Its seal shows the rune that will hurt it'); }
+  else { spawnWave(); K.banner('FLOOR ' + (floorN + 1) + ' · NEW RUNE: ' + sp.name, 'Hold R2 and trace  ' + sp.seq.split('').map(arrow).join(' ') + '  then release', 4); }
+}
+const arrow = (c) => ({ U: '↑', D: '↓', L: '←', R: '→' }[c]);
+function hurt(n) { if (P.inv > 0) return; if (P.ward > 0) { P.ward--; P.inv = 0.4; K.sfx('clank'); fx.burst(P.x, P.y, '#fde047', 10, 160, 0.3, 3); return; } P.hp -= n; P.inv = 1; K.sfx('hurt'); fx.shake(8); if (P.hp <= 0) K.lose({ title: 'UNWRITTEN', text: 'The tower closes the book on you. It opens again at the foot of this floor.', stats: [['Floor', floorN + 1], ['Foes dispelled', kills]] }); }
+function dmg(e, n, col) { e.hp -= n; e.flash = 0.12; fx.burst(e.x, e.y, col, 6, 140, 0.3, 3); if (e.hp <= 0 && e !== boss) { kills++; mana = Math.min(1, mana + 0.04); fx.burst(e.x, e.y, col, 14, 200, 0.5, 4); if (Math.random() < 0.12 && P.hp < 5) shots.push({ x: e.x, y: e.y, vx: 0, vy: 0, heart: true, t: 8 }); } }
+function nearest(x, y) { let b = null, bd = 1e9; for (const e of foes.concat(boss ? [boss] : [])) { const d = dist(x, y, e.x, e.y); if (d < bd && (e.in || 0) <= 0) { bd = d; b = e; } } return b; }
+function doCast(sp, seq) {
+  mana -= sp.cost; fx.flash(sp.col, 0.12);
+  if (boss) { if (boss.need === sp.k) { boss.hp -= 2; boss.flash = 0.2; boss.need = pick(SPELLS.filter((s) => s.k !== sp.k && s.k !== 'blink' && s.k !== 'ward')).k; K.sfx('boom'); fx.shake(10); fx.burst(boss.x, boss.y, sp.col, 40, 260, 0.7, 5); } else if (!['ward', 'blink'].includes(sp.k)) fx.text(boss.x, boss.y - 50, 'WRONG RUNE', '#94a3b8', 14); }
+  if (sp.k === 'bolt') { const e = nearest(P.x, P.y); K.sfx('zap'); if (e) { beams.push({ x1: P.x, y1: P.y, x2: e.x, y2: e.y, t: 0.18, col: sp.col }); if (e !== boss) dmg(e, e.k === 'brute' ? 1 : 3, sp.col); } }
+  else if (sp.k === 'gale') { K.sfx('dash'); blasts.push({ x: P.x, y: P.y, r: 0, max: 240, t: 0.35, col: sp.col }); for (const e of foes) { const d = dist(P.x, P.y, e.x, e.y); if (d < 240) { const a = ang(P.x, P.y, e.x, e.y); e.kx = Math.cos(a) * 700; e.ky = Math.sin(a) * 700; e.gale = 0.4; if (e.k !== 'brute') dmg(e, 1, sp.col); } } shots = shots.filter((s) => s.heart || dist(s.x, s.y, P.x, P.y) > 240); }
+  else if (sp.k === 'ward') { P.ward = 3; K.sfx('power'); }
+  else if (sp.k === 'fire') { let best = nearest(P.x, P.y), bn = 0; for (const e of foes) { let n = 0; for (const o of foes) if (dist(e.x, e.y, o.x, o.y) < 90) n++; if (n > bn) { bn = n; best = e; } } const tx = best ? best.x : P.x, ty = best ? best.y : P.y - 120; K.sfx('boom'); fx.shake(8); blasts.push({ x: tx, y: ty, r: 0, max: 100, t: 0.4, col: sp.col }); beams.push({ x1: P.x, y1: P.y, x2: tx, y2: ty, t: 0.15, col: sp.col }); for (const e of foes) if (dist(e.x, e.y, tx, ty) < 100) dmg(e, 4, sp.col); }
+  else if (sp.k === 'frost') { K.sfx('ping'); blasts.push({ x: P.x, y: P.y, r: 0, max: 280, t: 0.5, col: sp.col }); for (const e of foes) if (dist(e.x, e.y, P.x, P.y) < 280) { e.fr = 3.5; if (e.k !== 'brute') dmg(e, 1, sp.col); } }
+  else if (sp.k === 'blink') { const d = seq[0] === 'R' ? 1 : -1; fx.burst(P.x, P.y, sp.col, 16, 160, 0.4, 3); P.x = clamp(P.x + d * 240, AR.x + 14, AR.x + AR.w - 14); P.inv = Math.max(P.inv, 0.5); fx.burst(P.x, P.y, sp.col, 16, 160, 0.4, 3); K.sfx('dash'); }
+}
+
+K.run({
+  id: 'glyphcaster', num: 16, title: 'GLYPHCASTER', tag: 'Spells you draw', color: '#818cf8',
+  goal: 'Climb the seven floors of the Archive. Each floor gives you one new rune. Hold R2 to slow time, trace the rune with the stick or d-pad, and release to cast.',
+  controls: [['LS', 'Move'], ['r2', 'Hold: slow time and trace'], [['up', 'down', 'left', 'right'], 'Trace (or use the stick)']],
+  music: { bpm: 96, root: 49, mode: 'lydian', dens: 0.45, seed: 23, lead: 'triangle', leadVol: 0.06 },
+  start() { P = { x: 480, y: 400, r: 10, hp: 5, inv: 0, ward: 0 }; floorN = 0; known = 1; mana = 1; kills = 0; cast = { on: false, seq: '', rel: true, t: 0 }; enterFloor(); },
+  retry() { P.hp = 5; P.inv = 1; mana = 1; enterFloor(); },
+  update(dt0) {
+    const hold = K.down('r2'), dt = dt0 * (hold ? 0.22 : 1);
+    P.inv -= dt; mana = Math.min(1, mana + dt0 * 0.13);
+    if (hold) {
+      if (!cast.on) { cast.on = true; cast.seq = ''; cast.rel = false; cast.t = 0; }
+      cast.t += dt0; let d = null; const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly);
+      if (K.hit('up')) d = 'U'; else if (K.hit('down')) d = 'D'; else if (K.hit('left')) d = 'L'; else if (K.hit('right')) d = 'R';
+      else if (!K.down('up') && !K.down('down') && !K.down('left') && !K.down('right')) { if (m < 0.4) cast.rel = true; else if (m > 0.75 && cast.rel) { cast.rel = false; d = Math.abs(lx) > Math.abs(ly) ? (lx > 0 ? 'R' : 'L') : (ly > 0 ? 'D' : 'U'); } }
+      if (d && cast.seq.length < 4) { cast.seq += d; K.tone({ f: 500 + cast.seq.length * 160, dur: 0.07, type: 'triangle', vol: 0.14 }); }
+    } else if (cast.on) {
+      cast.on = false; const sp = SPELLS.slice(0, known).find((s) => s.seq === cast.seq || s.alt === cast.seq);
+      if (sp && mana >= sp.cost) doCast(sp, cast.seq); else if (cast.seq) { K.sfx('bad'); fx.text(P.x, P.y - 30, sp ? 'NO MANA' : 'FIZZLE', '#94a3b8', 14); }
+      cast.last = cast.seq; cast.seq = '';
+    } else { P.x = clamp(P.x + K.IN.lx * 215 * dt, AR.x + 12, AR.x + AR.w - 12); P.y = clamp(P.y + K.IN.ly * 215 * dt, AR.y + 12, AR.y + AR.h - 12); }
+    for (let i = foes.length - 1; i >= 0; i--) {
+      const e = foes[i]; if (e.hp <= 0) { foes.splice(i, 1); continue; }
+      e.flash -= dt; e.in -= dt; e.fr -= dt; e.gale = (e.gale || 0) - dt; if (e.in > 0) continue;
+      e.x += e.kx * dt; e.y += e.ky * dt; e.kx *= 1 - 6 * dt; e.ky *= 1 - 6 * dt;
+      if (e.gale > 0 && (e.x < AR.x + e.r || e.x > AR.x + AR.w - e.r || e.y < AR.y + e.r || e.y > AR.y + AR.h - e.r)) { e.gale = 0; dmg(e, 2, '#e2e8f0'); K.sfx('hit'); }
+      e.x = clamp(e.x, AR.x + e.r, AR.x + AR.w - e.r); e.y = clamp(e.y, AR.y + e.r, AR.y + AR.h - e.r);
+      if (e.fr > 0) continue;
+      const d = dist(e.x, e.y, P.x, P.y), a = ang(e.x, e.y, P.x, P.y);
+      if (e.k === 'imp') { e.x += Math.cos(a + Math.sin(K.time * 3 + i) * 0.5) * (78 + floorN * 8) * dt; e.y += Math.sin(a + Math.sin(K.time * 3 + i) * 0.5) * (78 + floorN * 8) * dt; }
+      else if (e.k === 'brute') { e.x += Math.cos(a) * 62 * dt; e.y += Math.sin(a) * 62 * dt; }
+      else { const want = d < 230 ? -1 : d > 320 ? 1 : 0; e.x += Math.cos(a) * 80 * want * dt; e.y += Math.sin(a) * 80 * want * dt; e.t -= dt; if (e.t <= 0) { e.t = 2.4; shots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, t: 4 }); K.sfx('blip'); } }
+      if (d < e.r + P.r) { hurt(e.k === 'brute' ? 2 : 1); if (K.scene !== 'play') return; if (e.k === 'imp') { e.kx = -Math.cos(a) * 300; e.ky = -Math.sin(a) * 300; } }
+    }
+    K.separate(foes, 0.6);
+    if (boss) {
+      boss.t -= dt; boss.flash -= dt; boss.x = 480 + Math.sin(K.time * 0.5) * 240; boss.y = 170 + Math.sin(K.time * 0.8) * 50;
+      if (boss.t <= 0) { boss.n++; boss.t = boss.hp < 8 ? 1.5 : 2.2; if (boss.n % 3 === 0) { for (let i = 0; i < 3; i++) foes.push({ k: 'imp', x: boss.x + rand(-40, 40), y: boss.y + 40, r: 11, hp: 1, t: 1, fr: 0, flash: 0, kx: 0, ky: 0, in: 0.3 }); } else { const k = 9, o = rand(0, 1); for (let i = 0; i < k; i++) shots.push({ x: boss.x, y: boss.y, vx: Math.cos(o + i * TAU / k) * 190, vy: Math.sin(o + i * TAU / k) * 190, t: 5 }); K.sfx('shoot'); } }
+      if (dist(boss.x, boss.y, P.x, P.y) < boss.r + P.r) hurt(1);
+      if (boss.hp <= 0) { K.win({ title: 'THE LAST PAGE', text: 'The Archivist folds into its own seal. Every rune in the tower is yours to keep.', stats: [['Foes dispelled', kills], ['Hearts left', P.hp]] }); return; }
+    }
+    for (let i = shots.length - 1; i >= 0; i--) { const s = shots[i]; s.t -= dt; s.x += s.vx * dt; s.y += s.vy * dt; let dead = s.t <= 0 || s.x < AR.x || s.x > AR.x + AR.w || s.y < AR.y || s.y > AR.y + AR.h; if (dist(s.x, s.y, P.x, P.y) < (s.heart ? 22 : 15)) { dead = true; if (s.heart) { P.hp = Math.min(5, P.hp + 1); K.sfx('pick'); } else { hurt(1); if (K.scene !== 'play') return; } } if (dead) shots.splice(i, 1); }
+    for (let i = beams.length - 1; i >= 0; i--) { beams[i].t -= dt0; if (beams[i].t <= 0) beams.splice(i, 1); }
+    for (let i = blasts.length - 1; i >= 0; i--) { const b = blasts[i]; b.t -= dt0; b.r = K.damp(b.r, b.max, 12, dt0); if (b.t <= 0) blasts.splice(i, 1); }
+    if (!boss && !foes.length) {
+      between += dt0;
+      if (between > 0.9) { between = 0; wave++; if (wave >= FLOORS[floorN].w.length) { floorN++; P.hp = Math.min(5, P.hp + 1); K.sfx('power'); enterFloor(); } else { spawnWave(); K.hint('More of them', 1.2); } }
+    }
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#0b0a1a');
+    g.save(); if (fx.shakeT) g.translate(rand(-fx.shakeT, fx.shakeT), rand(-fx.shakeT, fx.shakeT));
+    rrect(AR.x - 8, AR.y - 8, AR.w + 16, AR.h + 16, 14, '#2a2752'); rrect(AR.x, AR.y, AR.w, AR.h, 8, '#15132b');
+    for (let i = 0; i < 3; i++) ring(480, 280, 70 + i * 60, 'rgba(129,140,248,.1)', 2); for (let i = 0; i < 12; i++) { const a = i * TAU / 12 + t * 0.05; txt('ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ'[i], 480 + Math.cos(a) * 160, 280 + Math.sin(a) * 160, 18, 'rgba(129,140,248,.2)', 'center'); }
+    for (const b of blasts) { g.globalAlpha = clamp(b.t * 3, 0, 1); circ(b.x, b.y, b.r, b.col + '33'); ring(b.x, b.y, b.r, b.col, 4); g.globalAlpha = 1; }
+    for (const e of foes) {
+      if (e.in > 0) { ring(e.x, e.y, 16 * (e.in % 0.4) / 0.4 + 6, 'rgba(248,113,113,.6)', 2); continue; }
+      const c = e.flash > 0 ? '#fff' : e.fr > 0 ? '#a5f3fc' : null;
+      if (e.k === 'imp') { K.tri(e.x - 6, e.y - 9, 7, -1.9, c || '#ef4444'); K.tri(e.x + 6, e.y - 9, 7, -1.2, c || '#ef4444'); circ(e.x, e.y, 11, c || '#dc2626'); circ(e.x - 4, e.y - 2, 2, '#fef08a'); circ(e.x + 4, e.y - 2, 2, '#fef08a'); }
+      else if (e.k === 'arch') { rrect(e.x - 9, e.y - 12, 18, 24, 7, c || '#7c3aed'); circ(e.x, e.y - 12, 7, c || '#a78bfa'); g.strokeStyle = '#e9d5ff'; g.lineWidth = 2; g.beginPath(); g.arc(e.x + 10, e.y, 10, -1.2, 1.2); g.stroke(); }
+      else { rrect(e.x - 18, e.y - 18, 36, 36, 9, c || '#475569'); rrect(e.x - 20, e.y - 6, 40, 16, 4, c || '#94a3b8'); rect(e.x - 9, e.y - 12, 18, 4, '#0f172a'); }
+      if (e.fr > 0) ring(e.x, e.y, e.r + 5, '#a5f3fc', 2);
+    }
+    if (boss) { const b = boss, sp = SPELLS.find((s) => s.k === b.need); circ(b.x, b.y, b.r + 12 + Math.sin(t * 4) * 3, sp.col + '33'); circ(b.x, b.y, b.r, b.flash > 0 ? '#fff' : '#1e1b4b'); ring(b.x, b.y, b.r, sp.col, 4); txt(sp.seq.split('').map(arrow).join(''), b.x, b.y - 4, 24, sp.col, 'center', 900); txt(sp.name, b.x, b.y + 16, 10, sp.col, 'center', 800); bar(280, 46, 400, 14, b.hp / b.max, '#818cf8'); }
+    for (const s of shots) { if (s.heart) K.hearts(s.x, s.y, 1, 1, '#fb7185', 7); else { circ(s.x, s.y, 9, 'rgba(244,114,182,.3)'); circ(s.x, s.y, 5, '#f472b6'); } }
+    for (const b of beams) { g.globalAlpha = b.t * 5; line(b.x1, b.y1, b.x2, b.y2, b.col, 7); line(b.x1, b.y1, b.x2, b.y2, '#fff', 2); g.globalAlpha = 1; }
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) {
+      if (P.ward > 0) { for (let i = 0; i < P.ward; i++) { const a = t * 2.5 + i * TAU / 3; circ(P.x + Math.cos(a) * 24, P.y + Math.sin(a) * 24, 5, '#fde047'); } ring(P.x, P.y, 24, 'rgba(253,224,71,.4)', 2); }
+      circ(P.x + 2, P.y + 10, 10, 'rgba(0,0,0,.3)'); K.poly([[P.x - 11, P.y + 12], [P.x, P.y - 8], [P.x + 11, P.y + 12]], '#4338ca'); circ(P.x, P.y - 8, 7, '#f1d3a6'); K.poly([[P.x - 10, P.y - 11], [P.x, P.y - 30], [P.x + 10, P.y - 11]], '#6366f1'); line(P.x + 12, P.y + 12, P.x + 14, P.y - 16, '#a16207', 3); circ(P.x + 14, P.y - 18, 4, cast.on ? '#fff' : '#818cf8');
+    }
+    fx.draw(); g.restore();
+    /* tracing overlay */
+    if (cast.on) {
+      rect(0, 0, W, H, 'rgba(49,46,129,.25)');
+      let x = P.x, y = P.y - 46; const st = 34; g.lineCap = 'round';
+      const sx = P.x - 0, pts = [[sx, y]]; for (const c of cast.seq) { const d = DIRS[c]; pts.push([pts[pts.length - 1][0] + d[0] * st, pts[pts.length - 1][1] + d[1] * st]); }
+      const ok = SPELLS.slice(0, known).find((s) => s.seq === cast.seq || s.alt === cast.seq);
+      for (let i = 1; i < pts.length; i++) line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], ok ? ok.col : '#e0e7ff', 6);
+      circ(pts[pts.length - 1][0], pts[pts.length - 1][1], 6, '#fff');
+      if (ok) txt(ok.name, P.x, P.y + 34, 15, ok.col, 'center', 900);
+    }
+    hearts(24, 26, P.hp, 5); txt('MANA', 150, 26, 12, '#c7d2fe', 'left', 800); bar(192, 17, 150, 18, mana, '#818cf8');
+    txt(boss ? 'THE ARCHIVE · SUMMIT' : 'FLOOR ' + (floorN + 1) + ' / 7', 936, 26, 14, '#c7d2fe', 'right', 800);
+    /* spellbook */
+    const n = known, cw = 132, x0 = W / 2 - n * cw / 2;
+    for (let i = 0; i < n; i++) { const s = SPELLS[i], x = x0 + i * cw, can = mana >= s.cost; rrect(x + 4, 502, cw - 8, 32, 8, 'rgba(12,10,30,.85)'); txt(s.seq.split('').map(arrow).join(''), x + 14, 518, 15, can ? s.col : '#475569', 'left', 900); txt(s.name, x + cw - 12, 519, 11, can ? '#e0e7ff' : '#475569', 'right', 800); }
+  },
+});
+</script>
+</body>
+</html>

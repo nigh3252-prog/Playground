@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Lantern River — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* LANTERN RIVER — the current never stops; you only ever get to argue with
+   it. Paddle across the flow, plant the pole to hold still, bring the lost
+   lanterns down to the sea. */
+const { W, H, TAU, rand, irand, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const END = -16000, REACH = ['THE HEADWATERS', 'WILLOW BENDS', 'THE NARROWS', 'DROWNED FOREST', 'WHITE WATER', 'THE ESTUARY'];
+let R, rocks, pools, logs, spirits, seedN, saved, reach, flow, hits;
+const cxAt = (y) => 480 + Math.sin(y / 720) * 210 + Math.sin(y / 330 + 1) * 80;
+const rapid = (y) => { const k = -y / 16000 * 6; return (k > 2 && k < 3) || (k > 4 && k < 5); };
+const hwAt = (y) => (rapid(y) ? 105 : 165) + Math.sin(y / 520 + 2) * 40;
+const speedAt = (y) => (rapid(y) ? 235 : 130) + (-y / 16000) * 40;
+
+function build() {
+  const r = K.rng(seedN); rocks = []; pools = []; logs = []; spirits = [];
+  for (let y = -700; y > END + 500; y -= r.range(150, 300)) {
+    const k = -y / 16000 * 6, hw = hwAt(y), cx = cxAt(y), q = r();
+    if (q < 0.5) rocks.push({ x: cx + r.range(-hw + 30, hw - 30), y, r: r.range(14, 28) });
+    else if (q < 0.62 && k > 1 && !rapid(y)) pools.push({ x: cx + r.range(-hw * 0.4, hw * 0.4), y, r: 90, ph: 0 });
+    else if (q < 0.82 && k > 0.6) logs.push({ x: cx + r.range(-hw + 40, hw - 40), y, a: r() * TAU, w: r.range(-0.6, 0.6), len: r.range(34, 54), vx: 0, vy: 0 });
+    else if (k > 3 && k < 4) { for (let i = -1; i <= 1; i += 2) rocks.push({ x: cx + i * r.range(30, hw - 20), y: y + r.range(-40, 40), r: 12, tree: true }); }
+  }
+  for (let i = 0; i < 18; i++) {
+    const y = -900 - i * 820 + r.range(-200, 200), side = r() < 0.5 ? -1 : 1, hw = hwAt(y);
+    const s = { x: cxAt(y) + side * (hw - r.range(26, 60)), y, f: 0, got: false, ph: r() * TAU };
+    spirits.push(s); rocks.push({ x: s.x + side * 16, y: s.y + 6, r: 15, perch: true });
+  }
+  rocks = rocks.filter((o) => o.perch || spirits.every((s) => dist(o.x, o.y, s.x, s.y) > 70));
+}
+function place(y) { R = { x: cxAt(y), y, vx: 0, vy: -60, a: -Math.PI / 2, r: 15, hp: R ? R.hp : 5, pole: 1, inv: 1.5, spin: 0 }; cam.x = W / 2; cam.y = y - 150; }
+function hurt(n) { if (R.inv > 0) return; R.hp -= n; hits++; R.inv = 1; K.sfx('hurt'); fx.shake(8); if (R.hp <= 0) K.lose({ title: 'SWAMPED', text: 'The raft breaks up on the rocks. The river sets you back at the top of this reach.', stats: [['Lanterns saved', saved + ' / 18']] }); }
+
+K.run({
+  id: 'lantern-river', num: 15, title: 'LANTERN RIVER', tag: 'Rafting a living current', color: '#2dd4bf',
+  goal: 'Ride six reaches down to the sea. Lost lanterns wait on rocks near the banks: hold your raft beside one long enough and it climbs aboard. Each one mends your raft.',
+  controls: [['LS', 'Paddle'], ['cross', 'Hold: plant the pole (brake)']],
+  music: { bpm: 88, root: 53, mode: 'penta', dens: 0.42, seed: 61, lead: 'sine', leadVol: 0.07, long: true },
+  start() { seedN = irand(1, 1e9); build(); R = null; saved = 0; reach = 0; hits = 0; flow = []; place(-100); R.hp = 5; K.banner(REACH[0], 'Stay off the rocks. Glowing lanterns need a moment beside them.'); },
+  retry() { R.hp = 0; place(-reach * 16000 / 6 - 100); R.hp = 4; },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly, pole = K.down('cross') && R.pole > 0;
+    R.inv -= dt; R.pole = clamp(R.pole + (pole ? -dt / 3.2 : dt / 4), 0, 1);
+    const y = R.y, tx = cxAt(y - 40) - cxAt(y), ty = -40, tl = Math.hypot(tx, ty), sp = speedAt(y);
+    let cvx = tx / tl * sp + (cxAt(y) - R.x) * 0.12, cvy = ty / tl * sp;
+    for (const p of pools) { const d = dist(R.x, R.y, p.x, p.y); if (d < p.r + 40) { const a = ang(R.x, R.y, p.x, p.y), k = (1 - d / (p.r + 40)); cvx += (Math.cos(a) * 190 + Math.cos(a + 1.57) * 230) * k; cvy += (Math.sin(a) * 190 + Math.sin(a + 1.57) * 230) * k + sp * k * 0.9; R.spin += k * dt * 4; if (d < 20) { hurt(1); R.vy = -340; R.vx = rand(-200, 200); K.sfx('splash'); } } }
+    const cpl = pole ? 0.25 : 1.7;
+    R.vx += (cvx - R.vx) * cpl * dt; R.vy += (cvy - R.vy) * cpl * dt;
+    if (pole) { R.vx *= 1 - 4 * dt; R.vy *= 1 - 4 * dt; if (Math.random() < dt * 14) fx.spark(R.x + rand(-12, 12), R.y + 14, rand(-40, 40), rand(20, 80), '#ccfbf1', 0.4, 3); }
+    R.vx += lx * 330 * dt; R.vy += ly * (ly > 0 ? 200 : 300) * dt;
+    R.x += R.vx * dt; R.y += R.vy * dt; R.y = Math.min(R.y, 0);
+    R.a += K.angDiff(R.a, Math.atan2(R.vy, R.vx)) * dt * 3 + R.spin * dt; R.spin *= 1 - 2 * dt;
+    /* banks */
+    const cx = cxAt(R.y), hw = hwAt(R.y) - R.r;
+    if (Math.abs(R.x - cx) > hw) { const s = Math.sign(R.x - cx); R.x = cx + s * hw; if (Math.abs(R.vx) > 150 || rapid(R.y)) hurt(1); R.vx = -s * Math.abs(R.vx) * 0.5 - s * 30; K.sfx('land'); }
+    for (const o of rocks) { const d = dist(R.x, R.y, o.x, o.y); if (d < o.r + R.r - 2) { const a = ang(o.x, o.y, R.x, R.y), v = Math.hypot(R.vx, R.vy); R.x = o.x + Math.cos(a) * (o.r + R.r); R.y = o.y + Math.sin(a) * (o.r + R.r); if (v > 150 && !o.perch) hurt(1); const dn = R.vx * Math.cos(a) + R.vy * Math.sin(a); if (dn < 0) { R.vx -= 1.5 * dn * Math.cos(a); R.vy -= 1.5 * dn * Math.sin(a); } } }
+    for (const l of logs) {
+      const lsp = speedAt(l.y) * 0.7, ltx = cxAt(l.y - 40) - cxAt(l.y); l.vx = K.damp(l.vx, ltx / 40 * lsp + (cxAt(l.y) - l.x) * 0.3, 1, dt); l.vy = K.damp(l.vy, -lsp, 1, dt);
+      if (Math.abs(l.y - R.y) < 900) { l.x += l.vx * dt; l.y += l.vy * dt; l.a += l.w * dt; }
+      const d = dist(R.x, R.y, l.x, l.y); if (d < l.len * 0.6 + R.r) { const a = ang(l.x, l.y, R.x, R.y); R.vx += Math.cos(a) * 200; R.vy += Math.sin(a) * 200; l.vx -= Math.cos(a) * 120; l.vy -= Math.sin(a) * 120; if (Math.hypot(R.vx - l.vx, R.vy - l.vy) > 260) hurt(1); else K.sfx('land'); }
+      if (l.y < R.y - 700) { l.y = R.y + 500; l.x = cxAt(l.y); }
+    }
+    for (const s of spirits) {
+      if (s.got) continue; s.ph += dt;
+      if (dist(R.x, R.y, s.x, s.y) < 62) { s.f += dt / 1.0; if (Math.floor(s.f * 6) !== Math.floor((s.f - dt) * 6)) K.sfx('blip'); if (s.f >= 1) { s.got = true; saved++; R.hp = Math.min(6, R.hp + 1); K.sfx('key'); fx.burst(s.x, s.y, '#fde68a', 24, 160, 0.8, 4); fx.text(s.x, s.y - 30, saved + ' aboard', '#fef3c7', 15); } }
+      else s.f = Math.max(0, s.f - dt * 0.6);
+    }
+    const nr = Math.min(5, Math.floor(-R.y / 16000 * 6)); if (nr > reach) { reach = nr; K.sfx('power'); K.banner(REACH[nr], ['', 'Logs ride the current with you', 'Fast water. The pole is your friend.', 'Dead trees and whirlpools', 'Hold on', 'You can smell salt'][nr]); }
+    if (R.y < END) { K.win({ title: saved >= 14 ? 'ALL THE WAY TO THE SEA' : 'THE SEA', text: saved >= 14 ? 'The lanterns lift off the raft one by one and drift out over the water like a second sky.' : 'You made it. So did ' + saved + ' of them. The river remembers the rest.', stats: [['Lanterns saved', saved + ' / 18'], ['Knocks taken', hits]] }); return; }
+    if (Math.random() < dt * 30) flow.push({ x: cxAt(cam.y - 300) + rand(-200, 200), y: cam.y + rand(-330, 300), t: 1.2 });
+    for (let i = flow.length - 1; i >= 0; i--) { const f = flow[i]; f.t -= dt; const s2 = speedAt(f.y); f.y -= s2 * dt; f.x += (cxAt(f.y - 40) - cxAt(f.y)) / 40 * s2 * dt; if (f.t <= 0) flow.splice(i, 1); }
+    cam.x = K.damp(cam.x, lerp(W / 2, cxAt(R.y - 200), 0.5), 3, dt); cam.y = K.damp(cam.y, R.y - 150, 5, dt);
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#0d2a1f');
+    cam.begin();
+    const y0 = cam.y - H / 2 - 40, y1 = cam.y + H / 2 + 40;
+    g.fillStyle = '#0b4f5c'; g.beginPath(); for (let y = y0; y <= y1; y += 20) g.lineTo(cxAt(y) - hwAt(y), y); for (let y = y1; y >= y0; y -= 20) g.lineTo(cxAt(y) + hwAt(y), y); g.fill();
+    g.fillStyle = '#0e6b78'; g.beginPath(); for (let y = y0; y <= y1; y += 20) g.lineTo(cxAt(y) - hwAt(y) * 0.6, y); for (let y = y1; y >= y0; y -= 20) g.lineTo(cxAt(y) + hwAt(y) * 0.6, y); g.fill();
+    for (let y = Math.floor(y0 / 46) * 46; y < y1; y += 46) for (const s of [-1, 1]) { const n = K.hash2(y, s, 3), bx = cxAt(y) + s * (hwAt(y) + 18 + n * 30); circ(bx, y, 22 + n * 14, K.hsl(140 + n * 20, 40, 14 + n * 8)); if (n > 0.7) circ(bx + s * 40, y + 10, 18, K.hsl(150, 40, 11)); if (rapid(y)) { g.globalAlpha = 0.5; line(cxAt(y) + s * hwAt(y) * n, y, cxAt(y) + s * hwAt(y) * n, y - 16, '#e0fffa', 3); g.globalAlpha = 1; } }
+    for (const f of flow) { g.globalAlpha = Math.min(f.t, 1.2 - f.t) * 0.5; line(f.x, f.y, f.x, f.y + 16, '#99f6e4', 2); } g.globalAlpha = 1;
+    for (const p of pools) { if (p.y < y0 || p.y > y1) continue; for (let k = 0; k < 4; k++) { g.strokeStyle = 'rgba(204,251,241,' + (0.5 - k * 0.1) + ')'; g.lineWidth = 3; g.beginPath(); g.arc(p.x, p.y, 14 + k * 20, t * (3 - k * 0.5) + k, t * (3 - k * 0.5) + k + 4); g.stroke(); } circ(p.x, p.y, 9, '#042f2e'); }
+    for (const o of rocks) { if (o.y < y0 || o.y > y1) continue; circ(o.x, o.y + 2, o.r + 5, 'rgba(204,251,241,.22)'); if (o.tree) { circ(o.x, o.y, o.r, '#3f3a34'); line(o.x, o.y, o.x + 6, o.y - 40, '#57534e', 5); line(o.x + 3, o.y - 22, o.x - 12, o.y - 36, '#57534e', 3); } else { circ(o.x, o.y, o.r, '#5b6670'); circ(o.x - o.r * 0.25, o.y - o.r * 0.3, o.r * 0.5, '#7b8794'); } }
+    for (const l of logs) { if (l.y < y0 || l.y > y1) continue; g.save(); g.translate(l.x, l.y); g.rotate(l.a); rrect(-l.len, -7, l.len * 2, 14, 7, '#7a5230'); line(-l.len * 0.6, -2, l.len * 0.5, -2, '#5b3a1e', 2); g.restore(); }
+    for (const s of spirits) { if (s.got || s.y < y0 || s.y > y1) continue; const b = Math.sin(s.ph * 2) * 3; circ(s.x, s.y - 10 + b, 26, 'rgba(253,230,138,.16)'); rrect(s.x - 7, s.y - 20 + b, 14, 18, 4, '#fde68a'); rect(s.x - 8, s.y - 22 + b, 16, 3, '#92400e'); rect(s.x - 8, s.y - 3 + b, 16, 3, '#92400e'); ring(s.x, s.y, 62, 'rgba(253,230,138,.25)', 1.5); if (s.f > 0) { g.strokeStyle = '#fde68a'; g.lineWidth = 5; g.beginPath(); g.arc(s.x, s.y, 62, -Math.PI / 2, -Math.PI / 2 + s.f * TAU); g.stroke(); } }
+    if (END > y0 - 200) { rect(-400, END - 900, 1800, 900, '#0e6b78'); txt('THE SEA', cxAt(END), END - 80, 40, 'rgba(204,251,241,.5)', 'center', 900); }
+    if (R.inv <= 0 || Math.floor(t * 14) % 2) {
+      g.save(); g.translate(R.x, R.y); g.rotate(R.a + Math.PI / 2);
+      for (let i = -2; i <= 2; i++) rrect(i * 6 - 3, -17, 6, 34, 3, i % 2 ? '#b98a5a' : '#a47148'); rect(-15, -10, 30, 3, '#5b3a1e'); rect(-15, 8, 30, 3, '#5b3a1e');
+      circ(0, 2, 6, '#0f766e'); circ(0, -2, 4, '#f1d3a6');
+      for (let i = 0; i < Math.min(saved, 6); i++) circ(-9 + (i % 3) * 9, -12 + Math.floor(i / 3) * 22, 3, '#fde68a');
+      if (K.down('cross') && R.pole > 0) line(8, 2, 22, 30, '#e7d3b0', 3);
+      g.restore(); circ(R.x, R.y, 30, 'rgba(253,230,138,' + Math.min(0.14, saved * 0.012) + ')');
+    }
+    fx.draw(); cam.end();
+    const dk = g.createRadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 620); dk.addColorStop(0, 'rgba(2,10,14,0)'); dk.addColorStop(1, 'rgba(2,10,14,.7)'); g.fillStyle = dk; g.fillRect(0, 0, W, H);
+    hearts(24, 26, R.hp, 6, '#2dd4bf');
+    txt('POLE', 190, 26, 12, '#ccfbf1', 'left', 800); bar(228, 17, 110, 18, R.pole, R.pole < 0.25 ? '#ef4444' : '#99f6e4');
+    rrect(852, 15, 10, 14, 3, '#fde68a'); txt(saved + ' / 18', 932, 24, 16, '#fef3c7', 'right', 800);
+    txt(REACH[reach], W / 2, 24, 14, '#ccfbf1', 'center', 800); const f = clamp(R.y / END, 0, 1); rect(380, 40, 200, 3, 'rgba(255,255,255,.2)'); rect(380, 40, 200 * f, 3, '#2dd4bf');
+    if (rapid(R.y)) txt('RAPIDS', W / 2, 62, 13, '#fff', 'center', 900);
+  },
+});
+</script>
+</body>
+</html>
