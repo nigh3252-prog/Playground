@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Planet Hopper — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* PLANET HOPPER — every little world pulls you to its own centre. Run around
+   them, leap, and let the next one catch you. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const G0 = 720, NEED = 22;
+let pl, P, shards, urch, stars, got, rocket, falls, comets;
+
+function build() {
+  const r = K.rng(irand(1, 1e9)); pl = []; shards = []; urch = [];
+  let x = 0, y = 0, rad = 90, dir = 0; pl.push({ x, y, r: rad, k: 'home', hue: 150, main: true });
+  for (let i = 1; i < 15; i++) {
+    for (let t = 0; t < 60; t++) {
+      const nr = r.range(48, 104), a = dir + r.range(-1.0, 1.0), d = rad + nr + r.range(95, 185), nx = x + Math.cos(a) * d, ny = y + Math.sin(a) * d;
+      if (pl.some((p) => dist(p.x, p.y, nx, ny) < p.r + nr + 85)) continue;
+      const k = i === 14 ? 'goal' : i > 2 && r() < 0.2 ? 'bouncy' : i > 4 && r() < 0.22 ? 'ice' : i > 3 && r() < 0.3 ? 'lava' : 'rock';
+      const p = { x: nx, y: ny, r: nr, k, hue: r.int(0, 360), main: true, la: r() * TAU, lw: r.range(0.9, 1.5) }; pl.push(p);
+      /* shards arc from the old world toward the new one */
+      for (let j = 1; j <= 2; j++) shards.push({ x: lerp(x + Math.cos(a) * rad, nx - Math.cos(a) * nr, j / 3), y: lerp(y + Math.sin(a) * rad, ny - Math.sin(a) * nr, j / 3), got: false });
+      if (k === 'lava') p.la = a + Math.PI + 1.6;     /* keep the landing side clear */
+      if (i > 1 && k !== 'goal' && r() < 0.55) urch.push({ p, a: a + 1.5, w: (r() < 0.5 ? -1 : 1) * r.range(40, 70) / nr });
+      x = nx; y = ny; rad = nr; dir = a * 0.5; break;
+    }
+  }
+  for (let i = 0; i < 5; i++) for (let t = 0; t < 80; t++) {
+    const b = pl[r.int(1, pl.length - 2)], nr = r.range(36, 54), a = r() * TAU, d = b.r + nr + r.range(100, 160), nx = b.x + Math.cos(a) * d, ny = b.y + Math.sin(a) * d;
+    if (pl.some((p) => dist(p.x, p.y, nx, ny) < p.r + nr + 85)) continue;
+    const p = { x: nx, y: ny, r: nr, k: 'gem', hue: 50 }; pl.push(p); for (let j = 0; j < 3; j++) shards.push({ x: nx + Math.cos(j * 2.1) * (nr + 34), y: ny + Math.sin(j * 2.1) * (nr + 34), got: false }); break;
+  }
+  rocket = pl.find((p) => p.k === 'goal');
+  stars = []; for (let i = 0; i < 140; i++) stars.push([r() * W, r() * H, r() * 1.6 + 0.3, r()]);
+}
+function land(p, a) { P.on = p; P.a = a; P.w = 0; P.x = p.x + Math.cos(a) * (p.r + 10); P.y = p.y + Math.sin(a) * (p.r + 10); if (p.main && p.k !== 'lava') P.safe = p; }
+function hurt(why) { if (P.inv > 0) return; P.hp--; falls++; P.inv = 1.5; K.sfx('hurt'); fx.shake(9); if (P.hp <= 0) { K.lose({ title: 'LOST IN SPACE', text: why + ' You drift back to the last world that held you. Your shards stay with you.', stats: [['Shards', got + ' / ' + NEED]] }); return; } land(P.safe, P.sa || -1.57); K.hint(why, 1.8); }
+
+K.run({
+  id: 'planet-hopper', num: 22, title: 'PLANET HOPPER', tag: 'Tiny worlds, round gravity', color: '#f0abfc',
+  goal: 'Hop from world to world gathering star shards. Bring 22 of them to the rocket on the far planet. Whichever world you are nearest pulls you down.',
+  controls: [['LS', 'Run around the world / steer in the air'], ['cross', 'Jump']],
+  music: { bpm: 104, root: 57, mode: 'lydian', dens: 0.5, seed: 9, lead: 'triangle', leadVol: 0.07, prog: [0, 4, 3, 5] },
+  start() { build(); got = 0; falls = 0; comets = []; P = { hp: 5, on: null, vx: 0, vy: 0, inv: 0, safe: pl[0], face: 1, w: 0 }; land(pl[0], -1.57); cam.x = P.x; cam.y = P.y; K.banner('PLANET HOPPER', 'Jump toward the next world and it will catch you'); },
+  retry() { P.hp = 5; P.inv = 1.5; land(P.safe, -1.57); },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly; P.inv -= dt;
+    if (P.on) {
+      const p = P.on, tx = -Math.sin(P.a), ty = Math.cos(P.a), want = (lx * tx + ly * ty) * 215;
+      P.w = p.k === 'ice' ? K.damp(P.w, want, 1.4, dt) : K.approach(P.w, want, 1800 * dt); P.a += P.w / p.r * dt; if (Math.abs(P.w) > 20) P.face = Math.sign(P.w);
+      P.x = p.x + Math.cos(P.a) * (p.r + 10); P.y = p.y + Math.sin(P.a) * (p.r + 10);
+      if (p.k === 'lava' && Math.abs(K.angDiff(P.a, p.la)) < p.lw / 2) { P.sa = P.a; hurt('Molten ground.'); if (K.scene !== 'play') return; }
+      if (K.hit('cross')) { const v = p.k === 'bouncy' ? 590 : 410; P.vx = Math.cos(P.a) * v + tx * P.w; P.vy = Math.sin(P.a) * v + ty * P.w; P.from = p; P.on = null; P.air = 0; K.sfx('jump'); fx.burst(P.x, P.y, '#f5d0fe', 8, 120, 0.3, 3); }
+      if (p === rocket && Math.abs(K.angDiff(P.a, -1.57)) < 0.35) { if (got >= NEED) { K.win({ title: 'LIFT-OFF', text: 'The shards slot into the hull one by one, and the rocket remembers what it is for.', stats: [['Shards', got + ' / ' + shards.length], ['Tumbles', falls]] }); return; } else if (!P.told) { P.told = true; K.hint('The rocket needs ' + (NEED - got) + ' more shards.', 3); } }
+    } else {
+      P.air += dt; let best = null, bd = 1e9; for (const p of pl) { const d = dist(P.x, P.y, p.x, p.y) - p.r; if (d < bd) { bd = d; best = p; } }
+      const a = ang(P.x, P.y, best.x, best.y), k = bd < 230 ? 1 : clamp(1 - (bd - 230) / 260, 0.12, 1);
+      P.vx += (Math.cos(a) * G0 * k + lx * 260) * dt; P.vy += (Math.sin(a) * G0 * k + ly * 260) * dt; P.vx *= 1 - 0.25 * dt; P.vy *= 1 - 0.25 * dt;
+      P.x += P.vx * dt; P.y += P.vy * dt; P.ra = Math.atan2(P.y - best.y, P.x - best.x);
+      if (bd <= 10 && (best !== P.from || P.air > 0.15)) { land(best, Math.atan2(P.y - best.y, P.x - best.x)); P.sa = P.a; K.sfx('land'); fx.burst(P.x, P.y, '#f5d0fe', 6, 90, 0.3, 3); if (best.k === 'bouncy') K.hint('Springy! Big jumps here.', 1.4); }
+      if (bd > 700) { hurt('You drifted too far.'); if (K.scene !== 'play') return; }
+    }
+    for (const s of shards) if (!s.got && dist(P.x, P.y, s.x, s.y) < 30) { s.got = true; got++; K.sfx('coin'); fx.burst(s.x, s.y, '#fde047', 8, 120, 0.4, 3); if (got === NEED) K.banner('ENOUGH SHARDS', 'Find the rocket'); }
+    for (const u of urch) { u.a += u.w * dt; const ux = u.p.x + Math.cos(u.a) * (u.p.r + 9), uy = u.p.y + Math.sin(u.a) * (u.p.r + 9); if (dist(ux, uy, P.x, P.y) < 20) { P.sa = P.a + 1.2; hurt('Spiny thing.'); if (K.scene !== 'play') return; } }
+    if (Math.random() < dt * 0.35) { const a = rand(0, TAU); comets.push({ x: P.x + Math.cos(a) * 700, y: P.y + Math.sin(a) * 700, vx: -Math.cos(a + rand(-0.3, 0.3)) * 260, vy: -Math.sin(a + rand(-0.3, 0.3)) * 260, t: 6 }); }
+    for (let i = comets.length - 1; i >= 0; i--) { const c = comets[i]; c.t -= dt; c.x += c.vx * dt; c.y += c.vy * dt; fx.spark(c.x, c.y, 0, 0, '#bae6fd', 0.5, 4); let dead = c.t <= 0; for (const p of pl) if (dist(c.x, c.y, p.x, p.y) < p.r) { dead = true; fx.burst(c.x, c.y, '#bae6fd', 12, 160, 0.4, 3); } if (!P.on && dist(c.x, c.y, P.x, P.y) < 22) { P.vx += c.vx * 0.8; P.vy += c.vy * 0.8; K.sfx('hit'); dead = true; } if (dead) comets.splice(i, 1); }
+    cam.follow(P.x, P.y, dt, 4);
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#0c0720');
+    const nb = g.createRadialGradient(300, 200, 20, 300, 200, 520); nb.addColorStop(0, 'rgba(192,38,211,.22)'); nb.addColorStop(1, 'rgba(12,7,32,0)'); g.fillStyle = nb; g.fillRect(0, 0, W, H);
+    for (const s of stars) { g.globalAlpha = 0.4 + 0.5 * Math.abs(Math.sin(t * s[3] * 2 + s[0])); circ(((s[0] - cam.x * 0.08 * s[2]) % W + W) % W, ((s[1] - cam.y * 0.08 * s[2]) % H + H) % H, s[2], '#fff'); } g.globalAlpha = 1;
+    cam.begin();
+    for (const p of pl) {
+      if (!cam.see(p.x, p.y, p.r + 60)) continue;
+      const col = { home: [150, 50, 42], rock: [p.hue, 30, 40], bouncy: [320, 70, 60], ice: [195, 70, 74], lava: [20, 30, 24], goal: [45, 60, 55], gem: [50, 80, 60] }[p.k];
+      circ(p.x, p.y, p.r + 18, K.hsl(col[0], col[1], col[2], 0.12)); circ(p.x, p.y, p.r, K.hsl(col[0], col[1], col[2])); circ(p.x - p.r * 0.2, p.y - p.r * 0.25, p.r * 0.72, K.hsl(col[0], col[1], col[2] + 7));
+      for (let i = 0; i < 4; i++) { const a = K.hash2(i, p.r | 0, 3) * TAU, d = K.hash2(i, p.x | 0, 5) * p.r * 0.6; circ(p.x + Math.cos(a) * d, p.y + Math.sin(a) * d, p.r * 0.12, K.hsl(col[0], col[1], col[2] - 8)); }
+      if (p.k === 'bouncy') for (let i = 0; i < 8; i++) { const a = i * 0.785 + t * 0.3; circ(p.x + Math.cos(a) * p.r, p.y + Math.sin(a) * p.r, 9, '#fbcfe8'); }
+      if (p.k === 'lava') { g.strokeStyle = K.hsl(18 + Math.sin(t * 4) * 8, 95, 55); g.lineWidth = 10; g.beginPath(); g.arc(p.x, p.y, p.r - 2, p.la - p.lw / 2, p.la + p.lw / 2); g.stroke(); }
+      if (p.k === 'home' || p.k === 'rock') for (let i = 0; i < 5; i++) { const a = K.hash2(i, p.y | 0, 7) * TAU; line(p.x + Math.cos(a) * p.r, p.y + Math.sin(a) * p.r, p.x + Math.cos(a) * (p.r + 9), p.y + Math.sin(a) * (p.r + 9), '#4ade80', 3); }
+      if (p.k === 'goal') { g.save(); g.translate(p.x, p.y - p.r); rrect(-13, -64, 26, 56, 12, '#e5e7eb'); K.poly([[-13, -52], [0, -86], [13, -52]], '#ef4444'); K.poly([[-13, -22], [-26, -4], [-13, -8]], '#ef4444'); K.poly([[13, -22], [26, -4], [13, -8]], '#ef4444'); circ(0, -40, 7, got >= NEED ? '#fde047' : '#38bdf8'); g.restore(); if (got >= NEED) ring(p.x, p.y - p.r - 30, 50 + Math.sin(t * 4) * 6, '#fde047', 3); }
+    }
+    for (const s of shards) if (!s.got && cam.see(s.x, s.y)) { const b = Math.sin(t * 3 + s.x) * 3; K.poly([[s.x, s.y - 10 + b], [s.x + 6, s.y + b], [s.x, s.y + 10 + b], [s.x - 6, s.y + b]], '#fde047'); circ(s.x, s.y + b, 13, 'rgba(253,224,71,.16)'); }
+    for (const u of urch) { const x = u.p.x + Math.cos(u.a) * (u.p.r + 9), y = u.p.y + Math.sin(u.a) * (u.p.r + 9); for (let k = 0; k < 8; k++) K.tri(x + Math.cos(k * 0.785 + t * 2) * 10, y + Math.sin(k * 0.785 + t * 2) * 10, 6, k * 0.785 + t * 2, '#7f1d1d'); circ(x, y, 9, '#b91c1c'); circ(x, y, 3, '#fde047'); }
+    for (const c of comets) circ(c.x, c.y, 6, '#e0f2fe');
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) { const a = (P.on ? P.a : P.ra || 0) + Math.PI / 2; g.save(); g.translate(P.x, P.y); g.rotate(a); const leg = P.on ? Math.sin(t * 18) * Math.min(1, Math.abs(P.w) / 100) * 5 : 3; line(-4, 4, -4 - leg, 12, '#e5e7eb', 4); line(4, 4, 4 + leg, 12, '#e5e7eb', 4); rrect(-8, -10, 16, 16, 6, '#f8fafc'); circ(0, -13, 8, '#f8fafc'); rrect(-5 + P.face * 2, -16, 8, 6, 3, '#1e293b'); rect(-11, -8, 4, 10, '#f0abfc'); g.restore(); }
+    fx.draw(); cam.end();
+    hearts(24, 26, P.hp, 5); K.poly([[856, 16], [863, 26], [856, 36], [849, 26]], '#fde047'); txt(got + ' / ' + NEED, 932, 26, 17, got >= NEED ? '#fde047' : '#fff', 'right', 800);
+    if (!cam.see(rocket.x, rocket.y, -60)) { const a = ang(P.x, P.y, rocket.x, rocket.y); K.tri(W / 2 + Math.cos(a) * 190, H / 2 + Math.sin(a) * 190, 12, a, got >= NEED ? '#fde047' : 'rgba(255,255,255,.4)'); }
+  },
+});
+</script>
+</body>
+</html>
