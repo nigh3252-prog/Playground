@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Deepwood Archer — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* DEEPWOOD ARCHER — one bow, real arcs. Draw weight, drop and wind are yours
+   to judge; the forest only tells you which way the leaves are blowing. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx } = K;
+const GY = 440, BX = 120, BY = GY - 46, GRAV = 620;
+const SC = [
+  { name: 'THE CLEARING', tip: 'Hold R2 to draw, aim with the stick, release. Heads count double.', wind: 0, w: ['boar', 'boar', 'boar', 'boar', 'boar', 'boar'], gap: 2.6 },
+  { name: 'CROW FIELD', tip: 'The streamers show the wind. Lead your shot.', wind: 70, w: ['crow', 'crow', 'boar', 'crow', 'crow', 'crow', 'boar', 'crow', 'crow'], gap: 2.0 },
+  { name: 'THE FORD', tip: 'Shield trolls: arc one over the top onto the head', wind: -40, w: ['troll', 'boar', 'troll', 'crow', 'boar', 'troll'], gap: 4.2 },
+  { name: 'LANTERN TREE', tip: 'Put out every spirit lantern before the moon sets', wind: 50, lanterns: 7, time: 55, w: [] },
+  { name: 'STORMFRONT', tip: 'The wind will not hold still', wind: 0, gust: true, w: ['boar', 'crow', 'crow', 'troll', 'boar', 'boar', 'crow', 'crow', 'troll', 'crow', 'boar'], gap: 2.1 },
+  { name: 'THE ANTLERED KING', tip: 'Its heart only shows when it rears', wind: 30, gust: true, boss: true, w: [] },
+];
+let sc, foes, arrows, stuck, P, queue, qt, wind, clockT, lant, shotsN, hitsN, leaves;
+
+function mk(k) {
+  if (k === 'boar') return { k, x: W + 40, y: GY - 18, r: 20, hp: 2, sp: rand(84, 112), ph: rand(0, 6) };
+  if (k === 'crow') return { k, x: W + 40, y: rand(120, 290), by: 0, r: 13, hp: 1, sp: rand(96, 132), ph: rand(0, 6) };
+  if (k === 'troll') return { k, x: W + 50, y: GY - 44, r: 30, hp: 3, sp: 40, ph: 0 };
+  return { k: 'king', x: W + 80, y: GY - 80, r: 56, hp: 12, max: 12, sp: 26, ph: 0, rear: 0, t: 3 };
+}
+function load(n) {
+  sc = n; const S = SC[n]; foes = []; arrows = []; stuck = []; queue = S.w.slice(); qt = 1.5; wind = S.wind; clockT = S.time || 0; lant = [];
+  if (S.lanterns) for (let i = 0; i < S.lanterns; i++) lant.push({ x: 420 + i * 72 + rand(-14, 14), y0: rand(60, 110), len: rand(60, 230), ph: rand(0, 6), on: true });
+  if (S.boss) foes.push(mk('king'));
+  P.draw = 0; K.banner(S.name, S.tip, 3.6);
+}
+function hurt(n) { P.hp -= n; K.sfx('hurt'); fx.shake(9); fx.flash('#7f1d1d', 0.25); if (P.hp <= 0) K.lose({ title: 'OVERRUN', text: 'The wood closes over the path. You start this hunt again from the same stump.', stats: [['Hunt', (sc + 1) + ' / 6']] }); }
+function kill(e, i) { foes.splice(i, 1); fx.burst(e.x, e.y, e.k === 'crow' ? '#1f2937' : '#a16207', 16, 200, 0.6, 4, 400); K.sfx('boom'); }
+
+K.run({
+  id: 'deepwood-archer', num: 20, title: 'DEEPWOOD ARCHER', tag: 'Archery with drop and wind', color: '#86efac',
+  goal: 'Six hunts stand between you and the Antlered King. Nothing may reach your stump. Arrows fall as they fly and drift with the wind, so every shot is a guess you get better at.',
+  controls: [['LS', 'Aim'], ['r2', 'Hold to draw · release to loose'], ['cross', 'Same as R2']],
+  music: { bpm: 84, root: 45, mode: 'dorian', dens: 0.36, seed: 41, lead: 'triangle', leadVol: 0.06, long: true },
+  start() { P = { hp: 5, a: -0.35, draw: 0 }; shotsN = 0; hitsN = 0; leaves = []; for (let i = 0; i < 26; i++) leaves.push({ x: rand(0, W), y: rand(0, H), s: rand(0.5, 1.4) }); load(0); },
+  retry() { P.hp = 5; load(sc); },
+  update(dt) {
+    const S = SC[sc], lx = K.IN.lx, ly = K.IN.ly;
+    if (S.gust) wind = Math.sin(K.time * 0.45) * 110 + Math.sin(K.time * 1.3) * 40;
+    if (Math.hypot(lx, ly) > 0.35) P.a += K.angDiff(P.a, clamp(Math.atan2(ly, Math.max(0.05, lx)), -1.45, 0.5)) * Math.min(1, dt * 9);
+    const hold = K.down('r2') || K.down('cross');
+    if (hold) { if (P.draw === 0) K.sfx('charge'); P.draw = Math.min(1, P.draw + dt / 0.85); }
+    else if (P.draw > 0) { if (P.draw > 0.15) { const v = 330 + P.draw * 640; arrows.push({ x: BX + Math.cos(P.a) * 30, y: BY + Math.sin(P.a) * 30, vx: Math.cos(P.a) * v, vy: Math.sin(P.a) * v, t: 5 }); shotsN++; K.sfx('swing'); K.tone({ f: 180, f2: 90, dur: 0.12, type: 'triangle', vol: 0.2 }); } P.draw = 0; }
+    if (queue.length) { qt -= dt; if (qt <= 0) { foes.push(mk(queue.shift())); qt = S.gap * rand(0.7, 1.2); } }
+    for (let i = foes.length - 1; i >= 0; i--) {
+      const e = foes[i]; e.ph += dt; e.flash = (e.flash || 0) - dt;
+      if (e.k === 'crow') { e.x -= e.sp * dt; e.by = Math.sin(e.ph * 2.2) * 46; if (e.x < 330) e.y = lerp(e.y, BY, dt * 1.2); }
+      else if (e.k === 'king') {
+        e.t -= dt; if (e.rear > 0) { e.rear -= dt; } else { e.x -= e.sp * dt; if (e.t <= 0) { e.rear = 2.3; e.t = 6.5; K.tone({ f: 80, f2: 160, dur: 0.8, type: 'sawtooth', vol: 0.14, lp: 600 }); foes.push({ k: 'spore', x: e.x - 40, y: e.y - 60, r: 12, hp: 1, vx: -rand(110, 150), vy: -rand(180, 260), ph: 0 }, { k: 'spore', x: e.x - 40, y: e.y - 80, r: 12, hp: 1, vx: -rand(150, 190), vy: -rand(240, 300), ph: 0 }); } }
+      } else if (e.k === 'spore') { e.vy += 130 * dt; e.x += e.vx * dt; e.y += e.vy * dt; if (e.y > GY) { foes.splice(i, 1); continue; } }
+      else e.x -= e.sp * dt;
+      const ex = e.x, ey = e.y + (e.by || 0);
+      if (ex < BX + 30 || (e.k === 'spore' && dist(ex, ey, BX, BY) < 40)) { foes.splice(i, 1); hurt(e.k === 'king' ? 5 : e.k === 'troll' ? 2 : 1); if (K.scene !== 'play') return; continue; }
+    }
+    for (let i = arrows.length - 1; i >= 0; i--) {
+      const a = arrows[i]; a.t -= dt; let dead = a.t <= 0;
+      for (let s = 0; s < 4 && !dead; s++) {
+        const h = dt / 4; a.vx += wind * 0.9 * h; a.vy += GRAV * h; a.x += a.vx * h; a.y += a.vy * h;
+        if (a.y > GY) { dead = true; stuck.push({ x: a.x, y: GY, a: Math.atan2(a.vy, a.vx), t: 6 }); K.sfx('step'); break; }
+        for (let j = foes.length - 1; j >= 0; j--) {
+          const e = foes[j], ex = e.x, ey = e.y + (e.by || 0); let d = 0, crit = false, block = false;
+          if (e.k === 'boar') { if (dist(a.x, a.y, ex - 22, ey - 6) < 11) { d = 2; crit = true; } else if (dist(a.x, a.y, ex, ey) < e.r) d = 1; }
+          else if (e.k === 'crow' || e.k === 'spore') { if (dist(a.x, a.y, ex, ey) < e.r + 3) d = 1; }
+          else if (e.k === 'troll') { if (dist(a.x, a.y, ex - 4, ey - 44) < 15) { d = a.vy > 60 ? 3 : 1; crit = a.vy > 60; } else if (a.x > ex - 44 && a.x < ex - 26 && a.y > ey - 46 && a.y < ey + 40) block = true; else if (dist(a.x, a.y, ex, ey) < e.r) d = a.vx < 0 || a.x > ex ? 1 : 0, block = !d; }
+          else if (e.k === 'king') { if (e.rear > 0 && e.rear < 1.9 && dist(a.x, a.y, ex - 10, ey - 30) < 20) { d = 2; crit = true; } else if (dist(a.x, a.y, ex, ey - 20) < e.r || dist(a.x, a.y, ex - 30, ey - 110) < 44) block = true; }
+          if (block) { dead = true; K.sfx('clank'); fx.burst(a.x, a.y, '#cbd5e1', 5, 120, 0.3, 3); break; }
+          if (d) { dead = true; hitsN++; e.hp -= d; e.flash = 0.12; K.sfx('hit'); fx.burst(a.x, a.y, crit ? '#fde047' : '#fca5a5', crit ? 14 : 7, 160, 0.4, 3); if (crit) fx.text(ex, ey - 40, e.k === 'king' ? 'HEART' : 'HEAD', '#fde047', 14); if (e.hp <= 0) { if (e.k === 'king') { fx.burst(ex, ey, '#86efac', 70, 320, 1.2, 5); K.win({ title: 'THE KING KNEELS', text: 'It lowers its antlers, and the whole deepwood exhales. You unstring the bow.', stats: [['Arrows loosed', shotsN], ['Accuracy', Math.round(hitsN / Math.max(1, shotsN) * 100) + '%'], ['Hearts left', P.hp]] }); return; } kill(e, j); } break; }
+        }
+        for (const l of lant) { if (!l.on) continue; const lx2 = l.x + Math.sin(K.time * 1.3 + l.ph) * l.len * 0.25, ly2 = l.y0 + l.len; if (dist(a.x, a.y, lx2, ly2) < 15) { l.on = false; dead = true; hitsN++; K.sfx('key'); fx.burst(lx2, ly2, '#fde68a', 20, 180, 0.6, 4); break; } }
+        if (a.x > W + 60 || a.x < -60) dead = true;
+      }
+      if (dead) arrows.splice(i, 1);
+    }
+    for (let i = stuck.length - 1; i >= 0; i--) { stuck[i].t -= dt; if (stuck[i].t <= 0) stuck.splice(i, 1); }
+    let clear = !queue.length && !foes.length;
+    if (S.lanterns) { clockT -= dt; clear = lant.every((l) => !l.on); if (clockT <= 0 && !clear) { K.lose({ title: 'MOONSET', text: 'The last lanterns gutter out on their own, and whatever they were holding back comes down the path.', stats: [['Lanterns left', lant.filter((l) => l.on).length]] }); return; } }
+    if (S.boss) clear = false;
+    if (clear) { K.sfx('win'); P.hp = Math.min(5, P.hp + 1); load(sc + 1); }
+  },
+  draw(t) {
+    const g = K.g, S = SC[sc]; const sky = g.createLinearGradient(0, 0, 0, GY); const dusk = sc / 5; sky.addColorStop(0, K.hsl(lerp(200, 250, dusk), 40, lerp(60, 14, dusk))); sky.addColorStop(1, K.hsl(lerp(90, 280, dusk), 36, lerp(72, 26, dusk))); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    if (sc >= 3) circ(790, 90, 38, '#fef9c3');
+    for (let L = 0; L < 3; L++) for (let i = 0; i < 16; i++) { const x = (i * 70 + L * 23) % (W + 80) - 40, h = 190 + K.hash2(i, L, sc + 1) * 150 - L * 26, c = K.hsl(140 + L * 8, 34, lerp(36, 12, dusk) - L * 5 + 6); rect(x + 14, GY - h * 0.5, 8 + L * 3, h * 0.5, K.hsl(24, 30, 16)); K.poly([[x - 16, GY - h * 0.4], [x + 18, GY - h], [x + 52, GY - h * 0.4]], c); K.poly([[x - 8, GY - h * 0.66], [x + 18, GY - h * 1.1], [x + 44, GY - h * 0.66]], c); }
+    rect(0, GY, W, H - GY, K.hsl(110, 30, lerp(26, 10, dusk))); rect(0, GY, W, 6, K.hsl(100, 40, lerp(40, 18, dusk)));
+    /* wind streamers */
+    for (const lf of leaves) { lf.x += (wind * 1.6 + 6) * lf.s * 0.016; lf.y += (20 + Math.sin(t + lf.x * 0.02) * 12) * lf.s * 0.016; if (lf.x > W + 10) lf.x = -10; if (lf.x < -10) lf.x = W + 10; if (lf.y > GY) lf.y = 0; g.fillStyle = 'rgba(253,230,138,.6)'; g.beginPath(); g.ellipse(lf.x, lf.y, 4 * lf.s, 2 * lf.s, wind * 0.01 + lf.x * 0.03, 0, TAU); g.fill(); }
+    for (const l of lant) { const x = l.x + Math.sin(t * 1.3 + l.ph) * l.len * 0.25, y = l.y0 + l.len; line(l.x, l.y0 - 60, x, y - 10, 'rgba(0,0,0,.5)', 1.5); if (l.on) { circ(x, y, 26, 'rgba(253,230,138,.2)'); rrect(x - 9, y - 12, 18, 24, 5, '#fde68a'); } else rrect(x - 9, y - 12, 18, 24, 5, '#44403c'); rect(x - 10, y - 14, 20, 4, '#451a03'); }
+    for (const s of stuck) { g.globalAlpha = Math.min(1, s.t); line(s.x, s.y, s.x - Math.cos(s.a) * 22, s.y - Math.sin(s.a) * 22, '#e7d3b0', 2); g.globalAlpha = 1; }
+    for (const e of foes) {
+      const x = e.x, y = e.y + (e.by || 0), c = e.flash > 0 ? '#fff' : null;
+      if (e.k === 'boar') { const b = Math.abs(Math.sin(e.ph * 9)) * 4; for (const lx2 of [-12, -4, 8, 14]) rect(x + lx2, y + 10, 4, 10 - (lx2 % 8 ? b : 0), '#3f2a1c'); g.fillStyle = c || '#6b4423'; g.beginPath(); g.ellipse(x, y - b * 0.4, 24, 16, 0, 0, TAU); g.fill(); circ(x - 22, y - 6, 11, c || '#7c5230'); K.tri(x - 31, y - 2, 6, 2.6, '#f8fafc'); circ(x - 25, y - 9, 2, '#111'); }
+      else if (e.k === 'crow') { const f = Math.sin(e.ph * 12) * 12; K.poly([[x, y], [x + 22, y - f], [x + 8, y + 5]], c || '#111827'); K.poly([[x, y], [x - 6, y - f - 6], [x - 8, y + 5]], c || '#111827'); circ(x, y, 9, c || '#1f2937'); K.tri(x - 12, y, 6, Math.PI, '#f59e0b'); circ(x - 4, y - 2, 1.6, '#f87171'); }
+      else if (e.k === 'troll') { rrect(x - 24, y - 30, 48, 74, 14, c || '#4d7c0f'); circ(x - 4, y - 44, 15, c || '#65a30d'); circ(x - 9, y - 46, 2.4, '#fde047'); rect(x - 14, y + 34, 10, 12, '#365314'); rect(x + 6, y + 34, 10, 12, '#365314'); rrect(x - 44, y - 46, 16, 86, 5, '#78716c'); K.rectS(x - 44, y - 46, 16, 86, '#a8a29e', 2); }
+      else if (e.k === 'spore') { circ(x, y, 16, 'rgba(134,239,172,.25)'); circ(x, y, 10, c || '#4ade80'); }
+      else { const rr = e.rear > 0 ? -0.35 : 0; g.save(); g.translate(x, y); g.rotate(rr); for (const lx2 of [-40, -22, 26, 44]) rect(lx2, 30, 10, 54, '#292524'); rrect(-58, -34, 116, 74, 26, c || '#3f3f46'); K.poly([[-50, -24], [-84, -74], [-62, -84], [-30, -30]], c || '#3f3f46'); circ(-76, -80, 20, c || '#52525b'); circ(-84, -84, 3, '#86efac'); for (const s2 of [-1, 1]) { line(-74, -96, -74 + s2 * 26, -150, '#e7e5e4', 6); line(-74 + s2 * 14, -124, -74 + s2 * 40, -134, '#e7e5e4', 4); line(-74 + s2 * 22, -142, -74 + s2 * 44, -160, '#e7e5e4', 4); } if (e.rear > 0 && e.rear < 1.9) { circ(-10, -30, 26 + Math.sin(t * 12) * 3, 'rgba(134,239,172,.3)'); circ(-10, -30, 14, '#86efac'); } g.restore(); bar(W / 2 - 180, 58, 360, 12, e.hp / e.max, '#86efac'); }
+    }
+    for (const a of arrows) { const an = Math.atan2(a.vy, a.vx); line(a.x, a.y, a.x - Math.cos(an) * 24, a.y - Math.sin(an) * 24, '#f8fafc', 2.5); K.tri(a.x, a.y, 5, an, '#e5e7eb'); }
+    /* archer on stump */
+    rrect(BX - 30, GY - 22, 60, 24, 5, '#5b3a1e'); rect(BX - 30, GY - 22, 60, 5, '#a47148'); rrect(BX - 10, BY - 6, 20, 32, 7, '#166534'); circ(BX, BY - 16, 9, '#e9c9a4'); K.poly([[BX - 11, BY - 16], [BX, BY - 34], [BX + 9, BY - 18]], '#14532d');
+    g.save(); g.translate(BX, BY); g.rotate(P.a); g.strokeStyle = '#a16207'; g.lineWidth = 4; g.beginPath(); g.arc(8, 0, 26, -1.25, 1.25); g.stroke(); const pull = P.draw * 16; line(16.2, -24.6, 8 - pull, 0, '#f8fafc', 1.5); line(16.2, 24.6, 8 - pull, 0, '#f8fafc', 1.5); if (P.draw > 0) { line(8 - pull, 0, 40 - pull, 0, '#f8fafc', 2.5); } g.restore();
+    if (P.draw > 0.05) { let x = BX + Math.cos(P.a) * 30, y = BY + Math.sin(P.a) * 30, v = 330 + P.draw * 640, vx = Math.cos(P.a) * v, vy = Math.sin(P.a) * v; for (let i = 0; i < 7; i++) { for (let s = 0; s < 3; s++) { vy += GRAV * 0.016; x += vx * 0.016; y += vy * 0.016; } circ(x, y, 2.4, 'rgba(255,255,255,' + (0.7 - i * 0.09) + ')'); } }
+    fx.draw();
+    hearts(24, 26, P.hp, 5); txt('HUNT ' + (sc + 1) + ' / 6 · ' + S.name, W / 2, 26, 14, '#dcfce7', 'center', 800);
+    txt('DRAW', 150, 26, 11, '#dcfce7', 'left', 800); bar(190, 17, 110, 18, P.draw, P.draw >= 1 ? '#fde047' : '#86efac');
+    rrect(800, 12, 140, 30, 8, 'rgba(8,16,12,.7)'); txt('WIND', 812, 27, 10, '#dcfce7', 'left', 800); const wl = clamp(wind / 150, -1, 1) * 40; line(890, 27, 890 + wl, 27, '#fde68a', 4); if (Math.abs(wl) > 3) K.tri(890 + wl, 27, 8, wl > 0 ? 0 : Math.PI, '#fde68a'); else circ(890, 27, 4, '#fde68a');
+    if (S.lanterns) txt(Math.ceil(clockT) + 's', W / 2, 54, 20, clockT < 12 ? '#fca5a5' : '#fff', 'center', 900);
+    else if (!S.boss) txt((queue.length + foes.length) + ' left', W / 2, 50, 12, '#dcfce7', 'center', 700);
+  },
+});
+</script>
+</body>
+</html>
