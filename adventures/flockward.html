@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Flockward — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* FLOCKWARD — you never touch the sheep. You only decide where they do not
+   want to be. Four valleys, one flock, and wolves that count stragglers. */
+const { W, H, TAU, rand, irand, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, fx, cam } = K;
+const LEN = 3000, TOP = 70, BOT = 510;
+const ST = [
+  { name: 'HOME MEADOW', tip: 'Get behind the flock and walk it east to the pen', rocks: 14, rav: 0, wolves: 0, sky: '#7cc36a' },
+  { name: 'THE CUT', tip: 'Ravines. Only the plank bridges are safe.', rocks: 8, rav: 3, wolves: 0, sky: '#8fbf5f' },
+  { name: 'WOLF WOOD', tip: 'Bark at wolves. They go for whoever strays.', rocks: 26, rav: 0, wolves: 3, sky: '#4f8f4a' },
+  { name: 'LAST LIGHT', tip: 'Everything at once, and the sun is going', rocks: 16, rav: 3, wolves: 4, sky: '#3f6b4a' },
+];
+let D, sheep, rocks, ravs, wolves, stage, startN, lost, bark, penX;
+
+function build() {
+  const r = K.rng(irand(1, 1e9)), S = ST[stage]; rocks = []; ravs = []; wolves = []; penX = LEN - 260;
+  for (let i = 0; i < S.rav; i++) { const x = 800 + i * 620 + r.range(-80, 80), gy = r.range(TOP + 90, BOT - 90); ravs.push({ x, w: 70, gy, gh: 110 }); }
+  for (let i = 0; i < 300 && rocks.length < S.rocks; i++) {
+    const x = r.range(420, penX - 160), y = r.range(TOP + 20, BOT - 20), rad = r.range(16, 34);
+    if (ravs.some((v) => Math.abs(x - v.x) < 150) || rocks.some((o) => dist(o.x, o.y, x, y) < o.r + rad + 70)) continue;
+    rocks.push({ x, y, r: rad, tree: stage >= 2 && r() < 0.7 });
+  }
+  D = { x: 90, y: 290, r: 9, fx: 1, fy: 0, run: 0 };
+  sheep = []; for (let i = 0; i < startN; i++) sheep.push({ x: 220 + r.range(-70, 70), y: 290 + r.range(-90, 90), vx: 0, vy: 0, r: 9, panic: 0, ph: r() * TAU, in: false });
+  bark = 0; cam.x = W / 2; cam.y = H / 2;
+  K.banner(S.name, S.tip, 3.4);
+}
+function lose1(s, why) { sheep.splice(sheep.indexOf(s), 1); lost++; K.sfx('bad'); fx.text(s.x, s.y - 20, why, '#fecaca', 14); if (sheep.length < 4) K.lose({ title: 'THE FLOCK IS GONE', text: 'Fewer than four left. No shepherd pays for that. Take this valley again.', stats: [['Valley', stage + 1], ['Lost', lost]] }); }
+
+K.run({
+  id: 'flockward', num: 12, title: 'FLOCKWARD', tag: 'Herding by pressure', color: '#a3e635',
+  goal: 'Drive the flock through four valleys to the fold with at least four sheep left. They run from you, bolt from your bark, and drift toward your whistle.',
+  controls: [['LS', 'Run'], ['cross', 'Bark (scatter / scare wolves)'], ['square', 'Hold: whistle them to you']],
+  music: { bpm: 108, root: 55, mode: 'major', dens: 0.5, seed: 12, lead: 'triangle', prog: [0, 4, 5, 3] },
+  start() { stage = 0; startN = 12; lost = 0; build(); },
+  retry() { build(); },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly);
+    if (m > 0.2) { D.fx = lx / m; D.fy = ly / m; D.run += dt * 14 * m; }
+    D.x = clamp(D.x + lx * 250 * dt, 20, LEN - 20); D.y = clamp(D.y + ly * 250 * dt, TOP, BOT);
+    for (const o of rocks) { const d = dist(D.x, D.y, o.x, o.y); if (d < o.r + D.r) { const a = ang(o.x, o.y, D.x, D.y); D.x = o.x + Math.cos(a) * (o.r + D.r); D.y = o.y + Math.sin(a) * (o.r + D.r); } }
+    bark -= dt; const whistle = K.down('square');
+    if (K.hit('cross') && bark <= 0.6) { bark = 1; K.tone({ f: 420, f2: 180, dur: 0.12, type: 'sawtooth', vol: 0.25, lp: 1600 }); K.noise({ f: 1200, dur: 0.1, vol: 0.2 }); for (const s of sheep) if (dist(s.x, s.y, D.x, D.y) < 230) s.panic = 1.1; for (const w of wolves) if (dist(w.x, w.y, D.x, D.y) < 260) { w.flee = 4; if (w.has) { sheep.push(w.has); w.has.x = w.x; w.has.y = w.y; w.has = null; lost--; fx.text(w.x, w.y - 20, 'DROPPED!', '#bbf7d0', 14); } } }
+    if (whistle && Math.floor(K.time * 5) !== Math.floor((K.time - dt) * 5)) K.tone({ f: 1500 + Math.sin(K.time * 9) * 200, dur: 0.12, type: 'sine', vol: 0.06 });
+    /* flock */
+    let cx = 0, cy = 0; for (const s of sheep) { cx += s.x; cy += s.y; } cx /= sheep.length || 1; cy /= sheep.length || 1;
+    let inPen = 0;
+    for (let i = sheep.length - 1; i >= 0; i--) {
+      const s = sheep[i]; s.panic -= dt; s.ph += dt;
+      let ax = 0, ay = 0; const dd = dist(s.x, s.y, D.x, D.y), da = ang(D.x, D.y, s.x, s.y);
+      const fear = s.panic > 0 ? 260 : 150;
+      if (dd < fear) { const k = (fear - dd) / fear * (s.panic > 0 ? 900 : 620); ax += Math.cos(da) * k; ay += Math.sin(da) * k; }
+      else if (whistle && dd < 520) { ax -= Math.cos(da) * 150; ay -= Math.sin(da) * 150; }
+      let nx = 0, ny = 0, nn = 0;
+      for (const o of sheep) { if (o === s) continue; const d = dist(s.x, s.y, o.x, o.y); if (d < 26 && d > 0) { ax += (s.x - o.x) / d * (26 - d) * 22; ay += (s.y - o.y) / d * (26 - d) * 22; } if (d < 150) { nx += o.x; ny += o.y; nn++; ax += o.vx * 0.5; ay += o.vy * 0.5; } }
+      if (nn) { ax += (nx / nn - s.x) * 0.9; ay += (ny / nn - s.y) * 0.9; } else { ax += (cx - s.x) * 0.25; ay += (cy - s.y) * 0.25; }
+      ax += Math.cos(s.ph * 0.7 + i) * 26; ay += Math.sin(s.ph * 0.9 + i * 2) * 26;
+      for (const w of wolves) { const d = dist(s.x, s.y, w.x, w.y); if (d < 120) { ax += (s.x - w.x) / d * 500; ay += (s.y - w.y) / d * 500; } }
+      s.vx += ax * dt; s.vy += ay * dt; s.vx *= 1 - 2.6 * dt; s.vy *= 1 - 2.6 * dt;
+      const sp = Math.hypot(s.vx, s.vy), mx = s.panic > 0 ? 215 : 135; if (sp > mx) { s.vx *= mx / sp; s.vy *= mx / sp; }
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      if (s.y < TOP) { s.y = TOP; s.vy = Math.abs(s.vy); } if (s.y > BOT) { s.y = BOT; s.vy = -Math.abs(s.vy); } if (s.x < 20) { s.x = 20; s.vx = Math.abs(s.vx); }
+      for (const o of rocks) { const d = dist(s.x, s.y, o.x, o.y); if (d < o.r + s.r) { const a = ang(o.x, o.y, s.x, s.y); s.x = o.x + Math.cos(a) * (o.r + s.r); s.y = o.y + Math.sin(a) * (o.r + s.r); } }
+      /* pen: a fence with a mouth on the west side */
+      if (s.x > penX && s.x < penX + 14 && (s.y < 220 || s.y > 360)) { s.x = s.x < penX + 7 ? penX : penX + 14; s.vx *= -0.5; }
+      if (s.x > LEN - 40) { s.x = LEN - 40; s.vx = -Math.abs(s.vx); }
+      s.in = s.x > penX + 14; if (s.in) inPen++;
+      let fell = false; for (const v of ravs) if (s.x > v.x && s.x < v.x + v.w && !(s.y > v.gy && s.y < v.gy + v.gh)) fell = true;
+      if (fell) { fx.burst(s.x, s.y, '#f8fafc', 10, 120, 0.5, 4); lose1(s, 'FELL'); if (K.scene !== 'play') return; }
+    }
+    for (const v of ravs) if (D.x > v.x && D.x < v.x + v.w && !(D.y > v.gy && D.y < v.gy + v.gh)) { D.x = D.x < v.x + v.w / 2 ? v.x : v.x + v.w; }
+    /* wolves */
+    const S = ST[stage];
+    if (S.wolves && wolves.length < S.wolves && Math.random() < dt * 0.22 && cx > 500 && cx < penX - 300) { const top = Math.random() < 0.5; wolves.push({ x: cx + rand(-200, 500), y: top ? TOP - 30 : BOT + 30, vx: 0, vy: 0, flee: 0, has: null, t: 0 }); K.tone({ f: 300, f2: 520, dur: 0.9, type: 'sine', vol: 0.12 }); }
+    for (let i = wolves.length - 1; i >= 0; i--) {
+      const w = wolves[i]; w.flee -= dt; w.t += dt; let tx, ty, sp = 150;
+      if (w.flee > 0 || w.has) { tx = w.x; ty = w.y < H / 2 ? -200 : H + 200; sp = w.has ? 120 : 220; if (w.y < -60 || w.y > H + 60) { wolves.splice(i, 1); continue; } }
+      else {
+        let best = null, bs = -1; for (const s of sheep) { if (s.in) continue; const sc = dist(s.x, s.y, cx, cy) + dist(s.x, s.y, D.x, D.y) * 0.5 - dist(s.x, s.y, w.x, w.y) * 0.4; if (sc > bs) { bs = sc; best = s; } }
+        if (!best) { w.flee = 9; continue; } tx = best.x; ty = best.y;
+        if (dist(w.x, w.y, D.x, D.y) < 70) w.flee = 2.5;
+        else if (dist(w.x, w.y, best.x, best.y) < 15) { w.has = best; sheep.splice(sheep.indexOf(best), 1); lost++; K.sfx('hurt'); fx.text(w.x, w.y - 22, 'TAKEN! Bark!', '#fecaca', 14); if (sheep.length < 4) { K.lose({ title: 'THE FLOCK IS GONE', text: 'Fewer than four left. Take this valley again.', stats: [['Valley', stage + 1], ['Lost', lost]] }); return; } }
+      }
+      const a = ang(w.x, w.y, tx, ty); w.x += Math.cos(a) * sp * dt; w.y += Math.sin(a) * sp * dt; w.a = a;
+    }
+    if (sheep.length && inPen === sheep.length) {
+      K.sfx('win');
+      if (stage === 3) { K.win({ title: 'SAFE IN THE FOLD', text: sheep.length + ' of twelve came home. The dog gets the good spot by the fire.', stats: [['Sheep home', sheep.length + ' / 12'], ['Lost on the way', lost]] }); return; }
+      stage++; startN = sheep.length; build();
+    }
+    cam.x = clamp(K.damp(cam.x, (D.x * 0.6 + cx * 0.4) + D.fx * 60, 4, dt), W / 2, LEN - W / 2); cam.y = H / 2;
+  },
+  draw(t) {
+    const g = K.g, S = ST[stage]; rect(0, 0, W, H, S.sky);
+    cam.begin();
+    for (let x = Math.floor((cam.x - W / 2) / 60) * 60; x < cam.x + W / 2; x += 60) for (let y = TOP - 10; y < BOT + 30; y += 60) { const n = K.hash2(x, y, stage + 3); if (n > 0.55) { line(x + n * 40, y + 24, x + n * 40 + 3, y + 14, 'rgba(0,60,0,.25)', 2); line(x + n * 40 + 6, y + 24, x + n * 40 + 10, y + 16, 'rgba(0,60,0,.25)', 2); } if (n < 0.08) circ(x + 30, y + 30, 3, '#fde047'); }
+    rect(cam.x - W / 2, 0, W, TOP - 16, 'rgba(20,50,25,.55)'); rect(cam.x - W / 2, BOT + 16, W, 60, 'rgba(20,50,25,.55)');
+    for (let x = Math.floor((cam.x - W / 2) / 44) * 44; x < cam.x + W / 2 + 44; x += 44) { circ(x, TOP - 26 + K.hash2(x, 1, 2) * 10, 24, '#1f5a2c'); circ(x + 20, BOT + 32 - K.hash2(x, 2, 2) * 10, 24, '#1f5a2c'); }
+    for (const v of ravs) { rect(v.x, 0, v.w, H, '#1b1410'); rect(v.x + 8, 0, v.w - 16, H, '#0c0907'); rect(v.x - 4, v.gy, v.w + 8, v.gh, '#a47148'); for (let y = v.gy + 6; y < v.gy + v.gh; y += 14) line(v.x - 4, y, v.x + v.w + 4, y, '#7a5230', 2); }
+    /* pen */
+    rect(penX + 14, TOP - 10, LEN - penX, BOT - TOP + 40, 'rgba(250,240,200,.18)');
+    for (let y = TOP - 10; y < BOT + 30; y += 24) if (y < 215 || y > 360) { rect(penX + 3, y, 8, 20, '#8b5a2b'); }
+    line(penX + 7, TOP - 10, penX + 7, 220, '#a47148', 4); line(penX + 7, 360, penX + 7, BOT + 30, '#a47148', 4);
+    txt('FOLD', penX + 130, 100, 30, 'rgba(255,255,255,.35)', 'center', 900);
+    const drawables = [];
+    for (const o of rocks) drawables.push([o.y, () => { if (o.tree) { rect(o.x - 5, o.y - 6, 10, 20, '#5b3a1e'); circ(o.x, o.y - 26, o.r + 10, '#1f6b34'); circ(o.x - 8, o.y - 32, o.r * 0.5, '#2f8a48'); } else { circ(o.x + 4, o.y + 6, o.r, 'rgba(0,0,0,.2)'); circ(o.x, o.y, o.r, '#8b949e'); circ(o.x - o.r * 0.25, o.y - o.r * 0.3, o.r * 0.5, '#aab3bd'); } }]);
+    for (const s of sheep) drawables.push([s.y, () => { const f = s.vx < 0 ? -1 : 1, hop = Math.abs(Math.sin(s.ph * 10)) * Math.min(3, Math.hypot(s.vx, s.vy) / 30); circ(s.x + 2, s.y + 8, 9, 'rgba(0,0,0,.18)'); circ(s.x, s.y - hop, 10, s.panic > 0 ? '#fff' : '#f3f4f6'); circ(s.x - 5, s.y - 4 - hop, 6, '#f9fafb'); circ(s.x + 5, s.y - 5 - hop, 6, '#f9fafb'); circ(s.x + f * 10, s.y - 3 - hop, 5, '#1f2937'); }]);
+    for (const w of wolves) drawables.push([w.y, () => { g.save(); g.translate(w.x, w.y); g.rotate(w.a || 0); g.fillStyle = '#374151'; g.beginPath(); g.ellipse(0, 0, 16, 8, 0, 0, TAU); g.fill(); K.poly([[12, -6], [26, 0], [12, 6]], '#4b5563'); circ(18, -2, 1.6, '#fde047'); circ(18, 2, 1.6, '#fde047'); line(-14, 0, -24, Math.sin(t * 12) * 4, '#374151', 4); g.restore(); if (w.has) circ(w.x, w.y - 10, 8, '#f3f4f6'); }]);
+    drawables.push([D.y, () => { const hop = Math.abs(Math.sin(D.run)) * 3; circ(D.x + 2, D.y + 7, 8, 'rgba(0,0,0,.2)'); g.save(); g.translate(D.x, D.y - hop); g.rotate(Math.atan2(D.fy, D.fx)); g.fillStyle = '#1f2937'; g.beginPath(); g.ellipse(0, 0, 13, 7, 0, 0, TAU); g.fill(); circ(11, 0, 6, '#f8fafc'); circ(-2, 0, 5, '#f8fafc'); circ(15, 0, 2, '#111'); line(-12, 0, -20, Math.sin(t * 16) * 5, '#1f2937', 3); g.restore(); }]);
+    drawables.sort((a, b) => a[0] - b[0]); for (const d of drawables) d[1]();
+    if (bark > 0.5) ring(D.x, D.y, (1 - bark) * 460, 'rgba(255,255,255,' + (bark - 0.5) * 1.6 + ')', 4);
+    if (K.down('square')) { for (let k = 0; k < 3; k++) ring(D.x, D.y, 30 + ((t * 80 + k * 40) % 120), 'rgba(253,224,71,.3)', 2); }
+    fx.draw(); cam.end();
+    if (stage === 3) { rect(0, 0, W, H, 'rgba(30,20,60,' + clamp(0.1 + K.time * 0.0015, 0.1, 0.42) + ')'); }
+    rect(0, 0, W, 40, 'rgba(10,25,12,.7)');
+    txt('VALLEY ' + (stage + 1) + ' / 4 · ' + S.name, 20, 21, 14, '#d9f99d', 'left', 800);
+    for (let i = 0; i < 12; i++) circ(420 + i * 18, 21, 6, i < sheep.length ? (sheep[i].in ? '#fde047' : '#f3f4f6') : 'rgba(255,255,255,.12)');
+    txt(sheep.length + ' sheep', 650, 21, 14, sheep.length < 6 ? '#fecaca' : '#fff', 'left', 800);
+    const f = clamp(D.x / LEN, 0, 1); rect(760, 19, 170, 4, 'rgba(255,255,255,.2)'); circ(760 + 170 * f, 21, 5, '#fff'); rect(926, 13, 4, 16, '#fde047');
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Borrowed Skins — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* BORROWED SKINS — you are a spirit with seven seconds of essence and no
+   body. Every creature in the keep is a key that fits a different lock. */
+const { W, H, TAU, rand, irand, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx } = K;
+const TS = 40, GW = 24, GH = 13, OY = 10;
+const LV = [
+  { name: 'A SMALL DOOR', tip: 'Press ✕ next to the rat to borrow it. Only a rat fits through a rat hole.', m: [
+    '#..........#...........#', '#..........#...........#', '#..S.......#...........#', '#..........#.........E.#', '#......R...r...........#', '#..........#...........#', '#..........#...........#'] },
+  { name: "THE GUARD'S KEY", tip: 'The violet ward stops spirits, not bodies. Guards open guard doors.', m: [
+    '#.......w......#.......#', '#.......w......#.......#', '#..S....w......D....E..#', '#....G..w......#.......#', '#.......w......#.......#'] },
+  { name: 'LEAP OF FAITH', tip: 'Gold floor burns flesh: leave the body with ✕ and cross as yourself. Stay out of the lantern light.', m: [
+    '#.....wPPPP....s.......#', '#.....wPPPP....s.......#', '#.S...wPPPP....s....E..#', '#...B.wPPPP....s.V.....#', '#.....wPPPP....s.......#'] },
+  { name: "KNIGHT'S ERRAND", tip: 'A knight walks through cracked walls. Your essence drains while you are bodiless.', m: [
+    '#.........#.....#..s...#', '#.........#..K..X..s...#', '#..S......#.....#..s.V.#', '#.....R...r.....#..s...#', '#.........#.....#..s..E#', '#.........#.....#..s...#', '#.........#.....#..s...#'] },
+  { name: 'RELAY', tip: 'Exorcists cannot turn a knight. A knight can certainly turn them.', m: [
+    '#......#....wPPP...#...#', '#......#....wPPP...#.V.#', '#.S..G.D..B.wPPP.K.X...#', '#......#....wPPP...#..E#', '#......#....wPPP...#...#'] },
+  { name: 'THE CROWN ROOM', tip: 'Every skin you have worn. More than one way through.', m: [
+    '#....#.......s....#.PP.#', '#.S..r...O...s.B..w.PP.#', '#....#.......s..V.w.PP.#', '#.R..#########....#.PPE#', '#....#...K...X....#.PP.#', '#....D.......#....#.PP.#', '#.G..#.......#....#.PP.#'] },
+];
+const SPD = { spirit: 215, R: 235, G: 125, K: 105, B: 185 }, RAD = { spirit: 9, R: 8, G: 12, K: 14, B: 10 };
+const NAMES = { R: 'RAT', G: 'GUARD', K: 'KNIGHT', B: 'BAT' };
+let G, P, hosts, exos, lvl, hp, exitP, startP, deaths;
+
+function blocked(kind, t) {
+  if (t === '#') return true;
+  if (t === 'r') return kind !== 'R';
+  if (t === 'D') return true;
+  if (t === 'X') return true;
+  if (t === 'P') return kind !== 'B' && kind !== 'spirit';
+  if (t === 'w') return kind === 'spirit';
+  if (t === 's') return kind !== 'spirit';
+  return false;
+}
+const tile = (x, y) => (x < 0 || y < 0 || x >= GW || y >= GH ? '#' : G[y][x]);
+function load(n) {
+  lvl = n; const L = LV[n], pad = Math.floor((GH - L.m.length) / 2); G = [];
+  for (let y = 0; y < GH; y++) { const row = L.m[y - pad]; G.push((row || '########################').split('')); }
+  hosts = []; exos = [];
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+    const c = G[y][x], px = x * TS + 20, py = y * TS + 20;
+    if (c === 'S') { startP = { x: px, y: py }; G[y][x] = '.'; }
+    else if (c === 'E') { exitP = { x: px, y: py }; G[y][x] = '.'; }
+    else if ('RGKB'.includes(c)) { hosts.push({ k: c, x: px, y: py, r: RAD[c], a: 0, t: rand(0, 3) }); G[y][x] = '.'; }
+    else if (c === 'O' || c === 'V') { exos.push({ x: px, y: py, r: 12, dx: c === 'O' ? 1 : 0, dy: c === 'V' ? 1 : 0, dead: false, alert: 0 }); G[y][x] = '.'; }
+  }
+  P = { x: startP.x, y: startP.y, r: 9, host: null, ess: 1, fx: 1, fy: 0, inv: 1 };
+  K.banner(L.name, L.tip, 4.2);
+}
+function caught(why) {
+  if (P.inv > 0) return; hp--; deaths++; K.sfx('hurt'); fx.shake(10); fx.flash('#fde68a', 0.3);
+  if (hp <= 0) { K.lose({ title: 'UNMADE', text: why + ' You gather yourself at the door of this room.', stats: [['Room', (lvl + 1) + ' / ' + LV.length]] }); return; }
+  K.hint(why, 2); const n = lvl; load(n); K.banner(LV[n].name, why, 2);
+}
+
+K.run({
+  id: 'borrowed-skins', num: 11, title: 'BORROWED SKINS', tag: 'Possession puzzle-adventure', color: '#c4b5fd',
+  goal: 'A spirit cannot open a door, cross a ward, or last long alone. Borrow the rat, the guard, the bat and the knight, each for the one thing it can do, and reach the stair in all six rooms.',
+  controls: [['LS', 'Drift / walk'], ['cross', 'Possess · leave body']],
+  music: { bpm: 80, root: 46, mode: 'minor', dens: 0.34, seed: 77, lead: 'sine', leadVol: 0.07, long: true },
+  start() { hp = 5; deaths = 0; load(0); },
+  retry() { hp = 5; load(lvl); },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly), kind = P.host ? P.host.k : 'spirit';
+    if (m > 0.25) { P.fx = lx / m; P.fy = ly / m; }
+    P.inv -= dt; P.r = RAD[kind];
+    const sol = (x, y) => blocked(kind, tile(x, y));
+    const h = K.moveC(P, lx * SPD[kind] * dt, ly * SPD[kind] * dt, sol, TS);
+    if ((h.hx || h.hy) && P.host) {
+      const tx = Math.floor((P.x + P.fx * (P.r + 6)) / TS), ty = Math.floor((P.y + P.fy * (P.r + 6)) / TS), t = tile(tx, ty);
+      if (t === 'D' && kind === 'G') { G[ty][tx] = '.'; K.sfx('door'); fx.burst(tx * TS + 20, ty * TS + 20, '#fbbf24', 12, 120, 0.5, 4); }
+      else if (t === 'X' && kind === 'K') { G[ty][tx] = '.'; K.sfx('boom'); fx.shake(8); fx.burst(tx * TS + 20, ty * TS + 20, '#a8a29e', 26, 220, 0.7, 5); }
+      else if ((t === 'D' || t === 'X' || t === 'r' || t === 's' || t === 'P') && !P.told) { P.told = 1.5; K.sfx('bad'); K.hint({ D: 'Only a guard has the key.', X: 'Cracked, but it needs a knight.', r: 'Only a rat fits.', s: 'Hallowed ground burns a body. Leave it with ✕.', P: 'Only wings cross a pit.' }[t], 2); }
+    } else if ((h.hx || h.hy) && !P.host && !P.told) { const t = tile(Math.floor((P.x + P.fx * 16) / TS), Math.floor((P.y + P.fy * 16) / TS)); if (t === 'w') { P.told = 1.5; K.hint('The ward holds spirits back. A body walks through.', 2); } }
+    P.told = Math.max(0, (P.told || 0) - dt);
+    if (P.host) { P.host.x = P.x; P.host.y = P.y; if (m > 0.2) P.host.a = Math.atan2(ly, lx); P.ess = Math.min(1, P.ess + dt * 0.8); }
+    else {
+      P.ess -= dt / 7; if (Math.random() < dt * 20) fx.spark(P.x, P.y, rand(-20, 20), rand(-40, 0), '#c4b5fd', 0.5, 3);
+      if (P.ess <= 0) { P.inv = 0; caught('Your essence ran out.'); return; }
+    }
+    if (K.hit('cross')) {
+      if (P.host) {
+        const e = { x: P.x, y: P.y, r: 9 }; K.moveC(e, P.fx * 34, P.fy * 34, (x, y) => blocked('spirit', tile(x, y)), TS);
+        P.host.t = 2; P.host = null; P.x = e.x; P.y = e.y; K.sfx('dash'); fx.burst(P.x, P.y, '#c4b5fd', 12, 120, 0.4, 3);
+      } else {
+        let best = null, bd = 46; for (const o of hosts) { const d = dist(P.x, P.y, o.x, o.y); if (d < bd) { bd = d; best = o; } }
+        if (best) { P.host = best; P.x = best.x; P.y = best.y; K.sfx('power'); fx.burst(P.x, P.y, '#c4b5fd', 16, 140, 0.4, 3); fx.text(P.x, P.y - 26, NAMES[best.k], '#ddd6fe', 14); }
+        else K.sfx('bad');
+      }
+    }
+    for (const o of hosts) if (o !== P.host) o.t += dt;
+    for (const e of exos) {
+      if (e.dead) continue;
+      const nx = e.x + e.dx * 62 * dt, ny = e.y + e.dy * 62 * dt, t = tile(Math.floor((nx + e.dx * 16) / TS), Math.floor((ny + e.dy * 16) / TS));
+      if (t !== '.') { e.dx *= -1; e.dy *= -1; } else { e.x = nx; e.y = ny; }
+      const d = dist(e.x, e.y, P.x, P.y), fa = Math.atan2(e.dy, e.dx);
+      if (kind === 'K') { if (d < 30) { e.dead = true; K.sfx('hit'); fx.burst(e.x, e.y, '#fde68a', 24, 200, 0.6, 4); fx.shake(6); } continue; }
+      const seen = d < 26 || (d < 170 && Math.abs(K.angDiff(fa, ang(e.x, e.y, P.x, P.y))) < 0.55 && K.los(e.x, e.y, P.x, P.y, (x, y) => '#DXr'.includes(tile(x, y)), TS));
+      e.alert = seen ? e.alert + dt * 2.6 : Math.max(0, e.alert - dt);
+      if (e.alert >= 1) { caught('The exorcist saw you.'); return; }
+    }
+    if (dist(P.x, P.y, exitP.x, exitP.y) < 24) {
+      if (lvl === LV.length - 1) K.win({ title: 'THE CROWN IS YOURS', text: 'It fits no head you have. You take it anyway, and the keep forgets you were ever a ghost.', stats: [['Times unmade', deaths], ['Hearts left', hp]] });
+      else { K.sfx('key'); load(lvl + 1); }
+    }
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#0d0b18'); g.save(); g.translate(fx.shakeT ? rand(-fx.shakeT, fx.shakeT) : 0, OY);
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const c = G[y][x], px = x * TS, py = y * TS;
+      if (c === '#') { if ([[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]].some(([a, b]) => tile(x + a, y + b) !== '#')) { rect(px, py, TS, TS, '#2b2540'); rect(px, py, TS, 7, '#453c66'); line(px, py + 22, px + TS, py + 22, '#1f1a30', 2); } continue; }
+      rect(px, py, TS, TS, (x + y) % 2 ? '#1c1830' : '#201c36');
+      if (c === 'r') { rect(px, py, TS, TS, '#2b2540'); rect(px, py, TS, 7, '#453c66'); g.fillStyle = '#07060c'; g.beginPath(); g.arc(px + 20, py + 34, 11, Math.PI, 0); g.lineTo(px + 31, py + 40); g.lineTo(px + 9, py + 40); g.fill(); }
+      else if (c === 'D') { rrect(px + 3, py + 1, 34, 38, 5, '#92400e'); rect(px + 3, py + 12, 34, 4, '#451a03'); rect(px + 3, py + 26, 34, 4, '#451a03'); circ(px + 20, py + 21, 4, '#fbbf24'); }
+      else if (c === 'X') { rect(px, py, TS, TS, '#3a3352'); line(px + 6, py + 4, px + 22, py + 20, '#0d0b18', 3); line(px + 22, py + 20, px + 14, py + 36, '#0d0b18', 3); line(px + 22, py + 20, px + 36, py + 26, '#0d0b18', 2); }
+      else if (c === 'P') { rect(px, py, TS, TS, '#05040a'); if (tile(x, y - 1) !== 'P') rect(px, py, TS, 8, '#12101f'); }
+      else if (c === 'w') { for (let k = 0; k < 4; k++) { g.globalAlpha = 0.35 + 0.3 * Math.sin(t * 4 + k + y); rect(px + 16, py + k * 10, 8, 8, '#a78bfa'); } g.globalAlpha = 0.18; rect(px + 10, py, 20, TS, '#a78bfa'); g.globalAlpha = 1; }
+      else if (c === 's') { rect(px, py, TS, TS, 'rgba(253,224,71,.16)'); line(px + 20, py + 8, px + 20, py + 32, 'rgba(253,224,71,.6)', 3); line(px + 12, py + 16, px + 28, py + 16, 'rgba(253,224,71,.6)', 3); }
+    }
+    for (let i = 0; i < 4; i++) rect(exitP.x - 16 + i * 2, exitP.y - 14 + i * 7, 32 - i * 4, 5, '#6ee7b7'); ring(exitP.x, exitP.y, 24 + Math.sin(t * 5) * 3, 'rgba(110,231,183,.7)', 2);
+    for (const e of exos) {
+      if (e.dead) continue; const fa = Math.atan2(e.dy, e.dx);
+      g.fillStyle = 'rgba(253,230,138,' + (0.16 + e.alert * 0.3) + ')'; g.beginPath(); g.moveTo(e.x, e.y);
+      for (let i = 0; i <= 12; i++) { const a = fa - 0.55 + i / 12 * 1.1; let d = 0; while (d < 170 && !'#DXr'.includes(tile(Math.floor((e.x + Math.cos(a) * (d + 8)) / TS), Math.floor((e.y + Math.sin(a) * (d + 8)) / TS)))) d += 8; g.lineTo(e.x + Math.cos(a) * d, e.y + Math.sin(a) * d); }
+      g.fill(); rrect(e.x - 10, e.y - 12, 20, 26, 8, '#f8fafc'); circ(e.x, e.y - 14, 8, '#e2c9a8'); circ(e.x + e.dx * 14, e.y + e.dy * 14, 5, '#fde047');
+    }
+    for (const o of hosts) {
+      const mine = o === P.host, bob = mine ? 0 : Math.sin(o.t * 2) * 1.5; g.save(); g.translate(o.x, o.y + bob);
+      if (mine) { circ(0, 0, o.r + 9 + Math.sin(t * 8) * 2, 'rgba(196,181,253,.3)'); }
+      if (o.k === 'R') { g.rotate(o.a); g.fillStyle = '#9ca3af'; g.beginPath(); g.ellipse(0, 0, 10, 6, 0, 0, TAU); g.fill(); circ(8, 0, 4, '#9ca3af'); line(-9, 0, -18, 3, '#f9a8d4', 2); }
+      else if (o.k === 'G') { rrect(-10, -12, 20, 26, 7, '#334155'); circ(0, -14, 8, '#e2c9a8'); rect(-9, -22, 18, 6, '#64748b'); line(12, -18, 12, 14, '#94a3b8', 2); }
+      else if (o.k === 'K') { rrect(-13, -13, 26, 30, 8, '#94a3b8'); rrect(-9, -24, 18, 16, 6, '#cbd5e1'); rect(-6, -18, 12, 3, '#0f172a'); rect(-3, -30, 6, 7, '#ef4444'); }
+      else { const f = Math.sin(t * 14) * 8; K.poly([[0, 0], [-18, -f], [-8, 6]], '#4c1d95'); K.poly([[0, 0], [18, -f], [8, 6]], '#4c1d95'); circ(0, 0, 7, '#6d28d9'); }
+      if (mine) { circ(-3, o.k === 'K' ? -17 : o.k === 'G' ? -15 : -1, 2, '#ddd6fe'); circ(3, o.k === 'K' ? -17 : o.k === 'G' ? -15 : -1, 2, '#ddd6fe'); }
+      g.restore();
+      if (!P.host && dist(P.x, P.y, o.x, o.y) < 46) K.glyph('cross', o.x, o.y - 34, 10);
+    }
+    if (!P.host && (P.inv <= 0 || Math.floor(t * 14) % 2)) { const a = 0.4 + P.ess * 0.6; g.globalAlpha = a; circ(P.x, P.y, 15 + Math.sin(t * 6) * 2, 'rgba(196,181,253,.3)'); circ(P.x, P.y, 9, '#ddd6fe'); K.poly([[P.x - 8, P.y + 3], [P.x - 4, P.y + 16 + Math.sin(t * 9) * 3], [P.x, P.y + 9], [P.x + 4, P.y + 16 + Math.cos(t * 9) * 3], [P.x + 8, P.y + 3]], '#ddd6fe'); circ(P.x - 3, P.y - 1, 1.6, '#1e1b4b'); circ(P.x + 3, P.y - 1, 1.6, '#1e1b4b'); g.globalAlpha = 1; }
+    fx.draw(); g.restore();
+    hearts(24, 24, hp, 5, '#c4b5fd');
+    txt('ROOM ' + (lvl + 1) + ' / ' + LV.length + ' · ' + LV[lvl].name, W / 2, 24, 14, '#ddd6fe', 'center', 800);
+    txt(P.host ? 'WEARING: ' + NAMES[P.host.k] : 'ESSENCE', 760, 24, 12, '#c4b5fd', 'right', 800); bar(770, 15, 170, 18, P.ess, P.ess < 0.3 ? '#ef4444' : '#a78bfa');
+  },
+});
+</script>
+</body>
+</html>
