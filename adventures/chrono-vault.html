@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Chrono Vault — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* CHRONO VAULT — every door needs a hand on its plate, and you only have
+   two. So you rewind, and your past selves walk their old paths beside you. */
+const { W, H, TAU, rand, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, fx } = K;
+const TS = 40, GW = 24, GH = 13, OY = 10, MAXE = 3;
+const LV = [
+  { name: 'ONE HAND SHORT', tip: 'Stand on the plate, then press △ to rewind. Your echo will hold it for you.', m: ['#.........#............#', '#.........#............#', '#..S......A.........E..#', '#.........#............#', '#....a....#............#'] },
+  { name: 'IN SERIES', tip: 'An echo repeats everything you did, in the same time it took you', m: ['#.......#.......#......#', '#..S....A...b...B...E..#', '#.......#.......#......#', '#...a...#.......#......#'] },
+  { name: 'BOTH AT ONCE', tip: 'This door wants both of its plates held together', m: ['#..a......#............#', '#.........#............#', '#..S......A.........E..#', '#.........#............#', '#..a......#............#'] },
+  { name: 'RELAY', tip: 'The second plate is behind the first door', m: ['#.......#......#########', '#..S....A...b..#########', '#.......#......#########', '#...a...################', '#.......B...........E..#'] },
+  { name: 'THREE HANDS', tip: 'A paradox wisp hunts your oldest echo. Do not dawdle.', m: ['#..a....#.......#.....W#', '#.......#.......#......#', '#..S....A...b...B...E..#', '#.......#.......#......#', '#..a....#.......#......#'] },
+  { name: 'THE LONG WAY ROUND', tip: 'Three echoes, three doors, one of you', m: ['#......#...............#', '#......B....a.....c....#', '#......#..............W#', '#..S...#################', '#......#.......#.......#', '#..b...A.......C....E..#', '#......#.......#.......#'] },
+];
+const COL = { a: '#38bdf8', b: '#f472b6', c: '#fde047' };
+let G, P, echoes, rec, tNow, lvl, startP, exitP, plates, doors, wisp, rewinds, pressed;
+const tile = (x, y) => (x < 0 || y < 0 || x >= GW || y >= GH ? '#' : G[y][x]);
+function isOpen(d) { const ps = plates.filter((p) => p.k === d.k.toLowerCase()); return ps.length > 0 && ps.every((p) => pressed.has(p)); }
+function solid(x, y) { const t = tile(x, y); if (t === '#') return true; if ('ABC'.includes(t)) { const d = doors.find((q) => q.x === x && q.y === y); return !(d && d.open > 0.5); } return false; }
+function load(n) {
+  lvl = n; const L = LV[n], pad = Math.floor((GH - L.m.length) / 2); G = []; plates = []; doors = []; wisp = null;
+  for (let y = 0; y < GH; y++) G.push(((L.m[y - pad]) || '########################').split(''));
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) { const c = G[y][x], px = x * TS + 20, py = y * TS + 20;
+    if (c === 'S') { startP = { x: px, y: py }; G[y][x] = '.'; } else if (c === 'E') { exitP = { x: px, y: py }; G[y][x] = '.'; }
+    else if ('abc'.includes(c)) { plates.push({ k: c, x: px, y: py }); G[y][x] = '.'; } else if ('ABC'.includes(c)) doors.push({ k: c, x, y, open: 0 });
+    else if (c === 'W') { wisp = { x: px, y: py, hx: px, hy: py }; G[y][x] = '.'; } }
+  echoes = []; pressed = new Set(); restartLoop(); K.banner(L.name, L.tip, 4.2);
+}
+function restartLoop() { P = { x: startP.x, y: startP.y, r: 10, fx: 1, fy: 0 }; rec = []; tNow = 0; for (const d of doors) d.open = 0; if (wisp) { wisp.x = wisp.hx; wisp.y = wisp.hy; } }
+
+K.run({
+  id: 'chrono-vault', num: 24, title: 'CHRONO VAULT', tag: 'Co-operate with your past selves', color: '#5eead4',
+  goal: 'Each door stays open only while its plate is held. Rewind time to leave an echo that repeats your steps, up to three at once, and walk through the doors they hold for you.',
+  controls: [['LS', 'Walk'], ['triangle', 'Rewind: leave an echo'], ['square', 'Erase all echoes']],
+  music: { bpm: 72, root: 52, mode: 'lydian', dens: 0.3, seed: 58, lead: 'sine', leadVol: 0.07, long: true },
+  start() { rewinds = 0; load(0); },
+  retry() { load(lvl); },
+  update(dt) {
+    tNow += dt; const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly);
+    if (m > 0.2) { P.fx = lx / m; P.fy = ly / m; }
+    K.moveC(P, lx * 190 * dt, ly * 190 * dt, solid, TS); rec.push(P.x, P.y);
+    for (const e of echoes) { const i = Math.min(e.path.length / 2 - 1, Math.floor(tNow / e.dt)); e.x = e.path[i * 2]; e.y = e.path[i * 2 + 1]; e.done = i >= e.path.length / 2 - 1; }
+    pressed = new Set(); for (const p of plates) for (const o of echoes.concat([P])) if (dist(o.x, o.y, p.x, p.y) < 22) pressed.add(p);
+    for (const d of doors) { const was = d.open > 0.5, want = isOpen(d); const occ = echoes.concat([P]).some((o) => Math.abs(o.x - (d.x * TS + 20)) < 28 && Math.abs(o.y - (d.y * TS + 20)) < 28); d.open = K.approach(d.open, want || occ ? 1 : 0, dt * 5); if (was !== d.open > 0.5) K.sfx(want ? 'door' : 'back'); }
+    if (K.hit('triangle')) {
+      if (rec.length < 40) K.sfx('bad');
+      else { if (echoes.length >= MAXE) echoes.shift(); echoes.push({ path: rec, dt: tNow / (rec.length / 2), x: startP.x, y: startP.y, n: 0 }); rewinds++; K.sfx('power'); fx.flash('#5eead4', 0.25); fx.burst(P.x, P.y, '#5eead4', 20, 200, 0.5, 3); restartLoop(); }
+    }
+    if (K.hit('square') && echoes.length) { echoes = []; K.sfx('back'); fx.flash('#fff', 0.15); restartLoop(); K.hint('Echoes erased', 1.2); }
+    if (wisp && echoes.length) {
+      const tg = echoes[0], a = ang(wisp.x, wisp.y, tg.x, tg.y); wisp.x += Math.cos(a) * 34 * dt; wisp.y += Math.sin(a) * 34 * dt;
+      if (dist(wisp.x, wisp.y, tg.x, tg.y) < 16) { echoes.shift(); K.sfx('zap'); fx.burst(tg.x, tg.y, '#e879f9', 24, 180, 0.6, 4); wisp.x = wisp.hx; wisp.y = wisp.hy; K.hint('The wisp unmade an echo', 1.8); }
+      if (dist(wisp.x, wisp.y, P.x, P.y) < 18) { K.sfx('hurt'); fx.shake(8); echoes = []; restartLoop(); K.hint('The wisp unmade you. Start the room over.', 2.2); }
+    }
+    if (dist(P.x, P.y, exitP.x, exitP.y) < 22) {
+      if (lvl === LV.length - 1) K.win({ title: 'THE VAULT OPENS', text: 'Inside there is only a mirror, and behind you, a little late, three more of you arriving.', stats: [['Rewinds used', rewinds]] });
+      else { K.sfx('key'); load(lvl + 1); }
+    }
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#071316'); g.save(); g.translate(fx.shakeT ? rand(-fx.shakeT, fx.shakeT) : 0, OY);
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const c = G[y][x], px = x * TS, py = y * TS;
+      if (c === '#') { if ([[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]].some(([a, b]) => tile(x + a, y + b) !== '#')) { rect(px, py, TS, TS, '#16343a'); rect(px, py, TS, 6, '#24525a'); } continue; }
+      rect(px, py, TS, TS, (x + y) % 2 ? '#0c2126' : '#0e262b'); rect(px + 19, py + 19, 2, 2, '#16343a');
+    }
+    for (const d of doors) { const px = d.x * TS, py = d.y * TS, c = COL[d.k.toLowerCase()], h = TS * (1 - d.open); rect(px + 8, py, 24, h, c); rect(px + 8, py, 24, Math.min(h, 5), '#fff'); rect(px + 2, py, 6, TS, '#24525a'); rect(px + 32, py, 6, TS, '#24525a'); }
+    for (const p of plates) { const on = pressed.has(p), c = COL[p.k]; rrect(p.x - 16, p.y - 16, 32, 32, 6, on ? c : 'rgba(255,255,255,.06)'); K.rrectS(p.x - 16, p.y - 16, 32, 32, 6, c, 3); if (!on) ring(p.x, p.y, 6 + Math.sin(t * 4) * 2, c, 2); }
+    for (let i = 0; i < 4; i++) rect(exitP.x - 16 + i * 2, exitP.y - 14 + i * 7, 32 - i * 4, 5, '#6ee7b7'); ring(exitP.x, exitP.y, 24 + Math.sin(t * 5) * 3, 'rgba(110,231,183,.7)', 2);
+    ring(startP.x, startP.y, 16, 'rgba(94,234,212,.35)', 2);
+    echoes.forEach((e, i) => {
+      g.globalAlpha = 0.25; g.strokeStyle = '#5eead4'; g.lineWidth = 2; g.beginPath(); for (let k = 0; k < e.path.length; k += 12) g.lineTo(e.path[k], e.path[k + 1]); g.stroke();
+      g.globalAlpha = 0.6; circ(e.x, e.y, 10, '#5eead4'); circ(e.x, e.y - 3, 5, '#ccfbf1'); g.globalAlpha = 1; txt(String(i + 1), e.x, e.y - 20, 11, '#5eead4', 'center', 900);
+    });
+    if (wisp) { circ(wisp.x, wisp.y, 16 + Math.sin(t * 7) * 3, 'rgba(232,121,249,.25)'); circ(wisp.x, wisp.y, 8, '#e879f9'); if (echoes.length) { g.setLineDash([4, 8]); line(wisp.x, wisp.y, echoes[0].x, echoes[0].y, 'rgba(232,121,249,.3)', 1.5); g.setLineDash([]); } }
+    circ(P.x, P.y + 3, 11, 'rgba(0,0,0,.4)'); circ(P.x, P.y, 10, '#f8fafc'); circ(P.x + P.fx * 3, P.y + P.fy * 3 - 2, 5, '#0f766e');
+    fx.draw(); g.restore();
+    txt('ROOM ' + (lvl + 1) + ' / ' + LV.length + ' · ' + LV[lvl].name, W / 2, 24, 14, '#ccfbf1', 'center', 800);
+    txt('ECHOES', 24, 24, 11, '#5eead4', 'left', 800); for (let i = 0; i < MAXE; i++) circ(90 + i * 22, 24, 8, i < echoes.length ? '#5eead4' : 'rgba(255,255,255,.12)');
+    txt('LOOP ' + tNow.toFixed(1) + 's', 936, 24, 13, '#ccfbf1', 'right', 800);
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Rune Golem — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* RUNE GOLEM — a stone golem on a frozen temple floor. It cannot stop until
+   something stops it. Every chamber is generated, then proven solvable. */
+const { W, H, TAU, rand, irand, clamp, lerp, circ, ring, rect, rrect, line, txt, fx } = K;
+const GW = 15, GH = 9, TS = 54, OX = (W - GW * TS) / 2, OY = 44, NL = 8;
+const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+let B, Gm, lvl, moves, par, sol, hintT, totalMoves, totalPar, hints, anim, dead;
+
+function slide(b, x, y, dx, dy) {
+  let n = 0; const got = [];
+  for (;;) {
+    const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH || b.g[ny * GW + nx] === 1) break;
+    x = nx; y = ny; n++; const t = b.g[y * GW + x];
+    if (t === 3) return { x, y, n, pit: true, got };
+    const ri = b.runes.findIndex((r) => r[0] === x && r[1] === y); if (ri >= 0) got.push(ri);
+    if (t === 2) break;
+  }
+  return { x, y, n, pit: false, got };
+}
+function solve(b) {
+  const full = (1 << b.runes.length) - 1, start = (b.sy * GW + b.sx) * 8, prev = new Int32Array(GW * GH * 8).fill(-2), q = [start]; prev[start] = -1;
+  for (let i = 0; i < q.length; i++) {
+    const s = q[i], mask = s & 7, pos = s >> 3, x = pos % GW, y = Math.floor(pos / GW);
+    if (mask === full && x === b.ex && y === b.ey) { const path = []; let c = s; while (prev[c] >= 0) { path.push(prev[c] & 3); c = prev[c] >> 2; } return path.reverse(); }
+    for (let d = 0; d < 4; d++) { const r = slide(b, x, y, DIRS[d][0], DIRS[d][1]); if (r.pit || !r.n) continue; let m2 = mask; for (const k of r.got) m2 |= 1 << k; const ns = (r.y * GW + r.x) * 8 + m2; if (prev[ns] === -2) { prev[ns] = (s << 2) | d; q.push(ns); } }
+  }
+  return null;
+}
+function gen(n) {
+  const lo = 4 + n * 1.2, hi = lo + 3; let best = null;
+  for (let t = 0; t < 2500; t++) {
+    const b = { g: new Uint8Array(GW * GH), runes: [] };
+    for (let i = 0; i < GW * GH; i++) { const q = Math.random(); b.g[i] = q < 0.12 ? 1 : q < 0.16 ? 2 : q < 0.16 + Math.min(0.05, n * 0.008) ? 3 : 0; }
+    const free = () => { for (;;) { const x = irand(0, GW - 1), y = irand(0, GH - 1); if (b.g[y * GW + x] === 0 && !b.runes.some((r) => r[0] === x && r[1] === y) && !(x === b.sx && y === b.sy) && !(x === b.ex && y === b.ey)) return [x, y]; } };
+    [b.sx, b.sy] = free(); [b.ex, b.ey] = free(); for (let i = 0; i < 3; i++) b.runes.push(free());
+    const s = solve(b); if (!s) continue;
+    if (s.length >= lo && s.length <= hi) return { b, s };
+    if (!best || Math.abs(s.length - lo) < Math.abs(best.s.length - lo)) best = { b, s };
+  }
+  return best;
+}
+function load(n) { lvl = n; const r = gen(n); B = r.b; par = r.s.length; reset(); K.banner('CHAMBER ' + (n + 1) + ' OF ' + NL, n === 0 ? 'Slide to all three runes, then stop on the gate' : n === 2 ? 'Moss stops you. Pits swallow you.' : 'Par: ' + par + ' moves'); }
+function reset() { Gm = { x: B.sx, y: B.sy, px: B.sx, py: B.sy, mask: 0 }; moves = 0; anim = null; dead = 0; hintT = 0; sol = null; }
+
+K.run({
+  id: 'rune-golem', num: 25, title: 'RUNE GOLEM', tag: 'Sliding-stone puzzles', color: '#93c5fd',
+  goal: 'The golem slides until a wall or a patch of moss stops it. Gather the three runes in each of eight chambers and come to rest on the gate. Every chamber is new and always solvable.',
+  controls: [[['up', 'down', 'left', 'right'], 'Slide'], ['LS', 'Slide'], ['triangle', 'Show a hint'], ['square', 'Restart chamber']],
+  music: { bpm: 66, root: 48, mode: 'penta', dens: 0.3, seed: 81, lead: 'sine', leadVol: 0.08, long: true },
+  start() { totalMoves = 0; totalPar = 0; hints = 0; load(0); },
+  update(dt) {
+    hintT -= dt;
+    if (dead > 0) { dead -= dt; if (dead <= 0) reset(); return; }
+    if (anim) {
+      anim.f += dt * 1000 / (anim.n * TS); if (anim.f >= 1) {
+        Gm.x = anim.tx; Gm.y = anim.ty; const r = anim.r; anim = null; K.sfx(r.pit ? 'die' : 'land'); fx.shake(r.pit ? 8 : 3);
+        if (r.pit) { dead = 0.8; fx.burst(OX + Gm.x * TS + TS / 2, OY + Gm.y * TS + TS / 2, '#93c5fd', 20, 200, 0.6, 4); return; }
+        if (Gm.mask === 7 && Gm.x === B.ex && Gm.y === B.ey) { totalMoves += moves; totalPar += par; K.sfx('key'); if (lvl === NL - 1) { K.win({ title: 'THE TEMPLE WAKES', text: 'Twenty-four runes light along the golem’s arms. Somewhere below, very old doors begin to move.', stats: [['Moves', totalMoves + ' (par ' + totalPar + ')'], ['Hints used', hints]] }); return; } load(lvl + 1); }
+      } else { const e = anim.f; Gm.px = lerp(anim.sx, anim.tx, e); Gm.py = lerp(anim.sy, anim.ty, e); for (const k of anim.r.got) { const rn = B.runes[k]; if (!(Gm.mask & (1 << k)) && Math.abs(rn[0] - Gm.px) + Math.abs(rn[1] - Gm.py) < 0.5) { Gm.mask |= 1 << k; K.sfx('coin'); fx.burst(OX + rn[0] * TS + TS / 2, OY + rn[1] * TS + TS / 2, '#fde047', 12, 150, 0.5, 3); } } }
+      return;
+    }
+    Gm.px = Gm.x; Gm.py = Gm.y;
+    let dx = 0, dy = 0; if (K.hit('left')) dx = -1; else if (K.hit('right')) dx = 1; else if (K.hit('up')) dy = -1; else if (K.hit('down')) dy = 1; else if (K.IN.nx) dx = K.IN.nx; else if (K.IN.ny) dy = K.IN.ny;
+    if (dx || dy) { const r = slide(B, Gm.x, Gm.y, dx, dy); if (r.n) { moves++; anim = { sx: Gm.x, sy: Gm.y, tx: r.x, ty: r.y, n: r.n, f: 0, r }; sol = null; K.sfx('dash'); } else K.sfx('bad'); }
+    if (K.hit('square')) { reset(); K.sfx('back'); }
+    if (K.hit('triangle')) { const b2 = { g: B.g, runes: B.runes.filter((_, i) => !(Gm.mask & (1 << i))), sx: Gm.x, sy: Gm.y, ex: B.ex, ey: B.ey }; const s = solve(b2); if (s && s.length) { sol = s[0]; hintT = 2.5; hints++; K.sfx('select'); } else { K.hint('No way from here. Restart with □.', 2); K.sfx('bad'); } }
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#0a1220'); rrect(OX - 10, OY - 10, GW * TS + 20, GH * TS + 20, 10, '#1e2a44');
+    g.save(); if (fx.shakeT) g.translate(rand(-fx.shakeT, fx.shakeT), rand(-fx.shakeT, fx.shakeT));
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const px = OX + x * TS, py = OY + y * TS, c = B.g[y * GW + x], n = K.hash2(x, y, lvl + 2);
+      rect(px, py, TS, TS, K.hsl(210, 40, 80 + n * 6)); line(px + 8 + n * 20, py + 10, px + 22 + n * 20, py + 24, 'rgba(255,255,255,.6)', 2); K.rectS(px, py, TS, TS, 'rgba(100,130,170,.18)', 1);
+      if (c === 1) { rrect(px + 2, py + 2, TS - 4, TS - 4, 8, '#3b4a66'); rrect(px + 6, py + 5, TS - 16, TS - 22, 6, '#52648a'); }
+      else if (c === 2) { rrect(px + 3, py + 3, TS - 6, TS - 6, 10, '#3f7d3a'); for (let k = 0; k < 5; k++) circ(px + 12 + K.hash2(x, k, 3) * 30, py + 12 + K.hash2(k, y, 4) * 30, 5, '#5aa24f'); }
+      else if (c === 3) { circ(px + TS / 2, py + TS / 2, TS * 0.42, '#060a12'); ring(px + TS / 2, py + TS / 2, TS * 0.42, '#1e2a44', 4); }
+    }
+    const ex = OX + B.ex * TS, ey = OY + B.ey * TS, open = Gm.mask === 7; rrect(ex + 5, ey + 5, TS - 10, TS - 10, 8, open ? '#fde047' : '#64748b'); K.rrectS(ex + 5, ey + 5, TS - 10, TS - 10, 8, open ? '#fff' : '#94a3b8', 3); if (open) ring(ex + TS / 2, ey + TS / 2, 30 + Math.sin(t * 5) * 4, 'rgba(253,224,71,.7)', 3); txt('GATE', ex + TS / 2, ey + TS / 2, 10, open ? '#713f12' : '#e2e8f0', 'center', 900);
+    B.runes.forEach((r, i) => { if (Gm.mask & (1 << i)) return; const x = OX + r[0] * TS + TS / 2, y = OY + r[1] * TS + TS / 2 + Math.sin(t * 3 + i) * 3; circ(x, y, 17, 'rgba(250,204,21,.25)'); K.poly([[x, y - 14], [x + 10, y], [x, y + 14], [x - 10, y]], '#f59e0b', '#fef3c7', 2); });
+    if (sol !== null && hintT > 0) { const d = DIRS[sol], x = OX + Gm.x * TS + TS / 2, y = OY + Gm.y * TS + TS / 2; g.globalAlpha = 0.5 + 0.5 * Math.sin(t * 10); K.tri(x + d[0] * 46, y + d[1] * 46, 18, Math.atan2(d[1], d[0]), '#f472b6'); g.globalAlpha = 1; }
+    if (dead <= 0) { const x = OX + Gm.px * TS + TS / 2, y = OY + Gm.py * TS + TS / 2; circ(x + 3, y + 6, 20, 'rgba(0,0,30,.25)'); rrect(x - 19, y - 20, 38, 40, 10, '#64748b'); rrect(x - 15, y - 16, 30, 16, 6, '#94a3b8'); circ(x - 7, y - 8, 3.5, Gm.mask === 7 ? '#fde047' : '#38bdf8'); circ(x + 7, y - 8, 3.5, Gm.mask === 7 ? '#fde047' : '#38bdf8'); for (let i = 0; i < 3; i++) K.poly([[x - 10 + i * 10, y + 4], [x - 6 + i * 10, y + 10], [x - 10 + i * 10, y + 16], [x - 14 + i * 10, y + 10]], Gm.mask & (1 << i) ? '#f59e0b' : '#475569'); }
+    fx.draw(); g.restore();
+    txt('CHAMBER ' + (lvl + 1) + ' / ' + NL, 60, 20, 14, '#bfdbfe', 'left', 800); txt('MOVES ' + moves + '  ·  PAR ' + par, W / 2, 20, 14, moves > par ? '#fca5a5' : '#fff', 'center', 800); txt('RUNES ' + [1, 2, 4].filter((b) => Gm.mask & b).length + ' / 3', 900, 20, 14, '#fde047', 'right', 800);
+  },
+});
+</script>
+</body>
+</html>
