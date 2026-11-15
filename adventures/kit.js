@@ -311,6 +311,7 @@
     if (keys._u) ly -= 1; if (keys._d) ly += 1; if (keys._l) lx -= 1; if (keys._r) lx += 1;
     if (keys._ru) ry -= 1; if (keys._rd) ry += 1; if (keys._rl) rx -= 1; if (keys._rr) rx += 1;
     for (const b of BTN) if (keys[b]) { now[b] = true; val[b] = 1; }
+    if (K._ax) { lx += K._ax.lx || 0; ly += K._ax.ly || 0; rx += K._ax.rx || 0; ry += K._ax.ry || 0; }
     const tn = performance.now();
     for (const n in T.held) { if (T.held[n] > tn) { now[n] = true; val[n] = 1; } else delete T.held[n]; }
     for (const [s, k] of [[T.l, 'l'], [T.r, 'r']]) {
@@ -788,7 +789,7 @@
     down, hit, up, trig, IN, grid, bfs, bfsStep, los, moveC, moveB, cave, maze, rooms, separate, load, save, fmtTime,
     get scene() { return scene; }, get time() { return playT; }, get talking() { return dlg.on; },
     /* test hook: lets the smoke test drive buttons without a real device */
-    _keys: keys,
+    _keys: keys, _ax: null,
   };
   window.K = K;
 })();

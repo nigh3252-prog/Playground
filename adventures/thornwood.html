@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Thornwood — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* THORNWOOD — a twelve-screen forest where the tools you find decide where
+   you can go: a vine whip to cross the river, an ember to burn the brambles. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx } = K;
+const TS = 40, GW = 24, GH = 13, OY = 20;
+const GRASS = 0, TREE = 1, ROCK = 2, WATER = 3, BRAM = 4, POST = 5, CHEST = 6, OPEN = 7, SEAL = 8;
+const NAME = [['THORN GROVE', 'NORTH WOOD', 'CLIFF PASS', 'SKY GROVE'], ['BRAMBLE WALL', 'THE GREAT TREE', 'RIVER BEND', 'OLD BRIDGE'], ['THE MIRE', 'SOUTH MEADOW', 'THE HOLLOW', 'WHIP SHRINE']];
+const HCON = ['1,0', '2,0', '0,1', '1,1', '2,1', '0,2', '1,2', '2,2'];   /* x,y joins x+1,y */
+const VCON = ['1,0', '1,1', '0,0'];                                    /* x,y joins x,y+1 */
+const BOSS = { '2,2': 0, '0,0': 1, '3,0': 2 };
+let scr, sx, sy, G, P, foes, shots, boss, seedN, inv, seeds, cleared, opened, burned, maxHp, sealOn;
+const key = () => sx + ',' + sy;
+const solid = (x, y) => G.get(x, y) !== GRASS;
+
+function gen(x, y) {
+  const r = K.rng(seedN + x * 131 + y * 977), g = K.grid(GW, GH), k = x + ',' + y;
+  for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) if (i === 0 || j === 0 || i === GW - 1 || j === GH - 1) g.set(i, j, TREE);
+  const ex = { e: HCON.includes(k), w: HCON.includes((x - 1) + ',' + y), s: VCON.includes(k), n: VCON.includes(x + ',' + (y - 1)) };
+  if (ex.e) for (let j = 5; j <= 7; j++) g.set(GW - 1, j, GRASS);
+  if (ex.w) for (let j = 5; j <= 7; j++) g.set(0, j, GRASS);
+  if (ex.n) for (let i = 10; i <= 13; i++) g.set(i, 0, GRASS);
+  if (ex.s) for (let i = 10; i <= 13; i++) g.set(i, GH - 1, GRASS);
+  const isBoss = BOSS[k] !== undefined, clumps = isBoss ? 0 : 11;
+  for (let c = 0; c < clumps; c++) {
+    const cx = r.int(2, GW - 3), cy = r.int(2, GH - 3), t = r() < 0.6 ? TREE : ROCK;
+    for (let n = 0; n < r.int(1, 4); n++) {
+      const i = cx + r.int(-1, 1), j = cy + r.int(-1, 1);
+      if (i < 2 || j < 2 || i > GW - 3 || j > GH - 3 || (j >= 4 && j <= 8) || (i >= 9 && i <= 14)) continue;
+      g.set(i, j, t);
+    }
+  }
+  if (k === '2,1') { for (let j = 1; j < GH - 1; j++) { g.set(15, j, WATER); g.set(16, j, WATER); } g.set(14, 5, POST); g.set(17, 5, POST); }
+  if (k === '0,1' && !burned[k]) for (let j = 5; j <= 7; j++) { g.set(20, j, BRAM); g.set(19, j, BRAM); }
+  if (k === '2,0' && !burned[k]) for (let j = 5; j <= 7; j++) { g.set(20, j, BRAM); g.set(21, j, BRAM); }
+  if (k === '3,2' || k === '3,1' || k === '0,2') g.set(12, 3, opened[k] ? OPEN : CHEST);
+  if (k === '1,1') { for (let j = 2; j <= 3; j++) for (let i = 11; i <= 12; i++) g.set(i, j, TREE); }
+  return g;
+}
+function enter(nx, ny, px, py) {
+  sx = nx; sy = ny; G = gen(sx, sy); P.x = px; P.y = py; foes = []; shots = []; boss = null; sealOn = false;
+  const k = key(), r = K.rng(seedN + sx * 7 + sy * 3 + 5);
+  if (BOSS[k] !== undefined && !cleared[k]) {
+    const t = BOSS[k]; boss = { t, x: 480, y: 220, r: 30, hp: [7, 9, 11][t], max: [7, 9, 11][t], st: 'idle', tm: 1.5, vx: 0, vy: 0, flash: 0, a: 0 };
+    sealOn = true; seal(true); K.banner(['THE BARK BRUTE', 'THE THORN QUEEN', 'THE STORM STAG'][t], ['It charges. Let it hit a wall.', 'Strike between the bursts.', 'Stand where the lightning is not.'][t]);
+  } else if (!cleared[k] && k !== '1,1') {
+    const tier = { '1,2': 1, '2,1': 2, '3,2': 1, '3,1': 2, '0,1': 3, '1,0': 3, '2,0': 4, '0,2': 4 }[k] || 1, n = 2 + tier;
+    for (let i = 0; i < n; i++) {
+      let ex, ey, tries = 0; do { ex = r.int(2, GW - 3); ey = r.int(2, GH - 3); tries++; } while ((G.get(ex, ey) !== GRASS || dist(ex * TS, ey * TS, P.x, P.y) < 220) && tries < 60);
+      const q = r(), kind = tier >= 2 && q < 0.3 ? 'spit' : tier >= 3 && q < 0.6 ? 'wisp' : 'slime';
+      foes.push({ kind, x: ex * TS + 20, y: ey * TS + 20, r: kind === 'wisp' ? 10 : 13, hp: kind === 'slime' ? 2 : kind === 'spit' ? 3 : 1, t: r() * 2, a: r() * TAU, flash: 0, stun: 0, kx: 0, ky: 0 });
+    }
+  }
+  if (K.scene === 'play' && !boss) K.hint(NAME[sy][sx], 1.6);
+}
+function seal(on) {
+  for (let j = 5; j <= 7; j++) for (const i of [0, GW - 1]) if (G.get(i, j) === (on ? GRASS : SEAL)) G.set(i, j, on ? SEAL : GRASS);
+  for (let i = 10; i <= 13; i++) for (const j of [0, GH - 1]) if (G.get(i, j) === (on ? GRASS : SEAL)) G.set(i, j, on ? SEAL : GRASS);
+}
+function hurt(n, fx_, fy_) {
+  if (P.inv > 0) return; P.hp -= n; P.inv = 1.1; K.sfx('hurt'); fx.shake(8);
+  const a = ang(fx_, fy_, P.x, P.y); P.kx = Math.cos(a) * 320; P.ky = Math.sin(a) * 320;
+  if (P.hp <= 0) K.lose({ title: 'THE WOOD TAKES YOU', text: 'You wake under the Great Tree. What you found, you keep.', stats: [['Seeds', seeds + ' / 3']] });
+}
+function hitFoe(e, dmg, a) {
+  e.hp -= dmg; e.flash = 0.12; e.kx = Math.cos(a) * 260; e.ky = Math.sin(a) * 260; K.sfx('hit'); fx.burst(e.x, e.y, '#fef08a', 6, 120, 0.3, 3);
+}
+function shot(x, y, a, sp, col, r) { shots.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: r || 6, col: col || '#a3e635', t: 4 }); }
+
+K.run({
+  id: 'thornwood', num: 8, title: 'THORNWOOD', tag: 'Twelve screens, three guardians', color: '#4ade80',
+  goal: 'The Great Tree is dying. Three guardians each hold one of its seeds. Find the vine whip and the ember to open the way, win the seeds back, and plant them where you started.',
+  controls: [['LS', 'Move'], ['cross', 'Sword'], ['triangle', 'Vine whip'], ['circle', 'Ember']],
+  music: { bpm: 100, root: 45, mode: 'dorian', dens: 0.5, seed: 91, lead: 'square', leadVol: 0.045, lp: 1800 },
+  start() {
+    seedN = irand(1, 1e9); inv = { whip: false, ember: false }; seeds = 0; cleared = {}; opened = {}; burned = {}; maxHp = 5;
+    P = { x: 480, y: 300, r: 11, hp: 5, fx: 0, fy: 1, sw: 0, cd: 0, ecd: 0, wcd: 0, inv: 0, kx: 0, ky: 0, whipT: 0 };
+    enter(1, 1, 480, 300);
+    K.say(['The Great Tree has dropped every leaf.', 'Its three seeds were carried off: south-east to the Hollow, north-west to the Thorn Grove, north-east to the Sky Grove.', 'Start south. You will need more than a sword for the other two.'], null, 'The old keeper');
+  },
+  retry() { P.hp = maxHp; P.inv = 1; enter(1, 1, 480, 300); },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly);
+    if (m > 0.25 && P.sw <= 0) { P.fx = lx / m; P.fy = ly / m; }
+    P.inv -= dt; P.cd -= dt; P.ecd -= dt; P.wcd -= dt; P.sw -= dt; P.whipT -= dt;
+    const sp = P.sw > 0 ? 60 : 170;
+    K.moveC(P, (lx * sp + P.kx) * dt, (ly * sp + P.ky) * dt - 0, solid, TS); P.kx *= 1 - 8 * dt; P.ky *= 1 - 8 * dt;
+    const fa = Math.atan2(P.fy, P.fx);
+    /* sword */
+    if (K.hit('cross') && P.cd <= 0) {
+      P.sw = 0.2; P.cd = 0.32; K.sfx('swing');
+      const tx = Math.floor((P.x + P.fx * 34) / TS), ty = Math.floor((P.y + P.fy * 34) / TS);
+      if (G.get(tx, ty) === CHEST) {
+        G.set(tx, ty, OPEN); opened[key()] = true; K.sfx('key'); fx.burst(tx * TS + 20, ty * TS + 20, '#fde047', 20, 160, 0.6, 4);
+        if (key() === '3,2') { inv.whip = true; K.say(['The VINE WHIP.', 'Stand by a mooring post and press △ to swing across water. It also lashes whatever is in front of you.']); }
+        else if (key() === '3,1') { inv.ember = true; K.say(['The EMBER.', 'Press ○ to throw fire. Brambles burn. So do most things.']); }
+        else { maxHp++; P.hp = maxHp; K.say(['A heartwood charm. Your life grows by one.']); }
+      }
+      for (const e of foes.concat(boss ? [boss] : [])) {
+        const d = dist(P.x, P.y, e.x, e.y); if (d > 46 + e.r) continue;
+        if (Math.abs(K.angDiff(fa, ang(P.x, P.y, e.x, e.y))) < 1.15) { if (e === boss) hitBoss(1); else hitFoe(e, 1, fa); }
+      }
+    }
+    /* whip: cross at a post, or lash */
+    if (K.hit('triangle')) {
+      if (!inv.whip) K.sfx('bad');
+      else if (P.wcd <= 0) {
+        P.wcd = 0.5; let zipped = false;
+        if (key() === '2,1') for (const [px, tx] of [[14, 18], [17, 13]]) if (dist(P.x, P.y, px * TS + 20, 5 * TS + 20) < 70) { P.wx = P.x; P.wy = P.y; P.x = tx * TS + 20; P.y = 6 * TS + 20; zipped = true; K.sfx('dash'); fx.burst(P.x, P.y, '#86efac', 12, 120, 0.4, 3); break; }
+        P.whipT = 0.18; P.wa = fa; if (!zipped) { K.sfx('swing'); P.wx = null; }
+        for (const e of foes) { const d = dist(P.x, P.y, e.x, e.y); if (d < 130 && Math.abs(K.angDiff(fa, ang(P.x, P.y, e.x, e.y))) < 0.35) { hitFoe(e, 1, fa); e.stun = 1.5; } }
+        if (boss && dist(P.x, P.y, boss.x, boss.y) < 130 + boss.r && Math.abs(K.angDiff(fa, ang(P.x, P.y, boss.x, boss.y))) < 0.4) hitBoss(1);
+      }
+    }
+    if (K.hit('circle')) {
+      if (!inv.ember) K.sfx('bad');
+      else if (P.ecd <= 0) { P.ecd = 0.7; shots.push({ x: P.x + P.fx * 14, y: P.y + P.fy * 14, vx: P.fx * 380, vy: P.fy * 380, r: 8, col: '#fb923c', t: 0.7, mine: true }); K.sfx('shoot'); }
+    }
+    /* enemies */
+    for (let i = foes.length - 1; i >= 0; i--) {
+      const e = foes[i]; e.flash -= dt; e.t -= dt; e.stun -= dt;
+      if (e.hp <= 0) { foes.splice(i, 1); fx.burst(e.x, e.y, '#bbf7d0', 14, 150, 0.5, 4); if (Math.random() < 0.25 && P.hp < maxHp) shots.push({ x: e.x, y: e.y, vx: 0, vy: 0, r: 8, col: '#fb7185', t: 8, heart: true }); if (!foes.length) { cleared[key()] = true; K.sfx('power'); } continue; }
+      const d = dist(e.x, e.y, P.x, P.y), a = ang(e.x, e.y, P.x, P.y); let vx = e.kx, vy = e.ky; e.kx *= 1 - 7 * dt; e.ky *= 1 - 7 * dt;
+      if (e.stun <= 0) {
+        if (e.kind === 'slime') { if (e.t <= 0) { e.t = rand(0.5, 1.1); e.a = d < 330 ? a + rand(-0.4, 0.4) : rand(0, TAU); e.hop = 0.35; } if (e.hop > 0) { e.hop -= dt; vx += Math.cos(e.a) * 170; vy += Math.sin(e.a) * 170; } }
+        else if (e.kind === 'wisp') { e.a += K.angDiff(e.a, a) * dt * 2.2; vx += Math.cos(e.a) * 150 + Math.cos(K.time * 5 + i) * 60; vy += Math.sin(e.a) * 150 + Math.sin(K.time * 4 + i) * 60; }
+        else if (e.t <= 0 && d < 520) { e.t = 2.1; shot(e.x, e.y, a, 190); K.sfx('blip'); }
+      }
+      if (e.kind === 'wisp') { e.x = clamp(e.x + vx * dt, 50, 910); e.y = clamp(e.y + vy * dt, 50, 470); } else K.moveC(e, vx * dt, vy * dt, solid, TS);
+      if (d < e.r + P.r) hurt(1, e.x, e.y);
+    }
+    K.separate(foes, 0.5);
+    if (boss) bossAI(dt);
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const s = shots[i]; s.t -= dt; s.x += s.vx * dt; s.y += s.vy * dt; let dead = s.t <= 0;
+      const tx = Math.floor(s.x / TS), ty = Math.floor(s.y / TS), tt = G.get(tx, ty);
+      if (s.heart) { if (dist(s.x, s.y, P.x, P.y) < 22) { P.hp = Math.min(maxHp, P.hp + 1); K.sfx('pick'); dead = true; } }
+      else if (s.mine) {
+        fx.spark(s.x, s.y, rand(-30, 30), rand(-30, 30), '#fde047', 0.3, 4);
+        if (tt === BRAM) { burned[key()] = true; for (let j = 0; j < GH; j++) for (let k2 = 0; k2 < GW; k2++) if (G.get(k2, j) === BRAM) { G.set(k2, j, GRASS); fx.burst(k2 * TS + 20, j * TS + 20, '#fb923c', 14, 140, 0.7, 4); } K.sfx('boom'); dead = true; }
+        else if (tt !== GRASS && tt !== WATER) dead = true;
+        for (const e of foes) if (dist(s.x, s.y, e.x, e.y) < e.r + s.r) { hitFoe(e, 2, Math.atan2(s.vy, s.vx)); dead = true; break; }
+        if (boss && dist(s.x, s.y, boss.x, boss.y) < boss.r + s.r) { hitBoss(1); dead = true; }
+      } else {
+        if (tt === TREE || tt === ROCK || tt === SEAL) dead = true;
+        if (dist(s.x, s.y, P.x, P.y) < s.r + P.r - 2) { hurt(1, s.x, s.y); dead = true; }
+      }
+      if (dead) shots.splice(i, 1);
+    }
+    /* screen edges */
+    if (P.x < 6) enter(sx - 1, sy, W - 30, P.y); else if (P.x > W - 6) enter(sx + 1, sy, 30, P.y);
+    else if (P.y < 6) enter(sx, sy - 1, P.x, GH * TS - 30); else if (P.y > GH * TS - 6) enter(sx, sy + 1, P.x, 30);
+    if (key() === '1,1' && seeds === 3 && dist(P.x, P.y, 480, 200) < 60) K.win({ title: 'THE TREE WAKES', text: 'Three seeds in the old roots. By morning there is green at the tip of every branch.', stats: [['Hearts', P.hp + ' / ' + maxHp]] });
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#14301c');
+    g.save(); g.translate(fx.shakeT ? rand(-fx.shakeT, fx.shakeT) : 0, OY + (fx.shakeT ? rand(-fx.shakeT, fx.shakeT) : 0));
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+      const tt = G.d[j * GW + i], x = i * TS, y = j * TS, n = K.hash2(i + sx * 40, j + sy * 40, 1);
+      rect(x, y, TS, TS, K.hsl(118 - sy * 8, 34, 26 + n * 5 + sx));
+      if (n > 0.7 && tt === GRASS) { line(x + 10, y + 26, x + 12, y + 18, '#3f8f4f', 2); line(x + 14, y + 26, x + 17, y + 20, '#3f8f4f', 2); }
+      if (tt === WATER) { rect(x, y, TS, TS, '#1d6fa5'); line(x + 6, y + 12 + Math.sin(t * 2 + j) * 3, x + 20, y + 12 + Math.sin(t * 2 + j) * 3, 'rgba(255,255,255,.3)', 2); }
+      else if (tt === ROCK) { rrect(x + 4, y + 8, 32, 28, 9, '#57606a'); rrect(x + 8, y + 10, 16, 10, 5, '#7b8794'); }
+      else if (tt === POST) { rect(x + 15, y + 6, 10, 30, '#8b5a2b'); circ(x + 20, y + 8, 7, '#a16207'); if (inv.whip) ring(x + 20, y + 20, 22 + Math.sin(t * 5) * 3, 'rgba(134,239,172,.6)', 2); }
+      else if (tt === BRAM) { for (let q = 0; q < 5; q++) { const a = q * 1.3 + n * 6; line(x + 20, y + 20, x + 20 + Math.cos(a) * 19, y + 20 + Math.sin(a) * 19, '#3b1f2b', 4); K.tri(x + 20 + Math.cos(a) * 17, y + 20 + Math.sin(a) * 17, 6, a, '#7f1d1d'); } }
+      else if (tt === CHEST || tt === OPEN) { rrect(x + 6, y + 12, 28, 22, 4, '#92400e'); rect(x + 6, y + 20, 28, 3, '#fde047'); if (tt === OPEN) rect(x + 8, y + 12, 24, 8, '#1c1917'); else ring(x + 20, y + 22, 24 + Math.sin(t * 4) * 3, 'rgba(253,224,71,.5)', 2); }
+      else if (tt === SEAL) { for (let q = 0; q < 3; q++) K.tri(x + 8 + q * 12, y + 20, 13, -Math.PI / 2 + Math.sin(t * 3 + q) * 0.2, '#7f1d1d'); }
+    }
+    /* trees on top so they overlap things behind */
+    if (key() === '1,1') { const alive = seeds === 3; rect(468, 120, 24, 60, '#5b3a1e'); circ(480, 96, 62, alive ? '#22c55e' : '#57534e'); circ(450, 120, 36, alive ? '#16a34a' : '#44403c'); circ(512, 122, 38, alive ? '#15803d' : '#44403c'); if (alive) ring(480, 200, 40 + Math.sin(t * 4) * 5, '#fde047', 3); }
+    for (const e of foes) {
+      const c = e.flash > 0 ? '#fff' : null, wob = Math.sin(t * 8 + e.x) * 2;
+      if (e.kind === 'slime') { g.fillStyle = c || '#65a30d'; g.beginPath(); g.ellipse(e.x, e.y + 3, 14 + wob, 11 - wob * 0.6 - (e.hop > 0 ? 3 : 0), 0, 0, TAU); g.fill(); circ(e.x - 4, e.y, 2, '#111'); circ(e.x + 4, e.y, 2, '#111'); }
+      else if (e.kind === 'spit') { rect(e.x - 3, e.y, 6, 14, '#166534'); circ(e.x, e.y - 3, 12, c || '#be185d'); circ(e.x, e.y - 3, 5, '#fde047'); }
+      else { circ(e.x, e.y, 14, 'rgba(165,243,252,.25)'); circ(e.x, e.y, 8, c || '#67e8f9'); }
+      if (e.stun > 0) txt('✶', e.x, e.y - 20, 14, '#fde047', 'center');
+    }
+    if (boss) {
+      const b = boss, c = b.flash > 0 ? '#fff' : ['#7c4a21', '#9d174d', '#1e3a8a'][b.t];
+      if (b.t === 2) for (const z of (b.zaps || [])) { if (z.t > 0) { ring(z.x, z.y, 44, 'rgba(250,204,21,' + (0.4 + 0.5 * Math.sin(t * 30)) + ')', 3); circ(z.x, z.y, 44 * (1 - z.t / 0.9), 'rgba(250,204,21,.18)'); } else { circ(z.x, z.y, 44, 'rgba(254,249,195,.8)'); line(z.x, -20, z.x + rand(-10, 10), z.y, '#fef9c3', 5); } }
+      circ(b.x, b.y + 8, b.r, 'rgba(0,0,0,.3)'); circ(b.x, b.y, b.r, c);
+      if (b.t === 0) { rect(b.x - 22, b.y - 10, 44, 8, '#3f2a14'); circ(b.x - 10, b.y - 4, 4, b.st === 'stun' ? '#64748b' : '#f87171'); circ(b.x + 10, b.y - 4, 4, b.st === 'stun' ? '#64748b' : '#f87171'); if (b.st === 'aim') line(b.x, b.y, b.x + Math.cos(b.a) * 400, b.y + Math.sin(b.a) * 400, 'rgba(248,113,113,.35)', 6); }
+      if (b.t === 1) { for (let q = 0; q < 8; q++) K.tri(b.x + Math.cos(q * 0.785 + t) * 34, b.y + Math.sin(q * 0.785 + t) * 34, 10, q * 0.785 + t, '#4d7c0f'); circ(b.x, b.y - 4, 10, '#fbcfe8'); }
+      if (b.t === 2) { line(b.x - 12, b.y - 24, b.x - 24, b.y - 54, '#e0f2fe', 4); line(b.x + 12, b.y - 24, b.x + 24, b.y - 54, '#e0f2fe', 4); line(b.x - 20, b.y - 44, b.x - 32, b.y - 46, '#e0f2fe', 3); line(b.x + 20, b.y - 44, b.x + 32, b.y - 46, '#e0f2fe', 3); circ(b.x - 9, b.y - 4, 3, '#fde047'); circ(b.x + 9, b.y - 4, 3, '#fde047'); }
+      if (b.st === 'stun') txt('✶ ✶', b.x, b.y - 44, 18, '#fde047', 'center');
+    }
+    for (const s of shots) { if (s.heart) K.hearts(s.x, s.y, 1, 1, '#fb7185', 7); else { circ(s.x, s.y, s.r + 3, s.mine ? 'rgba(251,146,60,.4)' : 'rgba(163,230,53,.3)'); circ(s.x, s.y, s.r, s.col); } }
+    /* hero */
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) {
+      const fa = Math.atan2(P.fy, P.fx);
+      if (P.whipT > 0) { if (P.wx != null) line(P.wx, P.wy, P.x, P.y, '#86efac', 4); else { const L = 130 * Math.sin((1 - P.whipT / 0.18) * Math.PI); g.strokeStyle = '#86efac'; g.lineWidth = 4; g.beginPath(); g.moveTo(P.x, P.y); g.quadraticCurveTo(P.x + Math.cos(P.wa + 0.4) * L * 0.6, P.y + Math.sin(P.wa + 0.4) * L * 0.6, P.x + Math.cos(P.wa) * L, P.y + Math.sin(P.wa) * L); g.stroke(); } }
+      circ(P.x, P.y + 5, 11, 'rgba(0,0,0,.3)'); circ(P.x, P.y, 11, '#15803d'); circ(P.x + P.fx * 3, P.y + P.fy * 3 - 3, 7, '#f1d3a6'); K.tri(P.x - P.fx * 2, P.y - P.fy * 2 - 9, 10, -Math.PI / 2, '#166534');
+      if (P.sw > 0) { const a0 = fa - 1.1 + (1 - P.sw / 0.2) * 2.2; line(P.x + Math.cos(a0) * 12, P.y + Math.sin(a0) * 12, P.x + Math.cos(a0) * 48, P.y + Math.sin(a0) * 48, '#f8fafc', 5); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 10; g.beginPath(); g.arc(P.x, P.y, 40, fa - 1.1, a0); g.stroke(); }
+    }
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) if (G.d[j * GW + i] === TREE) { const x = i * TS, y = j * TS, n = K.hash2(i + sx * 40, j + sy * 40, 7); rect(x + 16, y + 22, 8, 16, '#5b3a1e'); circ(x + 20, y + 14, 21, K.hsl(135 + n * 20, 42, 20 + n * 8)); circ(x + 13, y + 8, 9, K.hsl(130, 42, 30 + n * 8)); }
+    fx.draw(); g.restore();
+    /* HUD */
+    rect(0, 0, W, 30, 'rgba(6,14,9,.82)'); hearts(22, 16, P.hp, maxHp, '#fb7185', 7);
+    txt(NAME[sy][sx], W / 2, 16, 13, '#bbf7d0', 'center', 800);
+    for (let i = 0; i < 3; i++) circ(700 + i * 22, 16, 7, i < seeds ? '#fde047' : 'rgba(255,255,255,.15)');
+    K.glyph('triangle', 790, 16, 10, inv.whip ? 1 : 0.2); K.glyph('circle', 816, 16, 10, inv.ember ? 1 : 0.2);
+    for (let j = 0; j < 3; j++) for (let i = 0; i < 4; i++) rect(868 + i * 20, 4 + j * 8, 18, 6, i === sx && j === sy ? '#fff' : cleared[i + ',' + j] ? '#4ade80' : BOSS[i + ',' + j] !== undefined ? '#b45309' : 'rgba(255,255,255,.2)');
+    if (boss) { bar(280, 500, 400, 16, boss.hp / boss.max, '#f87171'); }
+  },
+});
+function hitBoss(d) {
+  const b = boss; if (b.t === 0 && b.st !== 'stun') { K.sfx('clank'); fx.text(b.x, b.y - 40, 'ARMOURED', '#cbd5e1', 13); return; }
+  if (b.inv > 0) return; b.inv = 0.25; b.hp -= d; b.flash = 0.12; K.sfx('hit'); fx.burst(b.x, b.y, '#fef08a', 10, 160, 0.4, 4); fx.hitstop(0.04);
+  if (b.hp <= 0) {
+    fx.burst(b.x, b.y, '#fde047', 60, 300, 1.2, 5); K.sfx('boom'); fx.shake(14); cleared[key()] = true; seeds++; P.hp = maxHp; seal(false); sealOn = false; boss = null; shots = shots.filter((s) => s.mine); foes = [];
+    K.banner('SEED ' + seeds + ' OF 3', seeds === 3 ? 'Carry them home to the Great Tree' : seeds === 1 ? 'A shrine lies east of here' : 'One guardian left');
+  }
+}
+function bossAI(dt) {
+  const b = boss; b.tm -= dt; b.flash -= dt; b.inv = (b.inv || 0) - dt;
+  const d = dist(b.x, b.y, P.x, P.y), a = ang(b.x, b.y, P.x, P.y);
+  if (b.t === 0) {
+    if (b.st === 'idle') { K.moveC(b, Math.cos(a) * 40 * dt, Math.sin(a) * 40 * dt, solid, TS); if (b.tm <= 0) { b.st = 'aim'; b.tm = 0.75; b.a = a; K.sfx('charge'); } }
+    else if (b.st === 'aim') { b.a += K.angDiff(b.a, a) * dt * 3; if (b.tm <= 0) { b.st = 'run'; b.tm = 2; } }
+    else if (b.st === 'run') { const h = K.moveC(b, Math.cos(b.a) * 560 * dt, Math.sin(b.a) * 560 * dt, solid, TS); fx.spark(b.x, b.y + 20, rand(-40, 40), -40, '#a8a29e', 0.3, 4); if (h.hx || h.hy) { b.st = 'stun'; b.tm = 2.4; K.sfx('boom'); fx.shake(12); } }
+    else if (b.tm <= 0) { b.st = 'idle'; b.tm = 0.9; }
+    if (d < b.r + P.r && b.st !== 'stun') hurt(b.st === 'run' ? 2 : 1, b.x, b.y);
+  } else if (b.t === 1) {
+    b.x = 480 + Math.sin(K.time * 0.6) * 180; b.y = 240 + Math.sin(K.time * 0.9) * 70;
+    if (b.tm <= 0) { b.n = (b.n || 0) + 1; b.tm = b.hp < 5 ? 1.5 : 2.1; const k = 10, o = b.n * 0.31; for (let i = 0; i < k; i++) shot(b.x, b.y, o + i * TAU / k, 170, '#f472b6', 7); K.sfx('shoot');
+      if (b.n % 4 === 0 && foes.length < 3) foes.push({ kind: 'slime', x: b.x, y: b.y + 40, r: 13, hp: 2, t: 0.5, a: 0, flash: 0, stun: 0, kx: 0, ky: 0 }); }
+    if (d < b.r + P.r + 8) hurt(1, b.x, b.y);
+  } else {
+    b.zaps = b.zaps || [];
+    for (let i = b.zaps.length - 1; i >= 0; i--) { const z = b.zaps[i]; z.t -= dt; if (z.t <= 0 && !z.hit) { z.hit = true; K.sfx('zap'); if (dist(z.x, z.y, P.x, P.y) < 48) hurt(1, z.x, z.y); } if (z.t < -0.15) b.zaps.splice(i, 1); }
+    if (b.tm <= 0) {
+      b.n = (b.n || 0) + 1;
+      if (b.n % 3 === 0) { fx.burst(b.x, b.y, '#bfdbfe', 16, 160, 0.4, 4); b.x = rand(160, 800); b.y = rand(120, 400); fx.burst(b.x, b.y, '#bfdbfe', 16, 160, 0.4, 4); K.sfx('dash'); b.tm = 0.9; }
+      else { b.zaps.push({ x: P.x, y: P.y, t: 0.9 }); for (let i = 0; i < (b.hp < 6 ? 4 : 2); i++) b.zaps.push({ x: rand(100, 860), y: rand(90, 430), t: 0.9 + i * 0.12 }); b.tm = 1.25; }
+    }
+    if (d < b.r + P.r) hurt(1, b.x, b.y);
+  }
+}
+</script>
+</body>
+</html>

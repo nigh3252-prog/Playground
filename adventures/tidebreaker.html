@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Tidebreaker — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* TIDEBREAKER — sailing under real wind, with broadsides on the shoulder
+   buttons. Chain four chart fragments from island to island, then take the
+   flagship that guards the last one. */
+const { W, H, TAU, rand, irand, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, fx, cam } = K;
+const WS = 5600;
+let S, isles, reefs, foes, balls, wind, frag, known, boss, seedN, sunk, dockCd, wakes;
+const NAMES = ['Gull Rest', 'Port Marrow', 'The Sisters', 'Lantern Cay', 'Skull Rock'];
+const TALES = [
+  ['A fisherman mends nets on the pier.', 'He hands you a torn corner of sailcloth with ink on it. "My father drew that. The next piece went east with the Marrow traders."'],
+  ['Port Marrow smells of tar and oranges.', 'The harbourmaster trades you a second fragment for the news you bring. "Mind the raiders. They sail in pairs these days."'],
+  ['Two rocks lean on each other like tired sisters.', 'In a tin box under the cairn: the third fragment, and a note. "The lamp keeper holds the last."'],
+  ['The lamp keeper does not ask your name.', '"Four pieces make a whole," she says, and the chart finally shows it: Skull Rock. "The Red Admiral anchors there. You will have to sink her."'],
+];
+
+function isleR(I, a) { return I.r * (0.82 + 0.18 * Math.sin(a * 3 + I.ph) + 0.1 * Math.sin(a * 5 + I.ph * 2)); }
+function build() {
+  const r = K.rng(seedN); isles = []; reefs = []; foes = [];
+  const pts = [[900, 4600], [2300, 3500], [4500, 4300], [4200, 2100], [1500, 1100], [3000, 600], [600, 2700]];
+  pts.forEach(([x, y], i) => {
+    const I = { x: x + r.range(-200, 200), y: y + r.range(-200, 200), r: r.range(170, 250), ph: r() * TAU, q: i < 5 ? i : -1, name: i < 5 ? NAMES[i] : '', pa: r() * TAU };
+    I.px = I.x + Math.cos(I.pa) * (isleR(I, I.pa) + 60); I.py = I.y + Math.sin(I.pa) * (isleR(I, I.pa) + 60);
+    isles.push(I);
+  });
+  for (let i = 0; i < 26; i++) {
+    const x = r.range(300, WS - 300), y = r.range(300, WS - 300);
+    if (isles.some((I) => dist(x, y, I.x, I.y) < I.r + 190) || dist(x, y, 500, 5100) < 500) { i--; continue; }
+    reefs.push({ x, y, r: r.range(26, 44) });
+  }
+  for (let i = 0; i < 7; i++) {
+    const x = r.range(600, WS - 600), y = r.range(400, WS - 1300);
+    foes.push(mkFoe(x, y, 3));
+  }
+  boss = mkFoe(isles[4].px + 200, isles[4].py + 200, 14); boss.boss = true; boss.home = isles[4];
+}
+function mkFoe(x, y, hp) { return { x, y, a: rand(0, TAU), v: 0, hp, max: hp, r: hp > 5 ? 26 : 17, cdL: 1, cdR: 1, t: rand(0, 5), hx: x, hy: y, flash: 0 }; }
+function fire(sh, side, mine) {
+  const n = sh.boss ? 5 : 3, len = sh.r * 1.4;
+  for (let i = 0; i < n; i++) {
+    const o = (i - (n - 1) / 2) / n * len * 2, a = sh.a + side * Math.PI / 2 + rand(-0.05, 0.05);
+    balls.push({ x: sh.x + Math.cos(sh.a) * o, y: sh.y + Math.sin(sh.a) * o, vx: Math.cos(a) * 420 + Math.cos(sh.a) * sh.v, vy: Math.sin(a) * 420 + Math.sin(sh.a) * sh.v, t: 0.85, mine });
+    fx.burst(sh.x + Math.cos(sh.a) * o + Math.cos(a) * sh.r, sh.y + Math.sin(sh.a) * o + Math.sin(a) * sh.r, '#e5e7eb', 4, 70, 0.5, 5);
+  }
+  K.sfx('boom'); if (mine) fx.shake(5);
+}
+function hull(dmg) {
+  if (S.inv > 0) return; S.hp -= dmg; S.inv = 0.5; K.sfx('hurt'); fx.shake(8);
+  if (S.hp <= 0) K.lose({ title: 'LOST WITH ALL HANDS', text: 'The tide keeps your charts. You wake at the last pier you tied up to.', stats: [['Fragments', frag + ' / 4'], ['Ships sunk', sunk]] });
+}
+function place(I) { S = { x: I.px + Math.cos(I.pa) * 50, y: I.py + Math.sin(I.pa) * 50, a: I.pa, v: 0, sail: 0, hp: 100, cdL: 0, cdR: 0, inv: 1, r: 16 }; cam.x = S.x; cam.y = S.y; balls = []; dockCd = 4; }
+
+K.run({
+  id: 'tidebreaker', num: 3, title: 'TIDEBREAKER', tag: 'Sailing and broadsides', color: '#38bdf8',
+  goal: 'Sail island to island collecting four chart fragments, then sink the Red Admiral at Skull Rock. You cannot sail straight into the wind, and your cannons only fire sideways.',
+  controls: [['LS', 'Steer'], ['cross', 'Raise / furl sail'], ['l1', 'Port guns'], ['r1', 'Starboard guns'], ['triangle', 'Chart']],
+  music: { bpm: 96, root: 48, mode: 'major', dens: 0.5, seed: 21, lead: 'triangle', prog: [0, 3, 4, 0] },
+  start() {
+    seedN = irand(1, 1e9); build(); frag = 0; known = 0; sunk = 0; wakes = [];
+    wind = { a: rand(0, TAU), t: 0 }; S = null; place({ px: 500, py: 5100, pa: -0.9 }); this.last = { px: 500, py: 5100, pa: -0.9 };
+    K.say(['The chart is in four pieces on four islands. Somebody wanted it to stay that way.', 'Gull Rest lies to the north-east. Raise the sail with ✕ and keep the wind off your bow.'], null, 'First mate');
+  },
+  retry() { place(this.last); },
+  update(dt) {
+    wind.t += dt; wind.a += Math.sin(wind.t / 23) * 0.02 * dt + Math.sin(wind.t / 7) * 0.012 * dt;
+    dockCd -= dt; S.inv -= dt; S.cdL -= dt; S.cdR -= dt;
+    if (K.hit('cross')) { S.sail = S.sail ? 0 : 1; K.sfx(S.sail ? 'swing' : 'back'); }
+    this.map = K.down('triangle');
+    const rel = Math.cos(K.angDiff(S.a, wind.a));
+    const eff = 0.28 + 0.72 * clamp((rel + 0.8) / 1.2, 0, 1);
+    S.eff = eff;
+    S.v = K.damp(S.v, S.sail ? 185 * eff : 0, S.sail ? 0.7 : 0.9, dt);
+    S.a += K.IN.lx * (0.5 + Math.min(1, S.v / 90) * 0.9) * dt;
+    S.x += Math.cos(S.a) * S.v * dt; S.y += Math.sin(S.a) * S.v * dt;
+    S.x = clamp(S.x, 40, WS - 40); S.y = clamp(S.y, 40, WS - 40);
+    if (K.hit('l1') && S.cdL <= 0) { fire(S, -1, true); S.cdL = 1.7; }
+    if (K.hit('r1') && S.cdR <= 0) { fire(S, 1, true); S.cdR = 1.7; }
+    if (S.v > 30 && Math.random() < dt * 14) wakes.push({ x: S.x - Math.cos(S.a) * 16, y: S.y - Math.sin(S.a) * 16, t: 1.4 });
+    for (let i = wakes.length - 1; i >= 0; i--) { wakes[i].t -= dt; if (wakes[i].t <= 0) wakes.splice(i, 1); }
+    /* land and reefs */
+    for (const I of isles) {
+      const d = dist(S.x, S.y, I.x, I.y), a = ang(I.x, I.y, S.x, S.y), rr = isleR(I, a) + 12;
+      if (d < rr) { S.x = I.x + Math.cos(a) * rr; S.y = I.y + Math.sin(a) * rr; if (S.v > 70) hull(8); S.v *= 0.3; }
+      if (I.q >= 0 && dockCd <= 0 && dist(S.x, S.y, I.px, I.py) < 60 && S.v < 75) {
+        dockCd = 6; S.hp = 100; this.last = I; K.sfx('door');
+        if (I.q === known && I.q < 4) {
+          frag++; known++; K.sfx('key');
+          K.say(TALES[I.q].concat(['Chart fragment ' + frag + ' of 4. Hull repaired. Next: ' + NAMES[known] + '.']), null, I.name);
+        } else if (I.q === 4 && frag === 4 && boss.hp <= 0) {
+          K.win({ title: 'THE CHART IS WHOLE', text: 'Under Skull Rock, where the four pieces said it would be. The sea gave it up without a word.', stats: [['Ships sunk', sunk], ['Hull', Math.round(S.hp) + '%']] });
+        } else if (I.q === 4 && frag === 4) K.hint('The Red Admiral still floats. Sink her first.', 3);
+        else K.hint(I.name + ': hull repaired', 2.5);
+      }
+    }
+    for (const r of reefs) if (dist(S.x, S.y, r.x, r.y) < r.r + 10) { const a = ang(r.x, r.y, S.x, S.y); S.x = r.x + Math.cos(a) * (r.r + 11); S.y = r.y + Math.sin(a) * (r.r + 11); if (S.v > 50) hull(10); S.v *= 0.4; }
+    /* raiders */
+    const all = frag === 4 && boss.hp > 0 ? foes.concat([boss]) : foes;
+    for (const f of all) {
+      if (f.hp <= 0) continue;
+      f.flash -= dt; f.cdL -= dt; f.cdR -= dt; f.t += dt;
+      const d = dist(f.x, f.y, S.x, S.y), b = ang(f.x, f.y, S.x, S.y);
+      let want, sp = f.boss ? 78 : 92;
+      const leash = f.boss ? dist(f.x, f.y, f.home.px, f.home.py) > 900 : false;
+      if (d < 620 && !leash) {
+        want = d > 250 ? b : b + Math.PI / 2 * (K.angDiff(f.a, b) > 0 ? -1 : 1);
+        const side = K.angDiff(f.a, b);
+        if (d < 330 && Math.abs(Math.abs(side) - Math.PI / 2) < 0.3) {
+          if (side > 0 && f.cdR <= 0) { fire(f, 1, false); f.cdR = f.boss ? 2.2 : 3.2; }
+          if (side < 0 && f.cdL <= 0) { fire(f, -1, false); f.cdL = f.boss ? 2.2 : 3.2; }
+        }
+      } else { want = dist(f.x, f.y, f.hx, f.hy) > 500 ? ang(f.x, f.y, f.hx, f.hy) : f.a + Math.sin(f.t * 0.3) * 0.4; sp = 45; }
+      for (const I of isles) { const di = dist(f.x, f.y, I.x, I.y); if (di < I.r + 110) want = ang(I.x, I.y, f.x, f.y) + 0.9; }
+      f.a += clamp(K.angDiff(f.a, want), -1, 1) * 0.9 * dt; f.v = K.damp(f.v, sp, 1, dt);
+      f.x += Math.cos(f.a) * f.v * dt; f.y += Math.sin(f.a) * f.v * dt;
+      if (d < f.r + S.r) { const a = ang(f.x, f.y, S.x, S.y); S.x += Math.cos(a) * 6; S.y += Math.sin(a) * 6; hull(6); }
+    }
+    for (let i = balls.length - 1; i >= 0; i--) {
+      const b = balls[i]; b.t -= dt; b.x += b.vx * dt; b.y += b.vy * dt; let dead = b.t <= 0;
+      if (dead) { fx.burst(b.x, b.y, '#bae6fd', 5, 60, 0.4, 3); }
+      if (b.mine) { for (const f of all) if (f.hp > 0 && dist(b.x, b.y, f.x, f.y) < f.r + 4) { f.hp--; f.flash = 0.12; dead = true; K.sfx('hit'); fx.burst(b.x, b.y, '#fdba74', 8, 120, 0.4, 3); if (f.hp <= 0) { sunk++; K.sfx('boom'); fx.burst(f.x, f.y, '#fed7aa', 40, 240, 1, 5); fx.shake(10); if (f.boss) K.banner('THE RED ADMIRAL SINKS', 'Tie up at Skull Rock'); } break; } }
+      else if (dist(b.x, b.y, S.x, S.y) < S.r + 4) { hull(9); dead = true; fx.burst(b.x, b.y, '#fdba74', 8, 120, 0.4, 3); }
+      for (const I of isles) if (dist(b.x, b.y, I.x, I.y) < I.r * 0.8) dead = true;
+      if (dead) balls.splice(i, 1);
+    }
+    cam.follow(S.x + Math.cos(S.a) * 70, S.y + Math.sin(S.a) * 70, dt, 3); cam.bound(WS, WS);
+  },
+  draw(t) {
+    const g = K.g;
+    rect(0, 0, W, H, '#0b5c8a');
+    cam.begin();
+    /* swell */
+    const x0 = Math.floor((cam.x - W / 2) / 90) - 1, y0 = Math.floor((cam.y - H / 2) / 90) - 1;
+    for (let y = y0; y < y0 + 9; y++) for (let x = x0; x < x0 + 13; x++) {
+      const n = K.hash2(x, y, 9), px = x * 90 + n * 70 + Math.cos(wind.a) * ((t * 22 + n * 90) % 90), py = y * 90 + K.hash2(y, x, 5) * 70 + Math.sin(wind.a) * ((t * 22 + n * 90) % 90);
+      g.strokeStyle = 'rgba(186,230,253,' + (0.1 + n * 0.14) + ')'; g.lineWidth = 2; g.beginPath(); g.arc(px, py, 14 + n * 10, wind.a - 1.9, wind.a - 1.2); g.stroke();
+    }
+    for (const r of reefs) { if (!cam.see(r.x, r.y, 60)) continue; circ(r.x, r.y, r.r + 8 + Math.sin(t * 2 + r.x) * 3, 'rgba(224,242,254,.25)'); circ(r.x, r.y, r.r * 0.7, '#475569'); circ(r.x - 5, r.y - 6, r.r * 0.35, '#64748b'); }
+    for (const I of isles) {
+      if (!cam.see(I.x, I.y, 340)) continue;
+      for (const [k, col] of [[1.12, 'rgba(224,242,254,.3)'], [1, '#e9d8a6'], [0.84, '#5a9e4b'], [0.5, '#3f7d3a']]) {
+        g.fillStyle = col; g.beginPath();
+        for (let a = 0; a <= TAU + 0.01; a += 0.15) { const rr = isleR(I, a) * k; g.lineTo(I.x + Math.cos(a) * rr, I.y + Math.sin(a) * rr); }
+        g.fill();
+      }
+      if (I.q >= 0) {
+        const bx = I.x + Math.cos(I.pa) * isleR(I, I.pa) * 0.8, by = I.y + Math.sin(I.pa) * isleR(I, I.pa) * 0.8;
+        line(bx, by, I.px, I.py, '#8b5a2b', 12); circ(I.px, I.py, 8, '#6b4423');
+        if (I.q === known || (I.q === 4 && frag === 4)) ring(I.px, I.py, 40 + Math.sin(t * 4) * 5, '#fde047', 3);
+        rect(I.x - 14, I.y - 12, 28, 22, I.q === 4 ? '#1f2937' : '#b45309'); K.poly([[I.x - 18, I.y - 12], [I.x, I.y - 28], [I.x + 18, I.y - 12]], I.q === 4 ? '#111827' : '#7c2d12');
+        txt(I.name, I.x, I.y + 30, 15, '#fff', 'center', 800);
+      }
+    }
+    for (const w of wakes) circ(w.x, w.y, 4 + (1.4 - w.t) * 9, 'rgba(224,242,254,' + w.t * 0.18 + ')');
+    const ship = (s, col, sailCol, sails) => {
+      g.save(); g.translate(s.x, s.y); g.rotate(s.a);
+      const L = s.r * 1.5, B = s.r * 0.62;
+      g.fillStyle = col; g.beginPath(); g.moveTo(L, 0); g.quadraticCurveTo(L * 0.4, B * 1.3, -L, B * 0.8); g.lineTo(-L, -B * 0.8); g.quadraticCurveTo(L * 0.4, -B * 1.3, L, 0); g.fill();
+      rect(-L * 0.6, -B * 0.5, L * 1.1, B, 'rgba(0,0,0,.2)');
+      if (sails) { g.rotate(clamp(K.angDiff(s.a, wind.a), -1, 1) * 0.55); rrect(-3, -s.r * 1.25, 7, s.r * 2.5, 3, sailCol); rrect(L * 0.4, -s.r * 0.8, 5, s.r * 1.6, 2, sailCol); }
+      else line(0, -s.r, 0, s.r, '#3f2a1c', 3);
+      g.restore();
+    };
+    for (const f of foes.concat(frag === 4 ? [boss] : [])) if (f.hp > 0 && cam.see(f.x, f.y, 60)) {
+      ship(f, f.flash > 0 ? '#fff' : (f.boss ? '#450a0a' : '#3b2f2f'), f.boss ? '#dc2626' : '#27272a', true);
+      if (f.hp < f.max) bar(f.x - 22, f.y - f.r - 20, 44, 7, f.hp / f.max, '#f87171');
+    }
+    if (S.inv <= 0 || Math.floor(t * 16) % 2) ship(S, '#7c4a21', '#f8fafc', S.sail);
+    for (const b of balls) circ(b.x, b.y, 3.5, '#111827');
+    fx.draw();
+    cam.end();
+    /* HUD: hull, guns, wind rose */
+    txt('HULL', 20, 26, 12, '#bae6fd', 'left', 800); bar(62, 17, 160, 18, S.hp / 100, S.hp < 35 ? '#ef4444' : '#38bdf8');
+    K.glyph('l1', 250, 26, 11, S.cdL <= 0 ? 1 : 0.3); K.glyph('r1', 284, 26, 11, S.cdR <= 0 ? 1 : 0.3);
+    txt(S.sail ? (S.eff < 0.4 ? 'IN IRONS: turn off the wind' : 'SAIL SET') : 'SAIL FURLED', 316, 26, 13, S.sail && S.eff < 0.4 ? '#fca5a5' : '#e0f2fe', 'left', 800);
+    circ(900, 62, 42, 'rgba(6,20,34,.7)'); ring(900, 62, 42, 'rgba(186,230,253,.5)', 2);
+    txt('WIND', 900, 116, 11, '#bae6fd', 'center', 800);
+    g.save(); g.translate(900, 62); g.rotate(wind.a); K.poly([[30, 0], [8, -9], [8, -3], [-28, -3], [-28, 3], [8, 3], [8, 9]], '#e0f2fe'); g.restore();
+    g.save(); g.translate(900, 62); g.rotate(S.a); K.poly([[16, 0], [-8, -6], [-8, 6]], '#fbbf24'); g.restore();
+    for (let i = 0; i < 4; i++) rrect(404 + i * 40, 500, 32, 24, 4, i < frag ? '#fde68a' : 'rgba(6,20,34,.6)');
+    txt('CHART', 392, 512, 11, '#bae6fd', 'right', 800);
+    /* pointer to the next landfall */
+    const T = known < 4 ? isles[known] : isles[4];
+    if (!cam.see(T.px, T.py, -60)) { const a = ang(S.x, S.y, T.px, T.py); K.tri(W / 2 + Math.cos(a) * 200, H / 2 + Math.sin(a) * 200, 13, a, '#fde047'); txt(T.name, W / 2 + Math.cos(a) * 168, H / 2 + Math.sin(a) * 168, 12, '#fef9c3', 'center', 800); }
+    if (this.map) {
+      rrect(250, 60, 460, 420, 12, 'rgba(244,228,188,.96)'); const k = 440 / WS, mx = 260, my = 70;
+      for (const I of isles) { circ(mx + I.x * k, my + I.y * k, I.r * k, I.q >= 0 && I.q <= known ? '#5a9e4b' : '#b8a57a'); if (I.q >= 0 && I.q <= known && (I.q < 4 || frag === 4)) txt(I.name, mx + I.x * k, my + I.y * k + 26, 12, '#3f2a1c', 'center', 800); }
+      for (const r of reefs) circ(mx + r.x * k, my + r.y * k, 2, '#8b7d5a');
+      K.tri(mx + S.x * k, my + S.y * k, 9, S.a, '#b91c1c');
+    }
+  },
+});
+</script>
+</body>
+</html>

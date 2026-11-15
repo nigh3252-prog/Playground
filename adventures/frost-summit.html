@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Frost Summit — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* FROST SUMMIT — free climbing on grip strength. Read the route, rest on the
+   ledges, and decide where your three pitons go. */
+const { W, H, TAU, rand, irand, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const REACH = 124, DYNO = 205, TOP = -6600;
+const ZONES = ['THE APRON', 'BLUE ICE', 'THE CHIMNEYS', 'ROTTEN BAND', 'HEADWALL'];
+let holds, P, ice, seedN, zone, gust, falls, flakes;
+
+function build() {
+  const r = K.rng(seedN); holds = [];
+  let x = 480, y = 0, since = 0;
+  holds.push({ x, y, k: 'ledge', main: true });
+  while (y > TOP) {
+    const z = Math.min(4, Math.floor(y / TOP * 5));
+    const wantDyno = z >= 1 && since > 2 && r() < 0.1 + z * 0.035;
+    const d = wantDyno ? r.range(150, 190) : r.range(72, 112), a = -Math.PI / 2 + r.range(-0.95, 0.95);
+    let nx = x + Math.cos(a) * d, ny = y + Math.sin(a) * d;
+    if (nx < 150 || nx > 810) nx = x - Math.cos(a) * d;
+    nx = clamp(nx, 140, 820);
+    since++;
+    let k = 'jug';
+    if (since >= 10 || ny <= TOP) { k = 'ledge'; since = 0; }
+    else if (!wantDyno) { const q = r(); if (z >= 1 && q < 0.2) k = 'icy'; else if (q < 0.16 + z * 0.07) k = 'crimp'; else if (z >= 3 && q > 0.86) k = 'rot'; }
+    holds.push({ x: nx, y: ny, k, main: true, dyno: wantDyno });
+    /* decoys and alternatives around the line */
+    const nd = r.int(1, 2);
+    for (let i = 0; i < nd; i++) {
+      const dx = nx + r.range(-260, 260), dy = ny + r.range(-70, 70);
+      if (dx > 130 && dx < 830 && holds.every((h) => dist(h.x, h.y, dx, dy) > 46)) holds.push({ x: dx, y: dy, k: r.pick(['crimp', 'crimp', 'icy', 'jug', z >= 3 ? 'rot' : 'crimp']) });
+    }
+    x = nx; y = ny;
+  }
+  let last = null; for (const h of holds) if (h.main) last = h;
+  last.summit = true; last.k = 'ledge';
+  holds.forEach((h, i) => { h.i = i; h.t = 0; h.gone = 0; });
+}
+function setAt(h) { P.h = h; P.x = h.x; P.y = h.y + 34; P.mv = 0; }
+function fall(why) {
+  falls++; P.hp--; K.sfx('hurt'); fx.shake(12); fx.flash('#1e3a8a', 0.3);
+  if (P.hp <= 0) { K.lose({ title: 'THE MOUNTAIN SAYS NO', text: why + ' You wake at your last anchor with the rope still tight.', stats: [['Height', Math.round(-P.y / 30) + ' m'], ['Falls', falls]] }); return; }
+  K.hint(why + ' The rope catches you.', 2.2);
+  setAt(P.anchor); P.st = 55;
+}
+function target() {
+  const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly); if (m < 0.35) return null;
+  const want = Math.atan2(ly, lx), R = K.down('r2') ? DYNO : REACH;
+  let best = null, bs = 1e9;
+  for (const h of holds) {
+    if (h === P.h || h.gone > 0) continue; const d = dist(P.h.x, P.h.y, h.x, h.y); if (d > R) continue;
+    const s = Math.abs(K.angDiff(want, ang(P.h.x, P.h.y, h.x, h.y))); if (s > 0.75) continue;
+    const sc = s + d / 900; if (sc < bs) { bs = sc; best = h; }
+  }
+  return best;
+}
+
+K.run({
+  id: 'frost-summit', num: 7, title: 'FROST SUMMIT', tag: 'Free climb on failing grip', color: '#7dd3fc',
+  goal: 'Climb 220 metres to the summit cairn. Grip drains while you hang, faster on bad holds, and only comes back on ledges. Hammer a piton to choose where a fall will leave you.',
+  controls: [['LS', 'Aim reach'], ['cross', 'Grab'], ['r2', 'Hold to lunge further'], ['square', 'Hammer piton']],
+  music: { bpm: 68, root: 52, mode: 'lydian', dens: 0.28, seed: 14, long: true, lead: 'sine', leadVol: 0.06 },
+  start() {
+    seedN = irand(1, 1e9); build(); P = { hp: 3, st: 100, pitons: 3, anchor: holds[0], from: null, mv: 0, tg: null };
+    setAt(holds[0]); ice = []; zone = 0; gust = { t: 9, on: 0, dir: 1 }; falls = 0; flakes = [];
+    for (let i = 0; i < 70; i++) flakes.push({ x: rand(0, W), y: rand(0, H), s: rand(0.5, 1.6) });
+    cam.x = W / 2; cam.y = P.y - 120; K.banner(ZONES[0], 'Green holds are ledges: rest there');
+  },
+  retry() { P.hp = 3; P.st = 100; setAt(P.anchor); ice = []; },
+  update(dt) {
+    const h = P.h; h.t += dt;
+    for (const o of holds) if (o.gone > 0) o.gone -= dt;
+    P.tg = P.mv > 0 ? null : target();
+    if (P.mv > 0) { P.mv -= dt / 0.17; if (P.mv <= 0) { P.mv = 0; P.from = null; } }
+    if (K.hit('cross') && P.tg && P.mv <= 0) {
+      const d = dist(h.x, h.y, P.tg.x, P.tg.y), big = d > REACH;
+      P.st -= big ? 15 : 4; P.from = { x: h.x, y: h.y }; h.t = 0; P.h = P.tg; P.h.t = 0; P.mv = 1;
+      K.sfx(big ? 'dash' : 'step'); if (big) fx.burst(P.h.x, P.h.y, '#e0f2fe', 8, 90, 0.4, 3);
+      if (P.h.k === 'ledge') { K.sfx('land'); if (P.h.i > P.anchor.i) P.anchor = P.h; }
+    }
+    if (K.hit('square')) {
+      if (P.pitons > 0 && h.k !== 'ledge' && !h.piton && h.k !== 'rot') { P.pitons--; h.piton = true; if (h.i > P.anchor.i || h.y < P.anchor.y) P.anchor = h; K.sfx('clank'); fx.burst(h.x, h.y, '#fde047', 10, 100, 0.4, 3); K.hint('Piton set. A fall brings you back here.', 2); }
+      else K.sfx('bad');
+    }
+    /* grip */
+    const cur = P.h;
+    gust.t -= dt; if (zone >= 2 && gust.t <= 0) { gust.on = 2.6; gust.t = rand(9, 15); gust.dir = Math.random() < 0.5 ? -1 : 1; K.noise({ f: 500, f2: 1400, dur: 2.4, vol: 0.2, type: 'bandpass', q: 0.5 }); K.hint('Gust! Grip drains faster.', 1.6); }
+    gust.on -= dt;
+    const drain = { ledge: -34, jug: 5, crimp: 12, icy: 7, rot: 7 }[cur.k] * (gust.on > 0 && cur.k !== 'ledge' ? 1.9 : 1);
+    P.st = clamp(P.st - drain * dt, 0, 100);
+    if (cur.k === 'ledge' && P.pitons < 3 && cur.t > 0 && !cur.gave && cur.i > 0) { cur.gave = true; P.pitons = Math.min(3, P.pitons + 1); }
+    if (cur.k === 'icy' && cur.t > 2.1 && P.mv <= 0) { fall('The ice let go.'); return; }
+    if (cur.k === 'rot' && cur.t > 1.4 && P.mv <= 0) { cur.gone = 6; fx.burst(cur.x, cur.y, '#a8a29e', 14, 140, 0.6, 4, 500); K.sfx('boom'); fall('The rock crumbled.'); return; }
+    if (P.st <= 0) { fall('Your grip gave out.'); return; }
+    /* body position eases toward a hang below the hold */
+    const bx = P.from ? lerp(cur.x, P.from.x, P.mv) : cur.x, by = (P.from ? lerp(cur.y, P.from.y, P.mv) : cur.y) + 34 - Math.sin((1 - P.mv) * Math.PI) * (P.from ? 10 : 0);
+    P.x = K.damp(P.x, bx, 16, dt); P.y = K.damp(P.y, by, 16, dt);
+    /* falling ice */
+    const z = Math.min(4, Math.floor(P.y / TOP * 5));
+    if (z !== zone && z > zone) { zone = z; K.banner(ZONES[z], ['', 'Blue holds are slick: two seconds, no more', 'The wind finds you here', 'Brown holds crumble. Do not linger.', 'Everything at once. Almost there.'][z]); }
+    if (Math.random() < dt * (0.25 + zone * 0.16)) ice.push({ x: clamp(P.x + rand(-170, 170), 120, 840), y: cam.y - H / 2 - 40, vy: 60, r: rand(9, 15), warn: 1 });
+    for (let i = ice.length - 1; i >= 0; i--) {
+      const c = ice[i]; if (c.warn > 0) { c.warn -= dt; c.y = cam.y - H / 2 - 40; continue; }
+      c.vy += 620 * dt; c.y += c.vy * dt;
+      if (dist(c.x, c.y, P.x, P.y - 10) < c.r + 15) { P.st -= 26; K.sfx('hit'); fx.shake(7); fx.burst(c.x, c.y, '#e0f2fe', 14, 160, 0.5, 4, 400); ice.splice(i, 1); continue; }
+      if (c.y > cam.y + H) ice.splice(i, 1);
+    }
+    if (cur.summit && P.mv <= 0) K.win({ title: 'SUMMIT', text: 'Nothing above you but weather. You stack one more stone on the cairn.', stats: [['Falls', falls], ['Hearts left', P.hp]] });
+    cam.x = W / 2; cam.y = K.damp(cam.y, P.y - 110, 4, dt);
+  },
+  draw(t) {
+    const g = K.g, hi = clamp(P.y / TOP, 0, 1);
+    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, K.hsl(215, 50, lerp(46, 14, hi))); sky.addColorStop(1, K.hsl(200, 55, lerp(72, 36, hi))); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    for (let L = 0; L < 2; L++) { g.fillStyle = L ? 'rgba(226,240,255,.5)' : 'rgba(186,214,240,.4)'; g.beginPath(); g.moveTo(0, H); for (let x = 0; x <= W; x += 30) g.lineTo(x, 300 + L * 60 + K.noise2(x / 160 + L * 7, 1, 3) * 150 + hi * 420 * (0.5 + L * 0.3)); g.lineTo(W, H); g.fill(); }
+    cam.begin();
+    /* the wall: a rock band with strata */
+    const top = cam.y - H / 2 - 40, bot = cam.y + H / 2 + 40;
+    g.fillStyle = '#4b5563'; g.beginPath(); g.moveTo(90, bot);
+    for (let y = bot; y >= top; y -= 30) g.lineTo(95 + K.noise2(y / 140, 2, 5) * 40, y);
+    for (let y = top; y <= bot; y += 30) g.lineTo(865 - K.noise2(y / 140, 9, 5) * 40, y);
+    g.fill();
+    for (let y = Math.floor(top / 54) * 54; y < bot; y += 54) { const n = K.hash2(y, 3, 2); g.globalAlpha = 0.5; line(140 + n * 300, y, 300 + n * 500, y + 10, '#374151', 3); g.globalAlpha = 0.16; rrect(160 + K.hash2(y, 7, 2) * 560, y + 20, 90 + n * 80, 5, 2, '#e5eef8'); g.globalAlpha = 1; }
+    if (bot > 30) { rect(0, 60, W, 800, '#e5eef8'); }
+    /* rope from anchor to climber */
+    g.strokeStyle = '#f97316'; g.lineWidth = 2; g.beginPath(); g.moveTo(P.anchor.x, P.anchor.y); g.quadraticCurveTo((P.anchor.x + P.x) / 2 + 26, Math.max(P.anchor.y, P.y) + 30, P.x, P.y + 6); g.stroke();
+    for (const h of holds) {
+      if (h.y < top - 20 || h.y > bot + 20) continue;
+      if (h.gone > 0) { ring(h.x, h.y, 7, 'rgba(0,0,0,.25)', 2); continue; }
+      const sh = (h === P.h && (h.k === 'icy' || h.k === 'rot')) ? Math.sin(t * 50) * h.t * 1.6 : 0;
+      if (h.k !== 'ledge') circ(h.x + sh, h.y + 3, 15, 'rgba(15,23,42,.45)');
+      if (h.k === 'ledge') { rrect(h.x - 40, h.y - 4, 80, 14, 6, '#1f2937'); rrect(h.x - 38, h.y - 6, 76, 13, 6, h.summit ? '#fde047' : '#4ade80'); rect(h.x - 32, h.y - 10, 64, 5, '#f0f9ff'); if (h.summit) { for (let i = 0; i < 4; i++) rrect(h.x - 14 + i * 3, h.y - 22 - i * 9, 28 - i * 6, 9, 3, '#cbd5e1'); } }
+      else if (h.k === 'jug') { rrect(h.x - 14 + sh, h.y - 8, 28, 16, 8, '#f1d3a6'); rrect(h.x - 9 + sh, h.y - 3, 18, 5, 2, '#b08a5a'); }
+      else if (h.k === 'crimp') rrect(h.x - 11, h.y - 4, 22, 8, 3, '#f87171');
+      else if (h.k === 'icy') { K.poly([[h.x - 14 + sh, h.y - 7], [h.x + 14 + sh, h.y - 7], [h.x + 5 + sh, h.y + 15], [h.x - 4 + sh, h.y + 10]], '#7dd3fc', '#e0f2fe', 1.5); }
+      else { rrect(h.x - 13 + sh, h.y - 8, 26, 16, 3, '#92400e'); line(h.x - 6 + sh, h.y - 8, h.x + 2 + sh, h.y + 8, '#451a03', 2); }
+      if (h.piton) { line(h.x + 10, h.y - 10, h.x + 2, h.y - 2, '#fde047', 3); ring(h.x + 12, h.y - 12, 4, '#fde047', 2); }
+    }
+    if (P.tg) {
+      const far = dist(P.h.x, P.h.y, P.tg.x, P.tg.y) > REACH;
+      ring(P.tg.x, P.tg.y, 17 + Math.sin(t * 10) * 2, far ? '#fbbf24' : '#fff', 2.5);
+      g.setLineDash([5, 6]); line(P.h.x, P.h.y, P.tg.x, P.tg.y, 'rgba(255,255,255,.5)', 1.5); g.setLineDash([]);
+    }
+    if (K.down('r2') && P.mv <= 0) ring(P.h.x, P.h.y, DYNO, 'rgba(251,191,36,.25)', 2);
+    /* climber: body hangs, arms go to the hold, legs brace */
+    const hx = P.h.x, hy = P.h.y, bx = P.x, by = P.y, tired = P.st < 30 ? Math.sin(t * 40) * 1.5 : 0;
+    line(bx - 6, by - 14, hx - 5 + tired, hy, '#e2c9a8', 4); line(bx + 6, by - 14, P.tg ? lerp(hx + 5, P.tg.x, 0.35) : hx + 5, P.tg ? lerp(hy, P.tg.y, 0.35) : hy, '#e2c9a8', 4);
+    line(bx - 5, by + 8, bx - 13, by + 26, '#1e293b', 5); line(bx + 5, by + 8, bx + 12, by + 22 + Math.sin(t * 3) * 2, '#1e293b', 5);
+    rrect(bx - 9, by - 16, 18, 26, 6, '#dc2626'); circ(bx, by - 22, 8, '#e2c9a8'); rrect(bx - 9, by - 31, 18, 9, 4, '#1d4ed8');
+    for (const c of ice) {
+      if (c.warn > 0) { g.globalAlpha = 0.5 + 0.5 * Math.sin(t * 24); K.tri(c.x, cam.y - H / 2 + 46, 12, Math.PI / 2, '#f87171'); g.globalAlpha = 1; }
+      else K.poly([[c.x, c.y - c.r], [c.x + c.r * 0.8, c.y], [c.x + c.r * 0.2, c.y + c.r], [c.x - c.r * 0.8, c.y + c.r * 0.3]], '#e0f2fe', '#7dd3fc', 2);
+    }
+    fx.draw();
+    cam.end();
+    for (const f of flakes) { f.y = (f.y + f.s * 1.2 + 0.3) % H; f.x = (f.x + (gust.on > 0 ? gust.dir * 9 : 0.4) * f.s + W) % W; circ(f.x, f.y, f.s, 'rgba(255,255,255,.7)'); }
+    hearts(24, 26, P.hp, 3);
+    txt('GRIP', 104, 26, 12, '#e0f2fe', 'left', 800); bar(144, 15, 220, 22, P.st / 100, P.st < 30 ? '#ef4444' : P.h.k === 'ledge' ? '#4ade80' : '#7dd3fc');
+    for (let i = 0; i < 3; i++) { line(392 + i * 20, 18, 400 + i * 20, 34, i < P.pitons ? '#fde047' : 'rgba(255,255,255,.2)', 3); }
+    txt(Math.round(-P.y / 30) + ' m', 930, 26, 20, '#fff', 'right', 900); txt('of ' + Math.round(-TOP / 30) + ' m', 930, 48, 12, '#e0f2fe', 'right', 700);
+    rect(946, 70, 4, 400, 'rgba(255,255,255,.2)'); rect(942, 470 - 400 * hi, 12, 4, '#fff');
+    const names = { ledge: 'LEDGE: resting', jug: 'Good hold', crimp: 'CRIMP: tiring', icy: 'ICE: slipping!', rot: 'ROTTEN: move!' };
+    txt(names[P.h.k], 254, 50, 12, '#e0f2fe', 'center', 700);
+  },
+});
+</script>
+</body>
+</html>
