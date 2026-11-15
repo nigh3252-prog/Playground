@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Hollow Echo — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* HOLLOW ECHO — you see only what your sonar returns. Every ping draws the
+   trench for a moment, and tells the thing that lives here where you are. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const TS = 28, GW = 96, GH = 62, NR = 240;
+let G, lit, mem, S, pings, boxes, mines, bell, lev, seedN, got, objLit, silentT;
+const solid = (x, y) => G.get(x, y) === 1;
+
+function build() {
+  const r = K.rng(seedN);
+  do { G = K.cave(GW, GH, r, 0.445, 5); } while (G.open < GW * GH * 0.33);
+  lit = new Float32Array(GW * GH); mem = new Uint8Array(GW * GH);
+  const cells = []; for (let y = 2; y < GH - 2; y++) for (let x = 2; x < GW - 2; x++) if (!G.d[y * GW + x] && !G.get(x + 1, y) && !G.get(x - 1, y) && !G.get(x, y + 1) && !G.get(x, y - 1)) cells.push([x, y]);
+  const s = r.pick(cells.filter(([x, y]) => y < 14)) || cells[0];
+  bell = { x: s[0] * TS + 14, y: s[1] * TS + 14 };
+  const D = K.bfs(GW, GH, s[0], s[1], (x, y) => !G.d[y * GW + x]);
+  const far = cells.filter(([x, y]) => D[y * GW + x] > 30).sort((a, b) => D[b[1] * GW + b[0]] - D[a[1] * GW + a[0]]);
+  boxes = [];
+  for (const c of far) { if (boxes.length >= 4) break; const x = c[0] * TS + 14, y = c[1] * TS + 14; if (boxes.every((b) => dist(b.x, b.y, x, y) > 560)) boxes.push({ x, y, got: false, ph: r() * 3, lit: 0 }); }
+  while (boxes.length < 4) { const c = far[r.int(0, far.length - 1)]; boxes.push({ x: c[0] * TS + 14, y: c[1] * TS + 14, got: false, ph: r() * 3, lit: 0 }); }
+  mines = [];
+  for (const c of K.shuffle(cells.slice(), r)) { if (mines.length >= 26) break; const x = c[0] * TS + 14, y = c[1] * TS + 14; if (D[c[1] * GW + c[0]] > 10 && mines.every((m) => dist(m.x, m.y, x, y) > 190)) mines.push({ x, y, lit: 0, ph: r() * TAU }); }
+  const lc = far[far.length >> 1]; lev = { x: lc[0] * TS + 14, y: lc[1] * TS + 14, r: 22, tx: 0, ty: 0, heat: 0, lit: 0, map: null, mt: 0, a: 0, tail: [], bite: 0 };
+}
+function place() { S = { x: bell.x, y: bell.y + 20, vx: 0, vy: 0, r: 9, a: Math.PI / 2, hp: 4, cd: 0, inv: 1.5 }; pings = []; cam.x = S.x; cam.y = S.y; lev.heat = 0; if (dist(lev.x, lev.y, S.x, S.y) < 600) { lev.x = clamp(S.x + 900, 100, GW * TS - 100); lev.y = clamp(S.y + 700, 100, GH * TS - 100); } }
+function ping(x, y, max, own) { const alive = new Uint8Array(NR).fill(1); pings.push({ x, y, r: 6, max, alive, own }); }
+function heard(x, y, loud) { if (loud > lev.heat * 0.6) { lev.tx = x; lev.ty = y; lev.mt = 0; } lev.heat = Math.min(1.6, lev.heat + loud); }
+function hurt(n, why) {
+  if (S.inv > 0) return; S.hp -= n; S.inv = 1.5; K.sfx('hurt'); fx.shake(12); fx.flash('#7f1d1d', 0.3);
+  if (S.hp <= 0) K.lose({ title: 'CRUSH DEPTH', text: why + ' The bell crew winch you back. Recovered boxes are already aboard.', stats: [['Black boxes', got + ' / 4']] });
+}
+
+K.run({
+  id: 'hollow-echo', num: 9, title: 'HOLLOW ECHO', tag: 'Sonar in the dark', color: '#22d3ee',
+  goal: 'Four flight recorders lie in the trench, each chirping faintly. Recover them and return to the diving bell. Ping to see. Something down here is listening.',
+  controls: [['LS', 'Thrust'], ['cross', 'Sonar ping'], ['square', 'Hold: run silent']],
+  music: { bpm: 50, root: 36, mode: 'phryg', dens: 0.12, seed: 3, long: true, lead: 'sine', leadVol: 0.05, pad: true },
+  start() { seedN = irand(1, 1e9); build(); got = 0; place(); ping(S.x, S.y, 520, true); K.banner('HOLLOW ECHO', 'Follow the chirps. Hold □ and drift when it comes for you.'); },
+  retry() { place(); },
+  update(dt) {
+    const silent = K.down('square'), lx = silent ? 0 : K.IN.lx, ly = silent ? 0 : K.IN.ly, m = Math.hypot(lx, ly);
+    S.inv -= dt; S.cd -= dt;
+    S.vx += lx * 330 * dt; S.vy += ly * 330 * dt; S.vx *= 1 - 1.5 * dt; S.vy *= 1 - 1.5 * dt;
+    if (m > 0.2) S.a += K.angDiff(S.a, Math.atan2(ly, lx)) * Math.min(1, dt * 8);
+    const h = K.moveC(S, S.vx * dt, S.vy * dt, solid, TS);
+    if (h.hx) { if (Math.abs(S.vx) > 120) { hurt(1, 'Hull breach on the rocks.'); } S.vx *= -0.3; } if (h.hy) { if (Math.abs(S.vy) > 120) hurt(1, 'Hull breach on the rocks.'); S.vy *= -0.3; }
+    if (m > 0.3) { heard(S.x, S.y, m * dt * 0.16); if (Math.random() < dt * 14) fx.spark(S.x - Math.cos(S.a) * 12, S.y - Math.sin(S.a) * 12, rand(-20, 20), rand(-20, 20), 'rgba(165,243,252,.5)', 0.6, 2); }
+    if (K.hit('cross') && S.cd <= 0 && !silent) { S.cd = 1.1; ping(S.x, S.y, 560, true); K.sfx('ping'); heard(S.x, S.y, 0.75); }
+    /* passive hull glow */
+    const cx = Math.floor(S.x / TS), cy = Math.floor(S.y / TS);
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (G.get(cx + dx, cy + dy) === 1 && G.inb(cx + dx, cy + dy)) { const i = (cy + dy) * GW + cx + dx; lit[i] = Math.max(lit[i], 0.5); mem[i] = 1; }
+    for (let i = 0; i < lit.length; i++) if (lit[i] > 0) lit[i] = Math.max(0, lit[i] - dt * 0.3);
+    for (let p = pings.length - 1; p >= 0; p--) {
+      const P = pings[p], r1 = P.r + 560 * dt;
+      for (let i = 0; i < NR; i++) {
+        if (!P.alive[i]) continue; const a = i / NR * TAU, ca = Math.cos(a), sa = Math.sin(a);
+        for (let d = P.r; d < r1; d += 7) { const tx = Math.floor((P.x + ca * d) / TS), ty = Math.floor((P.y + sa * d) / TS); if (G.get(tx, ty) === 1) { if (G.inb(tx, ty)) { lit[ty * GW + tx] = 1; mem[ty * GW + tx] = 1; } P.alive[i] = 0; break; } }
+      }
+      if (P.own) {
+        for (const o of mines.concat(boxes, [lev])) { const d = dist(P.x, P.y, o.x, o.y); if (d >= P.r && d < r1 && K.los(P.x, P.y, o.x, o.y, solid, TS)) o.lit = 1; }
+      }
+      P.r = r1; if (P.r > P.max) pings.splice(p, 1);
+    }
+    for (const o of mines.concat(boxes, [lev])) o.lit = Math.max(0, o.lit - dt * 0.3);
+    for (const b of boxes) {
+      if (b.got) continue; b.ph += dt; if (b.ph > 3.2) { b.ph = 0; ping(b.x, b.y, 150, false); if (dist(b.x, b.y, S.x, S.y) < 900) K.tone({ f: 1900, dur: 0.05, type: 'sine', vol: clamp(0.14 - dist(b.x, b.y, S.x, S.y) / 9000, 0.01, 0.14) }); }
+      if (dist(b.x, b.y, S.x, S.y) < 24) { b.got = true; got++; K.sfx('key'); fx.burst(b.x, b.y, '#fde047', 20, 140, 0.7, 3); K.banner(got === 4 ? 'ALL FOUR RECOVERED' : 'RECORDER ' + got + ' OF 4', got === 4 ? 'Back to the bell. It pings for you now.' : 'It heard that'); heard(S.x, S.y, 0.5); }
+    }
+    for (let i = mines.length - 1; i >= 0; i--) { const mn = mines[i]; if (dist(mn.x, mn.y, S.x, S.y) < 22) { mines.splice(i, 1); K.sfx('boom'); fx.burst(mn.x, mn.y, '#fb923c', 40, 260, 0.8, 4); ping(mn.x, mn.y, 400, true); heard(mn.x, mn.y, 1.2); hurt(2, 'An old mine.'); } }
+    if (got === 4) { bell.ph = (bell.ph || 0) + dt; if (bell.ph > 2) { bell.ph = 0; ping(bell.x, bell.y, 260, false); } if (dist(S.x, S.y, bell.x, bell.y) < 34) { K.win({ title: 'SURFACING', text: 'Four voices from the dark, safe in the bell. The trench goes quiet behind you.', stats: [['Hull', S.hp + ' / 4']] }); return; } }
+    /* the listener */
+    lev.heat = Math.max(0, lev.heat - dt * 0.085); lev.bite -= dt; lev.mt -= dt;
+    const dl = dist(lev.x, lev.y, S.x, S.y), hunting = lev.heat > 0.25;
+    if (!hunting && (lev.mt <= 0 || dist(lev.x, lev.y, lev.tx, lev.ty) < 60)) { lev.tx = clamp(lev.x + rand(-500, 500), 80, GW * TS - 80); lev.ty = clamp(lev.y + rand(-400, 400), 80, GH * TS - 80); lev.mt = 6; lev.map = null; }
+    if (!lev.map || lev.mapT < K.time) { const tx = clamp(Math.floor(lev.tx / TS), 1, GW - 2), ty = clamp(Math.floor(lev.ty / TS), 1, GH - 2); lev.map = K.bfs(GW, GH, tx, ty, (x, y) => !G.d[y * GW + x]); lev.mapT = K.time + 0.8; }
+    const gx = Math.floor(lev.x / TS), gy = Math.floor(lev.y / TS); let [sx, sy] = K.bfsStep(lev.map, GW, GH, gx, gy);
+    let wa = sx || sy ? ang(lev.x, lev.y, (gx + sx) * TS + 14, (gy + sy) * TS + 14) : lev.a;
+    if (hunting && dl < 220 && K.los(lev.x, lev.y, S.x, S.y, solid, TS) && (m > 0.3 || dl < 70)) { wa = ang(lev.x, lev.y, S.x, S.y); lev.tx = S.x; lev.ty = S.y; }
+    lev.a += K.angDiff(lev.a, wa) * Math.min(1, dt * 5);
+    const lv = hunting ? 96 + lev.heat * 55 : 46; const e = { x: lev.x, y: lev.y, r: 10 }; K.moveC(e, Math.cos(lev.a) * lv * dt, Math.sin(lev.a) * lv * dt, solid, TS); lev.x = e.x; lev.y = e.y;
+    lev.tail.unshift({ x: lev.x, y: lev.y }); if (lev.tail.length > 70) lev.tail.pop();
+    if (dl < 30 && lev.bite <= 0) { lev.bite = 2.5; hurt(2, 'It found you.'); lev.heat = 0.2; const a = ang(lev.x, lev.y, S.x, S.y); S.vx = Math.cos(a) * 320; S.vy = Math.sin(a) * 320; }
+    silentT = silent ? (silentT || 0) + dt : 0;
+    cam.follow(S.x, S.y, dt, 5); cam.bound(GW * TS, GH * TS);
+    this.near = dl; this.hunt = hunting;
+    if (hunting && dl < 500 && Math.floor(K.time * (1.4 + (500 - dl) / 220)) !== Math.floor((K.time - dt) * (1.4 + (500 - dl) / 220))) K.tone({ f: 52, f2: 38, dur: 0.16, type: 'sine', vol: 0.3 });
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#010409');
+    cam.begin();
+    const x0 = Math.max(0, Math.floor((cam.x - W / 2) / TS)), x1 = Math.min(GW - 1, x0 + 36), y0 = Math.max(0, Math.floor((cam.y - H / 2) / TS)), y1 = Math.min(GH - 1, y0 + 21);
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const i = y * GW + x; if (!G.d[i]) continue; const L = Math.max(lit[i], mem[i] ? 0.17 : 0); if (L <= 0) continue;
+      g.fillStyle = 'rgba(34,211,238,' + (L * 0.85) + ')'; g.fillRect(x * TS + 1, y * TS + 1, TS - 2, TS - 2);
+      if (lit[i] > 0.6) { g.fillStyle = 'rgba(207,250,254,' + (lit[i] - 0.6) + ')'; g.fillRect(x * TS + 8, y * TS + 8, TS - 16, TS - 16); }
+    }
+    for (const P of pings) ring(P.x, P.y, P.r, 'rgba(103,232,249,' + clamp(0.5 * (1 - P.r / P.max), 0, 1) * (P.own ? 1 : 0.7) + ')', P.own ? 2 : 1.5);
+    for (const mn of mines) if (mn.lit > 0.02) { g.globalAlpha = mn.lit; for (let k = 0; k < 6; k++) line(mn.x, mn.y, mn.x + Math.cos(k * 1.05 + mn.ph) * 13, mn.y + Math.sin(k * 1.05 + mn.ph) * 13, '#fb923c', 2); circ(mn.x, mn.y, 7, '#f97316'); g.globalAlpha = 1; }
+    for (const b of boxes) if (!b.got) { g.globalAlpha = Math.max(b.lit, b.ph < 0.3 ? 1 : 0.12); rrect(b.x - 8, b.y - 6, 16, 12, 2, '#fde047'); g.globalAlpha = 1; }
+    if (lev.lit > 0.02) { g.globalAlpha = lev.lit; for (let i = lev.tail.length - 1; i >= 0; i -= 5) circ(lev.tail[i].x, lev.tail[i].y, 16 * (1 - i / 80), '#be123c'); circ(lev.x, lev.y, 19, '#e11d48'); circ(lev.x + Math.cos(lev.a + 0.5) * 12, lev.y + Math.sin(lev.a + 0.5) * 12, 3, '#fff'); circ(lev.x + Math.cos(lev.a - 0.5) * 12, lev.y + Math.sin(lev.a - 0.5) * 12, 3, '#fff'); g.globalAlpha = 1; }
+    /* bell */
+    line(bell.x, bell.y - 600, bell.x, bell.y - 16, 'rgba(148,163,184,.5)', 2); g.fillStyle = got === 4 ? '#fde047' : '#64748b'; g.beginPath(); g.arc(bell.x, bell.y, 18, Math.PI, 0); g.lineTo(bell.x + 18, bell.y + 10); g.lineTo(bell.x - 18, bell.y + 10); g.fill();
+    /* sub */
+    if (S.inv <= 0 || Math.floor(t * 14) % 2) {
+      g.save(); g.translate(S.x, S.y); g.rotate(S.a); g.fillStyle = K.down('square') ? '#475569' : '#e2e8f0'; g.beginPath(); g.ellipse(0, 0, 14, 7, 0, 0, TAU); g.fill(); rect(-4, -11, 7, 6, '#94a3b8'); K.poly([[-13, 0], [-20, -6], [-20, 6]], '#94a3b8'); circ(7, 0, 3, '#22d3ee'); g.restore();
+    }
+    fx.draw();
+    cam.end();
+    hearts(24, 26, S.hp, 4, '#22d3ee');
+    for (let i = 0; i < 4; i++) rrect(900 - i * 26, 17, 18, 14, 3, i < got ? '#fde047' : 'rgba(255,255,255,.12)');
+    txt('SONAR', 150, 26, 12, '#67e8f9', 'left', 800); bar(202, 18, 90, 16, 1 - clamp(S.cd / 1.1, 0, 1), '#22d3ee');
+    txt('NOISE', 320, 26, 12, lev.heat > 0.25 ? '#fda4af' : '#67e8f9', 'left', 800); bar(370, 18, 130, 16, lev.heat / 1.6, lev.heat > 0.25 ? '#e11d48' : '#64748b');
+    if (K.down('square')) txt('RUNNING SILENT', W / 2, 60, 14, '#94a3b8', 'center', 800);
+    if (this.hunt && this.near < 420) { g.globalAlpha = clamp((420 - this.near) / 420, 0, 1) * (0.5 + 0.5 * Math.sin(t * 6)); K.rectS(5, 5, W - 10, H - 10, '#e11d48', 6); g.globalAlpha = 1; txt('IT IS CLOSE', W / 2, 500, 14, '#fda4af', 'center', 800); }
+    if (got === 4) { const a = ang(S.x, S.y, bell.x, bell.y); K.tri(W / 2 + Math.cos(a) * 80, H / 2 + Math.sin(a) * 80, 11, a, '#fde047'); }
+  },
+});
+</script>
+</body>
+</html>
