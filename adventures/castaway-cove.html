@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Castaway Cove — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* CASTAWAY COVE — gather, craft, keep a fire lit. Days are for work; nights
+   belong to what crawls up the beach. Four raft parts get you home. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const TS = 32, N = 72, DAY = 85, NIGHT = 50;
+const RES = { tree: ['wood', 3, 1.3], rock: ['stone', 2, 1.6], reed: ['fiber', 2, 0.8], bush: ['food', 1, 0.6] };
+const RECIPES = [
+  { k: 'axe', name: 'STONE AXE', need: { wood: 3, stone: 2 }, desc: 'Gather twice as fast' },
+  { k: 'spear', name: 'SPEAR', need: { wood: 2, stone: 1 }, desc: 'Fight crabs with ✕. Crabs are food.' },
+  { k: 'hull', name: 'RAFT HULL', need: { wood: 12 }, desc: 'Raft part 1 of 4', raft: true },
+  { k: 'mast', name: 'MAST', need: { wood: 6, fiber: 4 }, desc: 'Raft part 2 of 4', raft: true },
+  { k: 'sail', name: 'SAIL', need: { fiber: 9 }, desc: 'Raft part 3 of 4', raft: true },
+  { k: 'anchor', name: 'ANCHOR', need: { stone: 7, fiber: 2 }, desc: 'Raft part 4 of 4', raft: true },
+];
+let land, P, nodes, inv, has, camp, crabs, clock, day, fire, menu, mI, gather, seedN, eaten;
+const isLand = (x, y) => x >= 0 && y >= 0 && x < N && y < N && land[y * N + x] > 0;
+const solid = (x, y) => !isLand(x, y);
+const night = () => clock > DAY;
+
+function build() {
+  const r = K.rng(seedN); land = new Uint8Array(N * N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const d = Math.hypot(x - N / 2, y - N / 2) / (N / 2), h = K.noise2(x / 9, y / 9, seedN % 200) * 0.75 + K.noise2(x / 3, y / 3, 7) * 0.25 - d * d * 1.15 + 0.38;
+    land[y * N + x] = h > 0.33 ? 2 : h > 0.2 ? 1 : 0;
+  }
+  let best = null; for (let y = N - 3; y > N / 2 && !best; y--) for (let x = N / 2 - 6; x < N / 2 + 6; x++) if (land[y * N + x] === 1 && land[(y - 2) * N + x]) { best = [x, y - 1]; break; }
+  if (!best) { best = [N / 2, N / 2]; }
+  camp = { x: best[0] * TS + 16, y: best[1] * TS + 16 };
+  const D = K.bfs(N, N, best[0], best[1], (x, y) => land[y * N + x] > 0);
+  nodes = [];
+  const want = { tree: 46, rock: 26, reed: 24, bush: 22 };
+  for (let t = 0; t < 9000; t++) {
+    const x = r.int(2, N - 3), y = r.int(2, N - 3), L = land[y * N + x]; if (!L || D[y * N + x] < 3) continue;
+    const k = L === 1 ? (r() < 0.7 ? 'reed' : 'rock') : r.pick(['tree', 'tree', 'rock', 'bush']);
+    if (want[k] <= 0) continue; const px = x * TS + 16 + r.range(-8, 8), py = y * TS + 16 + r.range(-8, 8);
+    if (nodes.some((o) => dist(o.x, o.y, px, py) < 44)) continue;
+    want[k]--; nodes.push({ k, x: px, y: py, n: RES[k][1], regrow: 0 });
+  }
+}
+function wake() { P = { x: camp.x, y: camp.y - 30, r: 9, fx: 0, fy: -1, hp: 4, food: 1, inv: 1, sw: 0 }; crabs = []; cam.x = P.x; cam.y = P.y; gather = null; menu = false; }
+function can(rc) { for (const k in rc.need) if ((inv[k] || 0) < rc.need[k]) return false; return true; }
+function hurt(x, y) { if (P.inv > 0) return; P.hp--; P.inv = 1.2; K.sfx('hurt'); fx.shake(8); if (P.hp <= 0) K.lose({ title: 'THE ISLAND KEEPS YOU', text: 'You wake by the camp at dawn. What you built is still built.', stats: [['Day', day], ['Raft parts', raftN() + ' / 4']] }); }
+const raftN = () => ['hull', 'mast', 'sail', 'anchor'].filter((k) => has[k]).length;
+
+K.run({
+  id: 'castaway-cove', num: 13, title: 'CASTAWAY COVE', tag: 'Gather · craft · survive the night', color: '#fb923c',
+  goal: 'Build the four parts of a raft at your camp and sail home. Chop, quarry and forage by day. At night keep the fire fed: the tide crabs will not cross its light.',
+  controls: [['LS', 'Walk'], ['cross', 'Hold: gather · tap: spear'], ['triangle', 'Craft (at camp)'], ['square', 'Eat · feed fire at camp']],
+  music: { bpm: 92, root: 50, mode: 'major', dens: 0.42, seed: 30, lead: 'triangle', prog: [0, 3, 0, 4] },
+  start() { seedN = irand(1, 1e9); build(); inv = { wood: 0, stone: 0, fiber: 0, food: 2 }; has = {}; clock = 0; day = 1; fire = 0.5; eaten = 0; wake(); K.say(['Sand in your teeth. No ship.', 'There is wood here, and stone, and reeds. Enough for a raft, if you last the nights.', 'Stand in the camp circle and press △ to craft. An axe first would be wise.']); },
+  retry() { wake(); clock = 0; fire = Math.max(fire, 0.4); },
+  update(dt) {
+    const atCamp = dist(P.x, P.y, camp.x, camp.y) < 80;
+    if (menu) {
+      if (K.IN.ny) { mI = (mI + K.IN.ny + RECIPES.length) % RECIPES.length; K.sfx('move'); }
+      if (K.hit('circle') || K.hit('triangle')) { menu = false; K.sfx('back'); }
+      if (K.hit('cross')) { const rc = RECIPES[mI]; if (!has[rc.k] && can(rc)) { for (const k in rc.need) inv[k] -= rc.need[k]; has[rc.k] = true; K.sfx('power'); if (rc.raft && raftN() === 4) { menu = false; K.banner('THE RAFT IS READY', 'Walk into the surf at camp to launch'); } } else K.sfx('bad'); }
+      return;
+    }
+    clock += dt; if (clock > DAY + NIGHT) { clock = 0; day++; K.banner('DAY ' + day, 'The crabs go back to the sea'); crabs = []; K.sfx('power'); }
+    if (clock > DAY && clock - dt <= DAY) { K.banner('NIGHT FALLS', fire > 0.15 ? 'Stay near the fire' : 'Your fire is nearly out!'); K.sfx('lose'); }
+    const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly);
+    if (m > 0.2) { P.fx = lx / m; P.fy = ly / m; }
+    P.inv -= dt; P.sw -= dt;
+    P.food = Math.max(0, P.food - dt / 120); if (P.food <= 0 && Math.floor(K.time) !== Math.floor(K.time - dt) && Math.floor(K.time) % 6 === 0) { P.inv = 0; hurt(P.x, P.y); K.hint('Starving. Eat something (□).', 2); if (K.scene !== 'play') return; }
+    /* gather */
+    let near = null, nd = 40; for (const o of nodes) if (o.n > 0) { const d = dist(P.x, P.y, o.x, o.y); if (d < nd) { nd = d; near = o; } }
+    if (K.down('cross') && near && m < 0.3) {
+      if (gather !== near) { gather = near; near.f = 0; }
+      near.f += dt / (RES[near.k][2] / (has.axe ? 2 : 1));
+      if (Math.floor(near.f * 5) !== Math.floor((near.f - dt) * 5)) { K.sfx(near.k === 'rock' ? 'clank' : 'step'); fx.burst(near.x, near.y - 10, near.k === 'rock' ? '#cbd5e1' : '#86efac', 3, 80, 0.3, 3); }
+      if (near.f >= 1) { near.f = 0; near.n--; const it = RES[near.k][0]; inv[it]++; K.sfx('pick'); fx.text(near.x, near.y - 24, '+1 ' + it, '#fef3c7', 14); if (near.n <= 0) near.regrow = near.k === 'bush' || near.k === 'reed' ? 70 : 9999; }
+    } else {
+      gather = null;
+      if (K.hit('cross')) { if (has.spear) { P.sw = 0.2; K.sfx('swing'); for (const c of crabs) if (dist(P.x + P.fx * 26, P.y + P.fy * 26, c.x, c.y) < 34) { c.hp--; c.kx = P.fx * 240; c.ky = P.fy * 240; K.sfx('hit'); } } else if (!near) K.hint('Nothing to gather here. A spear would make ✕ a weapon.', 1.6); }
+    }
+    for (const o of nodes) if (o.n <= 0 && o.regrow < 9000) { o.regrow -= dt; if (o.regrow <= 0) o.n = RES[o.k][1]; }
+    K.moveC(P, lx * 165 * dt, ly * 165 * dt, solid, TS);
+    if (K.hit('square')) {
+      if (atCamp && inv.wood > 0 && fire < 0.9) { inv.wood--; fire = Math.min(1, fire + 0.34); K.sfx('pick'); fx.burst(camp.x, camp.y - 10, '#fb923c', 14, 120, 0.6, 4); }
+      else if (inv.food > 0 && P.food < 0.95) { inv.food--; P.food = Math.min(1, P.food + 0.34); eaten++; K.sfx('coin'); if (P.hp < 4 && eaten % 2 === 0) P.hp++; }
+      else K.sfx('bad');
+    }
+    if (K.hit('triangle')) { if (atCamp) { menu = true; mI = 0; K.sfx('select'); } else K.hint('You can only craft at camp.', 1.5); }
+    fire = Math.max(0, fire - dt / (night() ? 55 : 160));
+    /* night crabs come out of the surf */
+    if (night() && crabs.length < 4 + day * 2 && Math.random() < dt * (0.5 + day * 0.15)) {
+      for (let k = 0; k < 20; k++) { const a = rand(0, TAU), x = P.x + Math.cos(a) * 420, y = P.y + Math.sin(a) * 420; if (isLand(Math.floor(x / TS), Math.floor(y / TS))) { crabs.push({ x, y, r: 10, hp: 2, kx: 0, ky: 0, ph: rand(0, 9) }); break; } }
+    }
+    const FR = fire > 0.05 ? 110 + fire * 110 : 0;
+    for (let i = crabs.length - 1; i >= 0; i--) {
+      const c = crabs[i]; if (c.hp <= 0) { crabs.splice(i, 1); inv.food++; fx.burst(c.x, c.y, '#fca5a5', 12, 140, 0.5, 4); fx.text(c.x, c.y - 20, '+1 food', '#fef3c7', 14); continue; }
+      c.ph += dt; let a = ang(c.x, c.y, P.x, P.y), v = 96; const df = dist(c.x, c.y, camp.x, camp.y);
+      if (df < FR + 10) { a = ang(camp.x, camp.y, c.x, c.y); v = 130; } else if (df < FR + 40 && dist(P.x, P.y, camp.x, camp.y) < FR) { a += Math.PI / 2; v = 50; }
+      K.moveC(c, (Math.cos(a) * v + Math.cos(a + 1.57) * Math.sin(c.ph * 5) * 40 + c.kx) * dt, (Math.sin(a) * v + Math.sin(a + 1.57) * Math.sin(c.ph * 5) * 40 + c.ky) * dt, solid, TS); c.kx *= 1 - 6 * dt; c.ky *= 1 - 6 * dt;
+      if (dist(c.x, c.y, P.x, P.y) < 20) hurt(c.x, c.y);
+    }
+    K.separate(crabs, 0.6);
+    if (raftN() === 4 && atCamp && P.y > camp.y + 20) { K.win({ title: 'HOMEWARD', text: 'The sail fills. The island shrinks to a green thumbprint, then to nothing.', stats: [['Days survived', day], ['Meals eaten', eaten]] }); return; }
+    cam.follow(P.x, P.y, dt, 6); cam.bound(N * TS, N * TS);
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#1d7fa8');
+    cam.begin();
+    const x0 = Math.max(0, Math.floor((cam.x - W / 2) / TS) - 1), y0 = Math.max(0, Math.floor((cam.y - H / 2) / TS) - 1);
+    for (let y = y0; y < Math.min(N, y0 + 20); y++) for (let x = x0; x < Math.min(N, x0 + 33); x++) {
+      const L = land[y * N + x], n = K.hash2(x, y, 4);
+      if (!L) { if (n > 0.8) line(x * TS + 4, y * TS + 14 + Math.sin(t * 2 + x) * 3, x * TS + 22, y * TS + 14 + Math.sin(t * 2 + x) * 3, 'rgba(255,255,255,.22)', 2); if (isLand(x, y - 1) || isLand(x + 1, y) || isLand(x - 1, y) || isLand(x, y + 1)) rect(x * TS, y * TS, TS, TS, 'rgba(186,230,253,.3)'); continue; }
+      rect(x * TS, y * TS, TS + 1, TS + 1, L === 1 ? K.hsl(44, 62, 70 + n * 5) : K.hsl(105, 40, 34 + n * 6));
+    }
+    /* camp */
+    ring(camp.x, camp.y, 80, 'rgba(255,255,255,.25)', 2); rrect(camp.x - 52, camp.y - 46, 34, 26, 4, '#7c4a21'); K.poly([[camp.x - 56, camp.y - 46], [camp.x - 35, camp.y - 66], [camp.x - 14, camp.y - 46]], '#a16207');
+    for (let i = 0; i < 3; i++) line(camp.x - 10 + i * 10, camp.y + 6, camp.x + 10 - i * 10, camp.y - 4, '#5b3a1e', 4);
+    if (fire > 0.03) { const fh = 10 + fire * 22; K.poly([[camp.x - 8, camp.y], [camp.x + rand(-2, 2), camp.y - fh - rand(0, 6)], [camp.x + 8, camp.y]], '#fb923c'); K.poly([[camp.x - 4, camp.y], [camp.x, camp.y - fh * 0.6], [camp.x + 4, camp.y]], '#fde047'); }
+    const parts = raftN(); if (parts) { const rx = camp.x + 46, ry = camp.y + 16; if (has.hull) { for (let i = 0; i < 5; i++) rrect(rx - 24, ry - 10 + i * 6, 48, 5, 2, '#a47148'); } if (has.mast) line(rx, ry + 4, rx, ry - 46, '#5b3a1e', 4); if (has.sail) K.poly([[rx + 2, ry - 44], [rx + 30, ry - 12], [rx + 2, ry - 8]], '#fef3c7'); if (has.anchor) { circ(rx - 18, ry + 14, 5, '#475569'); } }
+    const dr = [];
+    for (const o of nodes) { if (!cam.see(o.x, o.y, 50)) continue; dr.push([o.y, () => {
+      const sh = gather === o ? Math.sin(t * 40) * 2 : 0, dead = o.n <= 0;
+      if (o.k === 'tree') { if (dead) { rect(o.x - 5, o.y - 4, 10, 8, '#5b3a1e'); return; } rect(o.x - 4 + sh, o.y - 16, 8, 20, '#5b3a1e'); circ(o.x + sh, o.y - 30, 19, '#166534'); circ(o.x - 7 + sh, o.y - 36, 9, '#22863f'); }
+      else if (o.k === 'rock') { if (dead) { circ(o.x, o.y, 4, '#64748b'); return; } K.poly([[o.x - 14 + sh, o.y + 6], [o.x - 8 + sh, o.y - 10], [o.x + 6 + sh, o.y - 13], [o.x + 15 + sh, o.y + 6]], '#7b8794'); K.poly([[o.x - 6 + sh, o.y - 6], [o.x + 4 + sh, o.y - 10], [o.x + 4 + sh, o.y]], '#a3adb8'); }
+      else if (o.k === 'reed') { for (let i = -2; i <= 2; i++) line(o.x + i * 4, o.y + 6, o.x + i * 5 + sh + Math.sin(t * 2 + i) * 2, o.y - (dead ? 4 : 18), dead ? '#a3a380' : '#65a30d', 2); }
+      else { circ(o.x + sh, o.y - 4, 12, '#2f7d32'); if (!dead) { circ(o.x - 4 + sh, o.y - 6, 3, '#e11d48'); circ(o.x + 5 + sh, o.y - 2, 3, '#e11d48'); } }
+      if (gather === o) bar(o.x - 18, o.y - 58, 36, 7, o.f, '#fde047');
+    }]); }
+    for (const c of crabs) dr.push([c.y, () => { const w = Math.sin(c.ph * 12) * 3; for (const s of [-1, 1]) { line(c.x + s * 8, c.y, c.x + s * 16, c.y + 5 + w * s, '#b91c1c', 2); line(c.x + s * 8, c.y - 3, c.x + s * 15, c.y - 9, '#b91c1c', 3); circ(c.x + s * 15, c.y - 10, 4, '#ef4444'); } g.fillStyle = '#dc2626'; g.beginPath(); g.ellipse(c.x, c.y, 11, 8, 0, 0, TAU); g.fill(); circ(c.x - 3, c.y - 6, 1.6, '#111'); circ(c.x + 3, c.y - 6, 1.6, '#111'); }]);
+    dr.push([P.y, () => { if (P.inv > 0 && Math.floor(t * 14) % 2 === 0) return; circ(P.x + 2, P.y + 7, 9, 'rgba(0,0,0,.25)'); rrect(P.x - 8, P.y - 10, 16, 18, 6, '#b45309'); circ(P.x, P.y - 14, 7, '#e2c9a8'); rect(P.x - 7, P.y - 21, 14, 4, '#3f2a1c'); if (has.spear) { const k = P.sw > 0 ? 26 : 12; line(P.x + P.fx * 4, P.y + P.fy * 4 - 4, P.x + P.fx * (k + 16), P.y + P.fy * (k + 16) - 4, '#d6b48a', 3); K.tri(P.x + P.fx * (k + 18), P.y + P.fy * (k + 18) - 4, 6, Math.atan2(P.fy, P.fx), '#e5e7eb'); } }]);
+    dr.sort((a, b) => a[0] - b[0]); for (const d of dr) d[1]();
+    fx.draw(); cam.end();
+    /* darkness */
+    const dk = clock > DAY ? clamp((clock - DAY) / 6, 0, 1) * clamp((DAY + NIGHT - clock) / 6, 0, 1) : clock > DAY - 12 ? (clock - DAY + 12) / 12 * 0.25 : 0;
+    if (dk > 0) {
+      const fxs = cam.sx(camp.x), fys = cam.sy(camp.y), R = 110 + fire * 110;
+      g.fillStyle = 'rgba(6,10,30,' + dk * 0.78 + ')'; g.beginPath(); g.rect(0, 0, W, H); if (fire > 0.05) g.arc(fxs, fys, R, 0, TAU, true); g.arc(cam.sx(P.x), cam.sy(P.y), 46, 0, TAU, true); g.fill('evenodd');
+      if (fire > 0.05) { const gr = g.createRadialGradient(fxs, fys, R * 0.5, fxs, fys, R); gr.addColorStop(0, 'rgba(251,146,60,' + dk * 0.12 + ')'); gr.addColorStop(1, 'rgba(6,10,30,' + dk * 0.78 + ')'); g.fillStyle = gr; g.beginPath(); g.arc(fxs, fys, R, 0, TAU); g.fill(); }
+    }
+    rect(0, 0, W, 42, 'rgba(8,16,24,.72)'); hearts(22, 22, P.hp, 4, '#fb7185', 8);
+    txt('FOOD', 116, 22, 11, '#fed7aa', 'left', 800); bar(152, 14, 90, 16, P.food, P.food < 0.25 ? '#ef4444' : '#fb923c');
+    txt('FIRE', 256, 22, 11, '#fed7aa', 'left', 800); bar(290, 14, 90, 16, fire, fire < 0.2 ? '#ef4444' : '#fde047');
+    [['wood', '#a47148'], ['stone', '#94a3b8'], ['fiber', '#84cc16'], ['food', '#e11d48']].forEach(([k, c], i) => { circ(410 + i * 78, 22, 7, c); txt(k + ' ' + inv[k], 422 + i * 78, 22, 12, '#fff', 'left', 700); });
+    const ph = clock / (DAY + NIGHT); txt((night() ? 'NIGHT ' : 'DAY ') + day, 930, 15, 12, night() ? '#a5b4fc' : '#fde68a', 'right', 800); rect(790, 28, 140, 5, 'rgba(255,255,255,.15)'); rect(790 + 140 * DAY / (DAY + NIGHT), 28, 140 * NIGHT / (DAY + NIGHT), 5, 'rgba(99,102,241,.6)'); circ(790 + 140 * ph, 30, 5, '#fff');
+    for (let i = 0; i < 4; i++) rrect(736 + i * 12, 10, 9, 9, 2, i < parts ? '#fde047' : 'rgba(255,255,255,.15)');
+    if (!cam.see(camp.x, camp.y, -60)) { const a = ang(P.x, P.y, camp.x, camp.y); K.tri(W / 2 + Math.cos(a) * 120, H / 2 + Math.sin(a) * 120, 11, a, '#fb923c'); }
+    if (menu) {
+      rrect(200, 70, 560, 410, 16, 'rgba(12,10,9,.95)'); K.rrectS(200, 70, 560, 410, 16, '#fb923c', 2); txt('CAMP WORKBENCH', W / 2, 100, 20, '#fed7aa', 'center', 900);
+      RECIPES.forEach((rc, i) => { const y = 126 + i * 54, sel = i === mI, ok = can(rc), done = has[rc.k];
+        rrect(224, y, 512, 46, 10, sel ? 'rgba(251,146,60,.25)' : 'rgba(255,255,255,.05)'); if (sel) K.rrectS(224, y, 512, 46, 10, '#fb923c', 2);
+        txt(rc.name, 240, y + 16, 15, done ? '#6ee7b7' : '#fff', 'left', 800); txt(rc.desc, 240, y + 33, 11, '#a8a29e', 'left', 600);
+        txt(done ? '✓ BUILT' : Object.keys(rc.need).map((k) => rc.need[k] + ' ' + k).join(' · '), 720, y + 23, 13, done ? '#6ee7b7' : ok ? '#fde047' : '#fca5a5', 'right', 800); });
+      K.glyph('cross', 400, 462, 10); txt('Build', 416, 463, 13, '#e7e5e4', 'left', 700); K.glyph('circle', 500, 462, 10); txt('Close', 516, 463, 13, '#e7e5e4', 'left', 700);
+    }
+  },
+});
+</script>
+</body>
+</html>
