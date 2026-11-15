@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Spearbound — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* SPEARBOUND — you own exactly one weapon. Throw it and you are unarmed until
+   you call it home, and it hits harder on the way back than on the way out. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx } = K;
+const AR = { x: 60, y: 64, w: 840, h: 430 }, NR = 9;
+const ROOMS = [['g', 3], ['g', 5], ['g', 3, 'a', 2], ['s', 2, 'g', 2], ['b', 3, 'g', 3], ['s', 2, 'a', 3], ['g', 6, 'b', 2], ['s', 3, 'a', 2, 'b', 2], ['X', 1]];
+let P, S, foes, shots, pillars, room, door, kills, booms;
+function blockedPt(x, y) { if (x < AR.x || y < AR.y || x > AR.x + AR.w || y > AR.y + AR.h) return true; for (const p of pillars) if (x > p.x && x < p.x + p.w && y > p.y && y < p.y + p.h) return true; return false; }
+function moveE(e, dx, dy) { const nx = e.x + dx, ny = e.y + dy, r = e.r; const bad = (x, y) => blockedPt(x - r, y - r) || blockedPt(x + r, y - r) || blockedPt(x - r, y + r) || blockedPt(x + r, y + r); let hit = false; if (!bad(nx, e.y)) e.x = nx; else hit = true; if (!bad(e.x, ny)) e.y = ny; else hit = true; return hit; }
+function load(n) {
+  room = n; pillars = []; foes = []; shots = []; booms = []; door = false; const r = K.rng(irand(1, 1e9));
+  const np = n === NR - 1 ? 4 : r.int(2, 5);
+  for (let i = 0; i < np; i++) for (let k = 0; k < 30; k++) { const w = r.pick([44, 44, 90, 130]), h = w > 44 ? 44 : r.pick([44, 90]), x = r.range(AR.x + 110, AR.x + AR.w - 110 - w), y = r.range(AR.y + 70, AR.y + AR.h - 70 - h); if (Math.abs(x + w / 2 - 480) < 110 && Math.abs(y + h / 2 - (AR.y + AR.h - 60)) < 110) continue; if (pillars.some((p) => x < p.x + p.w + 70 && x + w + 70 > p.x && y < p.y + p.h + 70 && y + h + 70 > p.y)) continue; pillars.push({ x, y, w, h }); break; }
+  const def = ROOMS[n];
+  for (let i = 0; i < def.length; i += 2) for (let c = 0; c < def[i + 1]; c++) { let x, y, t = 0; do { x = r.range(AR.x + 40, AR.x + AR.w - 40); y = r.range(AR.y + 30, AR.y + 220); } while ((blockedPt(x - 20, y - 20) || blockedPt(x + 20, y + 20) || blockedPt(x - 20, y + 20) || blockedPt(x + 20, y - 20)) && t++ < 40);
+    const k = def[i]; foes.push(k === 'X' ? { k, x: 480, y: 170, r: 38, hp: 30, max: 30, a: Math.PI / 2, st: 'turn', t: 1.5, flash: 0, in: 0.8 } : { k, x, y, r: k === 's' ? 16 : 13, hp: k === 's' ? 5 : k === 'g' ? 3 : 2, a: Math.PI / 2, t: r.range(1, 2.5), flash: 0, in: r.range(0.3, 1.2), kx: 0, ky: 0 }); }
+  P.x = 480; P.y = AR.y + AR.h - 40; S = { st: 'held', x: P.x, y: P.y, vx: 0, vy: 0, a: 0, d: 0, hit: new Set() };
+  K.banner(n === NR - 1 ? 'THE COLOSSUS' : 'CHAMBER ' + (n + 1) + ' OF ' + NR, ['Throw with R2. Press it again to call the spear home.', 'The recall hits harder than the throw', 'Archers. Keep moving.', 'Shields stop a spear from the front. Throw past them and recall.', 'Red ones burst when they die', '', '', '', 'Its back is its only weak spot'][n], 3);
+}
+function hurt(n, x, y) { if (P.inv > 0) return; P.hp -= n; P.inv = 1; K.sfx('hurt'); fx.shake(9); const a = ang(x, y, P.x, P.y); P.kx = Math.cos(a) * 300; P.ky = Math.sin(a) * 300; if (P.hp <= 0) K.lose({ title: 'DISARMED FOR GOOD', text: 'The spear clatters down beside you. It will wait at the door of this chamber.', stats: [['Chamber', (room + 1) + ' / ' + NR], ['Foes felled', kills]] }); }
+function strike(e, dmg, a, back) {
+  if (e.in > 0) return false;
+  if (e.k === 's' && Math.cos(K.angDiff(e.a, a + Math.PI)) > 0.25) { K.sfx('clank'); fx.burst(e.x, e.y, '#cbd5e1', 6, 140, 0.3, 3); return 'block'; }
+  if (e.k === 'X') { const behind = Math.cos(K.angDiff(e.a, a)) > 0.35; if (!behind) { K.sfx('clank'); fx.text(e.x, e.y - 54, 'ARMOUR', '#cbd5e1', 13); return 'block'; } dmg *= 2; fx.text(e.x, e.y - 54, 'WEAK SPOT', '#fde047', 14); }
+  e.hp -= dmg; e.flash = 0.12; if (e.k !== 'X') { e.kx = Math.cos(a) * 220; e.ky = Math.sin(a) * 220; } K.sfx('hit'); fx.burst(e.x, e.y, back ? '#fde047' : '#fff', back ? 12 : 6, 180, 0.35, 3); fx.hitstop(back ? 0.05 : 0.025); return true;
+}
+
+K.run({
+  id: 'spearbound', num: 30, title: 'SPEARBOUND', tag: 'Throw it · call it home', color: '#fde047',
+  goal: 'Nine chambers with one spear. Throw it, fight unarmed while it is gone, and call it back through whatever stands between you. Line the return up well and it does twice the work.',
+  controls: [['LS', 'Move'], ['RS', 'Aim (optional)'], [['r2', 'cross'], 'Throw / recall'], ['circle', 'Dash']],
+  music: { bpm: 126, root: 44, mode: 'phryg', dens: 0.46, drums: true, seed: 90, lead: 'sawtooth', leadVol: 0.035, lp: 1500, drive: true },
+  start() { P = { x: 480, y: 440, r: 11, hp: 5, fa: -Math.PI / 2, inv: 0, kx: 0, ky: 0, dash: 0, dcd: 0 }; kills = 0; load(0); },
+  retry() { P.hp = 5; P.inv = 1; load(room); },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly), rm = Math.hypot(K.IN.rx, K.IN.ry);
+    if (rm > 0.4) P.fa = Math.atan2(K.IN.ry, K.IN.rx); else if (m > 0.3) P.fa += K.angDiff(P.fa, Math.atan2(ly, lx)) * Math.min(1, dt * 14);
+    P.inv -= dt; P.dcd -= dt;
+    if (K.hit('circle') && P.dcd <= 0 && m > 0.2) { P.dash = 0.15; P.dcd = 0.7; P.dx = lx / m; P.dy = ly / m; P.inv = Math.max(P.inv, 0.2); K.sfx('dash'); }
+    if (P.dash > 0) { P.dash -= dt; moveE(P, P.dx * 640 * dt, P.dy * 640 * dt); fx.spark(P.x, P.y, 0, 0, '#fef9c3', 0.2, 6); }
+    else moveE(P, (lx * 205 + P.kx) * dt, (ly * 205 + P.ky) * dt); P.kx *= 1 - 8 * dt; P.ky *= 1 - 8 * dt;
+    const act = K.hit('r2') || K.hit('cross');
+    if (act) {
+      if (S.st === 'held') { S.st = 'out'; S.x = P.x; S.y = P.y; S.a = P.fa; S.vx = Math.cos(P.fa) * 960; S.vy = Math.sin(P.fa) * 960; S.d = 0; S.hit = new Set(); K.sfx('swing'); }
+      else if (S.st === 'stuck' || S.st === 'out') { S.st = 'back'; S.hit = new Set(); K.tone({ f: 300, f2: 900, dur: 0.18, type: 'sawtooth', vol: 0.1, lp: 2400 }); }
+    }
+    if (S.st === 'held') { S.x = P.x; S.y = P.y; S.a = P.fa; }
+    else if (S.st === 'out' || S.st === 'back') {
+      if (S.st === 'back') { const a = ang(S.x, S.y, P.x, P.y); S.vx = Math.cos(a) * 1150; S.vy = Math.sin(a) * 1150; S.a = a + Math.PI; }
+      for (let i = 0; i < 4; i++) {
+        S.x += S.vx * dt / 4; S.y += S.vy * dt / 4; S.d += 960 * dt / 4;
+        if (S.st === 'out' && (blockedPt(S.x, S.y) || S.d > 560)) { if (blockedPt(S.x, S.y)) { S.x -= S.vx * dt / 4; S.y -= S.vy * dt / 4; K.sfx('clank'); fx.burst(S.x, S.y, '#e5e7eb', 6, 120, 0.3, 3); } S.st = 'stuck'; break; }
+        for (const e of foes) if (!S.hit.has(e) && dist(S.x, S.y, e.x, e.y) < e.r + 8) { S.hit.add(e); const r = strike(e, S.st === 'back' ? 3 : 2, Math.atan2(S.vy, S.vx), S.st === 'back'); if (r === 'block' && S.st === 'out') { S.st = 'stuck'; S.x -= S.vx * 0.02; S.y -= S.vy * 0.02; break; } }
+        if (S.st === 'back' && dist(S.x, S.y, P.x, P.y) < 22) { S.st = 'held'; K.sfx('pick'); break; }
+      }
+      if (Math.random() < dt * 60) fx.spark(S.x, S.y, 0, 0, S.st === 'back' ? '#fde047' : '#e5e7eb', 0.2, 4);
+    }
+    /* foes */
+    for (let i = foes.length - 1; i >= 0; i--) {
+      const e = foes[i]; e.flash -= dt; e.in -= dt; if (e.in > 0) continue;
+      if (e.hp <= 0) { foes.splice(i, 1); kills++; fx.burst(e.x, e.y, '#fca5a5', 16, 220, 0.5, 4); if (e.k === 'b') { booms.push({ x: e.x, y: e.y, t: 0.7 }); K.sfx('charge'); } else K.sfx('boom'); if (e.k === 'X') { K.win({ title: 'THE COLOSSUS FALLS', text: 'The spear comes home one last time and stays. The door behind the throne was never locked.', stats: [['Foes felled', kills], ['Hearts left', P.hp]] }); return; } if (Math.random() < 0.18 && P.hp < 5) shots.push({ x: e.x, y: e.y, vx: 0, vy: 0, heart: true, t: 9 }); continue; }
+      const d = dist(e.x, e.y, P.x, P.y), a = ang(e.x, e.y, P.x, P.y); e.t -= dt;
+      if (e.k === 'X') {
+        if (e.st === 'turn') { e.a += clamp(K.angDiff(e.a, a), -1, 1) * 1.5 * dt; if (e.t <= 0) { e.st = 'wind'; e.t = 0.7; K.sfx('charge'); } }
+        else if (e.st === 'wind') { if (e.t <= 0) { e.st = 'rush'; e.t = 1.1; } }
+        else if (e.st === 'rush') { const hitw = moveE(e, Math.cos(e.a) * 520 * dt, Math.sin(e.a) * 520 * dt); if (hitw || e.t <= 0) { e.st = 'rest'; e.t = hitw ? 2.4 : 1; if (hitw) { K.sfx('boom'); fx.shake(12); for (let q = 0; q < 8; q++) shots.push({ x: e.x, y: e.y, vx: Math.cos(q * 0.785) * 210, vy: Math.sin(q * 0.785) * 210, t: 3 }); } } }
+        else if (e.t <= 0) { e.st = 'turn'; e.t = e.hp < 12 ? 0.9 : 1.6; }
+        if (d < e.r + P.r) { hurt(e.st === 'rush' ? 2 : 1, e.x, e.y); if (K.scene !== 'play') return; }
+        continue;
+      }
+      e.a += K.angDiff(e.a, a) * Math.min(1, dt * (e.k === 's' ? 2.2 : 8));
+      let v = e.k === 'g' ? 112 : e.k === 's' ? 70 : e.k === 'b' ? 150 : (d < 240 ? -80 : d > 330 ? 80 : 0);
+      moveE(e, (Math.cos(a) * v + e.kx) * dt, (Math.sin(a) * v + e.ky) * dt); e.kx *= 1 - 6 * dt; e.ky *= 1 - 6 * dt;
+      if (e.k === 'a' && e.t <= 0) { e.t = 2.2; shots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 270, vy: Math.sin(a) * 270, t: 3 }); K.sfx('blip'); }
+      if (d < e.r + P.r) { if (e.k === 'b') e.hp = 0; else { hurt(1, e.x, e.y); if (K.scene !== 'play') return; } }
+    }
+    K.separate(foes.filter((e) => e.k !== 'X' && e.in <= 0), 0.7);
+    for (let i = booms.length - 1; i >= 0; i--) { const b = booms[i]; b.t -= dt; if (b.t <= 0) { booms.splice(i, 1); K.sfx('boom'); fx.shake(10); fx.burst(b.x, b.y, '#fb923c', 40, 300, 0.6, 5); if (dist(b.x, b.y, P.x, P.y) < 84) { hurt(1, b.x, b.y); if (K.scene !== 'play') return; } for (const e of foes) if (dist(b.x, b.y, e.x, e.y) < 84 + e.r && e.k !== 'X') e.hp -= 3; } }
+    for (let i = shots.length - 1; i >= 0; i--) { const s = shots[i]; s.t -= dt; s.x += s.vx * dt; s.y += s.vy * dt; let dead = s.t <= 0 || (!s.heart && blockedPt(s.x, s.y)); if (dist(s.x, s.y, P.x, P.y) < (s.heart ? 22 : 15)) { dead = true; if (s.heart) { P.hp = Math.min(5, P.hp + 1); K.sfx('pick'); } else { hurt(1, s.x, s.y); if (K.scene !== 'play') return; } } if (dead) shots.splice(i, 1); }
+    if (!foes.length && !booms.length && !door && room < NR - 1) { door = true; K.sfx('door'); K.hint('The way up is open', 1.6); }
+    if (door && P.y < AR.y + 26 && Math.abs(P.x - 480) < 50) { P.hp = Math.min(5, P.hp + 1); K.sfx('key'); load(room + 1); }
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#100c08'); g.save(); if (fx.shakeT) g.translate(rand(-fx.shakeT, fx.shakeT), rand(-fx.shakeT, fx.shakeT));
+    rrect(AR.x - 14, AR.y - 14, AR.w + 28, AR.h + 28, 10, '#3b2f20'); rect(AR.x, AR.y, AR.w, AR.h, '#241c12');
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 14; x++) if ((x + y) % 2) rect(AR.x + x * 60, AR.y + y * 54, 60, 54, '#281f14');
+    rect(430, AR.y - 14, 100, 16, door ? '#fde047' : '#5b3a1e'); if (door) { K.tri(480, AR.y + 30 + Math.sin(t * 6) * 4, 14, -Math.PI / 2, '#fde047'); }
+    for (const p of pillars) { rect(p.x + 6, p.y + 8, p.w, p.h, 'rgba(0,0,0,.4)'); rrect(p.x, p.y, p.w, p.h, 6, '#6b5a44'); rrect(p.x + 5, p.y + 5, p.w - 10, p.h - 14, 4, '#85715a'); }
+    for (const b of booms) { circ(b.x, b.y, 84, 'rgba(251,146,60,' + (0.12 + 0.2 * Math.sin(t * 40)) + ')'); ring(b.x, b.y, 84 * (1 - b.t / 0.7), '#fb923c', 3); }
+    /* recall line */
+    if (S.st === 'stuck') { g.setLineDash([6, 8]); line(S.x, S.y, P.x, P.y, 'rgba(253,224,71,.35)', 2); g.setLineDash([]); }
+    for (const e of foes) {
+      if (e.in > 0) { ring(e.x, e.y, 8 + (e.in % 0.4) * 40, 'rgba(248,113,113,.6)', 2); continue; }
+      const c = e.flash > 0 ? '#fff' : null; g.save(); g.translate(e.x, e.y); g.rotate(e.a);
+      if (e.k === 'g') { circ(0, 0, 13, c || '#b45309'); rect(6, -9, 5, 18, '#451a03'); circ(5, -5, 2.4, '#fde047'); circ(5, 5, 2.4, '#fde047'); }
+      else if (e.k === 'a') { circ(0, 0, 12, c || '#7c3aed'); g.strokeStyle = '#e9d5ff'; g.lineWidth = 2.5; g.beginPath(); g.arc(8, 0, 12, -1.1, 1.1); g.stroke(); }
+      else if (e.k === 's') { circ(0, 0, 16, c || '#475569'); g.strokeStyle = '#e2e8f0'; g.lineWidth = 7; g.beginPath(); g.arc(0, 0, 21, -1.2, 1.2); g.stroke(); }
+      else if (e.k === 'b') { circ(0, 0, 13 + Math.sin(t * 14) * 1.5, c || '#dc2626'); circ(0, 0, 6, '#fde047'); }
+      else { rrect(-38, -34, 76, 68, 16, c || '#57534e'); rrect(8, -30, 30, 60, 8, '#a8a29e'); circ(24, -12, 5, e.st === 'wind' || e.st === 'rush' ? '#f87171' : '#fde047'); circ(24, 12, 5, e.st === 'wind' || e.st === 'rush' ? '#f87171' : '#fde047'); circ(-34, 0, 13 + Math.sin(t * 6) * 2, '#fde047'); circ(-34, 0, 6, '#b45309'); }
+      g.restore();
+      if (e.k === 'X') { if (e.st === 'wind') line(e.x, e.y, e.x + Math.cos(e.a) * 500, e.y + Math.sin(e.a) * 500, 'rgba(248,113,113,.3)', 10); bar(280, 506, 400, 14, e.hp / e.max, '#f87171'); if (e.st === 'rest') txt('✶ ✶', e.x, e.y - 50, 18, '#fde047', 'center'); }
+    }
+    for (const s of shots) { if (s.heart) K.hearts(s.x, s.y, 1, 1, '#fb7185', 7); else { circ(s.x, s.y, 8, 'rgba(192,132,252,.3)'); circ(s.x, s.y, 4.5, '#e9d5ff'); } }
+    const spear = (x, y, a, glow) => { g.save(); g.translate(x, y); g.rotate(a); if (glow) { line(-26, 0, 22, 0, 'rgba(253,224,71,.4)', 9); } line(-24, 0, 16, 0, '#d6b48a', 4); K.poly([[14, -6], [30, 0], [14, 6]], '#f8fafc'); g.restore(); };
+    if (S.st !== 'held') spear(S.x, S.y, S.a, S.st === 'back');
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) { circ(P.x + 2, P.y + 5, 11, 'rgba(0,0,0,.35)'); circ(P.x, P.y, 11, '#0f766e'); circ(P.x + Math.cos(P.fa) * 3, P.y + Math.sin(P.fa) * 3, 6, '#f1d3a6'); if (S.st === 'held') spear(P.x + Math.cos(P.fa + 1.2) * 10, P.y + Math.sin(P.fa + 1.2) * 10, P.fa); else ring(P.x, P.y, 16, 'rgba(253,224,71,.4)', 1.5); line(P.x + Math.cos(P.fa) * 20, P.y + Math.sin(P.fa) * 20, P.x + Math.cos(P.fa) * 34, P.y + Math.sin(P.fa) * 34, 'rgba(255,255,255,.4)', 2); }
+    fx.draw(); g.restore();
+    hearts(24, 26, P.hp, 5); txt(room === NR - 1 ? 'THRONE' : 'CHAMBER ' + (room + 1) + ' / ' + NR, W / 2, 26, 14, '#fef9c3', 'center', 800);
+    txt(S.st === 'held' ? 'SPEAR IN HAND' : S.st === 'back' ? 'RETURNING' : 'UNARMED · press to recall', 936, 26, 13, S.st === 'held' ? '#fef9c3' : '#fca5a5', 'right', 800);
+  },
+});
+</script>
+</body>
+</html>

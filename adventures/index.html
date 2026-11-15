@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Thirty Adventures</title>
+<style>
+  :root{--bg:#07080e;--fg:#eef2fb;--mut:#8b93a7}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+  body{padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+    background:radial-gradient(circle at 15% 0,rgba(56,189,248,.16),transparent 34rem),radial-gradient(circle at 90% 100%,rgba(244,114,182,.13),transparent 30rem),var(--bg)}
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  h1{margin:0;font-size:clamp(20px,4.4vw,34px);font-weight:900;letter-spacing:.1em}
+  h1 span{background:linear-gradient(90deg,#fbbf24,#f472b6 45%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:13px;font-weight:600}
+  .sub b{color:#6ee7b7}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  a.card{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:104px;padding:10px 12px;border-radius:14px;text-decoration:none;color:inherit;
+    background:linear-gradient(160deg,color-mix(in srgb,var(--c) 26%,#10131c),#10131c 70%);border:1px solid rgba(255,255,255,.1);overflow:hidden;
+    transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+  a.card::before{content:attr(data-n);position:absolute;right:8px;top:2px;font-size:44px;font-weight:900;color:var(--c);opacity:.2;letter-spacing:-.04em}
+  a.card h2{margin:0;font-size:14px;font-weight:900;letter-spacing:.06em;line-height:1.15}
+  a.card p{margin:3px 0 0;font-size:11.5px;color:#b8c0d6;line-height:1.25}
+  a.card .done{position:absolute;left:10px;top:8px;font-size:10px;font-weight:900;letter-spacing:.1em;color:#07080e;background:#6ee7b7;border-radius:99px;padding:2px 7px;display:none}
+  a.card.won .done{display:block}
+  a.card.sel,a.card:hover,a.card:focus-visible{transform:translateY(-2px) scale(1.03);border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 10px 34px -10px var(--c);outline:none;z-index:2}
+  footer{margin-top:14px;color:var(--mut);font-size:12px;line-height:1.6}
+  kbd{display:inline-block;min-width:22px;text-align:center;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#e2e8f0;font:inherit;font-weight:800;font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>THIRTY ADVENTURES</span></h1>
+  <div class="sub"><span id="pad">Controller, touch or keyboard</span> · <b id="count">0</b> of 30 completed</div>
+</header>
+<div class="grid" id="grid"></div>
+<footer>
+  <kbd>D-PAD</kbd> / <kbd>L STICK</kbd> browse · <kbd>✕</kbd> play · in a game: <kbd>OPTIONS</kbd> pause, <kbd>CREATE</kbd> mute, <kbd>○</kbd> on the title screen comes back here.<br>
+  Keyboard: <kbd>WASD</kbd> move · <kbd>Arrows</kbd> right stick · <kbd>J</kbd> □ · <kbd>K</kbd>/<kbd>Space</kbd> ✕ · <kbd>L</kbd> ○ · <kbd>I</kbd> △ · <kbd>Q</kbd>/<kbd>E</kbd> L1/R1 · <kbd>U</kbd>/<kbd>O</kbd> L2/R2 · <kbd>Enter</kbd> pause · <kbd>M</kbd> mute.
+  Touch: left half of the screen is the stick; buttons appear on the right.
+</footer>
+<script>
+"use strict";
+const GAMES = [
+  ['lantern-deep', 'LANTERN DEEP', 'Exploration by lamplight', '#fbbf24'],
+  ['grapple-canyon', 'GRAPPLE CANYON', 'Rope-swing traversal', '#fb923c'],
+  ['tidebreaker', 'TIDEBREAKER', 'Sailing and broadsides', '#38bdf8'],
+  ['clockwork-heist', 'CLOCKWORK HEIST', 'Stealth in three floors', '#a78bfa'],
+  ['mole-mech', 'MOLE MECH', 'Dig, haul, upgrade', '#f59e0b'],
+  ['rift-walker', 'RIFT WALKER', 'First-person labyrinth', '#c084fc'],
+  ['frost-summit', 'FROST SUMMIT', 'Free climb on failing grip', '#7dd3fc'],
+  ['thornwood', 'THORNWOOD', 'Twelve screens, three guardians', '#4ade80'],
+  ['hollow-echo', 'HOLLOW ECHO', 'Sonar in the dark', '#22d3ee'],
+  ['dune-strider', 'DUNE STRIDER', 'Walk softly on loud sand', '#fbbf24'],
+  ['borrowed-skins', 'BORROWED SKINS', 'Possession puzzle-adventure', '#c4b5fd'],
+  ['flockward', 'FLOCKWARD', 'Herding by pressure', '#a3e635'],
+  ['castaway-cove', 'CASTAWAY COVE', 'Gather, craft, survive the night', '#fb923c'],
+  ['night-courier', 'NIGHT COURIER', 'Drift driving against the clock', '#f472b6'],
+  ['lantern-river', 'LANTERN RIVER', 'Rafting a living current', '#2dd4bf'],
+  ['glyphcaster', 'GLYPHCASTER', 'Spells you draw', '#818cf8'],
+  ['salvage-tug', 'SALVAGE TUG', 'Zero-g towing', '#fbbf24'],
+  ['runaway-express', 'RUNAWAY EXPRESS', 'Train-top brawler', '#f87171'],
+  ['thunder-lancer', 'THUNDER LANCER', 'Jousting tournament', '#fbbf24'],
+  ['deepwood-archer', 'DEEPWOOD ARCHER', 'Archery with drop and wind', '#86efac'],
+  ['magnet-monk', 'MAGNET MONK', 'Polarity runner', '#60a5fa'],
+  ['planet-hopper', 'PLANET HOPPER', 'Tiny worlds, round gravity', '#f0abfc'],
+  ['updraft', 'UPDRAFT', 'Gliding on borrowed height', '#38bdf8'],
+  ['chrono-vault', 'CHRONO VAULT', 'Co-operate with your past selves', '#5eead4'],
+  ['rune-golem', 'RUNE GOLEM', 'Sliding-stone puzzles', '#93c5fd'],
+  ['chimera-trail', 'CHIMERA TRAIL', 'Bind, fuse, battle', '#fb923c'],
+  ['caravan-of-salt', 'CARAVAN OF SALT', 'A journey of choices', '#eab308'],
+  ['bumper-crypt', 'BUMPER CRYPT', 'Pinball dungeon', '#a3e635'],
+  ['slingstar', 'SLINGSTAR', 'Gravity-assist launches', '#f9a8d4'],
+  ['spearbound', 'SPEARBOUND', 'Throw it, call it home', '#fde047'],
+];
+const grid = document.getElementById('grid');
+let done = 0;
+const cards = GAMES.map(([id, title, tag, col], i) => {
+  const a = document.createElement('a');
+  a.className = 'card'; a.href = id + '.html'; a.style.setProperty('--c', col); a.dataset.n = String(i + 1).padStart(2, '0');
+  let won = false; try { won = !!localStorage.getItem('adv30:done:' + id); } catch (e) { /* storage may be blocked */ }
+  if (won) { a.classList.add('won'); done++; }
+  a.innerHTML = '<span class="done">✓ DONE</span><h2></h2><p></p>';
+  a.querySelector('h2').textContent = title; a.querySelector('p').textContent = tag;
+  grid.appendChild(a); return a;
+});
+document.getElementById('count').textContent = done;
+
+let sel = 0; try { sel = Math.min(GAMES.length - 1, +sessionStorage.getItem('adv30:sel') || 0); } catch (e) { /* noop */ }
+function show(scroll) { cards.forEach((c, i) => c.classList.toggle('sel', i === sel)); if (scroll) cards[sel].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+function cols() { const top = cards[0].offsetTop; let n = 0; while (n < cards.length && cards[n].offsetTop === top) n++; return n || 1; }
+function move(dx, dy) { const c = cols(); let n = sel + dx + dy * c; if (n < 0 || n >= cards.length) return; if (dx && Math.floor(n / c) !== Math.floor(sel / c)) return; sel = n; show(true); }
+function go() { try { sessionStorage.setItem('adv30:sel', sel); } catch (e) { /* noop */ } location.href = cards[sel].href; }
+cards.forEach((c, i) => c.addEventListener('pointerenter', () => { sel = i; show(false); }));
+addEventListener('keydown', (e) => {
+  const k = e.code;
+  if (k === 'ArrowLeft' || k === 'KeyA') move(-1, 0); else if (k === 'ArrowRight' || k === 'KeyD') move(1, 0);
+  else if (k === 'ArrowUp' || k === 'KeyW') move(0, -1); else if (k === 'ArrowDown' || k === 'KeyS') move(0, 1);
+  else if (k === 'Enter' || k === 'Space' || k === 'KeyK') go(); else return;
+  e.preventDefault();
+});
+/* gamepad: d-pad or left stick browses with auto-repeat, cross plays */
+let px = 0, py = 0, rep = 0, last = performance.now(), pa = false, seen = false;
+function poll(now) {
+  requestAnimationFrame(poll);
+  const dt = (now - last) / 1000; last = now;
+  const gps = navigator.getGamepads ? navigator.getGamepads() : []; let gp = null;
+  for (const g of gps) if (g && g.connected) { gp = g; break; }
+  if (!gp) return;
+  if (!seen) { seen = true; const p = document.getElementById('pad'); p.textContent = 'Controller connected'; p.style.color = '#6ee7b7'; }
+  const b = (i) => gp.buttons[i] && gp.buttons[i].pressed;
+  const x = b(14) ? -1 : b(15) ? 1 : Math.abs(gp.axes[0] || 0) > 0.55 ? Math.sign(gp.axes[0]) : 0;
+  const y = b(12) ? -1 : b(13) ? 1 : Math.abs(gp.axes[1] || 0) > 0.55 ? Math.sign(gp.axes[1]) : 0;
+  if (x !== px || y !== py) { if (x || y) move(x, x ? 0 : y); rep = 0.34; }
+  else if (x || y) { rep -= dt; if (rep <= 0) { move(x, x ? 0 : y); rep = 0.12; } }
+  px = x; py = y;
+  const a = b(0); if (a && !pa) go(); pa = a;
+}
+show(false); requestAnimationFrame(poll);
+</script>
+</body>
+</html>
