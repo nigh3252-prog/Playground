@@ -18,6 +18,16 @@
   h1 span{background:linear-gradient(90deg,#fbbf24,#f472b6 45%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
   .sub{color:var(--mut);font-size:13px;font-weight:600}
   .sub b{color:#6ee7b7}
+  #fullscreen{min-width:44px;min-height:44px;padding:0 12px;border:1px solid #525c73;border-radius:10px;background:#141a27;color:var(--fg);font:inherit;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation}
+  #fullscreen [aria-hidden]{font-size:19px;vertical-align:middle}
+  #fullscreen:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
+  #fullscreen-status{color:var(--fg);font-size:13px}
+  #fullscreen-status:empty{position:absolute}
+  .playing header > :not(#fullscreen),.playing main{display:none}
+  .playing #fullscreen{position:fixed;z-index:2;top:max(6px,env(safe-area-inset-top));right:max(6px,env(safe-area-inset-right))}
+  .playing #fullscreen-label{display:none}
+  .playing #fullscreen-status:not(:empty){position:fixed;z-index:2;top:max(6px,env(safe-area-inset-top));right:calc(max(6px,env(safe-area-inset-right)) + 50px);padding:12px;background:#141a27;border-radius:10px}
+  #adventure-game{position:fixed;inset:0;width:100%;height:100%;border:0;background:#000}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   a.card{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:104px;padding:10px 12px;border-radius:14px;text-decoration:none;color:inherit;
     background:linear-gradient(160deg,color-mix(in srgb,var(--c) 26%,#10131c),#10131c 70%);border:1px solid rgba(255,255,255,.1);overflow:hidden;
@@ -36,13 +46,17 @@
 <header>
   <h1><span>THIRTY ADVENTURES</span></h1>
   <div class="sub"><span id="pad">Controller, touch or keyboard</span> · <b id="count">0</b> of 30 completed</div>
+  <button type="button" id="fullscreen" hidden><span aria-hidden="true">⛶</span> <span id="fullscreen-label">Fullscreen</span></button>
 </header>
+<div id="fullscreen-status" role="status"></div>
+<main>
 <div class="grid" id="grid"></div>
 <footer>
   <kbd>D-PAD</kbd> / <kbd>L STICK</kbd> browse · <kbd>✕</kbd> play · in a game: <kbd>OPTIONS</kbd> pause, <kbd>CREATE</kbd> mute, <kbd>○</kbd> on the title screen comes back here.<br>
   Keyboard: <kbd>WASD</kbd> move · <kbd>Arrows</kbd> right stick · <kbd>J</kbd> □ · <kbd>K</kbd>/<kbd>Space</kbd> ✕ · <kbd>L</kbd> ○ · <kbd>I</kbd> △ · <kbd>Q</kbd>/<kbd>E</kbd> L1/R1 · <kbd>U</kbd>/<kbd>O</kbd> L2/R2 · <kbd>Enter</kbd> pause · <kbd>M</kbd> mute.
   Touch: left half of the screen is the stick; buttons appear on the right.
 </footer>
+</main>
 <script>
 "use strict";
 const GAMES = [
@@ -78,25 +92,93 @@ const GAMES = [
   ['spearbound', 'SPEARBOUND', 'Throw it, call it home', '#fde047'],
 ];
 const grid = document.getElementById('grid');
-let done = 0;
+const fullscreenButton = document.getElementById('fullscreen');
+const fullscreenLabel = document.getElementById('fullscreen-label');
+const fullscreenStatus = document.getElementById('fullscreen-status');
+let gameFrame = null;
+let launcherScroll = 0;
+
+fullscreenButton.hidden = !document.fullscreenEnabled;
+document.addEventListener('fullscreenchange', () => {
+  const label = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+  fullscreenLabel.textContent = label;
+  fullscreenButton.setAttribute('aria-label', label);
+  fullscreenButton.title = label;
+});
+fullscreenButton.addEventListener('click', async () => {
+  fullscreenStatus.textContent = '';
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+    if (gameFrame) gameFrame.contentWindow.focus();
+  } catch (e) {
+    fullscreenStatus.textContent = 'Fullscreen is unavailable here.';
+  }
+});
+
 const cards = GAMES.map(([id, title, tag, col], i) => {
   const a = document.createElement('a');
   a.className = 'card'; a.href = id + '.html'; a.style.setProperty('--c', col); a.dataset.n = String(i + 1).padStart(2, '0');
-  let won = false; try { won = !!localStorage.getItem('adv30:done:' + id); } catch (e) { /* storage may be blocked */ }
-  if (won) { a.classList.add('won'); done++; }
   a.innerHTML = '<span class="done">✓ DONE</span><h2></h2><p></p>';
   a.querySelector('h2').textContent = title; a.querySelector('p').textContent = tag;
   grid.appendChild(a); return a;
 });
-document.getElementById('count').textContent = done;
+function refreshProgress() {
+  let done = 0;
+  cards.forEach((card, i) => {
+    let won = false; try { won = !!localStorage.getItem('adv30:done:' + GAMES[i][0]); } catch (e) { /* storage may be blocked */ }
+    card.classList.toggle('won', won);
+    if (won) done++;
+  });
+  document.getElementById('count').textContent = done;
+}
+refreshProgress();
 
 let sel = 0; try { sel = Math.min(GAMES.length - 1, +sessionStorage.getItem('adv30:sel') || 0); } catch (e) { /* noop */ }
 function show(scroll) { cards.forEach((c, i) => c.classList.toggle('sel', i === sel)); if (scroll) cards[sel].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 function cols() { const top = cards[0].offsetTop; let n = 0; while (n < cards.length && cards[n].offsetTop === top) n++; return n || 1; }
 function move(dx, dy) { const c = cols(); let n = sel + dx + dy * c; if (n < 0 || n >= cards.length) return; if (dx && Math.floor(n / c) !== Math.floor(sel / c)) return; sel = n; show(true); }
-function go() { try { sessionStorage.setItem('adv30:sel', sel); } catch (e) { /* noop */ } location.href = cards[sel].href; }
-cards.forEach((c, i) => c.addEventListener('pointerenter', () => { sel = i; show(false); }));
+function go() {
+  try { sessionStorage.setItem('adv30:sel', sel); } catch (e) { /* noop */ }
+  if (!document.fullscreenElement) {
+    location.href = cards[sel].href;
+    return;
+  }
+  // Keeping the launcher document open preserves fullscreen across games.
+  launcherScroll = scrollY;
+  const frame = document.createElement('iframe');
+  frame.id = 'adventure-game';
+  frame.name = 'thirty-adventures-game';
+  frame.title = GAMES[sel][1];
+  frame.src = cards[sel].href;
+  frame.addEventListener('load', () => frame.contentWindow.focus());
+  gameFrame = frame;
+  document.body.classList.toggle('playing', true);
+  document.body.appendChild(frame);
+}
+addEventListener('message', (event) => {
+  if (!gameFrame || event.source !== gameFrame.contentWindow || event.data !== 'adventures:quit') return;
+  if (location.protocol !== 'file:' && event.origin !== location.origin) return;
+  gameFrame.remove();
+  gameFrame = null;
+  fullscreenStatus.textContent = '';
+  document.body.classList.toggle('playing', false);
+  refreshProgress();
+  cards[sel].focus({ preventScroll: true });
+  scrollTo(0, launcherScroll);
+});
+cards.forEach((c, i) => {
+  c.addEventListener('pointerenter', () => { sel = i; show(false); });
+  c.addEventListener('click', (e) => {
+    if (!document.fullscreenElement || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    sel = i;
+    show(false);
+    go();
+  });
+});
 addEventListener('keydown', (e) => {
+  if (gameFrame || e.target === fullscreenButton) return;
   const k = e.code;
   if (k === 'ArrowLeft' || k === 'KeyA') move(-1, 0); else if (k === 'ArrowRight' || k === 'KeyD') move(1, 0);
   else if (k === 'ArrowUp' || k === 'KeyW') move(0, -1); else if (k === 'ArrowDown' || k === 'KeyS') move(0, 1);
@@ -113,12 +195,14 @@ function poll(now) {
   if (!gp) return;
   if (!seen) { seen = true; const p = document.getElementById('pad'); p.textContent = 'Controller connected'; p.style.color = '#6ee7b7'; }
   const b = (i) => gp.buttons[i] && gp.buttons[i].pressed;
+  const a = b(0);
+  if (gameFrame) { pa = a; return; }
   const x = b(14) ? -1 : b(15) ? 1 : Math.abs(gp.axes[0] || 0) > 0.55 ? Math.sign(gp.axes[0]) : 0;
   const y = b(12) ? -1 : b(13) ? 1 : Math.abs(gp.axes[1] || 0) > 0.55 ? Math.sign(gp.axes[1]) : 0;
   if (x !== px || y !== py) { if (x || y) move(x, x ? 0 : y); rep = 0.34; }
   else if (x || y) { rep -= dt; if (rep <= 0) { move(x, x ? 0 : y); rep = 0.12; } }
   px = x; py = y;
-  const a = b(0); if (a && !pa) go(); pa = a;
+  if (a && !pa) go(); pa = a;
 }
 show(false); requestAnimationFrame(poll);
 </script>

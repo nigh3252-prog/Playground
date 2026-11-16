@@ -601,7 +601,14 @@
     overData = { win: false, title: o.title || 'YOU FELL', text: o.text || '', stats: o.stats || [], retry: !!game.retry && o.retry !== false };
     setScene('over'); sfx('lose'); music(null);
   }
-  function quit() { location.href = 'index.html'; }
+  function quit() {
+    if (window.parent !== window && window.name === 'thirty-adventures-game') {
+      const target = location.protocol === 'file:' ? '*' : location.origin;
+      window.parent.postMessage('adventures:quit', target);
+      return;
+    }
+    location.href = 'index.html';
+  }
 
   function drawBackdrop(t) {
     const c = game.color || '#7dd3fc';
