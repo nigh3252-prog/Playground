@@ -12,7 +12,9 @@
         "impact",
         "action"
       ],
-      "summary": "Pilebunker impact experiment."
+      "summary": "Pilebunker impact experiment.",
+      "bestWith": "either",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "pocket-hole",
@@ -23,7 +25,9 @@
         "inventory",
         "experiment"
       ],
-      "summary": "Pocket Hole Hoarder build with storage changes."
+      "summary": "Pocket Hole Hoarder build with storage changes.",
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "southpoint",
@@ -33,7 +37,9 @@
       "tags": [
         "prototype"
       ],
-      "summary": "Standalone Southpoint experiment."
+      "summary": "Standalone Southpoint experiment.",
+      "bestWith": "backbone",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "punch-lab",
@@ -45,7 +51,9 @@
         "feel",
         "action"
       ],
-      "summary": "Experiment with punching and combat feel."
+      "summary": "Experiment with punching and combat feel.",
+      "bestWith": "backbone",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "melee-director",
@@ -57,7 +65,9 @@
         "AI",
         "systems"
       ],
-      "summary": "Melee combat directing laboratory, version 6."
+      "summary": "Melee combat directing laboratory, version 6.",
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "fusion-lab",
@@ -68,7 +78,9 @@
         "systems",
         "experiment"
       ],
-      "summary": "Second version of the Fusion Lab experiment."
+      "summary": "Second version of the Fusion Lab experiment.",
+      "bestWith": "either",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "robot-puppet",
@@ -80,7 +92,9 @@
         "animation",
         "controls"
       ],
-      "summary": "Robot puppet and controller experiment."
+      "summary": "Robot puppet and controller experiment.",
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "midair-ground",
@@ -92,7 +106,9 @@
         "geometry",
         "three.js"
       ],
-      "summary": "Three.js lifted ground-slice visual experiment."
+      "summary": "Three.js lifted ground-slice visual experiment.",
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "city-buildings",
@@ -104,7 +120,9 @@
         "city",
         "generation"
       ],
-      "summary": "Procedural city with terrain, roads, lots and buildings."
+      "summary": "Procedural city with terrain, roads, lots and buildings.",
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "city-roads",
@@ -116,7 +134,9 @@
         "city",
         "generation"
       ],
-      "summary": "Procedural city with terrain, roads and lots."
+      "summary": "Procedural city with terrain, roads and lots.",
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "city-terrain",
@@ -128,7 +148,9 @@
         "terrain",
         "generation"
       ],
-      "summary": "Procedural city terrain starting point."
+      "summary": "Procedural city terrain starting point.",
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     },
     {
       "id": "watershed",
@@ -142,7 +164,9 @@
       ],
       "summary": "Regional terrain, hydrology and environment exploration.",
       "archived": true,
-      "surprise": false
+      "surprise": false,
+      "bestWith": "touch",
+      "inputAssessment": "source-reviewed"
     }
   ]
 }
