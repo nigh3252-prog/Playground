@@ -19,4 +19,5 @@ window.ARC_GAMES = [
   { file: 'magnet.html', title: 'MAGNET', color: '#4ad6ff', blurb: 'Telekinesis: pull steel crates in, fling them through the crowd.' },
   { file: 'hookshot.html', title: 'HOOKSHOT', color: '#ffb03d', blurb: 'Matador with a grappling hook: yank them through you into the saws.' },
   { file: 'top.html', title: 'TOP', color: '#ff9a2e', blurb: 'Spinning-top sumo. Rev up, slam in, ring rivals out of the bowl.' },
+  { file: 'evade.html', title: 'EVADE', color: '#7dffcf', blurb: 'Boss duels. Dodge at the last instant to enter FLOW and hit triple.' },
 ];
