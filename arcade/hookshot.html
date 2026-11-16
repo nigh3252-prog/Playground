@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>HOOKSHOT</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU, segCircle } = ARC.util;
+const PR = 13, RANGE = 360, YANK = 980;
+let S;
+
+function makeSaws(g) {
+  const s = [];
+  const n = 3 + Math.min(3, S.lv);
+  for (let i = 0; i < n; i++) {
+    let x, y, t = 0; do { x = rand(80, g.W - 80); y = rand(70, g.H - 70); t++; } while ((Math.hypot(x - S.p.x, y - S.p.y) < 140 || s.some(o => Math.hypot(o.cx - x, o.cy - y) < 140)) && t < 50);
+    s.push({ cx: x, cy: y, x, y, r: rand(20, 30), orbit: S.lv >= 3 && Math.random() < 0.4 ? rand(40, 90) : 0, ph: rand(0, TAU), sp: rand(0.8, 1.6) * (Math.random() < 0.5 ? -1 : 1), spin: 0 });
+  }
+  return s;
+}
+function spawn(g) {
+  const side = (Math.random() * 4) | 0; let x, y;
+  if (side === 0) { x = -20; y = rand(30, g.H - 30); } else if (side === 1) { x = g.W + 20; y = rand(30, g.H - 30); } else if (side === 2) { x = rand(30, g.W - 30); y = -20; } else { x = rand(30, g.W - 30); y = g.H + 20; }
+  const heavy = S.lv >= 2 && Math.random() < 0.22, fast = S.lv >= 3 && Math.random() < 0.25;
+  S.enemies.push({ x, y, vx: 0, vy: 0, r: heavy ? 20 : fast ? 11 : 14, heavy, fast, spd: (heavy ? 45 : fast ? 125 : 75) + S.lv * 4, yank: 0, stun: 0, flash: 0 });
+}
+function killE(g, e, why, sp) {
+  if (e.dead) return; e.dead = true;
+  S.combo++; S.comboT = 2.5; S.kills++;
+  const pts = (e.heavy ? 250 : 100) * (1 + Math.floor(S.combo / 3)) * (why === 'bowl' ? 2 : 1);
+  g.addScore(pts);
+  g.fx.pop(e.x, e.y - 22, (why === 'bowl' ? 'STRIKE ' : why === 'saw' ? 'SHRED ' : '') + '+' + pts, { color: why === 'bowl' ? '#ffd84a' : '#fff', size: 16 + Math.min(12, S.combo) });
+  g.fx.burst(e.x, e.y, 26, { color: [e.heavy ? '#ffb03d' : e.fast ? '#ff5ec8' : '#ff5e5e', '#fff'], speed: 380, size: 4 });
+  g.sfx.hit(1 + Math.min(S.combo, 20) * 0.03); if (why === 'saw') g.audio.hiss(0.2, { freq: 3000, to: 1200, vol: 0.3, q: 4 });
+  g.hitstop(0.05); g.shake(7); g.haptic(0.6, 50);
+}
+function hurt(g) {
+  const p = S.p; if (p.inv > 0 || p.hp <= 0) return;
+  p.hp--; p.inv = 1.3; S.combo = 0; g.hitstop(0.09); g.shake(14); g.flash('#ff2040', 0.4); g.sfx.hurt(); g.haptic(1, 150);
+  if (p.hp <= 0) { S.overT = 1.1; g.slowmo(0.25, 1); }
+}
+
+ARC.game({
+  id: 'hookshot', title: 'HOOKSHOT', color: '#ffb03d', tagline: 'Stand in front of the saw. Pull them through you.',
+  help: [
+    { pad: 'Ⓛ move  ·  Ⓐ hook (auto-aims, or Ⓡ to aim) — they fly THROUGH you  ·  Ⓑ sidestep', touch: 'Left thumb: move  ·  HOOK auto-aims — they fly through you  ·  STEP sidesteps' },
+    'Put a saw blade behind you, then yank. Matador style.',
+    'Yanked bodies bowl over anyone they hit. Heavies fly slow but hit hard.',
+  ],
+  buttons: [{ id: 'a', label: 'HOOK', big: true, color: '#ffb03d' }, { id: 'b', label: 'STEP' }],
+  init(g) {
+    S = { p: { x: g.W / 2, y: g.H / 2, vx: 0, vy: 0, aim: 0, hp: 3, inv: 1, step: 0, scd: 0 }, hook: null, enemies: [], saws: [], spawnT: 1, lv: 1, lvT: 0, combo: 0, comboT: 0, overT: 0, kills: 0 };
+    g.S = S; S.saws = makeSaws(g);
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p;
+    if (S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver(S.kills + ' shredded  ·  level ' + S.lv); return; } }
+    S.lvT += dt; if (S.lvT > 24) { S.lvT = 0; S.lv++; S.saws = makeSaws(g); g.fx.pop(g.W / 2, 90, 'LEVEL ' + S.lv + ' — THE SAWS MOVE', { color: '#ffb03d', size: 24 }); g.sfx.select(0.8); }
+    S.spawnT -= dt; if (S.spawnT <= 0) { spawn(g); S.spawnT = Math.max(0.55, 2 - S.lv * 0.15) * rand(0.7, 1.2); }
+    if (S.comboT > 0) { S.comboT -= dt; if (S.comboT <= 0) S.combo = 0; }
+    p.inv -= dt; p.scd -= dt; p.step -= dt;
+    // aim: right stick, else nearest enemy
+    if (Math.hypot(I.ax, I.ay) > 0.3) p.aim = Math.atan2(I.ay, I.ax);
+    else { let best = null, bd = RANGE; for (const e of S.enemies) if (!e.dead && e.yank <= 0) { const d = Math.hypot(e.x - p.x, e.y - p.y); if (d < bd) { bd = d; best = e; } } if (best) p.aim = ARC.util.angLerp(p.aim, Math.atan2(best.y - p.y, best.x - p.x), 1 - Math.exp(-rdt * 25)); else if (Math.hypot(I.mx, I.my) > 0.3) p.aim = Math.atan2(I.my, I.mx); }
+    if (p.hp > 0) {
+      if ((I.pressed('b') || I.pressed('x')) && p.scd <= 0) { const m = Math.hypot(I.mx, I.my); const a = m > 0.2 ? Math.atan2(I.my, I.mx) : p.aim + Math.PI / 2; p.vx = Math.cos(a) * 620; p.vy = Math.sin(a) * 620; p.step = 0.14; p.scd = 0.45; p.inv = Math.max(p.inv, 0.18); g.sfx.dash(1.2); }
+      if (p.step <= 0) { p.vx = lerp(p.vx, I.mx * 250, 1 - Math.exp(-dt * 12)); p.vy = lerp(p.vy, I.my * 250, 1 - Math.exp(-dt * 12)); }
+      if (I.pressed('a') || I.pressed('rt') || I.pressed('rb')) { if (!S.hook) { S.hook = { x: p.x, y: p.y, vx: Math.cos(p.aim) * 1100, vy: Math.sin(p.aim) * 1100, d: 0, back: false }; g.sfx.zap(1.3); } }
+    } else { p.vx *= 0.9; p.vy *= 0.9; }
+    p.x = clamp(p.x + p.vx * dt, PR, g.W - PR); p.y = clamp(p.y + p.vy * dt, PR, g.H - PR);
+    // saws
+    for (const s of S.saws) { s.spin += dt * 14; if (s.orbit) { s.ph += s.sp * dt; s.x = s.cx + Math.cos(s.ph) * s.orbit; s.y = s.cy + Math.sin(s.ph) * s.orbit; } if (p.hp > 0 && Math.hypot(s.x - p.x, s.y - p.y) < s.r + PR - 4) { hurt(g); const dx = p.x - s.x, dy = p.y - s.y, d = Math.hypot(dx, dy) || 1; p.vx = dx / d * 500; p.vy = dy / d * 500; p.step = 0.15; } }
+    // hook
+    const h = S.hook;
+    if (h) {
+      if (!h.back) {
+        const ox = h.x, oy = h.y;
+        h.x += h.vx * dt; h.y += h.vy * dt; h.d += 1100 * dt;
+        for (const e of S.enemies) if (!e.dead && e.yank <= 0 && segCircle(ox, oy, h.x, h.y, e.x, e.y, e.r + 6)) {
+          // YANK: launch them toward and past the player
+          const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+          const sp = e.heavy ? YANK * 0.65 : YANK;
+          e.vx = dx / d * sp; e.vy = dy / d * sp; e.yank = 1.2; e.flash = 0.1; e.hit = new Set();
+          g.sfx.whoosh(0.9); g.sfx.clang(0.6); g.hitstop(0.04); g.shake(4); g.haptic(0.4, 40);
+          S.hook = null; break;
+        }
+        if (S.hook && (h.d > RANGE || h.x < 0 || h.x > g.W || h.y < 0 || h.y > g.H)) h.back = true;
+      } else {
+        const dx = p.x - h.x, dy = p.y - h.y, d = Math.hypot(dx, dy);
+        if (d < 30) S.hook = null; else { h.x += dx / d * 1600 * dt; h.y += dy / d * 1600 * dt; }
+      }
+    }
+    // enemies
+    for (const e of S.enemies) {
+      if (e.dead) continue;
+      e.flash -= dt; e.stun -= dt;
+      if (e.yank > 0) {
+        e.yank -= dt;
+        e.vx *= Math.exp(-dt * 1.1); e.vy *= Math.exp(-dt * 1.1);
+        const sp = Math.hypot(e.vx, e.vy);
+        e.x += e.vx * dt; e.y += e.vy * dt;
+        if (Math.random() < 0.6) g.fx.burst(e.x, e.y, 1, { color: '#fff', speed: 40, size: 2.5, life: 0.25 });
+        // bowling
+        for (const o of S.enemies) if (o !== e && !o.dead && !e.hit.has(o) && Math.hypot(o.x - e.x, o.y - e.y) < o.r + e.r) {
+          e.hit.add(o);
+          if (sp > 380) { killE(g, o, 'bowl', sp); if (!e.heavy) { e.vx *= 0.75; e.vy *= 0.75; } }
+          else { o.vx += e.vx * 0.6; o.vy += e.vy * 0.6; o.stun = 0.5; }
+        }
+        // walls stun and stop
+        if (e.x < e.r || e.x > g.W - e.r || e.y < e.r || e.y > g.H - e.r) { e.x = clamp(e.x, e.r, g.W - e.r); e.y = clamp(e.y, e.r, g.H - e.r); if (sp > 300) { g.sfx.hit(0.6); g.shake(3); } e.vx *= -0.3; e.vy *= -0.3; e.yank = 0; e.stun = 0.8; }
+        if (sp < 120) { e.yank = 0; e.stun = 0.5; }
+      } else if (e.stun > 0) { e.vx *= Math.exp(-dt * 5); e.vy *= Math.exp(-dt * 5); e.x += e.vx * dt; e.y += e.vy * dt; }
+      else {
+        const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+        e.vx = lerp(e.vx, dx / d * e.spd, 1 - Math.exp(-dt * 3)); e.vy = lerp(e.vy, dy / d * e.spd, 1 - Math.exp(-dt * 3));
+        // they try to steer around saws
+        for (const s of S.saws) { const sx = e.x - s.x, sy = e.y - s.y, sd = Math.hypot(sx, sy) || 1; if (sd < s.r + 50) { e.vx += sx / sd * 160 * dt * 10; e.vy += sy / sd * 160 * dt * 10; } }
+        e.x += e.vx * dt; e.y += e.vy * dt;
+        if (p.hp > 0 && d < e.r + PR - 2) hurt(g);
+      }
+      for (const s of S.saws) if (Math.hypot(s.x - e.x, s.y - e.y) < s.r + e.r - 3) { killE(g, e, 'saw'); g.fx.burst(s.x, s.y, 14, { color: '#ffd84a', speed: 400, size: 2, shape: 'line' }); break; }
+    }
+    S.enemies = S.enemies.filter(e => !e.dead);
+  },
+  draw(g, ctx) {
+    const p = S.p;
+    ctx.fillStyle = '#1a1410'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.strokeStyle = '#ffffff08'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = 0; x < g.W; x += 36) { ctx.moveTo(x, 0); ctx.lineTo(x, g.H); } ctx.stroke();
+    for (const s of S.saws) {
+      if (s.orbit) { ctx.strokeStyle = '#ffffff10'; ctx.beginPath(); ctx.arc(s.cx, s.cy, s.orbit, 0, TAU); ctx.stroke(); }
+      ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.spin);
+      ctx.fillStyle = '#c9ced6'; ctx.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * TAU; ctx.lineTo(Math.cos(a) * (s.r + (i % 2 ? 0 : 7)), Math.sin(a) * (s.r + (i % 2 ? 0 : 7))); } ctx.fill();
+      ctx.fillStyle = '#5a5f66'; ctx.beginPath(); ctx.arc(0, 0, s.r * 0.35, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+    // matador guide: line from aimed enemy through you, showing where they'll fly
+    if (p.hp > 0 && !S.hook) {
+      let tgt = null, bd = RANGE; for (const e of S.enemies) if (e.yank <= 0) { const d = Math.hypot(e.x - p.x, e.y - p.y); if (d < bd) { const off = Math.abs(((Math.atan2(e.y - p.y, e.x - p.x) - p.aim + Math.PI) % TAU + TAU) % TAU - Math.PI); if (off < 0.15) { bd = d; tgt = e; } } }
+      ctx.strokeStyle = '#ffb03d33'; ctx.setLineDash([3, 7]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + Math.cos(p.aim) * RANGE, p.y + Math.sin(p.aim) * RANGE); ctx.stroke();
+      if (tgt) { const bx = p.x - Math.cos(p.aim) * 260, by = p.y - Math.sin(p.aim) * 260; let lethal = S.saws.some(s => segCircle(p.x, p.y, bx, by, s.x, s.y, s.r + tgt.r)); ctx.strokeStyle = lethal ? '#ff3d3d' : '#ffffff55'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(bx, by); ctx.stroke(); }
+      ctx.setLineDash([]);
+    }
+    for (const e of S.enemies) {
+      ctx.fillStyle = e.flash > 0 ? '#fff' : e.heavy ? '#ffb03d' : e.fast ? '#ff5ec8' : '#ff5e5e';
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, TAU); ctx.fill();
+      if (e.yank > 0) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 4, 0, TAU); ctx.stroke(); }
+      if (e.stun > 0 && e.yank <= 0) { ctx.fillStyle = '#ffd84a'; ctx.fillRect(e.x - 2 + Math.cos(g.time * 10) * 10, e.y - e.r - 8, 4, 4); }
+    }
+    const h = S.hook;
+    if (h) { ctx.strokeStyle = '#d8c8a8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(h.x, h.y); ctx.stroke(); ctx.fillStyle = '#ffb03d'; ctx.beginPath(); ctx.arc(h.x, h.y, 5, 0, TAU); ctx.fill(); }
+    if (p.hp > 0 || S.overT > 0.6) {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.aim);
+      ctx.fillStyle = p.inv > 0 && Math.floor(g.time * 20) % 2 ? '#ff6b8a' : '#f2e6d0'; ctx.beginPath(); ctx.arc(0, 0, PR, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ffb03d'; ctx.fillRect(PR - 4, -3, 12, 6);
+      ctx.restore();
+    }
+    g.fx.draw(ctx);
+  },
+  hudExtra(g, ctx) {
+    for (let i = 0; i < 3; i++) g.text(i < S.p.hp ? '♥' : '♡', 24 + i * 24, 86, 22, i < S.p.hp ? '#ff6b8a' : '#ffffff44', 'left');
+    if (S.combo > 1) g.text(S.combo + ' COMBO', g.W - 24, 80, 22, '#ffd84a', 'right');
+  },
+});
+})();
+</script>
+</body>
+</html>
