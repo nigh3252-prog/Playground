@@ -25,7 +25,7 @@ for (const f of ['index.html', ...files]) {
     window.__press = (i, v) => { pad.buttons[i].pressed = v; pad.buttons[i].value = v ? 1 : 0; };
   });
   await page.goto('file://' + path.join(dir, f));
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(500);
   if (f !== 'index.html') {
     const st = () => page.evaluate(() => ARC.current && ARC.current.state);
     const tap = async i => { await page.evaluate(i => __press(i, true), i); await page.waitForTimeout(60); await page.evaluate(i => __press(i, false), i); await page.waitForTimeout(60); };
