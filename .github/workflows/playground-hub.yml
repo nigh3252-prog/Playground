@@ -1,0 +1,22 @@
+name: Playground Hub smoke
+on:
+  pull_request:
+    paths:
+      - 'hub/**'
+      - 'index.html'
+      - '.github/workflows/playground-hub.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'hub/**'
+      - 'index.html'
+      - '.github/workflows/playground-hub.yml'
+jobs:
+  validate-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Hub JavaScript syntax
+        run: node --check hub/hub.js
+      - name: Verify catalog, paths and UI wiring
+        run: node hub/smoke.mjs
