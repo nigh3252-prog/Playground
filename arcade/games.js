@@ -18,4 +18,5 @@ window.ARC_GAMES = [
   { file: 'still.html', title: 'STILL', color: '#ff5a1f', blurb: 'Time only moves when you do. One hit shatters you.' },
   { file: 'magnet.html', title: 'MAGNET', color: '#4ad6ff', blurb: 'Telekinesis: pull steel crates in, fling them through the crowd.' },
   { file: 'hookshot.html', title: 'HOOKSHOT', color: '#ffb03d', blurb: 'Matador with a grappling hook: yank them through you into the saws.' },
+  { file: 'top.html', title: 'TOP', color: '#ff9a2e', blurb: 'Spinning-top sumo. Rev up, slam in, ring rivals out of the bowl.' },
 ];
