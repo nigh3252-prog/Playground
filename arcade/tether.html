@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>TETHER</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU, segCircle } = ARC.util;
+const PR = 11, MAXLEN = 340;
+let S;
+
+function spawn(g) {
+  const lv = S.lv, r = Math.random();
+  const side = (Math.random() * 4) | 0; let x, y;
+  if (side === 0) { x = -20; y = rand(0, g.H); } else if (side === 1) { x = g.W + 20; y = rand(0, g.H); } else if (side === 2) { x = rand(0, g.W); y = -20; } else { x = rand(0, g.W); y = g.H + 20; }
+  if (r < 0.5) { const n = 4 + Math.min(6, lv); for (let i = 0; i < n; i++) S.enemies.push({ k: 'swarm', x: x + rand(-30, 30), y: y + rand(-30, 30), vx: 0, vy: 0, r: 8, hp: 1, spd: 95 + lv * 5, pts: 20, ph: rand(0, TAU) }); }
+  else if (r < 0.78 || lv < 2) S.enemies.push({ k: 'charger', x, y, vx: 0, vy: 0, r: 13, hp: 1, spd: 60, pts: 80, cool: rand(1.5, 2.5), ph: 0 });
+  else S.enemies.push({ k: 'tank', x, y, vx: 0, vy: 0, r: 22, hp: 3, spd: 40, pts: 300, ph: 0, cd: 0 });
+}
+function hurt(g) {
+  const p = S.p; if (p.inv > 0 || p.hp <= 0) return;
+  p.hp--; p.inv = 1.4; g.hitstop(0.1); g.shake(14); g.flash('#ff2040', 0.4); g.sfx.hurt(); g.haptic(1, 150);
+  for (const e of S.enemies) { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1; if (d < 150) { e.vx = dx / d * 420; e.vy = dy / d * 420; } }
+  if (p.hp <= 0) { S.overT = 1.1; g.slowmo(0.25, 1); }
+}
+
+ARC.game({
+  id: 'tether', title: 'TETHER', color: '#7dffcf', tagline: 'Drop the anchor. You are the other end of the laser.',
+  help: [
+    { pad: 'Ⓛ move  ·  Ⓐ drop anchor (beam runs anchor → you)  ·  Ⓑ recall — the anchor slices on its way back', touch: 'Left thumb: move  ·  ANCHOR drops the beam  ·  RECALL zips it back, slicing' },
+    'Sweep the beam through crowds. One sweep, many kills = chain.',
+    'Stretch past max length and the beam snaps. Big ones take 3 cuts.',
+  ],
+  buttons: [{ id: 'a', label: 'ANCHOR', big: true, color: '#7dffcf' }, { id: 'b', label: 'RECALL' }],
+  init(g) {
+    S = { p: { x: g.W / 2, y: g.H / 2, vx: 0, vy: 0, hp: 3, inv: 1, px: g.W / 2, py: g.H / 2 }, node: null, enemies: [], bullets: [], spawnT: 1, lv: 1, lvT: 0, sweep: 0, sweepT: 0, overT: 0, best: 0 };
+    g.S = S;
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p;
+    if (S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver('Best sweep ×' + S.best); return; } }
+    S.lvT += dt; if (S.lvT > 20) { S.lvT = 0; S.lv++; g.fx.pop(g.W / 2, 90, 'LEVEL ' + S.lv, { color: '#7dffcf', size: 28 }); }
+    S.spawnT -= dt; if (S.spawnT <= 0) { spawn(g); S.spawnT = Math.max(0.8, 2.4 - S.lv * 0.15) * rand(0.7, 1.2); }
+    p.inv -= dt;
+    p.px = p.x; p.py = p.y;
+    if (p.hp > 0) { p.vx = lerp(p.vx, I.mx * 290, 1 - Math.exp(-dt * 12)); p.vy = lerp(p.vy, I.my * 290, 1 - Math.exp(-dt * 12)); }
+    p.x = clamp(p.x + p.vx * dt, PR, g.W - PR); p.y = clamp(p.y + p.vy * dt, PR, g.H - PR);
+    // anchor
+    if ((I.pressed('a') || I.pressed('rt')) && p.hp > 0) {
+      S.node = { x: p.x, y: p.y, back: false, t: 0, px: p.x, py: p.y };
+      g.sfx.blip(1.3); g.fx.ring(p.x, p.y, { r: 4, to: 30, color: '#7dffcf', life: 0.2, w: 3 });
+      if (S.sweep >= 2) endSweep(g);
+      S.sweep = 0;
+    }
+    const n = S.node;
+    if (n) {
+      n.t += dt; n.px = n.x; n.py = n.y;
+      if ((I.pressed('b') || I.pressed('x') || I.pressed('rb')) && !n.back) { n.back = true; n.v = 300; g.sfx.zap(0.8); }
+      if (n.back) {
+        n.v = Math.min(1600, n.v + dt * 4000);
+        const dx = p.x - n.x, dy = p.y - n.y, d = Math.hypot(dx, dy) || 1;
+        const step = n.v * dt; if (step >= d) { S.node = null; g.sfx.pickup(0.8); if (S.sweep >= 2) endSweep(g); S.sweep = 0; }
+        else { n.x += dx / d * step; n.y += dy / d * step; }
+      }
+      const len = S.node ? Math.hypot(p.x - n.x, p.y - n.y) : 0;
+      if (S.node && len > MAXLEN) { S.node = null; g.sfx.clang(0.5); g.fx.burst(p.x, p.y, 10, { color: '#7dffcf', speed: 200, size: 2 }); g.fx.pop(p.x, p.y - 30, 'SNAP', { color: '#ffffff88', size: 14 }); if (S.sweep >= 2) endSweep(g); S.sweep = 0; }
+    }
+    // beam cuts: test the beam line now, plus the area swept since last frame (quad split into two segments + anchor path)
+    const N = S.node;
+    for (const e of S.enemies) {
+      e.cd = (e.cd || 0) - dt;
+      if (e.dead || !N || e.cd > 0) continue;
+      const hit = segCircle(N.x, N.y, p.x, p.y, e.x, e.y, e.r) || segCircle(N.px, N.py, N.x, N.y, e.x, e.y, e.r) || segCircle(p.px, p.py, p.x, p.y, e.x, e.y, e.r * 0.5) || triHit(N.x, N.y, p.px, p.py, p.x, p.y, e.x, e.y);
+      if (hit) {
+        e.hp--; e.cd = 0.3; e.flash = 0.1;
+        if (e.hp <= 0) {
+          e.dead = true; S.sweep++; S.sweepT = 1;
+          const pts = e.pts * S.sweep; g.addScore(pts);
+          g.fx.burst(e.x, e.y, e.k === 'tank' ? 30 : 10, { color: [e.k === 'swarm' ? '#ff5e7a' : e.k === 'tank' ? '#ffb03d' : '#c08bff', '#fff'], speed: 320, size: 3 });
+          if (S.sweep > 2) g.fx.pop(e.x, e.y - 18, '×' + S.sweep, { color: '#7dffcf', size: 14 + Math.min(16, S.sweep) });
+          g.sfx.hit(1 + Math.min(S.sweep, 30) * 0.03); g.hitstop(e.k === 'tank' ? 0.06 : 0.015); g.shake(e.k === 'tank' ? 8 : 2);
+          S.best = Math.max(S.best, S.sweep);
+        } else { g.sfx.clang(0.9); g.fx.burst(e.x, e.y, 8, { color: '#fff', speed: 200, size: 2.5 }); }
+      }
+    }
+    if (S.sweepT > 0) { S.sweepT -= dt; if (S.sweepT <= 0 && S.sweep >= 2) { endSweep(g); S.sweep = 0; } }
+    // enemies
+    for (const e of S.enemies) {
+      if (e.dead) continue;
+      e.ph += dt; e.flash = (e.flash || 0) - dt;
+      const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+      if (e.k === 'swarm') { const wob = Math.sin(e.ph * 5) * 0.6; const a = Math.atan2(dy, dx) + wob; e.vx = lerp(e.vx, Math.cos(a) * e.spd, 1 - Math.exp(-dt * 3)); e.vy = lerp(e.vy, Math.sin(a) * e.spd, 1 - Math.exp(-dt * 3)); }
+      if (e.k === 'charger') { e.cool -= dt; if (e.cool <= 0 && !e.dash) { e.dash = 0.5; e.dx = dx / d; e.dy = dy / d; g.sfx.whoosh(1.5); } if (e.dash > 0) { e.dash -= dt; e.vx = e.dx * 460; e.vy = e.dy * 460; if (e.dash <= 0) { e.dash = 0; e.cool = rand(1.8, 2.8); } } else { e.vx = lerp(e.vx, dx / d * e.spd, 1 - Math.exp(-dt * 2)); e.vy = lerp(e.vy, dy / d * e.spd, 1 - Math.exp(-dt * 2)); } }
+      if (e.k === 'tank') { e.vx = lerp(e.vx, dx / d * e.spd, 1 - Math.exp(-dt * 2)); e.vy = lerp(e.vy, dy / d * e.spd, 1 - Math.exp(-dt * 2)); }
+      e.x += e.vx * dt; e.y += e.vy * dt;
+      if (p.hp > 0 && d < e.r + PR - 2) hurt(g);
+    }
+    S.enemies = S.enemies.filter(e => !e.dead);
+  },
+  draw(g, ctx) {
+    const p = S.p, n = S.node;
+    ctx.fillStyle = '#05100e'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.fillStyle = '#7dffcf0c'; for (let x = 0; x < g.W; x += 32) for (let y = 0; y < g.H; y += 32) ctx.fillRect(x, y, 2, 2);
+    for (const e of S.enemies) {
+      const col = e.flash > 0 ? '#fff' : e.k === 'swarm' ? '#ff5e7a' : e.k === 'tank' ? '#ffb03d' : '#c08bff';
+      ctx.fillStyle = col;
+      if (e.k === 'swarm') { ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.ph * 6); ctx.fillRect(-e.r, -e.r, e.r * 2, e.r * 2); ctx.restore(); }
+      else if (e.k === 'charger') { ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(Math.atan2(p.y - e.y, p.x - e.x)); ctx.beginPath(); ctx.moveTo(e.r + 5, 0); ctx.lineTo(-e.r, -e.r); ctx.lineTo(-e.r, e.r); ctx.fill(); ctx.restore(); if (e.cool < 0.4 && !e.dash) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 6, 0, TAU); ctx.stroke(); } }
+      else { ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, TAU); ctx.fill(); for (let i = 0; i < e.hp; i++) { ctx.fillStyle = '#05100e'; ctx.beginPath(); ctx.arc(e.x - 8 + i * 8, e.y, 3, 0, TAU); ctx.fill(); } }
+    }
+    // beam
+    if (n) {
+      const len = Math.hypot(p.x - n.x, p.y - n.y), k = len / MAXLEN;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = k > 0.85 ? '#ff5e7a55' : '#7dffcf44'; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      ctx.strokeStyle = k > 0.85 ? (Math.floor(g.time * 20) % 2 ? '#ff5e7a' : '#fff') : '#e6fff6'; ctx.lineWidth = 3 + Math.sin(g.time * 40); ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      ctx.fillStyle = '#7dffcf'; ctx.save(); ctx.translate(n.x, n.y); ctx.rotate(g.time * 4); ctx.fillRect(-7, -7, 14, 14); ctx.restore();
+    }
+    if (p.hp > 0 || S.overT > 0.6) {
+      if (!(p.inv > 0 && Math.floor(g.time * 20) % 2)) { ctx.fillStyle = '#e6fff6'; ctx.beginPath(); ctx.arc(p.x, p.y, PR, 0, TAU); ctx.fill(); ctx.fillStyle = '#7dffcf'; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, TAU); ctx.fill(); }
+      if (!n) { ctx.strokeStyle = '#7dffcf22'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, MAXLEN, 0, TAU); ctx.stroke(); }
+    }
+    g.fx.draw(ctx);
+  },
+  hudExtra(g, ctx) {
+    for (let i = 0; i < 3; i++) g.text(i < S.p.hp ? '♥' : '♡', 24 + i * 24, 86, 22, i < S.p.hp ? '#ff6b8a' : '#ffffff44', 'left');
+    if (S.sweep > 1) g.text('SWEEP ×' + S.sweep, g.W - 24, 80, 24, '#7dffcf', 'right');
+  },
+});
+function endSweep(g) { if (S.sweep >= 3) { const b = S.sweep * S.sweep * 10; g.addScore(b); g.fx.pop(S.p.x, S.p.y - 50, 'SWEEP ×' + S.sweep + '  +' + b, { color: '#7dffcf', size: 22 }); g.sfx.combo(Math.min(S.sweep, 20)); } }
+function triHit(ax, ay, bx, by, cx, cy, px, py) {
+  const d1 = (px - bx) * (ay - by) - (ax - bx) * (py - by), d2 = (px - cx) * (by - cy) - (bx - cx) * (py - cy), d3 = (px - ax) * (cy - ay) - (cx - ax) * (py - ay);
+  const neg = d1 < 0 || d2 < 0 || d3 < 0, pos = d1 > 0 || d2 > 0 || d3 > 0; return !(neg && pos);
+}
+})();
+</script>
+</body>
+</html>
