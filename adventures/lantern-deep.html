@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Lantern Deep — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* LANTERN DEEP — exploration by lamplight. Your light is your life: the oil
+   that feeds it is also the only thing holding the shades back. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const TS = 32, GW = 84, GH = 58;
+let G, P, crystals, flasks, flareItems, flares, shades, crawlers, rope, seed = 1, dark, dg, got, bfsHome;
+
+const solid = (x, y) => G.get(x, y) === 1;
+
+function openCells() {
+  const out = [];
+  for (let y = 2; y < GH - 2; y++) for (let x = 2; x < GW - 2; x++) if (!G.d[y * GW + x]) out.push([x, y]);
+  return out;
+}
+function build() {
+  const r = K.rng(seed);
+  do { G = K.cave(GW, GH, r, 0.44, 5); } while (G.open < GW * GH * 0.32);
+  const cells = openCells();
+  /* the rope hangs somewhere near the top */
+  const top = cells.filter(([x, y]) => y < 12 && G.get(x, y - 1) === 0 && G.get(x + 1, y) === 0 && G.get(x - 1, y) === 0);
+  const s = r.pick(top.length ? top : cells);
+  rope = { x: s[0] * TS + 16, y: s[1] * TS + 16 };
+  bfsHome = K.bfs(GW, GH, s[0], s[1], (x, y) => !G.d[y * GW + x]);
+  const far = cells.filter(([x, y]) => bfsHome[y * GW + x] > 34).sort((a, b) => bfsHome[b[1] * GW + b[0]] - bfsHome[a[1] * GW + a[0]]);
+  crystals = [];
+  for (const c of far) {
+    if (crystals.length >= 3) break;
+    const x = c[0] * TS + 16, y = c[1] * TS + 16;
+    if (crystals.every((o) => dist(o.x, o.y, x, y) > 620)) crystals.push({ x, y, got: false });
+  }
+  while (crystals.length < 3) { const c = far[r.int(0, far.length - 1)]; crystals.push({ x: c[0] * TS + 16, y: c[1] * TS + 16, got: false }); }
+  const spots = K.shuffle(cells.slice(), r);
+  flasks = []; flareItems = []; crawlers = []; shades = [];
+  for (const c of spots) {
+    const x = c[0] * TS + 16, y = c[1] * TS + 16, d = bfsHome[c[1] * GW + c[0]];
+    if (flasks.length < 20 && d > 8 && flasks.every((o) => dist(o.x, o.y, x, y) > 300)) flasks.push({ x, y });
+    else if (flareItems.length < 7 && d > 14 && flareItems.every((o) => dist(o.x, o.y, x, y) > 420)) flareItems.push({ x, y });
+    else if (crawlers.length < 12 && d > 22 && crawlers.every((o) => dist(o.x, o.y, x, y) > 260)) crawlers.push({ x, y, r: 10, a: r() * TAU, t: r() * 2, chase: false, leg: 0 });
+  }
+  for (let i = 0; i < 7; i++) shades.push({ x: rand(0, GW * TS), y: rand(GH * TS * 0.3, GH * TS), ph: rand(0, TAU), cool: 0 });
+}
+function spawn() {
+  P = { x: rope.x, y: rope.y + 8, r: 9, hp: 3, oil: 1, flares: 3, fx: 0, fy: 1, dashT: 0, dashCd: 0, inv: 1, step: 0 };
+  flares = [];
+  cam.x = P.x; cam.y = P.y;
+}
+
+function hurt(fromX, fromY) {
+  if (P.inv > 0) return;
+  P.hp--; P.inv = 1.4; K.sfx('hurt'); fx.shake(9); fx.flash('#7f1d1d', 0.25);
+  const a = ang(fromX, fromY, P.x, P.y); K.moveC(P, Math.cos(a) * 26, Math.sin(a) * 26, solid, TS);
+  if (P.hp <= 0) K.lose({ title: 'THE DARK TOOK YOU', text: 'Crystals you already carried are safe at the rope.', stats: [['Crystals', got + ' / 3']] });
+}
+function lightR() { return 34 + 190 * Math.sqrt(P.oil); }
+
+K.run({
+  id: 'lantern-deep', num: 1, title: 'LANTERN DEEP', tag: 'Exploration by lamplight', color: '#fbbf24',
+  goal: 'Three singing crystals lie in the cavern. Find them all and climb back out on the rope. Oil is light, and light is the only thing the shades fear.',
+  controls: [['LS', 'Move'], ['cross', 'Dash'], ['square', 'Throw flare']],
+  music: { bpm: 62, root: 43, mode: 'phryg', dens: 0.22, long: true, lead: 'sine', seed: 11 },
+  init() { dark = document.createElement('canvas'); dark.width = W; dark.height = H; dg = dark.getContext('2d'); },
+  start() { seed = irand(1, 1e9); build(); got = 0; spawn(); K.banner('LANTERN DEEP', 'The resonance meter warms as a crystal nears'); },
+  retry() { spawn(); },
+  update(dt) {
+    const mx = K.IN.lx, my = K.IN.ly, m = Math.hypot(mx, my);
+    if (m > 0.2) { P.fx = mx / m; P.fy = my / m; }
+    P.dashCd -= dt; P.inv -= dt;
+    if (K.hit('cross') && P.dashCd <= 0) { P.dashT = 0.16; P.dashCd = 0.8; K.sfx('dash'); }
+    let sp = 150;
+    if (P.dashT > 0) { P.dashT -= dt; sp = 520; K.moveC(P, P.fx * sp * dt, P.fy * sp * dt, solid, TS); fx.spark(P.x, P.y, 0, 0, '#fde68a', 0.25, 5); }
+    else K.moveC(P, mx * sp * dt, my * sp * dt, solid, TS);
+    if (m > 0.3) { P.step -= dt; if (P.step <= 0) { P.step = 0.3; K.sfx('step'); } }
+    P.oil = Math.max(0, P.oil - dt / 80);
+    if (P.oil <= 0 && Math.random() < dt * 0.4) K.hint('Your lamp is out. Find oil!', 1.5);
+
+    if (K.hit('square')) {
+      if (P.flares > 0) { P.flares--; flares.push({ x: P.x, y: P.y, r: 4, vx: P.fx * 420, vy: P.fy * 420, t: 11 }); K.sfx('shoot'); }
+      else K.sfx('bad');
+    }
+    for (let i = flares.length - 1; i >= 0; i--) {
+      const f = flares[i]; f.t -= dt;
+      const h = K.moveC(f, f.vx * dt, f.vy * dt, solid, TS);
+      if (h.hx) f.vx *= -0.4; if (h.hy) f.vy *= -0.4;
+      f.vx *= 1 - 3 * dt; f.vy *= 1 - 3 * dt;
+      if (Math.random() < dt * 30) fx.spark(f.x, f.y, rand(-30, 30), rand(-60, -10), pick(['#fca5a5', '#fde68a']), 0.5, 3);
+      if (f.t <= 0) flares.splice(i, 1);
+    }
+    for (let i = flasks.length - 1; i >= 0; i--) if (dist(P.x, P.y, flasks[i].x, flasks[i].y) < 20) { flasks.splice(i, 1); P.oil = Math.min(1, P.oil + 0.5); K.sfx('pick'); fx.text(P.x, P.y - 20, '+OIL', '#fbbf24'); }
+    for (let i = flareItems.length - 1; i >= 0; i--) if (dist(P.x, P.y, flareItems[i].x, flareItems[i].y) < 20) { flareItems.splice(i, 1); P.flares += 2; K.sfx('pick'); fx.text(P.x, P.y - 20, '+2 FLARES', '#fca5a5'); }
+    for (const c of crystals) if (!c.got && dist(P.x, P.y, c.x, c.y) < 24) {
+      c.got = true; got++; K.sfx('key'); fx.burst(c.x, c.y, '#67e8f9', 30, 220, 0.9, 4); fx.flash('#67e8f9', 0.3); P.oil = Math.min(1, P.oil + 0.3);
+      K.banner(got === 3 ? 'ALL THREE CRYSTALS' : 'CRYSTAL ' + got + ' OF 3', got === 3 ? 'Now find the rope. Follow the arrow.' : 'The cavern hums a little louder');
+    }
+    if (got === 3 && dist(P.x, P.y, rope.x, rope.y) < 26) K.win({ title: 'BACK IN DAYLIGHT', text: 'Three crystals, one lamp, and nothing followed you up.', stats: [['Hearts left', P.hp]] });
+
+    /* shades drift through rock toward you and recoil from any light */
+    const LR = lightR();
+    for (const s of shades) {
+      s.ph += dt; s.cool -= dt;
+      let lit = dist(s.x, s.y, P.x, P.y) < LR + 14, ax = P.x, ay = P.y;
+      for (const f of flares) if (dist(s.x, s.y, f.x, f.y) < 170) { lit = true; ax = f.x; ay = f.y; }
+      const a = ang(s.x, s.y, ax, ay);
+      const v = lit ? -150 : (s.cool > 0 ? 0 : 58);
+      s.x += Math.cos(a) * v * dt + Math.cos(s.ph * 1.7) * 14 * dt; s.y += Math.sin(a) * v * dt + Math.sin(s.ph * 1.3) * 14 * dt;
+      if (dist(s.x, s.y, P.x, P.y) < 20) { hurt(s.x, s.y); s.cool = 3; s.x -= Math.cos(a) * 200; s.y -= Math.sin(a) * 200; }
+    }
+    /* crawlers hunt by sight and only a flare stops them */
+    for (let i = crawlers.length - 1; i >= 0; i--) {
+      const c = crawlers[i]; const d = dist(c.x, c.y, P.x, P.y);
+      if (d > 700) continue;
+      c.chase = d < 240 && K.los(c.x, c.y, P.x, P.y, solid, TS);
+      c.t -= dt;
+      if (c.chase) c.a += K.angDiff(c.a, ang(c.x, c.y, P.x, P.y)) * Math.min(1, dt * 6);
+      else if (c.t <= 0) { c.t = rand(0.8, 2.5); c.a = rand(0, TAU); }
+      const v = c.chase ? 128 : 36;
+      const h = K.moveC(c, Math.cos(c.a) * v * dt, Math.sin(c.a) * v * dt, solid, TS);
+      if ((h.hx || h.hy) && !c.chase) c.a += 1.6;
+      c.leg += v * dt * 0.12;
+      if (d < 20) hurt(c.x, c.y);
+      for (const f of flares) if (dist(c.x, c.y, f.x, f.y) < 70) { fx.burst(c.x, c.y, '#fb923c', 18, 180, 0.6, 4); K.sfx('hit'); crawlers.splice(i, 1); break; }
+    }
+    cam.follow(P.x, P.y, dt, 7); cam.bound(GW * TS, GH * TS);
+  },
+  draw(t) {
+    rect(0, 0, W, H, '#0a0806');
+    cam.begin();
+    const x0 = Math.max(0, Math.floor((cam.x - W / 2) / TS) - 1), x1 = Math.min(GW - 1, x0 + W / TS + 2);
+    const y0 = Math.max(0, Math.floor((cam.y - H / 2) / TS) - 1), y1 = Math.min(GH - 1, y0 + H / TS + 3);
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const n = K.hash2(x, y, seed);
+      if (G.d[y * GW + x]) {
+        rect(x * TS, y * TS, TS, TS, K.hsl(22, 24, 8 + n * 5));
+        if (!G.get(x, y + 1)) rect(x * TS, y * TS + TS - 9, TS, 9, K.hsl(24, 30, 5));
+        if (!G.get(x, y - 1)) rect(x * TS, y * TS, TS, 5, K.hsl(30, 30, 40));
+      } else {
+        rect(x * TS, y * TS, TS, TS, K.hsl(30, 20, 30 + n * 6));
+        if (n > 0.8) circ(x * TS + n * 28, y * TS + 20, 2.5, K.hsl(28, 14, 22));
+      }
+    }
+    /* rope */
+    line(rope.x, rope.y - 400, rope.x, rope.y, '#d6b98a', 4);
+    for (let i = 0; i < 12; i++) line(rope.x - 2, rope.y - i * 30, rope.x + 2, rope.y - i * 30 - 5, '#8a6f45', 2);
+    ring(rope.x, rope.y, 16 + Math.sin(t * 3) * 2, got === 3 ? '#fde68a' : 'rgba(253,230,138,.3)', 2);
+    for (const f of flasks) { rrect(f.x - 6, f.y - 6, 12, 14, 3, '#f59e0b'); rect(f.x - 3, f.y - 10, 6, 4, '#fde68a'); }
+    for (const f of flareItems) { rect(f.x - 7, f.y - 3, 14, 6, '#ef4444'); rect(f.x + 5, f.y - 3, 3, 6, '#fef3c7'); }
+    for (const c of crystals) if (!c.got) {
+      const b = Math.sin(t * 2.4 + c.x) * 2;
+      K.poly([[c.x, c.y - 18 + b], [c.x + 10, c.y + b], [c.x, c.y + 14 + b], [c.x - 10, c.y + b]], '#67e8f9', '#ecfeff', 1.5);
+    }
+    for (const c of crawlers) {
+      if (!cam.see(c.x, c.y)) continue;
+      for (let k = 0; k < 6; k++) { const a = c.a + (k < 3 ? 1 : -1) * (0.7 + (k % 3) * 0.55) + Math.sin(c.leg + k) * 0.25; line(c.x, c.y, c.x + Math.cos(a) * 15, c.y + Math.sin(a) * 15, '#3f2a1c', 2); }
+      circ(c.x, c.y, 9, c.chase ? '#7c2d12' : '#57341f');
+      circ(c.x + Math.cos(c.a) * 6, c.y + Math.sin(c.a) * 6, 2.2, c.chase ? '#fca5a5' : '#fde68a');
+    }
+    for (const f of flares) { circ(f.x, f.y, 5, '#fecaca'); circ(f.x, f.y, 9 + Math.sin(t * 30) * 2, 'rgba(248,113,113,.45)'); }
+    /* player */
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) {
+      circ(P.x, P.y + 3, 10, 'rgba(0,0,0,.4)');
+      circ(P.x, P.y, 9, '#e7d7b8'); circ(P.x + P.fx * 3, P.y + P.fy * 3 - 2, 6, '#8b5e34');
+      circ(P.x + P.fx * 11 - P.fy * 5, P.y + P.fy * 11 + P.fx * 5, 4, P.oil > 0 ? '#fde68a' : '#57534e');
+    }
+    fx.draw();
+    cam.end();
+
+    /* darkness with holes punched for every light */
+    dg.globalCompositeOperation = 'source-over'; dg.fillStyle = '#020203'; dg.fillRect(0, 0, W, H);
+    dg.globalCompositeOperation = 'destination-out';
+    const hole = (wx, wy, r, k) => {
+      const x = cam.sx(wx), y = cam.sy(wy); if (x < -r || y < -r || x > W + r || y > H + r) return;
+      const gr = dg.createRadialGradient(x, y, r * 0.15, x, y, r);
+      gr.addColorStop(0, 'rgba(0,0,0,' + k + ')'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      dg.fillStyle = gr; dg.beginPath(); dg.arc(x, y, r, 0, TAU); dg.fill();
+    };
+    const LR = lightR() * (1 + Math.sin(t * 9) * 0.02 * (P.oil < 0.25 ? 3 : 1));
+    hole(P.x, P.y, LR, 1); hole(P.x, P.y, LR * 0.6, 1);
+    for (const f of flares) { const r = 190 * Math.min(1, f.t / 2); hole(f.x, f.y, r, 1); hole(f.x, f.y, r * 0.6, 1); }
+    for (const c of crystals) if (!c.got) hole(c.x, c.y, 54 + Math.sin(t * 2.4 + c.x) * 8, 0.75);
+    hole(rope.x, rope.y - 30, 70, 0.6);
+    K.g.drawImage(dark, 0, 0);
+    /* shades are seen only as eyes, on top of the dark */
+    for (const s of shades) {
+      const x = cam.sx(s.x), y = cam.sy(s.y); if (x < -20 || y < -20 || x > W + 20 || y > H + 20) continue;
+      const bl = Math.sin(s.ph * 2) > -0.9 ? 1 : 0.1;
+      K.g.globalAlpha = bl * (s.cool > 0 ? 0.3 : 0.9);
+      circ(x - 5, y, 2.4, '#e879f9'); circ(x + 5, y, 2.4, '#e879f9'); K.g.globalAlpha = 1;
+    }
+    /* HUD */
+    hearts(24, 26, P.hp, 3);
+    txt('OIL', 110, 26, 12, '#fbbf24', 'left', 800); bar(140, 17, 150, 18, P.oil, P.oil < 0.25 ? '#ef4444' : '#fbbf24');
+    rect(310, 20, 14, 8, '#ef4444'); txt('× ' + P.flares, 330, 26, 15, '#fecaca', 'left', 800);
+    for (let i = 0; i < 3; i++) K.poly([[900 - i * 30, 14], [908 - i * 30, 26], [900 - i * 30, 38], [892 - i * 30, 26]], i < got ? '#67e8f9' : 'rgba(255,255,255,.12)');
+    if (got < 3) {
+      let nd = 1e9; for (const c of crystals) if (!c.got) nd = Math.min(nd, dist(P.x, P.y, c.x, c.y));
+      const f = clamp(1 - nd / 1500, 0, 1);
+      txt('RESONANCE', 620, 26, 12, '#67e8f9', 'left', 800); bar(706, 17, 110, 18, f * (0.85 + 0.15 * Math.sin(t * (4 + f * 14))), '#67e8f9');
+    } else {
+      const a = ang(P.x, P.y, rope.x, rope.y);
+      K.tri(W / 2 + Math.cos(a) * 70, H / 2 + Math.sin(a) * 70, 14, a, '#fde68a');
+      txt('ROPE ' + Math.round(dist(P.x, P.y, rope.x, rope.y) / TS) + ' m', 706, 26, 14, '#fde68a', 'left', 800);
+    }
+  },
+});
+</script>
+</body>
+</html>

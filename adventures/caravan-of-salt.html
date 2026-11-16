@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Caravan of Salt — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* CARAVAN OF SALT — a journey told in choices. Pick a road across the
+   desert, ration water, answer what the road asks, and defend the camels
+   with a crossbow when it comes to that. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, circ, ring, rect, rrect, line, txt, bar, fx } = K;
+const COLS = 8, NEED = 12;
+const KIND = { oasis: ['Oasis', '#38bdf8'], dunes: ['Open dunes', '#eab308'], ruins: ['Ruins', '#a78bfa'], pass: ['Bandit pass', '#f87171'], trader: ['Trader camp', '#4ade80'], storm: ['Storm country', '#94a3b8'], end: ['The Sea Market', '#fde047'], start: ['Saltgate', '#fde047'] };
+let nodes, at, C, st, sel, ev, evI, result, sk, sm, day, log;
+
+const EVENTS = [
+  { t: 'A well, half buried. The rope is rotten but the bucket still hangs.', c: [['Lower a guard on your own rope', () => (Math.random() < 0.7 ? (C.water += 4, 'Sweet water. +4 water.') : (C.guards = Math.max(0, C.guards - 1), 'The wall gives way. You lose a guard to the dark.'))], ['Leave it', () => 'You ride on, thirsty and whole.']] },
+  { t: 'A pilgrim with cracked lips asks for water. He has nothing to trade but a story.', c: [['Give him water (-2)', () => (C.water -= 2, C.luck = (C.luck || 0) + 1, 'He tells you which wells ahead are poisoned. Luck rides with you now.')], ['Refuse', () => 'He watches you go without a word.']] },
+  { t: 'One of the camels has gone lame. The drovers look at you.', c: [['Rest a day (-2 water)', () => (C.water -= 2, 'It walks again by morning.')], ['Leave it and split its load', () => (C.camels--, C.salt -= 2, 'Four blocks will not fit. You leave them in the sand. -1 camel, -2 salt.')], ['Push on regardless', () => (Math.random() < 0.5 ? 'It limps, but it keeps up.' : (C.camels--, C.salt -= 4, 'It falls at noon with its whole load. -1 camel, -4 salt.'))]] },
+  { t: 'Ruins of a customs house. Something glints under the fallen lintel.', c: [['Dig for it', () => (Math.random() < 0.6 ? (C.salt += 3, 'A sealed chest of old salt-coin. +3 salt.') : (C.water -= 1, 'A scorpion nest. You lose the afternoon and a waterskin.'))], ['Shelter in the shade instead', () => (C.water += 1, 'A cool hour. You find a forgotten skin in the cellar. +1 water.')]] },
+  { t: 'A rival caravan, stuck fast in soft sand. Their master offers salt for the loan of two camels to pull.', c: [['Help them', () => (C.salt += 2, C.water -= 1, 'An hour of hauling. +2 salt, -1 water, and a friend on the road.')], ['Pass by', () => 'Their curses follow you a long way.'], ['Help yourself while they are stuck', () => (C.salt += 5, C.wanted = true, 'You take five blocks at knifepoint. They will remember your face.')]] },
+  { t: 'A mercenary with a long rifle is looking for work as far as the sea.', c: [['Hire her (-3 salt)', () => (C.salt >= 3 ? (C.salt -= 3, C.guards++, 'She falls in beside the lead camel. +1 guard.') : 'You cannot pay. She shrugs.')], ['Decline', () => 'She tips her hat and waits for the next caravan.']] },
+  { t: 'Night. A drover swears he hears water running under the dune.', c: [['Dig until dawn', () => (C.luck || Math.random() < 0.45 ? (C.water += 5, 'A seep, cold and clean. +5 water.') : (C.water -= 1, 'Nothing but damp sand, and everyone is exhausted. -1 water.'))], ['Sleep', () => 'You dream of rain.']] },
+  { t: 'Salt flats, white to the horizon. A shortcut, if the crust holds.', c: [['Cross the flats', () => (Math.random() < 0.6 ? (C.water += 2, 'It holds. You save most of a day. +2 water kept.') : (C.camels--, C.salt -= 3, 'The crust breaks under the third camel. -1 camel, -3 salt.'))], ['Go around', () => (C.water -= 1, 'The long way. -1 water.')]] },
+];
+function build() {
+  nodes = []; const r = K.rng(irand(1, 1e9));
+  for (let c = 0; c < COLS; c++) { const n = c === 0 || c === COLS - 1 ? 1 : r.int(2, 3); for (let i = 0; i < n; i++) { let k = c === 0 ? 'start' : c === COLS - 1 ? 'end' : r.pick(['oasis', 'dunes', 'ruins', 'ruins', 'pass', 'pass', 'trader', 'storm', 'dunes']); nodes.push({ c, i, n, k, x: 90 + c * 112, y: 178 + (i - (n - 1) / 2) * 74 + r.range(-8, 8), to: [] }); } }
+  for (let c = 1; c < COLS - 1; c++) { const col = nodes.filter((q) => q.c === c); if (!col.some((q) => q.k === 'oasis' || q.k === 'trader') && c % 2 === 0) col[0].k = 'oasis'; }
+  for (const a of nodes) for (const b of nodes) if (b.c === a.c + 1 && (a.n === 1 || b.n === 1 || Math.abs(a.i / Math.max(1, a.n - 1) - b.i / Math.max(1, b.n - 1)) <= 0.5)) a.to.push(b);
+}
+function arrive(n) {
+  at = n; day++; const cost = n.k === 'storm' ? 3 : 2; C.water -= cost; let note = '';
+  if (C.water < 0) { C.water = 0; C.camels--; C.salt = Math.max(0, C.salt - 3); note = ' The water ran out on the road: a camel died of it, and three blocks of salt lie where it fell.'; }
+  if (C.camels <= 0) { K.lose({ title: 'THE DESERT KEEPS IT ALL', text: 'No camels, no caravan. The salt will still be here in a thousand years.', stats: [['Days on the road', day]], retry: false }); return; }
+  C.salt = Math.min(C.salt, C.camels * 6);
+  if (n.k === 'end') { if (C.salt >= NEED) K.win({ title: 'THE SEA MARKET', text: 'Gulls, and the smell of fish, and buyers shouting numbers. ' + C.salt + ' blocks: enough to buy back the family well, and then some.', stats: [['Salt delivered', C.salt], ['Days on the road', day], ['Camels', C.camels]] }); else K.lose({ title: 'TOO LITTLE, TOO LATE', text: 'You reach the sea with ' + C.salt + ' blocks. The well costs ' + NEED + '. The moneylender does not smile.', stats: [['Salt delivered', C.salt]], retry: false }); return; }
+  if (n.k === 'oasis') { C.water = Math.min(14, C.water + 7); result = 'Palms and green water. You fill every skin. +7 water.' + note; st = 'result'; K.sfx('splash'); }
+  else if (n.k === 'dunes') { result = 'Dunes, and more dunes. Nothing happens, which out here is good news.' + note; st = 'result'; }
+  else if (n.k === 'ruins') { ev = EVENTS[evI++ % EVENTS.length]; sel = 0; st = 'event'; ev.note = note; }
+  else if (n.k === 'trader') { sel = 0; st = 'shop'; }
+  else if (n.k === 'pass') { const nb = 7 + n.c + (C.wanted ? 3 : 0); sk = { foes: [], left: nb, total: nb, t: 1, rx: 480, ry: 240, cd: 0, bolts: [], lost: 0, gcd: 2, killed: 0 }; st = 'skirmish'; K.banner('BANDITS!', 'Aim with the stick, loose with ✕. Do not let them reach the camels.', 2.6); }
+  else { sm = { t: 0, pos: 0, band: 0, off: 0, dur: 14 }; st = 'storm'; K.banner('SANDSTORM', 'Steer to keep the caravan inside the lee of the dune', 2.4); }
+}
+const SHOP = [['Buy 4 water', 2, () => { C.water = Math.min(14, C.water + 4); }], ['Buy a camel', 4, () => { C.camels++; }], ['Hire a guard', 3, () => { C.guards++; }], ['Move on', 0, null]];
+
+K.run({
+  id: 'caravan-of-salt', num: 27, title: 'CARAVAN OF SALT', tag: 'A journey of choices', color: '#eab308',
+  goal: 'Lead a salt caravan across the desert to the Sea Market with at least 12 blocks left. Choose your road, mind your water, decide what each stranger is worth, and shoot straight when the passes turn ugly.',
+  controls: [['LS', 'Choose · aim · steer'], ['cross', 'Confirm · loose a bolt']],
+  music: { bpm: 78, root: 50, mode: 'phryg', dens: 0.34, seed: 27, lead: 'triangle', leadVol: 0.06, long: true },
+  start() { build(); C = { water: 9, salt: 20, camels: 4, guards: 2 }; day = 0; evI = irand(0, 7); at = nodes[0]; sel = 0; st = 'map'; K.say(['Twenty blocks of salt, four camels, two guards, and seven days of sand between you and the sea.', 'The well your grandmother dug is mortgaged for twelve blocks. Bring that much to market and it is yours again.'], null, 'Saltgate'); },
+  update(dt) {
+    const ok = K.hit('cross');
+    if (st === 'map') { const n = at.to.length; if (K.IN.ny || K.IN.nx) { sel = (sel + (K.IN.ny > 0 || K.IN.nx > 0 ? 1 : n - 1)) % n; K.sfx('move'); } if (ok) { K.sfx('select'); const t = at.to[sel]; sel = 0; arrive(t); } }
+    else if (st === 'result') { if (ok) { st = 'map'; sel = 0; } }
+    else if (st === 'event') { if (K.IN.ny) { sel = (sel + K.IN.ny + ev.c.length) % ev.c.length; K.sfx('move'); } if (ok) { result = ev.c[sel][1]() + (ev.note || ''); C.water = Math.max(0, C.water); C.salt = Math.max(0, C.salt); K.sfx('select'); if (C.camels <= 0) { arrive(at); return; } st = 'result'; } }
+    else if (st === 'shop') { if (K.IN.ny) { sel = (sel + K.IN.ny + SHOP.length) % SHOP.length; K.sfx('move'); } if (ok) { const s = SHOP[sel]; if (!s[2]) { st = 'map'; sel = 0; } else if (C.salt - s[1] >= 0) { C.salt -= s[1]; s[2](); K.sfx('coin'); } else K.sfx('bad'); } }
+    else if (st === 'skirmish') {
+      const S = sk; S.rx = clamp(S.rx + K.IN.lx * 520 * dt, 40, W - 40); S.ry = clamp(S.ry + K.IN.ly * 520 * dt, 90, 420); S.cd -= dt; S.t -= dt; S.gcd -= dt;
+      if (S.left > 0 && S.t <= 0) { S.left--; S.t = rand(0.7, 1.6); S.foes.push({ x: W + 30, y: rand(130, 400), sp: rand(95, 140), ph: rand(0, 6), hp: 1 }); }
+      if (ok && S.cd <= 0) { S.cd = 0.55; K.sfx('swing'); S.bolts.push({ x: 120, y: 280, tx: S.rx, ty: S.ry, f: 0 }); }
+      if (C.guards > 0 && S.gcd <= 0 && S.foes.length) { S.gcd = 3.2 / C.guards; const f = S.foes.reduce((a, b) => (a.x < b.x ? a : b)); S.bolts.push({ x: 100, y: 330, tx: f.x - f.sp * 0.3, ty: f.y, f: 0, g: true }); }
+      for (let i = S.bolts.length - 1; i >= 0; i--) { const b = S.bolts[i]; b.f += dt / 0.28; if (b.f >= 1) { S.bolts.splice(i, 1); for (const f of S.foes) if (dist(b.tx, b.ty, f.x, f.y + Math.sin(f.ph) * 10) < (b.g ? 30 : 34)) { f.hp = 0; S.killed++; K.sfx('hit'); fx.burst(f.x, f.y, '#f87171', 14, 180, 0.5, 4); break; } } }
+      for (let i = S.foes.length - 1; i >= 0; i--) { const f = S.foes[i]; f.ph += dt * 8; f.x -= f.sp * dt; if (f.hp <= 0) { S.foes.splice(i, 1); continue; } if (f.x < 170) { S.foes.splice(i, 1); S.lost++; K.sfx('hurt'); fx.shake(8); if (C.guards > 0 && Math.random() < 0.35) C.guards--; else C.salt = Math.max(0, C.salt - 2); } }
+      if (S.left <= 0 && !S.foes.length) { result = S.lost === 0 ? 'Not one of them reaches the camels. The pass is yours.' : S.lost + ' got through. They took what they could carry.'; if (S.lost === 0) { C.salt += 1; result += ' You find a block they dropped. +1 salt.'; } st = 'result'; K.sfx('win'); }
+    } else if (st === 'storm') {
+      const S = sm; S.t += dt; S.band = Math.sin(S.t * 0.9) * 250 + Math.sin(S.t * 2.3) * 90; S.pos = clamp(S.pos + K.IN.lx * 330 * dt + Math.sin(S.t * 3.1) * 60 * dt, -400, 400);
+      if (Math.abs(S.pos - S.band) > 80) { S.off += dt; if (Math.random() < dt * 6) fx.shake(4); }
+      if (S.t >= S.dur) { if (S.off < 2.5) result = 'You keep them in the lee the whole way. Nothing lost but sleep.'; else if (S.off < 5.5) { C.water = Math.max(0, C.water - 2); result = 'Two waterskins torn away into the dark. -2 water.'; } else { C.camels--; C.salt = Math.max(0, C.salt - 3); result = 'A camel bolts into the storm with its load. -1 camel, -3 salt.'; } st = 'result'; if (C.camels <= 0) arrive(at); }
+    }
+  },
+  draw(t) {
+    const g = K.g; const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#f6c177'); sky.addColorStop(0.5, '#e9a45b'); sky.addColorStop(1, '#b86b3a'); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    for (let L = 0; L < 3; L++) { g.fillStyle = ['#d9924a', '#c67b3c', '#a85f2e'][L]; g.beginPath(); g.moveTo(0, H); for (let x = 0; x <= W; x += 20) g.lineTo(x, 330 + L * 50 + Math.sin(x / (130 - L * 20) + L * 2 + day) * 26); g.lineTo(W, H); g.fill(); }
+    /* the caravan itself, always walking along the bottom */
+    for (let i = 0; i < C.camels; i++) { const x = 150 + i * 70, y = 478 + Math.sin(t * 4 + i) * 2; rrect(x - 22, y - 26, 44, 22, 10, '#8b5a2b'); circ(x - 6, y - 30, 9, '#8b5a2b'); circ(x + 10, y - 30, 9, '#8b5a2b'); line(x + 20, y - 20, x + 32, y - 40, '#8b5a2b', 6); circ(x + 34, y - 42, 6, '#8b5a2b'); for (const lx of [-16, -6, 8, 18]) line(x + lx, y - 6, x + lx + Math.sin(t * 6 + lx) * 3, y + 14, '#6b4423', 4); rrect(x - 14, y - 40, 22, 12, 2, '#f8fafc'); }
+    for (let i = 0; i < C.guards; i++) { const x = 100 - i * 26, y = 486; rrect(x - 6, y - 26, 12, 24, 4, '#1e3a5f'); circ(x, y - 31, 6, '#e9c9a4'); line(x + 6, y - 20, x + 16, y - 34, '#3f2a1c', 2); }
+    if (st === 'map' || st === 'result' || st === 'event' || st === 'shop') {
+      rrect(30, 60, W - 60, 230, 14, 'rgba(60,30,10,.35)');
+      for (const a of nodes) for (const b of a.to) { const on = a === at; g.setLineDash(on ? [] : [4, 8]); line(a.x, a.y, b.x, b.y, on ? 'rgba(255,255,255,.8)' : 'rgba(255,255,255,.25)', on ? 3 : 2); g.setLineDash([]); }
+      for (const n of nodes) { const k = KIND[n.k], past = n.c < at.c, isSel = st === 'map' && at.to[sel] === n; circ(n.x, n.y, isSel ? 19 : 14, past ? 'rgba(0,0,0,.3)' : k[1]); if (n === at) ring(n.x, n.y, 22 + Math.sin(t * 5) * 3, '#fff', 3); if (isSel) { ring(n.x, n.y, 25, '#fff', 3); txt(k[0], n.x, n.y - 36, 13, '#fff', 'center', 800); } }
+      if (st === 'map') { txt('Choose your road', W / 2, 310, 15, '#fff', 'center', 800); const n = at.to[sel]; if (n) txt({ oasis: 'Water for the taking', dunes: 'Quiet, probably', ruins: 'Who knows what is there', pass: 'There will be a fight', trader: 'Salt buys anything', storm: 'Costs more water. Hard going.', end: 'Journey’s end' }[n.k], W / 2, 332, 13, '#fde68a', 'center', 600); }
+    }
+    const panel = (title, lines, opts) => { rrect(150, 300, 660, 150, 14, 'rgba(30,14,6,.93)'); K.rrectS(150, 300, 660, 150, 14, '#eab308', 2); txt(title, 172, 320, 12, '#eab308', 'left', 800); const n = K.wrap(lines, 172, 344, 616, 20, 15, '#fff', 'left', 600); if (opts) opts.forEach((o, i) => { const y = 350 + n * 20 + i * 26; if (i === sel) rrect(166, y - 12, 628, 24, 6, '#eab308'); txt(o, 178, y + 1, 14, i === sel ? '#1c0f05' : '#fde68a', 'left', 800); }); else { K.glyph('cross', 786, 432, 10); } };
+    if (st === 'result') panel(KIND[at.k][0].toUpperCase(), result);
+    if (st === 'event') panel('ON THE ROAD', ev.t, ev.c.map((c) => c[0]));
+    if (st === 'shop') panel('TRADER CAMP', 'A trader with a parasol and a very good scale.', SHOP.map((s) => s[0] + (s[1] ? '   (' + s[1] + ' salt)' : '')));
+    if (st === 'skirmish') {
+      const S = sk; for (const f of S.foes) { const y = f.y + Math.sin(f.ph) * 6; rrect(f.x - 20, y - 6, 40, 18, 8, '#3f2a1c'); line(f.x - 16, y + 10, f.x - 20 + Math.sin(f.ph) * 8, y + 28, '#3f2a1c', 4); line(f.x + 14, y + 10, f.x + 12 - Math.sin(f.ph) * 8, y + 28, '#3f2a1c', 4); circ(f.x - 24, y - 8, 8, '#3f2a1c'); rrect(f.x - 7, y - 30, 14, 26, 5, '#111827'); circ(f.x, y - 34, 7, '#b91c1c'); line(f.x - 8, y - 20, f.x - 24, y - 34, '#e5e7eb', 2); }
+      for (const b of S.bolts) { const x = lerp(b.x, b.tx, b.f), y = lerp(b.y, b.ty, b.f) - Math.sin(b.f * Math.PI) * 30; line(x, y, x - 16, y + 3, b.g ? '#93c5fd' : '#fff', 3); }
+      ring(S.rx, S.ry, 20, S.cd <= 0 ? '#fff' : 'rgba(255,255,255,.4)', 3); line(S.rx - 28, S.ry, S.rx - 10, S.ry, '#fff', 2); line(S.rx + 10, S.ry, S.rx + 28, S.ry, '#fff', 2); line(S.rx, S.ry - 28, S.rx, S.ry - 10, '#fff', 2); line(S.rx, S.ry + 10, S.rx, S.ry + 28, '#fff', 2);
+      rect(168, 100, 3, 340, 'rgba(248,113,113,.4)'); txt('Bandits left: ' + (S.left + S.foes.length), W / 2, 76, 15, '#fff', 'center', 800);
+    }
+    if (st === 'storm') {
+      const S = sm; for (let i = 0; i < 60; i++) { const x = (i * 97 + t * (700 + i * 9)) % (W + 100) - 50, y = (i * 53) % 420 + 60; line(x, y, x + 40, y + 6, 'rgba(255,240,200,.35)', 2); }
+      rect(0, 0, W, H, 'rgba(160,100,50,.35)'); const bx = W / 2 + S.band; rrect(bx - 80, 250, 160, 60, 10, 'rgba(255,255,255,.18)'); K.rrectS(bx - 80, 250, 160, 60, 10, '#fff', 2); txt('LEE', bx, 240, 11, '#fff', 'center', 800);
+      const px = W / 2 + S.pos, ok2 = Math.abs(S.pos - S.band) <= 80; K.tri(px, 280, 20, -Math.PI / 2, ok2 ? '#6ee7b7' : '#f87171'); bar(280, 90, 400, 14, S.t / S.dur, '#fde68a'); txt(ok2 ? 'Holding' : 'EXPOSED!', W / 2, 120, 15, ok2 ? '#fff' : '#fecaca', 'center', 800);
+    }
+    fx.draw();
+    rect(0, 0, W, 44, 'rgba(30,14,6,.85)');
+    [['WATER', C.water, '#38bdf8', C.water <= 3], ['SALT', C.salt + ' / need ' + NEED, '#f8fafc', C.salt < NEED], ['CAMELS', C.camels, '#d6a55a', C.camels <= 1], ['GUARDS', C.guards, '#93c5fd', false]].forEach(([k, v, c, bad], i) => { txt(k, 30 + i * 210, 15, 10, c, 'left', 800); txt(String(v), 30 + i * 210, 31, 15, bad ? '#fca5a5' : '#fff', 'left', 800); });
+    txt('DAY ' + day, 930, 22, 14, '#fde68a', 'right', 800);
+  },
+});
+</script>
+</body>
+</html>

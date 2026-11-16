@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Thunder Lancer — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* THUNDER LANCER — a jousting tournament. Each pass is three jobs at once:
+   spur on the hoofbeat, hold a heavy lance on a small target, and read where
+   the other rider means to hit you. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, circ, ring, rect, rrect, line, txt, bar, fx } = K;
+const BEAT = 0.44, PASS = 4.4, ZN = ['HIGH', 'MID', 'LOW'];
+const RIDERS = [
+  { name: 'Squire Pell', col: '#84cc16', line: 'First tilt of the day. He holds his shield still and his lance low.', shieldSw: 0, aimSw: 0, sp: 0.55 },
+  { name: 'Dame Oriel', col: '#38bdf8', line: 'She moves her shield once, halfway down the list. Watch for it.', shieldSw: 0.5, aimSw: 0, sp: 0.7 },
+  { name: 'The Twin of Marrow', col: '#f472b6', line: 'He changes his aim late. Keep your guard for last.', shieldSw: 0.5, aimSw: 0.7, sp: 0.8 },
+  { name: 'Sir Calder', col: '#fbbf24', line: 'Fast, and he feints with shield and lance both.', shieldSw: 0.72, aimSw: 0.78, sp: 0.92, feint: true },
+  { name: 'The Black Rider', col: '#a78bfa', line: 'No one has seen his face. No one has unhorsed him.', shieldSw: 0.84, aimSw: 0.86, sp: 1, feint: true },
+];
+let st, match, me, op, pts, t0, res, tot, dust, crowd;
+function zoneOf(y) { return y < -0.33 ? 0 : y > 0.33 ? 2 : 1; }
+function newPass() {
+  const R = RIDERS[match];
+  me = { x: 110, speed: 0.3, lance: rand(-0.5, 0.5), lv: 0, guard: 1, beatHit: -1, good: 0 };
+  op = { x: 850, shield: irand(0, 2), aim: irand(0, 2), sw1: false, sw2: false, f1: false, f2: false, lance: 0 }; op.lance = op.aim - 1;
+  t0 = 0; st = 'ready';
+}
+function startMatch() { pts = [0, 0]; newPass(); K.say([RIDERS[match].line, 'First to three. △ □ ○ set your guard high, mid or low.'], null, 'Herald · ' + RIDERS[match].name); }
+
+K.run({
+  id: 'thunder-lancer', num: 19, title: 'THUNDER LANCER', tag: 'Jousting tournament', color: '#fbbf24',
+  goal: 'Unseat five riders, first to three points each. Tap ✕ on the hoofbeat to build speed, steady your lance on a spot their shield does not cover, and set your own guard where their lance is pointing.',
+  controls: [['cross', 'Spur on the beat'], ['LS', 'Lance up / down'], ['triangle', 'Guard high'], ['square', 'Guard mid'], ['circle', 'Guard low']],
+  music: { bpm: 136, root: 50, mode: 'dorian', dens: 0.4, drums: true, seed: 71, lead: 'square', leadVol: 0.04, lp: 1500, prog: [0, 0, 3, 4] },
+  start() { match = 0; tot = 0; dust = []; crowd = []; for (let i = 0; i < 90; i++) crowd.push([rand(0, W), rand(96, 170), pick(['#f87171', '#60a5fa', '#fde047', '#a3e635', '#f472b6', '#e5e7eb']), rand(0, 6)]); startMatch(); },
+  retry() { startMatch(); },
+  update(dt) {
+    const R = RIDERS[match];
+    if (K.hit('triangle')) me.guard = 0; if (K.hit('square')) me.guard = 1; if (K.hit('circle')) me.guard = 2;
+    if (st === 'ready') { if (K.hit('cross')) { st = 'charge'; t0 = 0; K.sfx('dash'); } return; }
+    if (st === 'charge') {
+      t0 += dt; const f = t0 / PASS, bi = Math.round(t0 / BEAT), off = Math.abs(t0 - bi * BEAT);
+      if (Math.floor(t0 / BEAT) !== Math.floor((t0 - dt) / BEAT)) { K.tone({ f: 90, f2: 60, dur: 0.07, type: 'square', vol: 0.16 }); K.noise({ f: 700, dur: 0.04, vol: 0.12 }); dust.push({ x: me.x - 30, y: 432, t: 0.6 }, { x: op.x + 30, y: 432, t: 0.6 }); }
+      if (K.hit('cross')) { if (off < 0.1 && me.beatHit !== bi) { me.beatHit = bi; me.speed = Math.min(1, me.speed + 0.115); me.good++; K.tone({ f: 660 + me.good * 40, dur: 0.06, type: 'triangle', vol: 0.14 }); fx.text(me.x, 300, 'GOOD', '#fde047', 13); } else { me.speed = Math.max(0.2, me.speed - 0.07); K.sfx('bad'); } }
+      /* the lance is heavy: it drifts, and faster is shakier */
+      me.lv += (K.IN.ly * 5.2 + Math.sin(t0 * 5.1) * (0.8 + me.speed * 2.4) + Math.sin(t0 * 2.3 + 1) * 1.4 - me.lv * 2.4) * dt; me.lance = clamp(me.lance + me.lv * dt, -1, 1); if (Math.abs(me.lance) >= 1) me.lv = 0;
+      if (R.shieldSw && f > R.shieldSw && !op.sw1) { op.sw1 = true; op.shield = (op.shield + irand(1, 2)) % 3; K.sfx('move'); }
+      if (R.feint && f > R.shieldSw - 0.25 && !op.f1) { op.f1 = true; op.shield = (op.shield + 1) % 3; }
+      if (R.aimSw && f > R.aimSw && !op.sw2) { op.sw2 = true; op.aim = (op.aim + irand(1, 2)) % 3; }
+      if (R.feint && f > R.aimSw - 0.3 && !op.f2) { op.f2 = true; op.aim = (op.aim + 1) % 3; }
+      op.lance = K.damp(op.lance, op.aim - 1, 7, dt);
+      const e = f * f * (3 - 2 * f); me.x = lerp(110, 440, e); op.x = lerp(850, 520, e);
+      if (f >= 1) {
+        const mz = zoneOf(me.lance), hitMe = op.aim !== me.guard, blocked = mz === op.shield, thunder = me.speed > 0.86;
+        let gain = blocked ? 0 : (mz === 0 ? 2 : 1) + (thunder ? 1 : 0), loss = hitMe ? (op.aim === 0 ? 2 : 1) + (R.sp > 0.9 ? 0 : 0) : 0;
+        res = { mz, blocked, gain, loss, thunder, t: 0 }; pts[0] += gain; pts[1] += loss; tot += gain; st = 'impact';
+        K.sfx(blocked && !hitMe ? 'clank' : 'boom'); fx.shake(gain || loss ? 14 : 6); fx.flash('#fff', 0.15); fx.burst(480, 330, '#fde68a', 30, 300, 0.6, 4, 500); if (!blocked) fx.burst(520, 330, R.col, 20, 260, 0.6, 4, 500);
+      }
+      return;
+    }
+    if (st === 'impact') {
+      res.t += dt; me.x += 260 * dt * Math.min(1, res.t); op.x -= 260 * dt * Math.min(1, res.t);
+      if (res.t > 2.3 || (res.t > 0.9 && K.hit('cross'))) {
+        if (pts[0] >= 3 && pts[0] >= pts[1]) { if (match === RIDERS.length - 1) { K.win({ title: 'CHAMPION OF THE LISTS', text: 'The Black Rider lifts his visor at last, and salutes. The crowd will tell this one for years.', stats: [['Points scored', tot]] }); return; } match++; K.sfx('win'); startMatch(); }
+        else if (pts[1] >= 3) K.lose({ title: 'UNHORSED', text: RIDERS[match].name + ' takes the match. The herald calls you both back to the line.', stats: [['Round', (match + 1) + ' / 5']] });
+        else newPass();
+      }
+    }
+    for (let i = dust.length - 1; i >= 0; i--) { dust[i].t -= dt; if (dust[i].t <= 0) dust.splice(i, 1); }
+  },
+  draw(t) {
+    const g = K.g, R = RIDERS[match]; const sky = g.createLinearGradient(0, 0, 0, 300); sky.addColorStop(0, '#60a5fa'); sky.addColorStop(1, '#dbeafe'); g.fillStyle = sky; g.fillRect(0, 0, W, 300);
+    rect(0, 80, W, 110, '#7c2d12'); for (let i = 0; i < 12; i++) K.poly([[i * 80, 80], [i * 80 + 40, 110], [i * 80 + 80, 80]], i % 2 ? '#fde047' : '#b91c1c');
+    for (const c of crowd) { const hop = st === 'impact' ? Math.abs(Math.sin(t * 9 + c[3])) * 8 : Math.sin(t * 2 + c[3]) * 1.5; circ(c[0], c[1] - hop, 8, c[2]); circ(c[0], c[1] - 11 - hop, 5, '#e9c9a4'); }
+    rect(0, 186, W, 26, '#451a03'); rect(0, 212, W, H, '#6aa84f'); rect(0, 420, W, 120, '#b08a5a'); rect(0, 392, W, 10, '#f8fafc'); for (let x = 20; x < W; x += 90) rect(x, 392, 8, 44, '#e5e7eb');
+    for (const d of dust) circ(d.x, d.y, 10 + (0.6 - d.t) * 30, 'rgba(120,90,50,' + d.t * 0.5 + ')');
+    g.save(); if (fx.shakeT) g.translate(rand(-fx.shakeT, fx.shakeT), rand(-fx.shakeT, fx.shakeT));
+    const rider = (x, dir, col, lanceY, shield, moving, fallen) => {
+      const bob = moving ? Math.sin(t0 / BEAT * Math.PI * 2) * 5 : 0; g.save(); g.translate(x, 350 + bob); g.scale(dir, 1);
+      for (const lx of [-36, -22, 26, 40]) { const sw = moving ? Math.sin(t0 / BEAT * Math.PI * 2 + lx) * 14 : 0; line(lx, 30, lx + sw, 78, '#3f2a1c', 7); }
+      rrect(-52, -6, 104, 44, 18, '#5b3a1e'); rrect(-50, 2, 100, 34, 8, col); K.poly([[44, -2], [78, -36], [92, -26], [70, 14]], '#5b3a1e'); circ(84, -34, 3, '#111'); line(-52, 4, -74, 30 + Math.sin(t * 6) * 6, '#3f2a1c', 6);
+      if (fallen) { g.rotate(-1.2); g.translate(-40, 10); }
+      rrect(-14, -58, 28, 56, 8, '#94a3b8'); rrect(-12, -82, 24, 26, 8, '#cbd5e1'); rect(0, -74, 12, 4, '#0f172a'); line(-4, -84, -14, -104, col, 5);
+      const sy = -74 + shield * 30; rrect(10, sy - 16, 12, 34, 5, col); K.rectS(10, sy - 16, 12, 34, '#fff', 2);
+      const ly = -40 + lanceY * 34; line(-30, -34, 150, ly - 2, '#e7d3b0', 6); K.tri(154, ly - 2, 9, Math.atan2(ly + 32, 180), '#f8fafc'); g.restore();
+    };
+    const mvg = st === 'charge' || st === 'impact';
+    rider(op.x, -1, R.col, op.lance * (st === 'ready' ? 0.4 : 1), op.shield, mvg, st === 'impact' && pts[0] >= 3 && res.gain > 0);
+    rider(me.x, 1, '#dc2626', me.lance, me.guard, mvg, st === 'impact' && pts[1] >= 3 && res.loss > 0);
+    fx.draw(); g.restore();
+    /* aiming panel: their body with zones, your tip marker */
+    const px = 760, py = 76; rrect(px - 14, py - 12, 200, 150, 10, 'rgba(8,10,18,.82)'); txt('YOUR AIM', px + 86, py + 2, 11, '#fde68a', 'center', 800);
+    for (let z = 0; z < 3; z++) { const y = py + 16 + z * 38, cov = op.shield === z; rrect(px + 30, y, 112, 34, 6, cov ? R.col : 'rgba(255,255,255,.1)'); txt(ZN[z] + (cov ? ' · SHIELD' : z === 0 ? ' · 2 pts' : ' · 1 pt'), px + 86, y + 18, 11, cov ? '#0b0d14' : '#e2e8f0', 'center', 800); }
+    const ty = py + 16 + (me.lance + 1) / 2 * 110; K.tri(px + 22, ty, 10, 0, '#fff'); line(px + 150, ty, px + 30, ty, 'rgba(255,255,255,.35)', 1);
+    const gx = 28; rrect(gx - 14, py - 12, 200, 150, 10, 'rgba(8,10,18,.82)'); txt('YOUR GUARD', gx + 86, py + 2, 11, '#fde68a', 'center', 800);
+    [['triangle', 0], ['square', 1], ['circle', 2]].forEach(([b, z]) => { const y = py + 16 + z * 38, on = me.guard === z, threat = Math.round(op.lance + 1) === z && st !== 'ready'; rrect(gx + 30, y, 112, 34, 6, on ? '#dc2626' : 'rgba(255,255,255,.1)'); K.glyph(b, gx + 12, y + 17, 11); txt(ZN[z], gx + 76, y + 18, 12, '#fff', 'center', 800); if (threat) { K.tri(gx + 160, y + 17, 9, Math.PI, R.col); txt('!', gx + 132, y + 18, 16, R.col, 'center', 900); } });
+    /* beat ring and speed */
+    if (st === 'charge') { const ph = (t0 / BEAT) % 1, near = Math.min(ph, 1 - ph); circ(W / 2, 250, 26, near < 0.22 ? '#fde047' : 'rgba(8,10,18,.8)'); ring(W / 2, 250, 26 + (1 - ph) * 34, '#fff', 3); K.glyph('cross', W / 2, 250, 16); }
+    txt('SPEED', W / 2 - 150, 300, 11, '#fff', 'right', 800); bar(W / 2 - 140, 291, 280, 18, me.speed, me.speed > 0.86 ? '#fde047' : '#f97316'); if (me.speed > 0.86) txt('THUNDER +1', W / 2 + 150, 300, 12, '#fde047', 'left', 900);
+    /* score */
+    rect(0, 0, W, 60, 'rgba(8,10,18,.85)'); txt('YOU', 200, 22, 14, '#fca5a5', 'right', 800); txt(R.name.toUpperCase(), 760, 22, 14, R.col, 'left', 800); txt('ROUND ' + (match + 1) + ' / 5', W / 2, 44, 11, '#94a3b8', 'center', 800);
+    for (let i = 0; i < 3; i++) { circ(230 + i * 28, 22, 10, i < pts[0] ? '#dc2626' : 'rgba(255,255,255,.14)'); circ(730 - i * 28, 22, 10, i < pts[1] ? R.col : 'rgba(255,255,255,.14)'); }
+    txt('FIRST TO 3', W / 2, 22, 13, '#fff', 'center', 800);
+    if (st === 'ready' && !K.talking) { g.globalAlpha = 0.6 + 0.4 * Math.sin(t * 5); K.glyph('cross', W / 2 - 86, 250, 14); txt('LOWER LANCE AND CHARGE', W / 2 - 64, 251, 16, '#fff', 'left', 900); g.globalAlpha = 1; }
+    if (st === 'impact') { const a = clamp(res.t * 3, 0, 1); g.globalAlpha = a; rrect(W / 2 - 230, 96, 460, 74, 12, 'rgba(8,10,18,.9)'); txt(res.blocked ? 'Your lance breaks on the shield' : 'You strike ' + ZN[res.mz] + (res.thunder ? ' at full gallop' : '') + '  +' + res.gain, W / 2, 120, 17, res.gain ? '#fde047' : '#94a3b8', 'center', 800); txt(res.loss ? 'Their lance lands  +' + res.loss + ' to them' : 'Your guard turns their lance', W / 2, 148, 15, res.loss ? '#fca5a5' : '#6ee7b7', 'center', 700); g.globalAlpha = 1; }
+  },
+});
+</script>
+</body>
+</html>

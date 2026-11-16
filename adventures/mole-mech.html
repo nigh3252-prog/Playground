@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Mole Mech — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* MOLE MECH — dig, haul, upgrade, dig deeper. Fuel is the leash: every trip
+   down is a bet about how far you can go and still fly home. */
+const { W, H, TAU, rand, irand, clamp, lerp, dist, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const TS = 32, GW = 30, GH = 112, SURF = 5;
+const AIR = 0, DIRT = 1, CLAY = 2, BASALT = 3, BED = 4, LAVA = 5, CU = 6, AG = 7, AU = 8, GEM = 9, RELIC = 10;
+const ORE = { [CU]: ['Copper', 12, '#f59e0b'], [AG]: ['Silver', 30, '#e2e8f0'], [AU]: ['Gold', 70, '#fde047'], [GEM]: ['Ruby', 160, '#fb7185'] };
+const UPG = [
+  { k: 'drill', name: 'DRILL', desc: ['Cuts dirt only', 'Cuts clay, faster', 'Cuts basalt, fastest'], cost: [0, 220, 800] },
+  { k: 'tank', name: 'FUEL TANK', desc: ['Small', 'Medium', 'Large', 'Huge'], cost: [0, 120, 420, 900] },
+  { k: 'cargo', name: 'CARGO BAY', desc: ['8 ore', '14 ore', '22 ore'], cost: [0, 150, 500] },
+  { k: 'hull', name: 'HULL', desc: ['3 plates', '5 plates', '7 plates'], cost: [0, 180, 600] },
+];
+const TANK = [55, 90, 140, 210], CARGO = [8, 14, 22], HULL = [3, 5, 7];
+let G, seen, M, lv, money, hold, shop, shopI, seedN, haveRelic, base, digFx, maxDepth;
+const hard = (t) => (t === DIRT || t >= CU && t <= GEM || t === RELIC ? 1 : t === CLAY ? 2 : t === BASALT ? 3 : 99);
+const layerOf = (y) => (y < 38 ? DIRT : y < 74 ? CLAY : BASALT);
+const solid = (x, y) => { const t = G.get(x, y); return x < 0 || x >= GW || (t !== AIR && t !== LAVA); };
+
+function build() {
+  const r = K.rng(seedN); G = K.grid(GW, GH); seen = new Uint8Array(GW * GH);
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+    let t = AIR;
+    if (y >= SURF) {
+      t = layerOf(y); const d = (y - SURF) / (GH - SURF), n = r();
+      const cavern = K.noise2(x / 5, y / 4, seedN % 97) > 0.72 && y > SURF + 3;
+      if (cavern) t = y > 80 && r() < 0.35 ? LAVA : AIR;
+      else if (n < 0.07) t = y < 38 ? CU : y < 74 ? (r() < 0.5 ? AG : CU) : (r() < 0.6 ? AU : AG);
+      else if (n < 0.085 + d * 0.04) t = y < 30 ? AG : y < 70 ? AU : GEM;
+      else if (n < 0.12 && y > 12) t = BED;
+      /* a band of the next layer shows early as a warning */
+      if (t === DIRT && y > 33 && r() < (y - 33) / 6) t = CLAY;
+      if (t === CLAY && y > 69 && r() < (y - 69) / 6) t = BASALT;
+    }
+    if (y >= GH - 2) t = BED;
+    G.set(x, y, t);
+  }
+  /* the relic chamber, and a guaranteed shaft-able column of non-bedrock */
+  for (let y = GH - 8; y < GH - 3; y++) for (let x = 12; x < 18; x++) G.set(x, y, AIR);
+  G.set(15, GH - 4, RELIC);
+  for (let y = SURF; y < GH - 8; y++) if (G.get(15, y) === BED) G.set(15, y, layerOf(y));
+  base = { x: 15 * TS, y: SURF * TS };
+}
+function spawn() {
+  M = { x: 15 * TS - 12, y: SURF * TS - 24, w: 24, h: 24, vx: 0, vy: 0, fuel: TANK[lv.tank], hp: HULL[lv.hull], face: 1, dig: null, digT: 0, inv: 1, thr: 0 };
+  hold = []; cam.x = W / 2; cam.y = M.y;
+}
+function hurt(n) {
+  if (M.inv > 0) return; M.hp -= n; M.inv = 1; K.sfx('hurt'); fx.shake(8);
+  if (M.hp <= 0) K.lose({ title: 'MECH LOST', text: 'A rescue winch hauls the wreck up. You keep your upgrades and your bank, but not the cargo.', stats: [['Depth reached', maxDepth + ' m']] });
+}
+function reveal() {
+  const cx = Math.floor((M.x + 12) / TS), cy = Math.floor((M.y + 12) / TS);
+  for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) if (dx * dx + dy * dy <= 17 && G.inb(cx + dx, cy + dy)) seen[(cy + dy) * GW + cx + dx] = 1;
+}
+
+K.run({
+  id: 'mole-mech', num: 5, title: 'MOLE MECH', tag: 'Dig · haul · upgrade', color: '#f59e0b',
+  goal: 'A relic sleeps at the bottom of the shaft, ' + (GH - SURF - 4) + ' metres down. Mine ore, sell it at the surface rig for a better drill and a bigger tank, and bring the relic home before your fuel runs dry.',
+  controls: [['LS', 'Drive / dig (push into rock)'], ['cross', 'Thrusters'], ['triangle', 'Shop (on the rig)']],
+  music: { bpm: 112, root: 38, mode: 'minor', dens: 0.35, drums: true, drive: true, seed: 8, bassType: 'square' },
+  start() { seedN = irand(1, 1e9); build(); lv = { drill: 0, tank: 0, cargo: 0, hull: 0 }; money = 0; haveRelic = false; shop = false; maxDepth = 0; spawn(); K.banner('MOLE MECH', 'Push down into the dirt to dig. Land on the rig to sell and refuel.'); },
+  retry() { if (haveRelic) { haveRelic = false; G.set(15, GH - 4, RELIC); } spawn(); },
+  update(dt) {
+    const onRig = M.ground && M.y < SURF * TS && Math.abs(M.x + 12 - base.x) < 80;
+    if (shop) {
+      if (K.IN.ny) { shopI = (shopI + K.IN.ny + UPG.length) % UPG.length; K.sfx('move'); }
+      if (K.hit('circle') || K.hit('triangle')) { shop = false; K.sfx('back'); }
+      if (K.hit('cross')) {
+        const u = UPG[shopI], n = lv[u.k] + 1;
+        if (n < u.cost.length && money >= u.cost[n]) { money -= u.cost[n]; lv[u.k] = n; K.sfx('power'); M.fuel = TANK[lv.tank]; M.hp = HULL[lv.hull]; }
+        else K.sfx('bad');
+      }
+      return;
+    }
+    const lx = K.IN.lx, ly = K.IN.ly;
+    M.inv -= dt;
+    if (Math.abs(lx) > 0.3) M.face = Math.sign(lx);
+    const thrust = (K.down('cross') || ly < -0.5) && M.fuel > 0;
+    M.thr = K.damp(M.thr, thrust ? 1 : 0, 12, dt);
+    M.vx = K.approach(M.vx, lx * 170, 900 * dt);
+    M.vy = thrust ? K.approach(M.vy, -215, 900 * dt) : Math.min(M.vy + 800 * dt, 520);
+    const vyWas = M.vy;
+    K.moveB(M, M.vx * dt, M.vy * dt, solid, TS);
+    if (M.ground) { if (vyWas > 430) hurt(1); M.vy = 0; } if (M.ceil) M.vy = 0;
+    M.x = clamp(M.x, 0, GW * TS - M.w);
+    let use = 0.35 + (thrust ? 1.5 : 0) + (Math.abs(lx) > 0.3 ? 0.4 : 0);
+    /* digging: grounded, pushing into a neighbour */
+    const cx = Math.floor((M.x + 12) / TS), cy = Math.floor((M.y + 12) / TS);
+    let tx = cx, ty = cy;
+    if (M.ground && ly > 0.55 && Math.abs(lx) < 0.5) ty++;
+    else if (M.ground && Math.abs(lx) > 0.55 && M.wall) tx += M.wall;
+    if ((tx !== cx || ty !== cy) && G.inb(tx, ty) && G.get(tx, ty) !== AIR && G.get(tx, ty) !== LAVA) {
+      const t = G.get(tx, ty), hd = hard(t);
+      if (hd > lv.drill + 1) { if (!M.dig || M.dig.x !== tx || M.dig.y !== ty) { K.sfx('clank'); K.hint(hd > 3 ? 'Bedrock. Go around.' : 'Too hard for this drill. Upgrade at the rig.', 1.6); } M.dig = { x: tx, y: ty, f: 0, blocked: true }; }
+      else {
+        if (!M.dig || M.dig.x !== tx || M.dig.y !== ty || M.dig.blocked) M.dig = { x: tx, y: ty, f: 0 };
+        M.dig.f += dt / ((0.2 + hd * 0.16) / (1 + lv.drill * 0.45)); use += 0.9;
+        M.x = K.damp(M.x, ty !== cy ? cx * TS + 4 : M.x, 14, dt);
+        if (Math.random() < dt * 30) { fx.spark(tx * TS + rand(4, 28), ty * TS + rand(4, 28), rand(-80, 80), rand(-140, -20), '#a8a29e', 0.4, 3, 500); }
+        digFx = (digFx || 0) - dt; if (digFx <= 0) { digFx = 0.09; K.noise({ f: 500 + hd * 250, dur: 0.06, vol: 0.12, type: 'bandpass' }); }
+        if (M.dig.f >= 1) {
+          G.set(tx, ty, AIR); M.dig = null;
+          if (ORE[t]) { if (hold.length < CARGO[lv.cargo]) { hold.push(t); K.sfx('coin'); fx.text(tx * TS + 16, ty * TS, ORE[t][0], ORE[t][2], 14); } else { K.sfx('bad'); K.hint('Cargo bay full. Sell at the rig.', 1.6); } }
+          if (t === RELIC) { haveRelic = true; K.sfx('key'); fx.flash('#a5f3fc', 0.4); K.banner('THE RELIC', 'Now fly it home. All ' + (cy - SURF) + ' metres.'); }
+        }
+      }
+    } else M.dig = null;
+    M.fuel = Math.max(0, M.fuel - use * dt);
+    if (G.get(cx, cy) === LAVA || G.get(cx, Math.floor((M.y + 26) / TS)) === LAVA) { hurt(1); M.vy = -260; }
+    maxDepth = Math.max(maxDepth, cy - SURF + 1);
+    if (M.fuel <= 0 && M.ground && !onRig) { K.lose({ title: 'OUT OF FUEL', text: 'Stranded in the dark. The winch brings you up without your cargo; upgrades and bank are safe.', stats: [['Depth reached', maxDepth + ' m']] }); return; }
+    if (M.fuel > 0 && M.fuel < TANK[lv.tank] * 0.3 && Math.floor(K.time * 2) % 6 === 0 && cy > SURF + 4) K.hint('Fuel low. Head up!', 0.6);
+    if (onRig) {
+      M.fuel = Math.min(TANK[lv.tank], M.fuel + 60 * dt); M.hp = HULL[lv.hull];
+      if (hold.length) { let v = 0; for (const o of hold) v += ORE[o][1]; money += v; hold = []; K.sfx('coin'); fx.text(M.x + 12, M.y - 20, '+$' + v, '#fde047', 18); }
+      if (haveRelic) { K.win({ title: 'RELIC RECOVERED', text: 'It hums on the deck of the rig, warm as the day it was buried.', stats: [['Bank', '$' + money], ['Deepest', maxDepth + ' m']] }); return; }
+      if (K.hit('triangle')) { shop = true; shopI = 0; K.sfx('select'); }
+    }
+    reveal();
+    cam.x = W / 2; cam.y = K.damp(cam.y, M.y + 40, 6, dt); cam.y = clamp(cam.y, H / 2 - 40, GH * TS - H / 2);
+  },
+  draw(t) {
+    const g = K.g;
+    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#1e3a5f'); sky.addColorStop(1, '#f59e6b'); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    cam.begin();
+    const y0 = Math.max(0, Math.floor((cam.y - H / 2) / TS)), y1 = Math.min(GH - 1, y0 + 18);
+    if (y0 > SURF) rect(0, y0 * TS, W, 600, '#0c0a09');
+    else { for (let i = 0; i < 6; i++) { const mx = i * 190 - 40; K.poly([[mx, SURF * TS], [mx + 110, SURF * TS - 70 - (i % 3) * 22], [mx + 230, SURF * TS]], '#7c4a3a'); } rect(0, SURF * TS, W, 700, '#0c0a09'); }
+    const COL = { [DIRT]: [28, 45, 26], [CLAY]: [8, 38, 30], [BASALT]: [250, 16, 22], [BED]: [220, 6, 12] };
+    for (let y = y0; y <= y1; y++) for (let x = 0; x < GW; x++) {
+      const tt = G.d[y * GW + x], px = x * TS, py = y * TS;
+      if (!seen[y * GW + x]) { if (tt !== AIR || y >= SURF) rect(px, py, TS, TS, '#0c0a09'); continue; }
+      if (tt === AIR) { if (y >= SURF) rect(px, py, TS, TS, '#1c1614'); continue; }
+      if (tt === LAVA) { rect(px, py, TS, TS, K.hsl(18 + Math.sin(t * 3 + x) * 8, 95, 48)); circ(px + 16 + Math.sin(t * 2 + y) * 8, py + 12, 4, '#fde047'); continue; }
+      const base_ = tt >= CU ? layerOf(y) : tt, c = COL[base_], n = K.hash2(x, y, 3);
+      rect(px, py, TS, TS, K.hsl(c[0], c[1], c[2] + n * 6));
+      rect(px + n * 20, py + 6 + n * 14, 8, 3, K.hsl(c[0], c[1], c[2] - 6));
+      if (tt === BED) { rect(px + 3, py + 3, TS - 6, TS - 6, '#111827'); line(px + 6, py + 8, px + 24, py + 22, '#374151', 2); }
+      if (ORE[tt]) { const oc = ORE[tt][2]; for (let k = 0; k < 4; k++) { const ox = px + 6 + K.hash2(x, y, k) * 20, oy = py + 6 + K.hash2(y, x, k) * 20; if (tt === GEM) K.poly([[ox, oy - 5], [ox + 4, oy], [ox, oy + 5], [ox - 4, oy]], oc); else circ(ox, oy, 3.2, oc); } if ((t * 2 + x * 0.3) % 3 < 0.15) circ(px + 16, py + 12, 2, '#fff'); }
+      if (tt === RELIC) { rect(px, py, TS, TS, '#1c1614'); K.poly([[px + 16, py + 2], [px + 28, py + 16], [px + 16, py + 30], [px + 4, py + 16]], '#67e8f9', '#ecfeff', 2); ring(px + 16, py + 16, 20 + Math.sin(t * 4) * 3, 'rgba(103,232,249,.5)', 2); }
+    }
+    /* rig */
+    rect(base.x - 80, base.y - 6, 160, 6, '#64748b'); line(base.x - 60, base.y - 6, base.x, base.y - 120, '#94a3b8', 4); line(base.x + 60, base.y - 6, base.x, base.y - 120, '#94a3b8', 4);
+    line(base.x - 40, base.y - 44, base.x + 40, base.y - 44, '#94a3b8', 3); circ(base.x, base.y - 120, 8, '#fbbf24');
+    rrect(base.x + 86, base.y - 46, 60, 46, 4, '#b45309'); txt('SHOP', base.x + 116, base.y - 22, 12, '#fef3c7', 'center', 800);
+    /* mech */
+    if (M.dig && !M.dig.blocked) { g.globalAlpha = 0.5; rect(M.dig.x * TS, M.dig.y * TS + TS * (1 - M.dig.f), TS, TS * M.dig.f, '#0c0a09'); g.globalAlpha = 1; }
+    if (M.inv <= 0 || Math.floor(t * 14) % 2) {
+      const x = M.x, y = M.y;
+      if (M.thr > 0.1) { K.poly([[x + 5, y + 24], [x + 12, y + 24 + 20 * M.thr + rand(0, 8)], [x + 19, y + 24]], '#fde047'); }
+      rrect(x, y + 2, 24, 20, 5, '#f59e0b'); rrect(x + (M.face > 0 ? 10 : 4), y + 5, 10, 8, 2, '#bae6fd'); rect(x, y + 18, 24, 6, '#44403c');
+      for (let i = 0; i < 3; i++) circ(x + 4 + i * 8, y + 22, 3, '#78716c');
+      const dg = M.dig && !M.dig.blocked, sp = dg ? Math.sin(t * 50) * 2 : 0;
+      if (M.dig && M.dig.y > Math.floor((M.y + 12) / TS)) K.poly([[x + 6, y + 24], [x + 18, y + 24], [x + 12 + sp, y + 34]], '#cbd5e1');
+      else K.poly([[x + 12 + M.face * 12, y + 6], [x + 12 + M.face * 12, y + 18], [x + 12 + M.face * 24, y + 12 + sp]], '#cbd5e1');
+      if (haveRelic) K.poly([[x + 12, y - 12], [x + 18, y - 5], [x + 12, y + 2], [x + 6, y - 5]], '#67e8f9');
+    }
+    fx.draw();
+    cam.end();
+    /* HUD */
+    hearts(22, 26, M.hp, HULL[lv.hull], '#f59e0b', 7);
+    txt('FUEL', 150, 26, 12, '#fde68a', 'left', 800); bar(190, 17, 170, 18, M.fuel / TANK[lv.tank], M.fuel < TANK[lv.tank] * 0.3 ? '#ef4444' : '#22c55e');
+    txt('CARGO ' + hold.length + '/' + CARGO[lv.cargo], 380, 26, 13, hold.length >= CARGO[lv.cargo] ? '#fca5a5' : '#e7e5e4', 'left', 800);
+    txt('$' + money, 930, 26, 18, '#fde047', 'right', 900);
+    const depth = Math.max(0, Math.floor((M.y + 12) / TS) - SURF + 1);
+    txt(depth + ' m', 930, 50, 13, '#a8a29e', 'right', 800);
+    rect(946, 70, 4, 400, 'rgba(255,255,255,.12)'); rect(943, 70 + 400 * depth / (GH - SURF), 10, 4, '#f59e0b'); rect(943, 466, 10, 4, '#67e8f9');
+    if (M.ground && M.y < SURF * TS && Math.abs(M.x + 12 - base.x) < 80 && !shop) { K.glyph('triangle', W / 2 - 40, 470, 12); txt('Shop', W / 2 - 22, 471, 15, '#fff', 'left', 800); }
+    if (shop) {
+      rrect(230, 90, 500, 360, 16, 'rgba(12,10,9,.95)'); K.rrectS(230, 90, 500, 360, 16, '#f59e0b', 2);
+      txt('RIG WORKSHOP', W / 2, 122, 22, '#fde68a', 'center', 900); txt('Bank $' + money, W / 2, 150, 15, '#fde047', 'center', 800);
+      UPG.forEach((u, i) => {
+        const y = 184 + i * 58, n = lv[u.k] + 1, maxed = n >= u.cost.length, sel = i === shopI;
+        rrect(254, y, 452, 50, 10, sel ? 'rgba(245,158,11,.25)' : 'rgba(255,255,255,.05)'); if (sel) K.rrectS(254, y, 452, 50, 10, '#f59e0b', 2);
+        txt(u.name, 272, y + 17, 16, '#fff', 'left', 800); txt(maxed ? 'Fully upgraded' : 'Next: ' + u.desc[n], 272, y + 36, 12, '#a8a29e', 'left', 600);
+        for (let k = 0; k < u.cost.length; k++) rect(470 + k * 16, y + 12, 12, 8, k <= lv[u.k] ? '#f59e0b' : 'rgba(255,255,255,.14)');
+        txt(maxed ? 'MAX' : '$' + u.cost[n], 690, y + 26, 17, maxed ? '#78716c' : money >= u.cost[n] ? '#fde047' : '#fca5a5', 'right', 900);
+      });
+      K.glyph('cross', 380, 428, 10); txt('Buy', 396, 429, 13, '#e7e5e4', 'left', 700); K.glyph('circle', 500, 428, 10); txt('Close', 516, 429, 13, '#e7e5e4', 'left', 700);
+    }
+  },
+});
+</script>
+</body>
+</html>

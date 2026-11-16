@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Runaway Express — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* RUNAWAY EXPRESS — a brawl along the roof of a train that will not stop.
+   Knock bandits into the gaps, duck the signal gantries, reach the engine. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const CW = 760, GAP = 46, NC = 8, GR = 1500;
+const CARS = [['b', 'b'], ['b', 'b', 'b'], ['b', 'b', 't'], ['B'], ['b', 'b', 'b', 't', 't'], ['B', 'b', 'b'], ['t', 't', 't', 'b', 'b'], ['X']];
+let P, foes, knives, carN, cars, beam, scroll, kos, smoke, awake;
+const carX = (i) => i * CW, roofY = (i) => cars[i].y;
+function carAt(x) { const i = Math.floor(x / CW); if (i < 0 || i >= NC) return -1; return x - i * CW < CW - GAP ? i : -1; }
+function groundAt(x) { const i = carAt(x); return i < 0 ? 9999 : roofY(i); }
+
+function mk(k, x, i) {
+  const base = { k, x, y: roofY(i) - 1, vx: 0, vy: 0, face: -1, st: 'walk', t: rand(0.3, 1.2), flash: 0, car: i, on: true };
+  if (k === 'b') return Object.assign(base, { hp: 3, w: 15, sp: rand(78, 104) });
+  if (k === 't') return Object.assign(base, { hp: 2, w: 14, sp: 70 });
+  if (k === 'B') return Object.assign(base, { hp: 9, w: 24, sp: 52 });
+  return Object.assign(base, { hp: 18, max: 18, w: 28, sp: 60, boss: true });
+}
+function wake(i) { if (awake[i]) return; awake[i] = true; CARS[i].forEach((k, n) => foes.push(mk(k, carX(i) + 300 + n * 85 + rand(-20, 20), i))); if (i === NC - 1) K.banner('ENGINEER BRAKK', 'He charges. Step aside and let the cab wall do the work.'); }
+function place(i) { P.x = carX(i) + 60; P.y = roofY(i) - 1; P.vx = P.vy = 0; P.inv = 1.5; P.st = 'idle'; }
+function hurt(n, dir) { if (P.inv > 0) return; P.hp -= n; P.inv = 0.9; P.vx = dir * 260; P.vy = -200; K.sfx('hurt'); fx.shake(8); if (P.hp <= 0) K.lose({ title: 'THROWN FROM THE TRAIN', text: 'You wake in the cinders... and the dream gives you this car again.', stats: [['Car', (carN + 1) + ' / 8'], ['Bandits dropped', kos]] }); }
+function hit(e, n, kb, dir) { if (e.boss && e.st !== 'stun') { K.sfx('clank'); fx.text(e.x, e.y - 80, 'BLOCKED', '#cbd5e1', 13); return; } e.hp -= n; e.flash = 0.12; e.vx = dir * kb * (e.k === 'B' || e.boss ? 0.25 : 1); e.vy = -120; e.st = 'hurt'; e.t = 0.3; K.sfx('hit'); fx.burst(e.x, e.y - 30, '#fde68a', 6, 160, 0.3, 3); fx.hitstop(0.035); }
+
+K.run({
+  id: 'runaway-express', num: 18, title: 'RUNAWAY EXPRESS', tag: 'Train-top brawler', color: '#f87171',
+  goal: 'Fight forward over eight cars to the engine and pull the brake before the bridge. Your third punch sends a man flying: aim him at a gap. When the bell rings, duck.',
+  controls: [['LS', 'Run / hold down to duck'], ['cross', 'Jump'], ['square', 'Punch combo'], ['triangle', 'Shoulder charge']],
+  music: { bpm: 132, root: 43, mode: 'dorian', dens: 0.5, drums: true, drive: true, seed: 19, lead: 'square', leadVol: 0.04, lp: 1700 },
+  start() { cars = []; for (let i = 0; i < NC; i++) cars.push({ y: i === 3 ? 372 : 330 + [0, -14, 10, 0, -10, 12, -6, 0][i], flat: i === 3, loco: i === NC - 1 }); P = { hp: 6, w: 13, face: 1, combo: 0, ct: 0, at: 0, cd: 0, chg: 0, ccd: 0 }; foes = []; knives = []; awake = {}; carN = 0; kos = 0; scroll = 0; smoke = []; beam = { t: 9, warn: 0, x: 0, on: false }; place(0); wake(0); cam.x = P.x + 200; cam.y = 270; K.banner('RUNAWAY EXPRESS', 'The engine is eight cars ahead'); },
+  retry() { P.hp = 6; foes = foes.filter((e) => e.car > carN); awake[carN] = false; knives = []; place(carN); wake(carN); beam.t = 8; beam.on = false; },
+  update(dt) {
+    scroll += dt * 620; const lx = K.IN.lx, ly = K.IN.ly;
+    P.inv -= dt; P.cd -= dt; P.ccd -= dt; P.ct -= dt; P.at -= dt; if (P.ct <= 0) P.combo = 0;
+    const gy = groundAt(P.x), onG = P.y >= gy - 1 && P.y < gy + 30 && P.vy >= 0;
+    P.duck = onG && ly > 0.55 && P.chg <= 0;
+    if (P.chg > 0) { P.chg -= dt; P.vx = P.face * 520; for (const e of foes) if (e.on && Math.abs(e.x - P.x) < e.w + 26 && Math.abs(e.y - P.y) < 50 && !e.hitc) { e.hitc = true; hit(e, 2, 620, P.face); } }
+    else {
+      if (onG) { P.vx = K.approach(P.vx, P.duck || P.at > 0 ? 0 : lx * 235, 2200 * dt); if (Math.abs(lx) > 0.3 && P.at <= 0) P.face = Math.sign(lx); }
+      else P.vx = K.approach(P.vx, lx * 235, 700 * dt);
+      if (K.hit('cross') && onG) { P.vy = -470; P.y -= 2; K.sfx('jump'); }
+      if (K.hit('square') && P.cd <= 0) {
+        P.combo = P.combo % 3 + 1; P.ct = 0.55; P.at = 0.16; P.cd = P.combo === 3 ? 0.42 : 0.2; K.sfx('swing');
+        for (const e of foes) if (e.on && (e.x - P.x) * P.face > -10 && Math.abs(e.x - P.x) < e.w + 50 && Math.abs(e.y - P.y) < 46) hit(e, P.combo === 3 ? 2 : 1, P.combo === 3 ? 520 : 90, P.face);
+      }
+      if (K.hit('triangle') && P.ccd <= 0 && onG) { P.chg = 0.26; P.ccd = 1.3; K.sfx('dash'); for (const e of foes) e.hitc = false; }
+    }
+    P.vy += GR * dt; P.x += P.vx * dt; P.y += P.vy * dt;
+    const g2 = groundAt(P.x); if (P.vy >= 0 && P.y >= g2 && P.y < g2 + 26) { P.y = g2; P.vy = 0; }
+    if (g2 < 9000 && P.y > g2 + 26 && P.y < g2 + 300) { const i = carAt(P.x), cx0 = carX(i); P.x = P.x - cx0 < 30 ? cx0 - P.w : cx0 + CW - GAP + P.w; }
+    P.x = Math.max(P.x, 20); if (P.x > NC * CW - GAP - 30) P.x = NC * CW - GAP - 30;
+    if (P.y > 620) { P.inv = 0; hurt(1, 0); if (K.scene !== 'play') return; place(carN); K.hint('Mind the gap.', 1.5); }
+    const ci = carAt(P.x); if (ci > carN && P.y <= roofY(ci) + 2) { carN = ci; wake(ci); if (ci < NC - 1) K.hint('CAR ' + (ci + 1) + ' OF 8', 1.4); P.hp = Math.min(6, P.hp + 1); }
+    if (ci >= 0 && ci + 1 < NC && P.x - carX(ci) > CW * 0.55) wake(ci + 1);
+    /* gantry beam */
+    beam.t -= dt;
+    if (!beam.on && beam.t <= 1.3 && beam.warn <= 0) { beam.warn = 1.3; K.tone({ f: 1400, dur: 0.12, type: 'square', vol: 0.14 }); K.tone({ f: 1400, dur: 0.12, type: 'square', vol: 0.14, delay: 0.25 }); K.tone({ f: 1400, dur: 0.12, type: 'square', vol: 0.14, delay: 0.5 }); }
+    beam.warn -= dt;
+    if (!beam.on && beam.t <= 0) { beam.on = true; beam.x = cam.x + 700; }
+    if (beam.on) {
+      const px = beam.x; beam.x -= 1500 * dt;
+      const sweep = (o, h, duck) => o.x <= px && o.x > beam.x && !duck && o.y - h < 296 && o.y > 250;
+      if (sweep(P, 50, P.duck)) { hurt(2, -1); if (K.scene !== 'play') return; }
+      for (const e of foes) if (e.on && sweep(e, 50, false) && !e.boss) { hit(e, 2, 420, -1); }
+      if (beam.x < cam.x - 700) { beam.on = false; beam.t = rand(7, 11); }
+    }
+    /* bandits */
+    for (let i = foes.length - 1; i >= 0; i--) {
+      const e = foes[i]; e.flash -= dt; e.t -= dt;
+      const eg = groundAt(e.x), eOn = e.y >= eg - 1 && e.y < eg + 30; const d = P.x - e.x, ad = Math.abs(d);
+      if (e.hp <= 0 && e.on) { e.on = false; e.vy = -260; e.vx = -Math.sign(d || 1) * 200; kos++; if (e.boss) { fx.burst(e.x, e.y - 40, '#fde047', 50, 300, 1, 5); K.sfx('boom'); } }
+      if (!e.on) { e.vy += GR * dt; e.x += e.vx * dt; e.y += e.vy * dt; if (e.y > 700) { foes.splice(i, 1); if (e.boss) { K.win({ title: 'BRAKES ON', text: 'Sparks all the way down the line. The train sighs to a stop with its nose over the first plank of the bridge.', stats: [['Bandits dropped', kos], ['Hearts left', P.hp]] }); return; } } continue; }
+      if (e.st === 'hurt') { if (e.t <= 0) e.st = 'walk'; }
+      else if (e.boss) {
+        if (e.st === 'walk') { e.face = Math.sign(d) || 1; e.vx = e.face * e.sp; if (e.t <= 0) { e.st = 'wind'; e.t = 0.7; e.vx = 0; K.sfx('charge'); } }
+        else if (e.st === 'wind') { if (e.t <= 0) { e.st = 'rush'; e.t = 1.6; } }
+        else if (e.st === 'rush') { e.vx = e.face * 560; const lim0 = carX(NC - 1) + 40, lim1 = carX(NC - 1) + CW - GAP - 120; if (e.x < lim0 || e.x > lim1 || e.t <= 0) { e.x = clamp(e.x, lim0, lim1); e.st = 'stun'; e.t = 2.2; e.vx = 0; K.sfx('boom'); fx.shake(12); } if (ad < e.w + 20 && Math.abs(P.y - e.y) < 60) { hurt(2, e.face); if (K.scene !== 'play') return; } }
+        else if (e.st === 'stun' && e.t <= 0) { e.st = 'walk'; e.t = 1.4; if (e.hp < 10) knives.push({ x: e.x, y: e.y - 60, vx: Math.sign(d) * 250, vy: -420, arc: true }); }
+      } else if (e.k === 't') {
+        e.face = Math.sign(d) || 1; const want = ad < 230 ? -e.face : ad > 330 ? e.face : 0; e.vx = want * e.sp;
+        if (e.t <= 0 && ad < 520 && eOn) { e.t = 2.3; knives.push({ x: e.x + e.face * 16, y: e.y - (Math.random() < 0.5 ? 40 : 14), vx: e.face * 330, vy: 0 }); K.sfx('swing'); }
+      } else {
+        if (e.st === 'walk') { e.face = Math.sign(d) || 1; e.vx = ad > e.w + 26 ? e.face * e.sp : 0; if (ad <= e.w + 32 && e.t <= 0 && Math.abs(P.y - e.y) < 50) { e.st = 'wind'; e.t = e.k === 'B' ? 0.6 : 0.42; e.vx = 0; } }
+        else if (e.st === 'wind' && e.t <= 0) { e.st = 'punch'; e.t = 0.2; K.sfx('swing'); if ((P.x - e.x) * e.face > -6 && ad < e.w + 46 && Math.abs(P.y - e.y) < 46) { hurt(e.k === 'B' ? 2 : 1, e.face); if (K.scene !== 'play') return; } }
+        else if (e.st === 'punch' && e.t <= 0) { e.st = 'walk'; e.t = rand(0.5, 1.1); }
+      }
+      /* stay on own car unless knocked */
+      if (e.st !== 'hurt' && eOn) { const c0 = carX(e.car) + 24, c1 = carX(e.car) + CW - GAP - 24; if (e.x < c0) { e.x = c0; e.vx = 0; } if (e.x > c1) { e.x = c1; e.vx = 0; } } else if (eOn) e.vx *= 1 - 3 * dt;
+      e.vy += GR * dt; e.x += e.vx * dt; e.y += e.vy * dt; const ng = groundAt(e.x); if (e.vy >= 0 && e.y >= ng && e.y < ng + 26) { e.y = ng; e.vy = 0; }
+      if (e.y > 640) { foes.splice(i, 1); kos++; K.sfx('coin'); fx.text(e.x, 500, 'OFF THE TRAIN', '#fde68a', 14); if (e.boss) { K.win({ title: 'BRAKES ON', text: 'With Brakk gone over the side, the brake lever is all yours.', stats: [['Bandits dropped', kos], ['Hearts left', P.hp]] }); return; } }
+    }
+    for (let i = knives.length - 1; i >= 0; i--) { const k = knives[i]; if (k.arc) k.vy += 900 * dt; k.x += k.vx * dt; k.y += k.vy * dt; const top = P.y - (P.duck ? 26 : 52); if (Math.abs(k.x - P.x) < 14 && k.y > top && k.y < P.y) { hurt(1, Math.sign(k.vx)); if (K.scene !== 'play') return; knives.splice(i, 1); continue; } if (Math.abs(k.x - P.x) > 900 || k.y > 600) knives.splice(i, 1); }
+    if (Math.random() < dt * 14) smoke.push({ x: carX(NC - 1) + 560, y: 220, r: 12, t: 2.4 });
+    for (let i = smoke.length - 1; i >= 0; i--) { const s = smoke[i]; s.t -= dt; s.x -= 420 * dt; s.y -= 30 * dt; s.r += 26 * dt; if (s.t <= 0) smoke.splice(i, 1); }
+    cam.x = K.damp(cam.x, P.x + P.face * 110 + 60, 4, dt); cam.y = 270;
+  },
+  draw(t) {
+    const g = K.g; const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#2b1b4a'); sky.addColorStop(0.6, '#c2553f'); sky.addColorStop(1, '#f2a65a'); g.fillStyle = sky; g.fillRect(0, 0, W, H); circ(700, 300, 70, '#fde68a');
+    for (let L = 0; L < 3; L++) { const sp = [0.05, 0.14, 0.4][L]; g.fillStyle = ['#5a2a4f', '#3b1d3f', '#22122b'][L]; g.beginPath(); g.moveTo(0, H); for (let x = 0; x <= W; x += 20) g.lineTo(x, 330 + L * 46 - K.noise2((x + scroll * sp) / (240 - L * 50), L * 5, 2) * (120 - L * 30)); g.lineTo(W, H); g.fill(); }
+    for (let i = 0; i < 4; i++) { const x = W - ((scroll * 1.0 + i * 420) % 1680) + 300; rect(x, 250, 8, 240, '#1a0f1f'); rect(x - 22, 262, 52, 6, '#1a0f1f'); }
+    rect(0, 486, W, 60, '#1a0f1f'); for (let x = -((scroll * 1.6) % 40); x < W; x += 40) rect(x, 482, 22, 6, '#3b2a2a'); rect(0, 474, W, 5, '#6b7280');
+    cam.begin();
+    for (const s of smoke) circ(s.x, s.y, s.r, 'rgba(226,232,240,' + s.t * 0.12 + ')');
+    for (let i = 0; i < NC; i++) {
+      const x = carX(i), y = roofY(i), w = CW - GAP; if (x > cam.x + 520 || x + w < cam.x - 520) continue;
+      const c = cars[i];
+      if (c.loco) { rrect(x, y, w, 470 - y, 8, '#1f2937'); rrect(x + w - 190, y - 46, 150, 50, 6, '#111827'); rect(x + w - 60, y - 96, 30, 100, '#111827'); rrect(x + 30, y + 22, 130, 70, 6, '#7f1d1d'); rect(x + 46, y + 34, 40, 34, '#fde68a'); rect(x + 10, y, 14, -44, '#b91c1c'); circ(x + 17, y - 50, 8, '#f87171'); }
+      else if (c.flat) { rect(x, y, w, 22, '#5b3a1e'); for (let k = 0; k < 4; k++) { rrect(x + 90 + k * 150, y - 50, 70, 50, 4, '#8b5a2b'); line(x + 90 + k * 150, y - 50, x + 160 + k * 150, y, '#5b3a1e', 3); } }
+      else { rrect(x, y, w, 470 - y - 22, 6, K.hsl(8 + i * 22, 38, 26)); rect(x, y, w, 10, K.hsl(8 + i * 22, 30, 40)); for (let k = 0; k < 9; k++) line(x + 40 + k * 80, y + 14, x + 40 + k * 80, 440, 'rgba(0,0,0,.25)', 3); rrect(x + w / 2 - 60, y + 30, 120, 96, 4, 'rgba(0,0,0,.3)'); }
+      rect(x + w, 440, GAP, 8, '#111827'); for (const wx of [70, 190, w - 190, w - 70]) { circ(x + wx, 458, 22, '#111827'); line(x + wx, 458, x + wx + Math.cos(scroll * 0.05) * 20, 458 + Math.sin(scroll * 0.05) * 20, '#6b7280', 3); }
+    }
+    const fig = (x, y, face, col, hat, opt) => { const o = opt || {}, hh = o.duck ? 24 : 46 * (o.s || 1), w = 13 * (o.s || 1); g.save(); g.translate(x, y); if (o.rot) g.rotate(o.rot); rrect(-w, -hh, w * 2, hh - 6, 6, o.flash ? '#fff' : col); rect(-w + 2, -8, 8, 8, '#1f2937'); rect(w - 10, -8, 8, 8, '#1f2937'); circ(face * 2, -hh - 7, 9 * (o.s || 1), '#e9c9a4'); rect(-12 * (o.s || 1), -hh - 15, 24 * (o.s || 1), 5, hat); rect(-7 * (o.s || 1), -hh - 23, 14 * (o.s || 1), 9, hat); if (o.arm) { line(face * 6, -hh + 16, face * (6 + o.arm), -hh + 14, '#e9c9a4', 7); circ(face * (8 + o.arm), -hh + 14, 5, '#e9c9a4'); } g.restore(); };
+    for (const e of foes) { if (Math.abs(e.x - cam.x) > 560) continue; const wind = e.st === 'wind'; if (wind) ring(e.x, e.y - 30, 30 + e.t * 30, 'rgba(248,113,113,.8)', 3); fig(e.x, e.y, e.face, e.boss ? '#111827' : e.k === 'B' ? '#4c1d95' : e.k === 't' ? '#0f766e' : '#7c2d12', e.boss ? '#b91c1c' : '#1c1917', { s: e.boss ? 1.5 : e.k === 'B' ? 1.3 : 1, flash: e.flash > 0, arm: e.st === 'punch' ? 30 : wind ? -8 : 0, rot: !e.on ? t * 9 : e.st === 'stun' ? 0.3 : 0 }); if (e.st === 'stun') txt('✶ ✶', e.x, e.y - 96, 18, '#fde047', 'center'); if (e.boss) bar(e.x - 50, e.y - 116, 100, 9, e.hp / e.max, '#f87171'); }
+    for (const k of knives) { if (k.arc) circ(k.x, k.y, 8, '#111827'); else { line(k.x - 10, k.y, k.x + 10, k.y, '#e5e7eb', 3); } }
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) fig(P.x, P.y, P.face, '#1d4ed8', '#78350f', { duck: P.duck, arm: P.at > 0 ? (P.combo === 3 ? 36 : 26) : P.chg > 0 ? 14 : 0, rot: P.chg > 0 ? P.face * 0.35 : 0 });
+    if (beam.on) { rect(beam.x - 6, 80, 12, 196, '#111827'); rect(beam.x - 40, 262, 80, 30, '#111827'); rect(beam.x - 36, 266, 72, 22, '#fde047'); }
+    fx.draw(); cam.end();
+    if (beam.warn > 0 && !beam.on) { g.globalAlpha = 0.5 + 0.5 * Math.sin(t * 30); rrect(W / 2 - 110, 70, 220, 54, 10, '#facc15'); txt('▼ DUCK ▼', W / 2, 98, 30, '#111', 'center', 900); g.globalAlpha = 1; }
+    hearts(24, 26, P.hp, 6); for (let i = 0; i < NC; i++) rrect(330 + i * 38, 16, 32, 14, 3, i < carN ? '#6ee7b7' : i === carN ? '#fff' : 'rgba(0,0,0,.4)'); txt('ENGINE ▶', 640, 24, 11, '#fff', 'left', 800);
+    K.glyph('triangle', 906, 26, 11, P.ccd <= 0 ? 1 : 0.25);
+  },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Rift Walker — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* RIFT WALKER — a first-person labyrinth drawn by raycasting. Three sigils
+   wake the gate; every one you lift wakes more of the things that guard it. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx } = K;
+const N = 25, COLS = 240, CW = W / COLS, FOV = 1.15, PROJ = (W / 2) / Math.tan(FOV / 2);
+let G, P, foes, sigils, gate, seenMap, zbuf, seedN, got, bolts, kick, kills, wallHue;
+const wall = (x, y) => G.get(Math.floor(x), Math.floor(y)) === 1;
+
+function build() {
+  const r = K.rng(seedN); G = K.maze(N, N, r, 0.22);
+  /* a few open halls so it is not all corridor */
+  for (let i = 0; i < 5; i++) { const x = r.int(2, N - 6), y = r.int(2, N - 6); for (let yy = y; yy < y + 3; yy++) for (let xx = x; xx < x + 3; xx++) G.set(xx, yy, 0); }
+  const D = K.bfs(N, N, 1, 1, (x, y) => !G.d[y * N + x]);
+  const cells = []; for (let y = 1; y < N - 1; y++) for (let x = 1; x < N - 1; x++) if (!G.d[y * N + x] && D[y * N + x] > 0) cells.push([x, y, D[y * N + x]]);
+  cells.sort((a, b) => b[2] - a[2]);
+  sigils = [];
+  for (const c of cells) { if (sigils.length >= 3) break; if (c[2] > 14 && sigils.every((s) => Math.abs(s.x - c[0]) + Math.abs(s.y - c[1]) > 12)) sigils.push({ x: c[0] + 0.5, y: c[1] + 0.5, got: false }); }
+  while (sigils.length < 3) { const c = cells[r.int(0, 20)]; sigils.push({ x: c[0] + 0.5, y: c[1] + 0.5, got: false }); }
+  const mid = cells.filter((c) => Math.abs(c[0] - 12) < 4 && Math.abs(c[1] - 12) < 4);
+  const gc = mid.length ? r.pick(mid) : cells[cells.length >> 1]; gate = { x: gc[0] + 0.5, y: gc[1] + 0.5 };
+  foes = []; for (let i = 0; i < 12; i++) spawnFoe(cells, 9);
+  build.cells = cells;
+  seenMap = new Uint8Array(N * N); wallHue = [250, 200, 285, 320][seedN % 4];
+}
+function spawnFoe(cells, minD) {
+  for (let k = 0; k < 40; k++) {
+    const c = pick(cells); if (c[2] < minD || (P && dist(c[0], c[1], P.x, P.y) < 7)) continue;
+    const brute = Math.random() < 0.3;
+    foes.push({ x: c[0] + 0.5, y: c[1] + 0.5, hp: brute ? 3 : 1, brute, r: brute ? 0.34 : 0.22, wake: false, ph: rand(0, TAU), flash: 0, cd: 0 }); return;
+  }
+}
+function castRay(a) {
+  const dx = Math.cos(a), dy = Math.sin(a); let mx = Math.floor(P.x), my = Math.floor(P.y);
+  const ddx = Math.abs(1 / (dx || 1e-9)), ddy = Math.abs(1 / (dy || 1e-9));
+  const sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+  let sdx = (dx < 0 ? P.x - mx : mx + 1 - P.x) * ddx, sdy = (dy < 0 ? P.y - my : my + 1 - P.y) * ddy, side = 0;
+  for (let i = 0; i < 64; i++) {
+    if (sdx < sdy) { sdx += ddx; mx += sx; side = 0; } else { sdy += ddy; my += sy; side = 1; }
+    if (G.get(mx, my) === 1) break;
+  }
+  const d = side === 0 ? sdx - ddx : sdy - ddy;
+  const hx = side === 0 ? P.y + d * dy : P.x + d * dx;
+  return { d, side, u: hx - Math.floor(hx), mx, my };
+}
+function sight(ax, ay, bx, by) { const d = dist(ax, ay, bx, by), n = Math.ceil(d * 5); for (let i = 1; i < n; i++) if (wall(lerp(ax, bx, i / n), lerp(ay, by, i / n))) return false; return true; }
+function hurt() {
+  if (P.inv > 0) return; P.hp--; P.inv = 1; K.sfx('hurt'); fx.shake(10); fx.flash('#7f1d1d', 0.3);
+  if (P.hp <= 0) K.lose({ title: 'THE RIFT CLOSES', text: 'It keeps you a while, then puts you back at the threshold. The sigils you carried stay yours.', stats: [['Sigils', got + ' / 3'], ['Banished', kills]] });
+}
+function place() { P = { x: 1.5, y: 1.5, a: 0.6, hp: 5, mana: 1, inv: 1.5, bob: 0 }; bolts = []; kick = 0; for (const f of foes) if (dist(f.x, f.y, 1.5, 1.5) < 5) { f.x = gate.x; f.y = gate.y; f.wake = false; } }
+
+K.run({
+  id: 'rift-walker', num: 6, title: 'RIFT WALKER', tag: 'First-person labyrinth', color: '#c084fc',
+  goal: 'Three sigils are hidden in the labyrinth. Carry all three to the gate at its heart. Your wand recharges on its own, slowly.',
+  controls: [['LS', 'Walk / strafe'], ['RS', 'Turn'], [['l1', 'r1'], 'Turn'], [['r2', 'cross'], 'Cast bolt']],
+  music: { bpm: 76, root: 41, mode: 'phryg', dens: 0.25, seed: 66, long: true, lead: 'sawtooth', leadVol: 0.03, lp: 900 },
+  init() { zbuf = new Float32Array(COLS); },
+  start() { seedN = irand(1, 1e9); P = null; build(); got = 0; kills = 0; place(); K.banner('RIFT WALKER', 'The map in the corner fills in as you walk'); },
+  retry() { place(); },
+  update(dt) {
+    const turn = K.IN.rx + (K.down('r1') ? 1 : 0) - (K.down('l1') ? 1 : 0);
+    P.a += clamp(turn, -1, 1) * 2.6 * dt;
+    const f = -K.IN.ly, s = K.IN.lx, sp = 2.9;
+    const vx = (Math.cos(P.a) * f - Math.sin(P.a) * s) * sp * dt, vy = (Math.sin(P.a) * f + Math.cos(P.a) * s) * sp * dt, pad = 0.22;
+    if (!wall(P.x + vx + Math.sign(vx) * pad, P.y - pad) && !wall(P.x + vx + Math.sign(vx) * pad, P.y + pad)) P.x += vx;
+    if (!wall(P.x - pad, P.y + vy + Math.sign(vy) * pad) && !wall(P.x + pad, P.y + vy + Math.sign(vy) * pad)) P.y += vy;
+    const mv = Math.hypot(f, s); P.bob += mv * dt * 9; if (mv > 0.3 && Math.sin(P.bob) > 0.98) K.sfx('step');
+    P.inv -= dt; P.mana = Math.min(1, P.mana + dt * 0.5); kick = Math.max(0, kick - dt * 5);
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const x = Math.floor(P.x) + dx, y = Math.floor(P.y) + dy; if (G.inb(x, y)) seenMap[y * N + x] = 1; }
+    if ((K.hit('r2') || K.hit('cross')) && P.mana >= 0.25) {
+      P.mana -= 0.25; kick = 1; K.sfx('zap');
+      bolts.push({ x: P.x + Math.cos(P.a) * 0.3, y: P.y + Math.sin(P.a) * 0.3, vx: Math.cos(P.a) * 11, vy: Math.sin(P.a) * 11, t: 1.2 });
+    }
+    for (let i = bolts.length - 1; i >= 0; i--) {
+      const b = bolts[i]; b.t -= dt; let dead = b.t <= 0;
+      for (let k = 0; k < 3 && !dead; k++) {
+        b.x += b.vx * dt / 3; b.y += b.vy * dt / 3;
+        if (wall(b.x, b.y)) dead = true;
+        for (const e of foes) if (e.hp > 0 && dist(b.x, b.y, e.x, e.y) < e.r + 0.12) { e.hp--; e.flash = 0.15; e.wake = true; dead = true; K.sfx('hit'); if (e.hp <= 0) { kills++; K.sfx('boom'); } break; }
+      }
+      if (dead) bolts.splice(i, 1);
+    }
+    for (let i = foes.length - 1; i >= 0; i--) {
+      const e = foes[i]; if (e.hp <= 0) { foes.splice(i, 1); continue; }
+      e.ph += dt; e.flash -= dt; e.cd -= dt;
+      const d = dist(e.x, e.y, P.x, P.y);
+      if (!e.wake && d < 7 && sight(e.x, e.y, P.x, P.y)) { e.wake = true; K.tone({ f: e.brute ? 90 : 500, f2: e.brute ? 60 : 900, dur: 0.4, type: 'sawtooth', vol: 0.08, lp: 900 }); }
+      if (e.wake && d < 14) {
+        let a = ang(e.x, e.y, P.x, P.y);
+        if (!sight(e.x, e.y, P.x, P.y)) { if (!e.map || e.mt < K.time) { e.map = K.bfs(N, N, Math.floor(P.x), Math.floor(P.y), (x, y) => !G.d[y * N + x], 22); e.mt = K.time + 0.7; } const [sx, sy] = K.bfsStep(e.map, N, N, Math.floor(e.x), Math.floor(e.y)); if (sx || sy) a = ang(e.x, e.y, Math.floor(e.x) + sx + 0.5, Math.floor(e.y) + sy + 0.5); }
+        const v = (e.brute ? 1.25 : 2.0) * dt, nx = e.x + Math.cos(a) * v, ny = e.y + Math.sin(a) * v;
+        if (!wall(nx, e.y)) e.x = nx; if (!wall(e.x, ny)) e.y = ny;
+        if (d < e.r + 0.3 && e.cd <= 0) { hurt(); e.cd = 1.2; e.x -= Math.cos(a) * 0.5; e.y -= Math.sin(a) * 0.5; if (wall(e.x, e.y)) { e.x += Math.cos(a) * 0.5; e.y += Math.sin(a) * 0.5; } }
+      }
+    }
+    for (const s of sigils) if (!s.got && dist(P.x, P.y, s.x, s.y) < 0.55) {
+      s.got = true; got++; K.sfx('key'); fx.flash('#c084fc', 0.35); P.hp = Math.min(5, P.hp + 1);
+      for (let k = 0; k < 4; k++) spawnFoe(build.cells, 2);
+      K.banner(got === 3 ? 'THE GATE WAKES' : 'SIGIL ' + got + ' OF 3', got === 3 ? 'It is marked on your map. Run.' : 'Something else in here woke up too');
+    }
+    if (got === 3 && dist(P.x, P.y, gate.x, gate.y) < 0.6) K.win({ title: 'THROUGH THE GATE', text: 'The labyrinth folds shut behind you like a book.', stats: [['Banished', kills], ['Hearts left', P.hp]] });
+  },
+  draw(t) {
+    const g = K.g, bob = Math.sin(P.bob) * 4;
+    const cg = g.createLinearGradient(0, 0, 0, H / 2); cg.addColorStop(0, '#0b0714'); cg.addColorStop(1, '#1b1030'); g.fillStyle = cg; g.fillRect(0, 0, W, H / 2 + bob);
+    const fg = g.createLinearGradient(0, H / 2, 0, H); fg.addColorStop(0, '#0d0a14'); fg.addColorStop(1, '#3b2f4a'); g.fillStyle = fg; g.fillRect(0, H / 2 + bob, W, H / 2 - bob);
+    for (let i = 0; i < COLS; i++) {
+      const ra = P.a + Math.atan((i + 0.5 - COLS / 2) * CW / PROJ), h = castRay(ra), d = h.d * Math.cos(ra - P.a);
+      zbuf[i] = d; const wh = PROJ / d, y = H / 2 - wh / 2 + bob;
+      const brick = (Math.floor(h.u * 4) + Math.floor(K.hash2(h.mx, h.my, 2) * 3)) % 2, fog = clamp(1 - d / 11, 0, 1);
+      const L = (16 + brick * 4 + (h.side ? 0 : 9)) * fog + 3;
+      g.fillStyle = K.hsl(wallHue + K.hash2(h.mx, h.my, 5) * 30, 36, L); g.fillRect(i * CW, y, CW + 0.5, wh);
+      if (h.u < 0.04 || h.u > 0.96) { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(i * CW, y, CW + 0.5, wh); }
+      g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(i * CW, y + wh * 0.48, CW + 0.5, wh * 0.04);
+    }
+    /* sprites, far to near, clipped per column against the walls */
+    const sp = [];
+    const add = (o, kind) => { const d = dist(P.x, P.y, o.x, o.y), rel = K.angDiff(P.a, ang(P.x, P.y, o.x, o.y)); if (Math.abs(rel) < 1 && d > 0.15) sp.push({ o, kind, d: d * Math.cos(rel), sx: W / 2 + Math.tan(rel) * PROJ }); };
+    for (const e of foes) add(e, 'foe'); for (const s of sigils) if (!s.got) add(s, 'sigil'); for (const b of bolts) add(b, 'bolt'); add(gate, 'gate');
+    sp.sort((a, b) => b.d - a.d);
+    for (const s of sp) {
+      const sc = PROJ / s.d, o = s.o, half = sc * (s.kind === 'gate' ? 0.4 : s.kind === 'foe' ? o.r * 1.5 : 0.25);
+      const c0 = Math.max(0, Math.floor((s.sx - half) / CW)), c1 = Math.min(COLS - 1, Math.ceil((s.sx + half) / CW));
+      g.save(); g.beginPath(); let any = false;
+      for (let c = c0; c <= c1; c++) if (zbuf[c] > s.d) { g.rect(c * CW, 0, CW + 0.5, H); any = true; }
+      if (!any) { g.restore(); continue; }
+      g.clip(); const fog = clamp(1.15 - s.d / 11, 0.15, 1); g.globalAlpha = fog; const cy = H / 2 + bob;
+      if (s.kind === 'foe') {
+        const y = cy + sc * (o.brute ? 0.12 : -0.02 + Math.sin(o.ph * 3) * 0.05), R = sc * o.r, col = o.flash > 0 ? '#fff' : o.brute ? '#7f1d1d' : '#22d3ee';
+        if (o.brute) { rrect(s.sx - R, y - R * 1.2, R * 2, R * 2.6, R * 0.5, col); circ(s.sx - R * 0.4, y - R * 0.5, R * 0.18, '#fde047'); circ(s.sx + R * 0.4, y - R * 0.5, R * 0.18, '#fde047'); rect(s.sx - R * 0.5, y + R * 0.2, R, R * 0.14, '#1c0707'); }
+        else { circ(s.sx, y, R * 1.5, 'rgba(34,211,238,.2)'); circ(s.sx, y, R, col); circ(s.sx, y, R * 0.45, o.wake ? '#083344' : '#a5f3fc'); }
+      } else if (s.kind === 'sigil') {
+        const y = cy + sc * 0.1 + Math.sin(t * 3) * sc * 0.04, R = sc * 0.16; circ(s.sx, y, R * 2.2, 'rgba(192,132,252,.2)');
+        K.poly([[s.sx, y - R * 1.5], [s.sx + R, y], [s.sx, y + R * 1.5], [s.sx - R, y]], '#e9d5ff', '#c084fc', 2);
+      } else if (s.kind === 'bolt') { circ(s.sx, cy + sc * 0.05, sc * 0.07, '#f0abfc'); circ(s.sx, cy + sc * 0.05, sc * 0.14, 'rgba(240,171,252,.3)'); }
+      else {
+        const on = got === 3, R = sc * 0.38; g.strokeStyle = on ? '#c084fc' : '#3f3f46'; g.lineWidth = Math.max(2, sc * 0.05);
+        g.beginPath(); g.ellipse(s.sx, cy, R * 0.7, R * 1.25, 0, 0, TAU); g.stroke();
+        if (on) { g.fillStyle = 'rgba(192,132,252,' + (0.3 + 0.2 * Math.sin(t * 6)) + ')'; g.beginPath(); g.ellipse(s.sx, cy, R * 0.62, R * 1.15, 0, 0, TAU); g.fill(); }
+      }
+      g.restore();
+    }
+    /* wand */
+    const wx = 640 + Math.cos(P.bob * 0.5) * 8, wy = 470 + Math.abs(Math.sin(P.bob * 0.5)) * 10 + kick * 26;
+    K.poly([[wx, wy - 110], [wx + 14, wy - 104], [wx + 70, H + 20], [wx + 30, H + 20]], '#4a3728'); circ(wx + 6, wy - 114, 12 + kick * 10, kick > 0.3 ? '#fff' : '#c084fc'); circ(wx + 6, wy - 114, 22, 'rgba(192,132,252,' + (0.15 + P.mana * 0.2) + ')');
+    line(W / 2 - 7, H / 2, W / 2 + 7, H / 2, 'rgba(255,255,255,.6)', 2); line(W / 2, H / 2 - 7, W / 2, H / 2 + 7, 'rgba(255,255,255,.6)', 2);
+    /* HUD */
+    hearts(24, 26, P.hp, 5);
+    bar(24, 44, 110, 12, P.mana, '#c084fc');
+    for (let i = 0; i < 3; i++) K.poly([[190 + i * 26, 14], [198 + i * 26, 26], [190 + i * 26, 38], [182 + i * 26, 26]], i < got ? '#e9d5ff' : 'rgba(255,255,255,.14)');
+    const ms = 5, mx = W - N * ms - 14, my = 12;
+    rect(mx - 3, my - 3, N * ms + 6, N * ms + 6, 'rgba(8,6,14,.7)');
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (seenMap[y * N + x] && !G.d[y * N + x]) rect(mx + x * ms, my + y * ms, ms, ms, '#3b2f5a');
+    for (const s of sigils) if (!s.got && seenMap[Math.floor(s.y) * N + Math.floor(s.x)]) rect(mx + s.x * ms - 2, my + s.y * ms - 2, 4, 4, '#e9d5ff');
+    if (got === 3 || seenMap[Math.floor(gate.y) * N + Math.floor(gate.x)]) ring(mx + gate.x * ms, my + gate.y * ms, 4, got === 3 && Math.floor(t * 4) % 2 ? '#fff' : '#c084fc', 2);
+    K.tri(mx + P.x * ms, my + P.y * ms, 5, P.a, '#fde047');
+  },
+});
+</script>
+</body>
+</html>

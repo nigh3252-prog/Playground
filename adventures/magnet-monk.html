@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Magnet Monk — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* MAGNET MONK — you never stop running. Flip polarity to snap between the
+   floor rail and the ceiling rail, and pulse to shatter what blocks both. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const FY = 430, CY = 110, ZONES = ['THE STOKEHOLD', 'ROLLING MILL', 'SLAG RUN', 'CRUCIBLE', 'THE HEART FURNACE'], PER = 30;
+let P, ev, zoneX, zone, speed, gears, gearN, hits, endX, bg;
+
+function build() {
+  const r = K.rng(irand(1, 1e9)); ev = []; gears = []; zoneX = []; let x = 900, rail = 0;
+  for (let z = 0; z < 5; z++) {
+    zoneX.push(x - 500); const v = 300 + z * 42, gap = v * (0.72 - z * 0.055);
+    for (let i = 0; i < PER; i++) {
+      const q = r(); let k;
+      if (q < 0.34) k = rail === 0 ? 'floor' : 'ceil';                    /* must flip */
+      else if (q < 0.5) k = rail === 0 ? 'ceil' : 'floor';                /* decoy: stay */
+      else if (q < 0.64 && z >= 1) k = 'saw';                             /* stay on a rail: do not be mid-flip */
+      else if (q < 0.78 && z >= 1) k = 'crate';                           /* pulse */
+      else if (q < 0.88 && z >= 2) k = rail === 0 ? 'pillarF' : 'pillarC'; /* tall: flip early */
+      else k = 'gears';
+      if (k === 'floor' || k === 'pillarF') rail = 1; else if (k === 'ceil' && rail === 1 && q < 0.34) rail = 0; else if (k === 'pillarC') rail = 0;
+      if (k === 'floor') rail = 1; if (k === 'ceil' && q < 0.34) rail = 0;
+      if (k === 'gears') { for (let j = 0; j < 5; j++) gears.push({ x: x + j * 34, y: lerp(FY - 30, CY + 30, j / 4) * (r() < 0.5 ? 1 : 0) || lerp(CY + 30, FY - 30, j / 4), got: false }); }
+      else ev.push({ k, x, w: k === 'crate' ? 40 : k.startsWith('pillar') ? 46 : k === 'saw' ? 0 : 64, hp: 1, hit: false });
+      x += gap * r.range(0.95, 1.5) + (k.startsWith('pillar') ? 60 : 0);
+    }
+    x += 500;
+  }
+  endX = x; zoneX.push(endX);
+  bg = []; for (let i = 0; i < 60; i++) bg.push([r() * 3000, r() * 300 + 120, r() * 40 + 20]);
+}
+function place(z) { zone = z; speed = 300 + z * 42; P.x = zoneX[z]; P.rail = 0; P.y = FY; P.vy = 0; P.fly = false; P.inv = 1.5; P.pulse = 0; P.pcd = 0; for (const e of ev) if (e.x > P.x) { e.hit = false; e.broken = false; } cam.x = P.x + 300; }
+function hurt(e) { if (e) e.hit = true; if (P.inv > 0) return; P.hp--; hits++; P.inv = 1.1; K.sfx('hurt'); fx.shake(10); fx.flash('#7f1d1d', 0.2); if (P.hp <= 0) K.lose({ title: 'QUENCHED', text: 'The foundry spits you back to the gate of this hall.', stats: [['Hall', (zone + 1) + ' / 5'], ['Gears', gearN]] }); }
+
+K.run({
+  id: 'magnet-monk', num: 21, title: 'MAGNET MONK', tag: 'Polarity runner', color: '#60a5fa',
+  goal: 'Run five halls of the foundry to the Heart Furnace. Flip polarity to jump rails, stay put when saws cross the middle, and pulse to break the scrap walls.',
+  controls: [['cross', 'Flip polarity'], ['square', 'Pulse (breaks crates)']],
+  music: { bpm: 140, root: 42, mode: 'minor', dens: 0.5, drums: true, drive: true, seed: 37, lead: 'square', leadVol: 0.04, lp: 1900 },
+  start() { build(); P = { hp: 4 }; gearN = 0; hits = 0; place(0); K.banner(ZONES[0], 'Blue rail below, red rail above'); },
+  retry() { P.hp = 4; place(zone); },
+  update(dt) {
+    P.inv -= dt; P.pcd -= dt; P.pulse -= dt; speed = K.damp(speed, 300 + zone * 42, 2, dt); P.x += speed * dt;
+    if (K.hit('cross')) { P.rail = 1 - P.rail; P.fly = true; K.tone({ f: P.rail ? 520 : 330, f2: P.rail ? 880 : 200, dur: 0.12, type: 'sawtooth', vol: 0.1, lp: 1800 }); }
+    if (P.fly) { const ty = P.rail ? CY : FY; P.y = K.approach(P.y, ty, 1250 * dt); if (P.y === ty) { P.fly = false; K.sfx('clank'); fx.burst(P.x, ty, P.rail ? '#f87171' : '#60a5fa', 8, 140, 0.3, 3); } }
+    if (K.hit('square') && P.pcd <= 0) { P.pulse = 0.25; P.pcd = 0.7; K.sfx('zap'); }
+    const mid = P.y > CY + 60 && P.y < FY - 60;
+    for (const e of ev) {
+      if (e.x < P.x - 200 || e.broken) continue; if (e.x > P.x + 700) break;
+      const inX = P.x + 14 > e.x && P.x - 14 < e.x + Math.max(e.w, 30);
+      if (e.k === 'crate') { if (P.pulse > 0 && e.x - P.x < 150 && e.x - P.x > -20) { e.broken = true; K.sfx('boom'); fx.burst(e.x + 20, P.y - 30, '#a16207', 22, 280, 0.6, 5, 500); fx.shake(5); } else if (inX && !e.hit) { hurt(e); e.broken = true; if (K.scene !== 'play') return; } }
+      else if (!e.hit && inX) {
+        if (e.k === 'floor' && P.y > FY - 70) hurt(e); else if (e.k === 'ceil' && P.y < CY + 70) hurt(e);
+        else if (e.k === 'pillarF' && P.y > CY + 80) hurt(e); else if (e.k === 'pillarC' && P.y < FY - 80) hurt(e);
+        else if (e.k === 'saw' && mid) hurt(e);
+        if (K.scene !== 'play') return;
+      }
+    }
+    for (const gr of gears) if (!gr.got && Math.abs(gr.x - P.x) < 24 && Math.abs(gr.y - (P.y + (P.rail && !P.fly ? 28 : -28))) < 46) { gr.got = true; gearN++; K.sfx('coin'); }
+    if (Math.random() < dt * 30) fx.spark(P.x - 10, P.y + (P.y > 270 ? 0 : 0), -speed * 0.3 + rand(-40, 40), rand(-60, 60), P.rail ? '#fca5a5' : '#93c5fd', 0.3, 3);
+    if (zone < 4 && P.x > zoneX[zone + 1]) { zone++; P.hp = Math.min(4, P.hp + 1); K.sfx('power'); K.banner(ZONES[zone], ['', 'Saws cross the middle. Crates need a pulse.', 'Tall pillars: flip early', 'Faster', 'Everything the foundry has'][zone]); }
+    if (P.x > endX) { K.win({ title: 'THE HEART FURNACE', text: 'You stand in front of it with every hair on end, humming at the same pitch.', stats: [['Gears', gearN + ' / ' + gears.length], ['Knocks taken', hits]] }); return; }
+    cam.x = P.x + 300; cam.y = H / 2;
+  },
+  draw(t) {
+    const g = K.g; const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#1a0f14'); gr.addColorStop(0.5, '#3b1a12'); gr.addColorStop(1, '#1a0f14'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    for (const b of bg) { const x = ((b[0] - cam.x * 0.3) % 3000 + 3000) % 3000 - 200; rect(x, b[1], b[2], 400, 'rgba(0,0,0,.25)'); circ(x + b[2] / 2, b[1], b[2] * 0.3, 'rgba(251,146,60,.12)'); }
+    rect(0, 256, W, 28, 'rgba(251,146,60,' + (0.06 + 0.03 * Math.sin(t * 3)) + ')');
+    cam.begin(); const x0 = cam.x - W / 2 - 80, x1 = cam.x + W / 2 + 80;
+    rect(x0, FY, x1 - x0, 200, '#111827'); rect(x0, 0, x1 - x0, CY, '#111827'); rect(x0, FY, x1 - x0, 8, '#2563eb'); rect(x0, CY - 8, x1 - x0, 8, '#dc2626');
+    for (let x = Math.floor(x0 / 60) * 60; x < x1; x += 60) { rect(x, FY + 8, 30, 6, '#1e3a8a'); rect(x + 30, CY - 14, 30, 6, '#7f1d1d'); }
+    for (let i = 1; i < zoneX.length; i++) { const zx = zoneX[i]; if (zx > x0 && zx < x1) { rect(zx - 4, CY, 8, FY - CY, 'rgba(253,224,71,.25)'); txt(i === 5 ? 'FURNACE' : 'HALL ' + (i + 1), zx, 270, 16, '#fde047', 'center', 900); } }
+    for (const e of ev) {
+      if (e.x < x0 - 80 || e.broken) continue; if (e.x > x1) break;
+      if (e.k === 'floor') { rect(e.x, FY - 36, e.w, 36, '#374151'); for (let k = 0; k < 4; k++) K.tri(e.x + 8 + k * 16, FY - 44, 11, -Math.PI / 2, '#e5e7eb'); }
+      else if (e.k === 'ceil') { rect(e.x, CY, e.w, 36, '#374151'); for (let k = 0; k < 4; k++) K.tri(e.x + 8 + k * 16, CY + 44, 11, Math.PI / 2, '#e5e7eb'); }
+      else if (e.k === 'pillarF') { rect(e.x, CY + 86, e.w, FY - CY - 86, '#4b5563'); rect(e.x - 4, CY + 80, e.w + 8, 10, '#f97316'); }
+      else if (e.k === 'pillarC') { rect(e.x, CY, e.w, FY - CY - 86, '#4b5563'); rect(e.x - 4, FY - 90, e.w + 8, 10, '#f97316'); }
+      else if (e.k === 'saw') { const y = 270 + Math.sin(t * 2 + e.x) * 50; line(e.x + 15, CY, e.x + 15, FY, 'rgba(255,255,255,.08)', 2); g.save(); g.translate(e.x + 15, y); g.rotate(t * 14); for (let k = 0; k < 10; k++) K.tri(Math.cos(k * 0.628) * 40, Math.sin(k * 0.628) * 40, 12, k * 0.628, '#e5e7eb'); g.restore(); circ(e.x + 15, y, 38, '#9ca3af'); circ(e.x + 15, y, 10, '#374151'); }
+      else { for (let k = 0; k < 8; k++) { const y = CY + k * 40; rrect(e.x, y + 1, 40, 38, 4, '#92400e'); K.rectS(e.x + 5, y + 6, 30, 28, '#b45309', 2); } if (e.x - P.x < 420 && e.x > P.x) { K.glyph('square', e.x + 20, 270, 15); } }
+    }
+    for (const gr2 of gears) if (!gr2.got && gr2.x > x0 && gr2.x < x1) { g.save(); g.translate(gr2.x, gr2.y); g.rotate(t * 3); for (let k = 0; k < 6; k++) rect(-3, -11, 6, 22, '#fde047'), g.rotate(Math.PI / 3); g.restore(); circ(gr2.x, gr2.y, 7, '#fde047'); circ(gr2.x, gr2.y, 3, '#3b1a12'); }
+    if (P.pulse > 0) ring(P.x, P.y + (P.rail ? 26 : -26), (0.25 - P.pulse) * 640, 'rgba(253,224,71,' + P.pulse * 3 + ')', 5);
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) {
+      const up = P.fly ? (P.rail ? -1 : 1) : (P.rail ? -1 : 1), s = P.rail && !P.fly ? -1 : P.fly ? (P.y < 270 ? -1 : 1) : 1; g.save(); g.translate(P.x, P.y); g.scale(1, s);
+      const leg = Math.sin(t * 22) * 9; line(-3, -18, -3 - leg, 0, '#1f2937', 5); line(3, -18, 3 + leg, 0, '#1f2937', 5);
+      rrect(-11, -46, 22, 30, 7, '#ea580c'); circ(2, -54, 9, '#e9c9a4'); line(-14, -60, -14, -8, '#a16207', 4); circ(-14, -64, 6, P.rail ? '#f87171' : '#60a5fa'); g.restore();
+      circ(P.x, P.y + (P.rail && !P.fly ? 26 : -26), 40, P.rail ? 'rgba(248,113,113,.1)' : 'rgba(96,165,250,.1)');
+    }
+    fx.draw(); cam.end();
+    hearts(24, 26, P.hp, 4); txt('HALL ' + (zone + 1) + ' / 5 · ' + ZONES[zone], W / 2, 26, 14, '#fed7aa', 'center', 800); txt('⚙ ' + gearN, 930, 26, 16, '#fde047', 'right', 800);
+    const f = clamp((P.x - zoneX[0]) / (endX - zoneX[0]), 0, 1); rect(330, 44, 300, 3, 'rgba(255,255,255,.2)'); rect(330, 44, 300 * f, 3, '#60a5fa');
+    K.glyph('square', 150, 26, 11, P.pcd <= 0 ? 1 : 0.25);
+  },
+});
+</script>
+</body>
+</html>

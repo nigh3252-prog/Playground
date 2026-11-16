@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Slingstar — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* SLINGSTAR — one launch, then gravity does the flying. Curve a probe around
+   whole worlds to thread a warp ring you cannot see a straight line to.
+   Every system is generated, then proven to have a clean solution. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, fx } = K;
+const STEP = 1 / 120, NS = 8, VMIN = 150, VMAX = 430, GOALR = 24;
+let sys, lvl, P, aim, power, charging, probes, trail, ghosts, acc, burns, used, stars, bestD;
+
+function step(p, pl) {
+  let ax = 0, ay = 0;
+  for (const q of pl) { const dx = q.x - p.x, dy = q.y - p.y, d2 = dx * dx + dy * dy, d = Math.sqrt(d2); if (d < q.r + 4) return 'crash'; const a = q.gm / d2; ax += dx / d * a; ay += dy / d * a; }
+  p.vx += ax * STEP; p.vy += ay * STEP; p.x += p.vx * STEP; p.y += p.vy * STEP;
+  if (p.x < -140 || p.x > W + 140 || p.y < -120 || p.y > H + 120) return 'lost';
+  return null;
+}
+function fly(s, a, v, maxT) {
+  const p = { x: s.sx + Math.cos(a) * 20, y: s.sy + Math.sin(a) * 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v };
+  for (let i = 0; i < maxT / STEP; i++) { if (step(p, s.pl)) return false; if (dist(p.x, p.y, s.gx, s.gy) < GOALR) return true; }
+  return false;
+}
+function gen(n) {
+  let best = null;
+  for (let t = 0; t < 60; t++) {
+    const s = { pl: [], sx: rand(70, 150), sy: rand(130, 440), gx: rand(790, 890), gy: rand(110, 450) };
+    const np = 1 + Math.floor((n + 1) / 2.4);
+    for (let i = 0; i < np; i++) for (let k = 0; k < 40; k++) {
+      const r = i === 0 ? rand(34, 50) : rand(18, 44), f = i === 0 ? rand(0.4, 0.6) : rand(0.2, 0.85), x = lerp(s.sx, s.gx, f) + (i === 0 ? rand(-20, 20) : rand(-60, 60)), y = i === 0 ? lerp(s.sy, s.gy, f) + rand(-24, 24) : rand(90, 470);
+      if (dist(x, y, s.sx, s.sy) < r + 90 || dist(x, y, s.gx, s.gy) < r + 80 || s.pl.some((q) => dist(x, y, q.x, q.y) < q.r + r + 50)) continue;
+      const dense = n >= 4 && i === np - 1; s.pl.push({ x, y, r: dense ? r * 0.6 : r, gm: 6.2e6 * (r / 40) * (r / 40) * (dense ? 2.2 : 1), dense, hue: irand(0, 360), ring: Math.random() < 0.3 }); break;
+    }
+    let ok = 0, tot = 0, sol = null;
+    for (let ai = 0; ai < 72; ai++) for (let vi = 0; vi < 6; vi++) { tot++; const a = ai / 72 * TAU, v = lerp(VMIN, VMAX, vi / 5); if (fly(s, a, v, 9)) { ok++; if (!sol) sol = [a, v]; } }
+    if (!ok) continue; const frac = ok / tot; s.frac = frac; s.sol = sol;
+    if (frac <= 0.05 && frac >= 0.004) return s; if (!best || Math.abs(frac - 0.03) < Math.abs(best.frac - 0.03)) best = s;
+  }
+  return best;
+}
+function load(n) { lvl = n; sys = gen(n); probes = 6; ghosts = []; bestD = 1e9; ready(); K.banner('SYSTEM ' + (n + 1) + ' OF ' + NS, n === 0 ? 'Aim with the stick, hold ✕ for power, let go' : n === 4 ? 'Small pale worlds are dense: they pull much harder' : 'Six probes'); }
+function ready() { P = null; charging = false; power = 0; trail = []; acc = 0; burns = 3; }
+
+K.run({
+  id: 'slingstar', num: 29, title: 'SLINGSTAR', tag: 'Gravity-assist launches', color: '#f9a8d4',
+  goal: 'Launch a probe so that gravity bends it around the planets and through the warp ring. Eight star systems, six probes each. Three small course-correction burns per probe.',
+  controls: [['LS', 'Aim · steer a burn'], ['cross', 'Hold for power, release to launch'], ['square', 'Burn (in flight)']],
+  music: { bpm: 64, root: 53, mode: 'lydian', dens: 0.26, seed: 73, lead: 'sine', leadVol: 0.08, long: true },
+  start() { aim = 0; used = 0; stars = []; for (let i = 0; i < 120; i++) stars.push([rand(0, W), rand(0, H), rand(0.3, 1.6), rand(0, 6)]); load(0); },
+  retry() { probes = 6; ghosts = []; ready(); },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly);
+    if (!P) {
+      if (m > 0.35) aim += K.angDiff(aim, Math.atan2(ly, lx)) * Math.min(1, dt * (charging ? 3 : 9));
+      if (K.down('cross')) { if (!charging) { charging = true; power = 0; K.sfx('charge'); } power = Math.min(1, power + dt / 1.5); }
+      else if (charging) { charging = false; const v = lerp(VMIN, VMAX, power); P = { x: sys.sx + Math.cos(aim) * 20, y: sys.sy + Math.sin(aim) * 20, vx: Math.cos(aim) * v, vy: Math.sin(aim) * v, t: 0 }; probes--; used++; K.sfx('dash'); fx.burst(sys.sx, sys.sy, '#f9a8d4', 12, 160, 0.4, 3); }
+      return;
+    }
+    if (K.hit('square') && burns > 0) { burns--; const a = m > 0.35 ? Math.atan2(ly, lx) : Math.atan2(P.vy, P.vx); P.vx += Math.cos(a) * 75; P.vy += Math.sin(a) * 75; K.sfx('zap'); for (let i = 0; i < 10; i++) fx.spark(P.x, P.y, -Math.cos(a) * rand(60, 160) + rand(-30, 30), -Math.sin(a) * rand(60, 160) + rand(-30, 30), '#fde047', 0.4, 3); }
+    acc += dt; let end = null;
+    while (acc >= STEP && !end) {
+      acc -= STEP; P.t += STEP; end = step(P, sys.pl);
+      const d = dist(P.x, P.y, sys.gx, sys.gy); bestD = Math.min(bestD, d); if (d < GOALR) end = 'goal'; if (P.t > 14) end = 'lost';
+    }
+    if (trail.length < 900 && (trail.length === 0 || dist(P.x, P.y, trail[trail.length - 2], trail[trail.length - 1]) > 6)) trail.push(P.x, P.y);
+    if (end === 'goal') {
+      K.sfx('key'); fx.burst(sys.gx, sys.gy, '#6ee7b7', 40, 260, 0.9, 4); fx.flash('#6ee7b7', 0.2);
+      if (lvl === NS - 1) { K.win({ title: 'THE LAST RING', text: 'Eight systems behind it, the little probe slips through and is somewhere else entirely.', stats: [['Probes launched', used]] }); return; }
+      load(lvl + 1);
+    } else if (end) {
+      if (end === 'crash') { K.sfx('boom'); fx.shake(8); fx.burst(P.x, P.y, '#fb923c', 24, 200, 0.6, 4); } else K.sfx('back');
+      ghosts.push(trail); if (ghosts.length > 3) ghosts.shift();
+      if (probes <= 0) { K.lose({ title: 'OUT OF PROBES', text: 'Closest pass: ' + Math.round(bestD) + ' km from the ring. Mission control sends six more. The planets have not moved.', stats: [['System', (lvl + 1) + ' / ' + NS]] }); return; }
+      K.hint(end === 'crash' ? 'Impact. ' + probes + ' probes left.' : 'Lost to deep space. ' + probes + ' left.', 1.8); ready();
+    }
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#070614');
+    const nb = g.createRadialGradient(700, 150, 10, 700, 150, 500); nb.addColorStop(0, 'rgba(236,72,153,.16)'); nb.addColorStop(1, 'rgba(7,6,20,0)'); g.fillStyle = nb; g.fillRect(0, 0, W, H);
+    for (const s of stars) { g.globalAlpha = 0.35 + 0.5 * Math.abs(Math.sin(t * 0.8 + s[3])); circ(s[0], s[1], s[2], '#fff'); } g.globalAlpha = 1;
+    g.save(); if (fx.shakeT) g.translate(rand(-fx.shakeT, fx.shakeT), rand(-fx.shakeT, fx.shakeT));
+    for (const q of sys.pl) {
+      for (let k = 1; k <= 3; k++) ring(q.x, q.y, q.r + k * Math.sqrt(q.gm) / 55, 'rgba(255,255,255,' + (0.07 - k * 0.015) + ')', 1);
+      const c = q.dense ? [200, 20, 82] : [q.hue, 45, 50]; circ(q.x, q.y, q.r + 6, K.hsl(c[0], c[1], c[2], 0.2)); circ(q.x, q.y, q.r, K.hsl(c[0], c[1], c[2])); circ(q.x - q.r * 0.22, q.y - q.r * 0.25, q.r * 0.7, K.hsl(c[0], c[1], c[2] + 8));
+      if (!q.dense) { g.save(); g.beginPath(); g.arc(q.x, q.y, q.r, 0, TAU); g.clip(); rect(q.x - q.r, q.y - q.r * 0.3, q.r * 2, q.r * 0.22, K.hsl(c[0] + 30, c[1], c[2] - 10)); rect(q.x - q.r, q.y + q.r * 0.3, q.r * 2, q.r * 0.14, K.hsl(c[0] - 20, c[1], c[2] + 12)); g.restore(); }
+      if (q.ring) { g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 3; g.beginPath(); g.ellipse(q.x, q.y, q.r * 1.7, q.r * 0.45, -0.3, 0, TAU); g.stroke(); }
+    }
+    ghosts.forEach((tr, i) => { g.globalAlpha = 0.14 + i * 0.07; g.strokeStyle = '#f9a8d4'; g.lineWidth = 1.5; g.setLineDash([3, 6]); g.beginPath(); for (let k = 0; k < tr.length; k += 2) g.lineTo(tr[k], tr[k + 1]); g.stroke(); g.setLineDash([]); }); g.globalAlpha = 1;
+    /* warp ring */
+    for (let k = 0; k < 3; k++) ring(sys.gx, sys.gy, GOALR + k * 7 + Math.sin(t * 4 + k) * 2, 'rgba(110,231,183,' + (0.9 - k * 0.28) + ')', 3 - k * 0.7); circ(sys.gx, sys.gy, GOALR - 4, 'rgba(110,231,183,.14)');
+    /* launcher */
+    circ(sys.sx, sys.sy, 16, '#334155'); circ(sys.sx, sys.sy, 10, '#94a3b8'); line(sys.sx, sys.sy, sys.sx + Math.cos(aim) * 26, sys.sy + Math.sin(aim) * 26, '#e2e8f0', 6);
+    if (!P) {
+      const v = lerp(VMIN, VMAX, charging ? power : 0.5), p = { x: sys.sx + Math.cos(aim) * 20, y: sys.sy + Math.sin(aim) * 20, vx: Math.cos(aim) * v, vy: Math.sin(aim) * v }, len = lvl < 2 ? 1.5 : 0.75;
+      for (let i = 0; i < len / STEP; i++) { if (step(p, sys.pl)) break; if (i % 9 === 0) circ(p.x, p.y, 2, 'rgba(255,255,255,' + (0.8 - i * STEP / len * 0.7) + ')'); }
+    } else {
+      g.strokeStyle = '#f9a8d4'; g.lineWidth = 2; g.beginPath(); for (let k = 0; k < trail.length; k += 2) g.lineTo(trail[k], trail[k + 1]); g.stroke();
+      const a = Math.atan2(P.vy, P.vx); K.tri(P.x, P.y, 9, a, '#fff'); circ(P.x, P.y, 14, 'rgba(249,168,212,.25)');
+    }
+    fx.draw(); g.restore();
+    txt('SYSTEM ' + (lvl + 1) + ' / ' + NS, 24, 24, 14, '#fbcfe8', 'left', 800);
+    for (let i = 0; i < 6; i++) K.tri(190 + i * 20, 24, 8, -Math.PI / 2, i < probes ? '#fff' : 'rgba(255,255,255,.14)');
+    txt('BURNS', 340, 24, 11, '#fde047', 'left', 800); for (let i = 0; i < 3; i++) circ(396 + i * 16, 24, 5, i < burns ? '#fde047' : 'rgba(255,255,255,.14)');
+    if (!P) { txt('POWER', 700, 24, 11, '#fbcfe8', 'left', 800); bar(748, 15, 180, 18, charging ? power : 0, '#f9a8d4'); }
+    else if (bestD < 900) txt('closest ' + Math.round(bestD) + ' km', 930, 24, 13, '#6ee7b7', 'right', 800);
+  },
+});
+</script>
+</body>
+</html>

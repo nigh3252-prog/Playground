@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Grapple Canyon — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* GRAPPLE CANYON — rope-swing traversal. Momentum is everything: hook, pump,
+   release at the top of the arc, hook again. */
+const { W, H, TAU, rand, irand, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, hearts, fx, cam } = K;
+const RANGE = 330, GRAV = 1150, DEATH_Y = 1320;
+let P, plats, anchors, hazards, feathers, checks, cp, goalX, seedN, featherN, falls;
+
+function build() {
+  const r = K.rng(seedN);
+  plats = []; anchors = []; hazards = []; feathers = []; checks = [];
+  let x = -200, y = 900;
+  plats.push({ x, y, w: 520, h: 600 }); checks.push({ x: 120, y, i: 0 });
+  x += 520;
+  const names = ['THE FIRST SPAN', 'SWAYING LANTERNS', 'ROTTEN ROOTS', 'THORN GALLERY', 'THE LONG THROW'];
+  for (let s = 0; s < 5; s++) {
+    const n = 7 + s * 2;
+    let ax = x + 140, ay = y - r.range(240, 280);
+    for (let i = 0; i < n; i++) {
+      const a = { x: ax, y: ay, by: ay, kind: 'rock', ph: r() * TAU, t: 0, gone: 0 };
+      if (s === 1 && i % 2 === 1) a.kind = 'sway';
+      if (s === 2 && i > 0 && i < n - 1) a.kind = 'rot';
+      if (s === 4 && i % 3 === 1) a.kind = 'sway';
+      anchors.push(a);
+      if (i < n - 1) {
+        const step = s === 4 ? r.range(300, 360) : r.range(205, 255);
+        feathers.push({ x: ax + step * 0.5, y: ay + r.range(150, 230), got: false });
+        if (s === 3 && i > 0) hazards.push({ kind: 'thorn', x: ax + step * 0.5, y: ay + r.range(-10, 60), r: 20 });
+        if ((s === 3 || s === 4) && i % 2 === 0) hazards.push({ kind: 'bat', x: ax + step * 0.5, y: ay + 250, bx: ax + step * 0.5, r: 13, ph: r() * TAU, sp: r.range(1, 1.6) });
+        ax += step; ay = clamp(ay + r.range(-70, 70), 380, 760);
+      }
+    }
+    y = clamp(ay + r.range(250, 290), 760, 1040);
+    x = ax + 150;
+    const w = s === 4 ? 700 : 380;
+    plats.push({ x, y, w, h: 600 });
+    checks.push({ x: x + 110, y, i: s + 1, name: names[s + 1] });
+    x += w;
+  }
+  checks[0].name = names[0];
+  goalX = x - 300;
+}
+function respawn() {
+  const c = checks[cp];
+  P = { x: c.x, y: c.y - 14, vx: 0, vy: 0, r: 12, ground: false, hook: null, len: 0, face: 1, hp: P ? P.hp : 6, inv: 1, coy: 0, target: null };
+  cam.x = P.x + 100; cam.y = P.y - 120;
+}
+function die() {
+  if (P.inv > 0.3) return;
+  P.hp--; falls++; K.sfx('hurt'); fx.shake(10); fx.flash('#7f1d1d', 0.25);
+  if (P.hp <= 0) { K.lose({ title: 'THE CANYON WINS', text: 'You keep your last camp. The rope is still coiled there.', stats: [['Feathers', featherN]] }); return; }
+  respawn();
+}
+function pickTarget() {
+  const sx = K.IN.lx, sy = K.IN.ly, m = Math.hypot(sx, sy);
+  const want = m > 0.4 ? Math.atan2(sy, sx) : Math.atan2(-0.75, P.face * 0.66);
+  let best = null, bs = 1e9;
+  for (const a of anchors) {
+    if (a.gone > 0) continue;
+    const d = dist(P.x, P.y, a.x, a.y); if (d > RANGE || a.y > P.y + 30) continue;
+    const s = Math.abs(K.angDiff(want, ang(P.x, P.y, a.x, a.y))) + d / 2000;
+    if (s < bs) { bs = s; best = a; }
+  }
+  return best;
+}
+
+K.run({
+  id: 'grapple-canyon', num: 2, title: 'GRAPPLE CANYON', tag: 'Rope-swing traversal', color: '#fb923c',
+  goal: 'Cross five spans of the canyon to ring the summit bell. Hook a stone, pump the swing, let go at the top of the arc and hook the next one.',
+  controls: [['LS', 'Run / pump / reel'], ['cross', 'Jump'], [['r2', 'square'], 'Hold to grapple']],
+  music: { bpm: 104, root: 50, mode: 'dorian', dens: 0.4, drums: true, seed: 5, lead: 'triangle' },
+  start() { seedN = irand(1, 1e9); build(); cp = 0; P = null; featherN = 0; falls = 0; respawn(); P.hp = 6; K.banner('THE FIRST SPAN', 'Aim with the stick. The ringed stone is your target.'); },
+  retry() { P.hp = 0; respawn(); P.hp = 4; },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly;
+    P.inv -= dt;
+    for (const a of anchors) {
+      a.t += dt;
+      if (a.kind === 'sway') a.y = a.by + Math.sin(a.t * 1.5 + a.ph) * 70;
+      if (a.gone > 0) { a.gone -= dt; if (a.gone <= 0) a.rotT = 0; }
+    }
+    if (Math.abs(lx) > 0.3) P.face = Math.sign(lx);
+    const hold = K.down('r2') || K.down('square');
+    P.target = P.hook ? null : pickTarget();
+    if (hold && !P.hook && P.target) { P.hook = P.target; P.len = Math.max(70, dist(P.x, P.y, P.hook.x, P.hook.y)); P.ground = false; P.hook.rotT = 0; K.sfx('clank'); fx.burst(P.hook.x, P.hook.y, '#fde68a', 6, 80, 0.3, 3); }
+    if (!hold && P.hook) { P.hook = null; K.sfx('swing'); }
+
+    const sub = 3, h = dt / sub;
+    for (let s = 0; s < sub; s++) {
+      if (P.hook) {
+        const a = P.hook, dx = P.x - a.x, dy = P.y - a.y, d = Math.hypot(dx, dy) || 1;
+        const tx = -dy / d, ty = dx / d;
+        P.vx += tx * -lx * 520 * h; P.vy += ty * -lx * 520 * h;
+        P.len = clamp(P.len + ly * 150 * h, 60, RANGE);
+        P.vy += GRAV * h; P.vx *= 1 - 0.12 * h; P.vy *= 1 - 0.12 * h;
+        P.x += P.vx * h; P.y += P.vy * h;
+        const ex = P.x - a.x, ey = P.y - a.y, e = Math.hypot(ex, ey) || 1;
+        if (e > P.len) { const nx = ex / e, ny = ey / e; P.x = a.x + nx * P.len; P.y = a.y + ny * P.len; const vr = P.vx * nx + P.vy * ny; if (vr > 0) { P.vx -= vr * nx; P.vy -= vr * ny; } }
+      } else if (P.ground) {
+        P.vx = K.approach(P.vx, lx * 230, 1900 * h); P.vy = 0; P.x += P.vx * h;
+      } else {
+        P.vx += lx * 330 * h; P.vy += GRAV * h; P.x += P.vx * h; P.y += P.vy * h;
+      }
+      /* platforms */
+      let on = false;
+      for (const p of plats) {
+        if (P.x + P.r < p.x || P.x - P.r > p.x + p.w) continue;
+        if (P.y + P.r >= p.y && P.y + P.r <= p.y + 26 + Math.max(0, P.vy * h) && P.vy >= 0 && P.x > p.x - 4 && P.x < p.x + p.w + 4) { P.y = p.y - P.r; if (!P.ground && P.vy > 200) K.sfx('land'); P.vy = 0; on = true; if (P.hook && P.len > dist(P.x, P.y, P.hook.x, P.hook.y)) P.len = dist(P.x, P.y, P.hook.x, P.hook.y); }
+        else if (P.y + P.r > p.y + 8) { if (P.x < p.x + p.w / 2) { P.x = p.x - P.r; if (P.vx > 0) P.vx *= -0.3; } else { P.x = p.x + p.w + P.r; if (P.vx < 0) P.vx *= -0.3; } }
+      }
+      P.ground = on && !P.hook;
+      if (on && P.hook) { P.vx = K.approach(P.vx, lx * 230, 1900 * h); }
+    }
+    P.coy = P.ground ? 0.1 : P.coy - dt;
+    if (K.hit('cross') && P.coy > 0 && !P.hook) { P.vy = -450; P.ground = false; P.coy = 0; P.y -= 2; K.sfx('jump'); }
+    if (P.hook && P.hook.kind === 'rot') {
+      P.hook.rotT = (P.hook.rotT || 0) + dt;
+      if (P.hook.rotT > 1.5) { const a = P.hook; a.gone = 4; P.hook = null; K.sfx('boom'); fx.burst(a.x, a.y, '#a16207', 16, 160, 0.6, 4, 400); }
+    }
+    for (const f of feathers) if (!f.got && dist(P.x, P.y, f.x, f.y) < 30) { f.got = true; featherN++; K.sfx('coin'); fx.burst(f.x, f.y, '#fde68a', 8, 90, 0.4, 3); }
+    for (const z of hazards) {
+      if (z.kind === 'bat') { z.ph += dt * z.sp; z.x = z.bx + Math.sin(z.ph) * 90; z.yy = z.y + Math.sin(z.ph * 2.3) * 26; }
+      if (dist(P.x, P.y, z.x, z.kind === 'bat' ? z.yy : z.y) < z.r + P.r - 3) { die(); return; }
+    }
+    if (P.y > DEATH_Y) { die(); return; }
+    for (const c of checks) if (c.i > cp && P.ground && P.x > c.x - 60) {
+      cp = c.i; P.hp = Math.min(6, P.hp + 1); K.sfx('power');
+      if (cp < 5) K.banner(c.name, 'Camp reached. One heart restored.');
+    }
+    if (cp === 5 && P.ground && P.x > goalX - 20) {
+      fx.burst(goalX, P.y - 120, '#fde68a', 40, 260, 1, 4);
+      K.win({ title: 'THE BELL RINGS', text: 'It carries the whole length of the canyon you just crossed.', stats: [['Feathers', featherN + ' / ' + feathers.length], ['Falls', falls]] });
+    }
+    cam.follow(P.x + P.face * 90 + P.vx * 0.25, Math.min(P.y - 90, 900), dt, 4.5);
+    cam.y = clamp(cam.y, 300, 960);
+  },
+  draw(t) {
+    const g = K.g;
+    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#fcd9a8'); sky.addColorStop(0.55, '#f59e6b'); sky.addColorStop(1, '#7c2d3a');
+    g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    circ(720, 130, 60, 'rgba(255,247,220,.9)');
+    for (let L = 0; L < 3; L++) {
+      const par = 0.12 + L * 0.16, col = ['#d97757', '#b4533f', '#8a3b34'][L]; g.fillStyle = col; g.beginPath(); g.moveTo(0, H);
+      for (let x = 0; x <= W; x += 24) { const wx = x + cam.x * par; const y = 250 + L * 70 + Math.floor(K.noise2(wx / 220, L * 9, 4) * 5) * 26 - (cam.y - 600) * par * 0.4; g.lineTo(x, y); g.lineTo(x + 24, y); }
+      g.lineTo(W, H); g.fill();
+    }
+    cam.begin();
+    /* overhang ceiling so anchors hang from something */
+    for (const a of anchors) {
+      if (!cam.see(a.x, a.y, 300)) continue;
+      if (a.gone > 0) { ring(a.x, a.by, 8, 'rgba(120,53,15,.4)', 2); continue; }
+      if (a.kind === 'sway') { line(a.x, a.by - 500, a.x, a.y, 'rgba(60,30,20,.6)', 2); circ(a.x, a.y, 13, '#3f2a23'); circ(a.x, a.y, 8, '#fde047'); }
+      else {
+        const sh = a.kind === 'rot' && a.rotT > 0 ? Math.sin(t * 60) * a.rotT * 2 : 0;
+        K.poly([[a.x - 26 + sh, a.y - 520], [a.x + 26 + sh, a.y - 520], [a.x + 15 + sh, a.y - 4], [a.x + sh, a.y + 12], [a.x - 15 + sh, a.y - 4]], a.kind === 'rot' ? '#6b4423' : '#5b2c2a');
+        circ(a.x + sh, a.y, 7, a.kind === 'rot' ? '#a3e635' : '#fdba74');
+      }
+    }
+    for (const p of plats) {
+      if (p.x > cam.x + 600 || p.x + p.w < cam.x - 600) continue;
+      rect(p.x, p.y, p.w, p.h, '#4a2326'); rect(p.x, p.y, p.w, 12, '#c2693f');
+      for (let i = 0; i < p.w; i += 46) rect(p.x + i + 8, p.y + 24 + (i * 7 % 40), 22, 5, '#5e2d2c');
+    }
+    for (const c of checks) {
+      line(c.x, c.y, c.x, c.y - 46, '#3f2a23', 3);
+      K.poly([[c.x, c.y - 46], [c.x + 26, c.y - 38 + Math.sin(t * 5 + c.i) * 2], [c.x, c.y - 30]], c.i <= cp ? '#fde047' : '#fca5a5');
+    }
+    /* bell */
+    line(goalX - 30, 0, goalX - 30, checks[5].y, '#3f2a23', 6); line(goalX + 30, 0, goalX + 30, checks[5].y, '#3f2a23', 6);
+    const by = checks[5].y - 130; rect(goalX - 40, by - 30, 80, 8, '#3f2a23');
+    K.poly([[goalX - 14, by - 20], [goalX + 14, by - 20], [goalX + 26, by + 26], [goalX - 26, by + 26]], '#fbbf24'); circ(goalX, by + 30, 6, '#92400e');
+    for (const f of feathers) if (!f.got && cam.see(f.x, f.y)) { g.save(); g.translate(f.x, f.y + Math.sin(t * 3 + f.x) * 4); g.rotate(0.5); g.fillStyle = '#fef3c7'; g.beginPath(); g.ellipse(0, 0, 4, 11, 0, 0, TAU); g.fill(); g.restore(); }
+    for (const z of hazards) {
+      if (!cam.see(z.x, z.y, 100)) continue;
+      if (z.kind === 'thorn') { for (let i = 0; i < 9; i++) K.tri(z.x + Math.cos(i * 0.7) * 16, z.y + Math.sin(i * 0.7) * 16, 9, i * 0.7, '#14532d'); circ(z.x, z.y, 15, '#166534'); circ(z.x - 4, z.y - 4, 4, '#4ade80'); }
+      else { const y = z.yy || z.y, f = Math.sin(t * 16) * 9; K.poly([[z.x, y], [z.x - 20, y - f], [z.x - 9, y + 5]], '#1f1722'); K.poly([[z.x, y], [z.x + 20, y - f], [z.x + 9, y + 5]], '#1f1722'); circ(z.x, y, 7, '#2a1f2d'); circ(z.x - 3, y - 1, 1.5, '#f87171'); circ(z.x + 3, y - 1, 1.5, '#f87171'); }
+    }
+    if (P.target) { ring(P.target.x, P.target.y, 15 + Math.sin(t * 9) * 2, '#fff', 2.5); g.setLineDash([5, 7]); line(P.x, P.y, P.target.x, P.target.y, 'rgba(255,255,255,.35)', 1.5); g.setLineDash([]); }
+    if (P.hook) line(P.x, P.y, P.hook.x, P.hook.y, '#fef3c7', 2.5);
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) {
+      const lean = P.hook ? Math.atan2(P.hook.x - P.x, -(P.hook.y - P.y)) : clamp(P.vx / 900, -0.4, 0.4);
+      g.save(); g.translate(P.x, P.y); g.rotate(lean);
+      rrect(-8, -12, 16, 22, 6, '#0f766e'); circ(0, -15, 8, '#fcd9b6'); rect(-9, -20, 18, 5, '#b91c1c');
+      g.fillStyle = '#b91c1c'; g.fillRect(-P.face * 9 - (P.face > 0 ? 12 : 0), -19, 12, 3);
+      g.restore();
+    }
+    fx.draw();
+    cam.end();
+    hearts(24, 26, P.hp, 6);
+    txt('SPAN ' + Math.min(5, cp + 1) + ' / 5', W / 2, 26, 15, '#fff', 'center', 800);
+    txt('❖ ' + featherN, 930, 26, 16, '#fef3c7', 'right', 800);
+    const f = clamp(P.x / goalX, 0, 1); rect(330, 44, 300, 3, 'rgba(0,0,0,.35)'); rect(330, 44, 300 * f, 3, '#fff');
+  },
+});
+</script>
+</body>
+</html>

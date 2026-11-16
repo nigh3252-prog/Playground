@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Bumper Crypt — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* BUMPER CRYPT — pinball as a dungeon crawl. You are the ball. The monsters
+   are the bumpers. Clear a floor and the gate at the top opens. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, fx } = K;
+const X0 = 262, X1 = 698, TOP = 24, R = 9, GRAV = 880;
+const WALLS = [[X0, 60, X0, 396], [X1, 60, X1, 396], [X0, 396, 370, 470], [X1, 396, 590, 470], [X0, 100, 336, TOP], [X1, 100, 624, TOP], [336, TOP, 440, TOP], [520, TOP, 624, TOP], [X0, TOP, X0, 100], [X1, TOP, X1, 100]];
+const FL = [{ px: 378, py: 476, len: 80, rest: 0.5, up: -0.6, a: 0.5, w: 0, side: -1 }, { px: 582, py: 476, len: 80, rest: Math.PI - 0.5, up: Math.PI + 0.6, a: Math.PI - 0.5, w: 0, side: 1 }];
+const NAMES = ['THE BONE HALL', 'THE BELFRY', "THE LICH'S TABLE"];
+let ball, mons, floorN, balls, gate, save, score, still, nudgeCd, posts, kills;
+
+function setup(n) {
+  floorN = n; mons = []; posts = [[300, 330], [660, 330]];
+  if (n === 0) [[400, 150], [560, 150], [480, 220], [350, 250], [610, 250]].forEach(([x, y]) => mons.push({ k: 'skel', x, y, r: 24, hp: 2 }));
+  if (n === 1) { [[380, 130], [580, 130], [480, 170], [330, 240], [630, 240], [480, 290]].forEach(([x, y]) => mons.push({ k: 'skel', x, y, r: 22, hp: 2 })); mons.push({ k: 'bat', x: 400, y: 80, bx: 480, r: 16, hp: 2, ph: 0, amp: 150, sp: 1.3 }, { k: 'bat', x: 400, y: 350, bx: 480, r: 16, hp: 2, ph: 2, amp: 130, sp: 1.7 }); }
+  if (n === 2) { mons.push({ k: 'lich', x: 480, y: 140, bx: 480, r: 40, hp: 14, max: 14, ph: 0, amp: 120, sp: 0.7, t: 5 }); [[350, 260], [610, 260]].forEach(([x, y]) => mons.push({ k: 'skel', x, y, r: 22, hp: 3 })); }
+  gate = false; launch(); K.banner(NAMES[n], n === 2 ? 'Break the lich' : 'Smash every monster to open the gate', 2.6);
+}
+function launch() { ball = { x: 480 + rand(-30, 30), y: 60, vx: rand(-60, 60), vy: 80 }; save = 7; still = 0; }
+function seg(ax, ay, bx, by, rad, e, pivot, w) {
+  const abx = bx - ax, aby = by - ay, t = clamp(((ball.x - ax) * abx + (ball.y - ay) * aby) / (abx * abx + aby * aby), 0, 1), cx = ax + abx * t, cy = ay + aby * t, dx = ball.x - cx, dy = ball.y - cy, d = Math.hypot(dx, dy) || 0.001;
+  if (d >= R + rad) return false;
+  const nx = dx / d, ny = dy / d; ball.x = cx + nx * (R + rad); ball.y = cy + ny * (R + rad);
+  let sx = 0, sy = 0; if (pivot) { sx = -w * (cy - pivot.py); sy = w * (cx - pivot.px); }
+  const rvx = ball.vx - sx, rvy = ball.vy - sy, vn = rvx * nx + rvy * ny;
+  if (vn < 0) { ball.vx = rvx - (1 + e) * vn * nx + sx; ball.vy = rvy - (1 + e) * vn * ny + sy; return -vn; }
+  return 0.001;
+}
+function killed(m) { kills++; score += m.k === 'lich' ? 5000 : 500; fx.burst(m.x, m.y, '#e5e7eb', 24, 240, 0.7, 4, 400); K.sfx('boom'); fx.shake(8); }
+
+K.run({
+  id: 'bumper-crypt', num: 28, title: 'BUMPER CRYPT', tag: 'Pinball dungeon', color: '#a3e635',
+  goal: 'Three floors of a crypt, played as pinball. Bash every monster on a floor to open the gate at the top, then shoot the gate. You have four balls. The lich waits at the bottom.',
+  controls: [[['l1', 'l2'], 'Left flipper'], [['r1', 'r2'], 'Right flipper'], ['cross', 'Both flippers'], ['square', 'Nudge']],
+  music: { bpm: 124, root: 40, mode: 'minor', dens: 0.5, drums: true, seed: 13, lead: 'square', leadVol: 0.04, lp: 1600, drive: true },
+  start() { balls = 4; score = 0; kills = 0; nudgeCd = 0; setup(0); },
+  retry() { balls = 3; setup(floorN); },
+  update(dt) {
+    const L = K.down('l1') || K.down('l2') || K.down('cross') || K.IN.lx < -0.5, Rr = K.down('r1') || K.down('r2') || K.down('cross') || K.IN.lx > 0.5;
+    nudgeCd -= dt; save -= dt;
+    if (K.hit('square') && nudgeCd <= 0) { nudgeCd = 2.5; ball.vy -= 260; ball.vx += rand(-120, 120); fx.shake(6); K.sfx('land'); }
+    for (const m of mons) { m.flash = (m.flash || 0) - dt; if (m.bx !== undefined) { m.ph += dt * m.sp; m.x = m.bx + Math.sin(m.ph) * m.amp; } if (m.k === 'lich') { m.t -= dt; if (m.t <= 0 && mons.length < 6) { m.t = 7; mons.push({ k: 'ghost', x: m.x, y: m.y + 70, r: 16, hp: 1, bx: m.x, ph: rand(0, 6), amp: 90, sp: 2 }); K.sfx('zap'); } } }
+    const sub = 6, h = dt / sub;
+    for (let s = 0; s < sub; s++) {
+      FL.forEach((f, i) => { const on = i === 0 ? L : Rr, tgt = on ? f.up : f.rest, na = K.approach(f.a, tgt, 17 * h); f.w = (na - f.a) / h; f.a = na; if (on && !f.was) K.sfx('clank'); if (s === sub - 1) f.was = on; });
+      ball.vy += GRAV * h; ball.x += ball.vx * h; ball.y += ball.vy * h;
+      for (const w of WALLS) { const v = seg(w[0], w[1], w[2], w[3], 2, 0.45); if (v > 140) K.sfx('step'); }
+      if (!gate) seg(440, TOP, 520, TOP, 2, 0.45);
+      for (const f of FL) { const tx = f.px + Math.cos(f.a) * f.len, ty = f.py + Math.sin(f.a) * f.len; const v = seg(f.px, f.py, tx, ty, 7, 0.35, f, f.w); if (v > 200) K.tone({ f: 200, f2: 120, dur: 0.06, type: 'square', vol: 0.1 }); }
+      for (const p of posts) { const d = dist(ball.x, ball.y, p[0], p[1]); if (d < R + 10) { const a = ang(p[0], p[1], ball.x, ball.y); ball.x = p[0] + Math.cos(a) * (R + 10); ball.y = p[1] + Math.sin(a) * (R + 10); const vn = ball.vx * Math.cos(a) + ball.vy * Math.sin(a); if (vn < 0) { ball.vx -= 1.9 * vn * Math.cos(a); ball.vy -= 1.9 * vn * Math.sin(a); } K.sfx('blip'); } }
+      for (let i = mons.length - 1; i >= 0; i--) {
+        const m = mons[i], d = dist(ball.x, ball.y, m.x, m.y); if (d >= R + m.r) continue;
+        const a = ang(m.x, m.y, ball.x, ball.y); ball.x = m.x + Math.cos(a) * (R + m.r + 1); ball.y = m.y + Math.sin(a) * (R + m.r + 1);
+        const sp = Math.max(430, Math.hypot(ball.vx, ball.vy) * 0.9); ball.vx = Math.cos(a) * sp; ball.vy = Math.sin(a) * sp;
+        m.hp--; m.flash = 0.12; score += 100; K.sfx('hit'); fx.burst(ball.x, ball.y, '#fde047', 6, 160, 0.3, 3); fx.hitstop(0.02);
+        if (m.hp <= 0) { mons.splice(i, 1); killed(m); if (m.k === 'lich') { K.win({ title: 'THE LICH IS DUST', text: 'One last rattle down the outlane, and the crypt is just a quiet stone room with a silver ball in it.', stats: [['Score', score], ['Balls left', balls]] }); return; } if (!mons.some((q) => q.k !== 'ghost') || (floorN < 2 && !mons.length)) { if (floorN < 2) { gate = true; K.sfx('door'); K.banner('THE GATE IS OPEN', 'Shoot the top of the table'); } } }
+      }
+      const v = Math.hypot(ball.vx, ball.vy); if (v > 1250) { ball.vx *= 1250 / v; ball.vy *= 1250 / v; }
+    }
+    ball.vx *= 1 - 0.12 * dt;
+    if (gate && ball.y < TOP + 4 && ball.x > 440 && ball.x < 520) { K.sfx('key'); score += 2000; balls = Math.min(5, balls + 1); setup(floorN + 1); return; }
+    if (ball.y < TOP - 30) { ball.y = TOP + 12; ball.vy = Math.abs(ball.vy); }
+    still = Math.hypot(ball.vx, ball.vy) < 14 ? still + dt : 0; if (still > 1.6) { ball.vy = -300; ball.vx = rand(-150, 150); still = 0; }
+    if (ball.y > 570) {
+      if (save > 0) { K.hint('Ball saved', 1.2); launch(); return; }
+      balls--; K.sfx('lose'); fx.shake(8);
+      if (balls <= 0) { K.lose({ title: 'DRAINED', text: 'The last ball rolls away into the dark under the table. The crypt resets this floor for you.', stats: [['Floor', (floorN + 1) + ' / 3'], ['Score', score]] }); return; }
+      launch();
+    }
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#0a0c10');
+    for (let i = 0; i < 14; i++) { rect(20 + (i % 2) * 110, 30 + i * 36, 90, 26, '#12151c'); rect(730 + (i % 2) * 100, 30 + i * 36, 90, 26, '#12151c'); }
+    g.save(); if (fx.shakeT) g.translate(rand(-fx.shakeT, fx.shakeT), rand(-fx.shakeT, fx.shakeT));
+    g.fillStyle = '#171b26'; g.beginPath(); g.moveTo(X0, 100); g.lineTo(336, TOP); g.lineTo(624, TOP); g.lineTo(X1, 100); g.lineTo(X1, 396); g.lineTo(590, 470); g.lineTo(590, 560); g.lineTo(370, 560); g.lineTo(370, 470); g.lineTo(X0, 396); g.fill();
+    for (let y = 60; y < 460; y += 50) for (let x = X0 + 20; x < X1; x += 50) rect(x, y, 3, 3, 'rgba(163,230,53,.15)');
+    for (const w of WALLS) line(w[0], w[1], w[2], w[3], '#6b7280', 5);
+    line(440, TOP, 520, TOP, gate ? 'rgba(163,230,53,' + (0.4 + 0.4 * Math.sin(t * 8)) + ')' : '#b45309', 7); if (gate) { K.tri(480, TOP + 34 + Math.sin(t * 6) * 4, 14, -Math.PI / 2, '#a3e635'); }
+    for (const p of posts) { circ(p[0], p[1], 10, '#fde047'); circ(p[0], p[1], 5, '#713f12'); }
+    for (const m of mons) {
+      const c = m.flash > 0;
+      if (m.k === 'skel') { circ(m.x, m.y, m.r, c ? '#fff' : '#d6d3d1'); circ(m.x - 8, m.y - 4, 6, '#0a0c10'); circ(m.x + 8, m.y - 4, 6, '#0a0c10'); circ(m.x - 8, m.y - 4, 2, m.hp > 1 ? '#a3e635' : '#f87171'); circ(m.x + 8, m.y - 4, 2, m.hp > 1 ? '#a3e635' : '#f87171'); for (let i = -1; i <= 1; i++) rect(m.x - 2 + i * 7, m.y + 8, 3, 9, '#0a0c10'); }
+      else if (m.k === 'bat') { const f = Math.sin(t * 16) * 9; K.poly([[m.x, m.y], [m.x - 30, m.y - f], [m.x - 12, m.y + 8]], c ? '#fff' : '#581c87'); K.poly([[m.x, m.y], [m.x + 30, m.y - f], [m.x + 12, m.y + 8]], c ? '#fff' : '#581c87'); circ(m.x, m.y, 12, c ? '#fff' : '#7e22ce'); circ(m.x - 4, m.y - 2, 2, '#fde047'); circ(m.x + 4, m.y - 2, 2, '#fde047'); }
+      else if (m.k === 'ghost') { g.globalAlpha = 0.8; circ(m.x, m.y, m.r, c ? '#fff' : '#a5f3fc'); circ(m.x - 5, m.y - 2, 3, '#083344'); circ(m.x + 5, m.y - 2, 3, '#083344'); g.globalAlpha = 1; }
+      else { circ(m.x, m.y, m.r + 10 + Math.sin(t * 5) * 3, 'rgba(163,230,53,.15)'); circ(m.x, m.y, m.r, c ? '#fff' : '#1f2937'); K.poly([[m.x - 34, m.y - 22], [m.x - 20, m.y - 60], [m.x - 6, m.y - 34], [m.x, m.y - 64], [m.x + 6, m.y - 34], [m.x + 20, m.y - 60], [m.x + 34, m.y - 22]], '#fde047'); circ(m.x - 13, m.y - 4, 8, '#a3e635'); circ(m.x + 13, m.y - 4, 8, '#a3e635'); rect(m.x - 14, m.y + 16, 28, 5, '#a3e635'); bar(m.x - 50, m.y + m.r + 14, 100, 9, m.hp / m.max, '#a3e635'); }
+    }
+    for (const f of FL) { const tx = f.px + Math.cos(f.a) * f.len, ty = f.py + Math.sin(f.a) * f.len; line(f.px, f.py, tx, ty, '#e11d48', 15); line(f.px, f.py, tx, ty, '#fb7185', 7); circ(f.px, f.py, 8, '#fecdd3'); }
+    circ(ball.x + 3, ball.y + 4, R, 'rgba(0,0,0,.4)'); circ(ball.x, ball.y, R, '#e5e7eb'); circ(ball.x - 3, ball.y - 3, 3, '#fff'); rect(ball.x - 6, ball.y - 1, 12, 2, '#475569');
+    if (save > 0) { g.globalAlpha = 0.6; txt('BALL SAVE', 480, 540, 11, '#a3e635', 'center', 800); g.globalAlpha = 1; }
+    fx.draw(); g.restore();
+    txt('FLOOR ' + (floorN + 1) + ' / 3', 40, 60, 16, '#a3e635', 'left', 900); txt(NAMES[floorN], 40, 84, 12, '#9ca3af', 'left', 700);
+    txt('SCORE', 40, 150, 11, '#9ca3af', 'left', 800); txt(String(score), 40, 174, 26, '#fff', 'left', 900);
+    txt('BALLS', 40, 230, 11, '#9ca3af', 'left', 800); for (let i = 0; i < 5; i++) circ(50 + i * 26, 254, 9, i < balls ? '#e5e7eb' : 'rgba(255,255,255,.1)');
+    txt('MONSTERS', 760, 60, 11, '#9ca3af', 'left', 800); txt(String(mons.filter((m) => m.k !== 'ghost').length), 760, 86, 26, gate ? '#a3e635' : '#fff', 'left', 900);
+    K.glyph('l1', 300, 520, 12, K.down('l1') || K.down('l2') ? 1 : 0.5); K.glyph('r1', 660, 520, 12, K.down('r1') || K.down('r2') ? 1 : 0.5);
+    K.glyph('square', 772, 250, 11, nudgeCd <= 0 ? 1 : 0.25); txt('Nudge', 790, 251, 12, '#9ca3af', 'left', 700);
+  },
+});
+</script>
+</body>
+</html>

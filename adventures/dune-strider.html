@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Dune Strider — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* DUNE STRIDER — the sand carries every footstep to the worm. How hard you
+   push the stick is how loud you are. Rock is the only safe ground. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const WS = 4400;
+let P, rocks, beacons, worms, thumpers, drums, evac, seedN, lit, deaths, last;
+
+function build() {
+  const r = K.rng(seedN); rocks = []; beacons = []; drums = [];
+  const add = (x, y, rad) => { const R = { x, y, r: rad, ph: r() * TAU, n: 7 + r.int(0, 4) }; rocks.push(R); return R; };
+  add(400, WS - 400, 130); evac = add(WS - 420, 420, 150);
+  const bp = [[1500, WS - 900], [900, 1700], [2700, 2600], [3300, 1100]];
+  for (const [x, y] of bp) { const b = { x: x + r.range(-200, 200), y: y + r.range(-200, 200), on: 0, done: false }; beacons.push(b); add(b.x + r.range(-1, 1) * 230, b.y + r.range(-1, 1) * 230, r.range(60, 90)); }
+  for (let i = 0; i < 400 && rocks.length < 44; i++) {
+    const x = r.range(200, WS - 200), y = r.range(200, WS - 200), rad = r.range(50, 120);
+    if (rocks.every((o) => dist(o.x, o.y, x, y) > o.r + rad + 260) && beacons.every((b) => dist(b.x, b.y, x, y) > rad + 90)) add(x, y, rad);
+  }
+  for (let i = 0; i < 16; i++) drums.push({ x: r.range(300, WS - 300), y: r.range(300, WS - 300), r: r.range(120, 220) });
+  worms = [mkWorm(2600, 1800)];
+}
+function mkWorm(x, y) { return { x, y, a: rand(0, TAU), tx: x, ty: y, heat: 0, st: 'roam', t: 0, ex: 0, ey: 0, seg: [], wt: 0 }; }
+function onRock(x, y) { for (const R of rocks) if (dist(x, y, R.x, R.y) < R.r - 4) return true; return false; }
+function place(at) { P = { x: at.x, y: at.y, r: 10, fx: 0, fy: -1, water: 1, thump: P ? Math.max(2, P.thump) : 3, inv: 2, step: 0, noise: 0 }; cam.x = P.x; cam.y = P.y; thumpers = []; for (const w of worms) { w.heat = 0; w.st = 'roam'; if (dist(w.x, w.y, P.x, P.y) < 900) { w.x = clamp(P.x + 1300, 200, WS - 200); w.y = clamp(P.y - 1300, 200, WS - 200); } } }
+function die(why) {
+  if (P.inv > 0) return; deaths++; P.lives--; K.sfx('die'); fx.shake(16); fx.flash('#7c2d12', 0.4);
+  if (P.lives <= 0) { K.lose({ title: 'SWALLOWED', text: why + ' Lit beacons stay lit.', stats: [['Beacons', lit + ' / 4']] }); return; }
+  const l = P.lives; place(last); P.lives = l; K.hint(why + ' A scout drags you back to rock.', 2.5);
+}
+
+K.run({
+  id: 'dune-strider', num: 10, title: 'DUNE STRIDER', tag: 'Walk softly on loud sand', color: '#fbbf24',
+  goal: 'Light four survey beacons and reach the evac spire. The worm hunts by vibration: ease the stick to creep, stand on rock to be safe, and throw a thumper to send it somewhere else.',
+  controls: [['LS', 'Walk (gently = quiet)'], ['r2', 'Sprint (very loud)'], ['square', 'Throw thumper']],
+  music: { bpm: 72, root: 47, mode: 'phryg', dens: 0.3, seed: 44, long: true, lead: 'triangle', leadVol: 0.05 },
+  start() { seedN = irand(1, 1e9); build(); lit = 0; deaths = 0; P = null; last = rocks[0]; place(rocks[0]); P.lives = 3; P.thump = 3; K.banner('DUNE STRIDER', 'Pale ripples are drum sand: twice as loud'); },
+  retry() { const t = P.thump; place(last); P.lives = 3; P.thump = Math.max(2, t); },
+  update(dt) {
+    const lx = K.IN.lx, ly = K.IN.ly, m = Math.hypot(lx, ly), run = K.down('r2') && m > 0.3;
+    if (m > 0.2) { P.fx = lx / m; P.fy = ly / m; }
+    const safe = onRock(P.x, P.y), sp = run ? 250 : 150;
+    P.x = clamp(P.x + lx * sp * dt, 30, WS - 30); P.y = clamp(P.y + ly * sp * dt, 30, WS - 30);
+    P.inv -= dt;
+    let drum = false; for (const d of drums) if (dist(P.x, P.y, d.x, d.y) < d.r) drum = true;
+    const noise = safe ? 0 : m * m * (run ? 2.4 : 1) * (drum ? 2.2 : 1);
+    P.noise = K.damp(P.noise, noise, 8, dt);
+    if (m > 0.2) { P.step -= dt * m * (run ? 1.6 : 1); if (P.step <= 0) { P.step = 0.3; if (noise > 0.15) K.noise({ f: 300, dur: 0.05, vol: 0.04 + noise * 0.05 }); if (!safe) fx.spark(P.x, P.y + 8, rand(-20, 20), -20, '#fde68a', 0.4, 3); } }
+    P.water = Math.max(0, P.water - dt / 150); if (safe) { for (const R of rocks) if (R === last && dist(P.x, P.y, R.x, R.y) < R.r) break; for (const R of rocks) if (dist(P.x, P.y, R.x, R.y) < R.r - 4) last = R; }
+    if (P.water <= 0) { P.inv = 0; die('The sun did what the worm could not.'); P.water = 1; return; }
+    if (K.hit('square')) {
+      if (P.thump > 0) { P.thump--; thumpers.push({ x: P.x, y: P.y, tx: P.x + P.fx * 330, ty: P.y + P.fy * 330, f: 0, t: 9 }); K.sfx('swing'); }
+      else K.sfx('bad');
+    }
+    for (let i = thumpers.length - 1; i >= 0; i--) {
+      const th = thumpers[i];
+      if (th.f < 1) { th.f = Math.min(1, th.f + dt * 2); th.x = lerp(th.x, th.tx, th.f); th.y = lerp(th.y, th.ty, th.f); continue; }
+      th.t -= dt; th.beat = (th.beat || 0) - dt;
+      if (th.beat <= 0) { th.beat = 0.5; K.tone({ f: 70, f2: 40, dur: 0.18, type: 'sine', vol: 0.3 }); th.pulse = 1; for (const w of worms) if (w.st !== 'erupt' && !onRock(th.x, th.y)) { w.tx = th.x; w.ty = th.y; w.heat = Math.max(w.heat, 1.2); w.lure = th; } }
+      th.pulse = Math.max(0, (th.pulse || 0) - dt * 2);
+      if (th.t <= 0) { thumpers.splice(i, 1); for (const w of worms) if (w.lure === th) w.lure = null; }
+    }
+    /* beacons */
+    for (const b of beacons) {
+      if (b.done) continue;
+      if (dist(P.x, P.y, b.x, b.y) < 46) { b.on += dt / 3.2; if (Math.random() < dt * 8) K.sfx('blip'); for (const w of worms) if (!w.lure) { w.tx = b.x; w.ty = b.y; w.heat = Math.max(w.heat, 0.5); }
+        if (b.on >= 1) { b.done = true; lit++; K.sfx('key'); P.water = 1; P.thump = Math.min(4, P.thump + 1); fx.burst(b.x, b.y - 30, '#67e8f9', 30, 200, 0.9, 4); K.banner(lit === 4 ? 'ALL BEACONS LIT' : 'BEACON ' + lit + ' OF 4', lit === 4 ? 'The evac spire is north-east. Run for it.' : 'Canteen filled. One thumper added.'); if (lit === 2) { worms.push(mkWorm(clamp(P.x + 1500, 200, WS - 200), clamp(P.y + 1200, 200, WS - 200))); K.hint('A second worm has woken.', 3); } }
+      } else b.on = Math.max(0, b.on - dt * 0.2);
+    }
+    if (lit === 4 && dist(P.x, P.y, evac.x, evac.y) < 60) { K.win({ title: 'EVAC', text: 'The skiff lifts off the spire. Below, two long shapes circle the place where your footprints end.', stats: [['Times swallowed', deaths], ['Lives left', P.lives]] }); return; }
+    /* worms */
+    for (const w of worms) {
+      w.t -= dt; w.wt += dt;
+      if (w.st === 'erupt') {
+        if (w.t <= 0 && !w.bit) { w.bit = true; K.sfx('boom'); fx.shake(14); fx.burst(w.ex, w.ey, '#d6a55a', 50, 320, 0.9, 5, 300); if (dist(P.x, P.y, w.ex, w.ey) < 66 && !onRock(P.x, P.y)) { die('The sand opened under you.'); if (K.scene !== 'play') return; } for (let i = thumpers.length - 1; i >= 0; i--) if (dist(thumpers[i].x, thumpers[i].y, w.ex, w.ey) < 70) { if (w.lure === thumpers[i]) w.lure = null; thumpers.splice(i, 1); } }
+        if (w.t <= -1.3) { w.st = 'roam'; w.heat *= 0.4; w.x = w.ex; w.y = w.ey; }
+        continue;
+      }
+      if (!w.lure && noise > 0.05) { const d = dist(w.x, w.y, P.x, P.y), hear = noise * 900; if (d < hear + 250) { w.heat = Math.min(1.6, w.heat + noise * dt * 0.9); if (w.heat > 0.2) { w.tx = P.x + lx * sp * 0.55; w.ty = P.y + ly * sp * 0.55; } } }
+      w.heat = Math.max(0, w.heat - dt * 0.07);
+      const hunting = w.heat > 0.2;
+      if (!hunting && (w.t <= 0 || dist(w.x, w.y, w.tx, w.ty) < 80)) { w.tx = clamp(w.x + rand(-700, 700), 200, WS - 200); w.ty = clamp(w.y + rand(-700, 700), 200, WS - 200); w.t = 7; }
+      const a = ang(w.x, w.y, w.tx, w.ty); w.a += K.angDiff(w.a, a) * Math.min(1, dt * 2.6);
+      let v = hunting ? 175 + w.heat * 60 : 70, nx = w.x + Math.cos(w.a) * v * dt, ny = w.y + Math.sin(w.a) * v * dt;
+      for (const R of rocks) { const d = dist(nx, ny, R.x, R.y); if (d < R.r + 26) { const ra = ang(R.x, R.y, nx, ny); nx = R.x + Math.cos(ra) * (R.r + 26); ny = R.y + Math.sin(ra) * (R.r + 26); } }
+      w.x = nx; w.y = ny;
+      if (Math.random() < dt * 20) fx.spark(w.x + rand(-14, 14), w.y + rand(-14, 14), rand(-20, 20), rand(-50, -10), '#e8c98a', 0.7, 4);
+      if (hunting && dist(w.x, w.y, w.tx, w.ty) < 46 && (w.lure || !onRock(P.x, P.y) || dist(w.tx, w.ty, P.x, P.y) > 120)) {
+        if (w.lure || dist(w.x, w.y, P.x, P.y) < 150) { w.st = 'erupt'; w.t = 0.75; w.bit = false; w.ex = w.x; w.ey = w.y; K.sfx('charge'); }
+      }
+    }
+    cam.follow(P.x + P.fx * 40, P.y + P.fy * 40, dt, 4); cam.bound(WS, WS);
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#d9a441');
+    cam.begin();
+    const x0 = Math.floor((cam.x - W / 2) / 60) - 1, y0 = Math.floor((cam.y - H / 2) / 60) - 1;
+    for (let y = y0; y < y0 + 12; y++) for (let x = x0; x < x0 + 19; x++) {
+      const n = K.noise2(x / 4, y / 4, seedN % 50); rect(x * 60, y * 60, 60, 60, K.hsl(40, 62, 50 + n * 12));
+      g.strokeStyle = 'rgba(120,70,20,.16)'; g.lineWidth = 2; g.beginPath(); g.arc(x * 60 + 30, y * 60 + 70 + n * 30, 46, -2.2, -0.9); g.stroke();
+    }
+    for (const d of drums) { if (!cam.see(d.x, d.y, d.r)) continue; for (let k = 1; k <= 3; k++) ring(d.x, d.y, d.r * k / 3, 'rgba(255,247,220,.4)', 5); }
+    for (const R of rocks) {
+      if (!cam.see(R.x, R.y, R.r + 30)) continue;
+      const pts = [], sh = []; for (let i = 0; i < R.n; i++) { const a = i / R.n * TAU + R.ph, rr = R.r * (0.9 + 0.16 * Math.sin(i * 2.3 + R.ph)); pts.push([R.x + Math.cos(a) * rr, R.y + Math.sin(a) * rr]); sh.push([R.x + Math.cos(a) * rr + 10, R.y + Math.sin(a) * rr + 14]); }
+      K.poly(sh, 'rgba(90,50,20,.3)'); K.poly(pts, R === evac ? '#6b5b53' : '#8a6f5c'); K.poly(pts.map(([x, y]) => [R.x + (x - R.x) * 0.72 - 4, R.y + (y - R.y) * 0.72 - 5]), R === evac ? '#857168' : '#a58a74');
+    }
+    /* evac spire */
+    line(evac.x, evac.y, evac.x, evac.y - 90, '#334155', 8); K.tri(evac.x, evac.y - 100, 18, -Math.PI / 2, lit === 4 ? '#67e8f9' : '#475569'); if (lit === 4) ring(evac.x, evac.y, 60 + Math.sin(t * 4) * 6, '#67e8f9', 3);
+    for (const b of beacons) {
+      if (!cam.see(b.x, b.y, 80)) continue;
+      ring(b.x, b.y, 46, b.done ? 'rgba(103,232,249,.4)' : 'rgba(30,41,59,.5)', 3);
+      if (b.on > 0 && !b.done) { g.strokeStyle = '#67e8f9'; g.lineWidth = 5; g.beginPath(); g.arc(b.x, b.y, 46, -Math.PI / 2, -Math.PI / 2 + b.on * TAU); g.stroke(); }
+      rect(b.x - 5, b.y - 34, 10, 34, '#334155'); circ(b.x, b.y - 38, 9, b.done ? '#67e8f9' : '#64748b'); if (b.done) circ(b.x, b.y - 38, 16 + Math.sin(t * 5) * 3, 'rgba(103,232,249,.3)');
+    }
+    for (const w of worms) {
+      if (w.st === 'erupt') {
+        if (w.t > 0) { const k = 1 - w.t / 0.75; circ(w.ex, w.ey, 66, 'rgba(120,53,15,' + (0.2 + k * 0.4) + ')'); ring(w.ex, w.ey, 66 * (0.4 + k * 0.6), '#7c2d12', 4); }
+        else { const k = clamp(-w.t / 1.3, 0, 1), hgt = Math.sin(k * Math.PI) * 120; circ(w.ex, w.ey, 60, '#5c3a1a'); rrect(w.ex - 38, w.ey - hgt, 76, hgt + 10, 30, '#b4703a'); circ(w.ex, w.ey - hgt, 38, '#c98548'); circ(w.ex, w.ey - hgt, 26, '#3b1408'); for (let i = 0; i < 10; i++) K.tri(w.ex + Math.cos(i * 0.63) * 24, w.ey - hgt + Math.sin(i * 0.63) * 24, 8, i * 0.63 + Math.PI, '#fef3c7'); }
+      } else if (cam.see(w.x, w.y, 80)) { for (let k = 0; k < 3; k++) { g.strokeStyle = 'rgba(120,70,20,' + (0.5 - k * 0.14) + ')'; g.lineWidth = 5; g.beginPath(); g.arc(w.x - Math.cos(w.a) * k * 22, w.y - Math.sin(w.a) * k * 22, 22 + k * 5, w.a - 1.1, w.a + 1.1); g.stroke(); } }
+    }
+    for (const th of thumpers) { rect(th.x - 4, th.y - 18, 8, 22, '#334155'); circ(th.x, th.y - 20, 6, '#f87171'); if (th.pulse > 0) ring(th.x, th.y, 30 + (1 - th.pulse) * 90, 'rgba(248,113,113,' + th.pulse * 0.7 + ')', 3); }
+    if (P.noise > 0.05) ring(P.x, P.y, 16 + P.noise * 46 + Math.sin(t * 18) * 3, 'rgba(120,53,15,' + clamp(P.noise * 0.5, 0.1, 0.6) + ')', 3);
+    if (P.inv <= 0 || Math.floor(t * 14) % 2) { circ(P.x + 3, P.y + 8, 10, 'rgba(90,50,20,.35)'); circ(P.x, P.y, 10, '#1e3a5f'); circ(P.x + P.fx * 3, P.y + P.fy * 3 - 3, 6, '#e7d3b0'); rect(P.x - 8, P.y - 12, 16, 4, '#f8fafc'); }
+    fx.draw();
+    cam.end();
+    hearts(24, 26, P.lives, 3);
+    txt('WATER', 104, 26, 12, '#e0f2fe', 'left', 800); bar(156, 17, 120, 18, P.water, P.water < 0.25 ? '#ef4444' : '#38bdf8');
+    txt('NOISE', 300, 26, 12, '#451a03', 'left', 800); bar(350, 17, 150, 18, P.noise / 2.4, P.noise > 1 ? '#dc2626' : P.noise > 0.4 ? '#f59e0b' : '#65a30d');
+    for (let i = 0; i < 4; i++) { rect(528 + i * 16, 16, 6, 20, i < P.thump ? '#334155' : 'rgba(0,0,0,.15)'); if (i < P.thump) circ(531 + i * 16, 15, 4, '#f87171'); }
+    for (let i = 0; i < 4; i++) circ(860 + i * 22, 26, 8, i < lit ? '#67e8f9' : 'rgba(0,0,0,.25)');
+    txt(onRock(P.x, P.y) ? 'ON ROCK: safe' : 'ON SAND', W / 2, 54, 13, onRock(P.x, P.y) ? '#14532d' : '#7c2d12', 'center', 800);
+    let T = null, bd = 1e9; for (const b of beacons) if (!b.done) { const d = dist(P.x, P.y, b.x, b.y); if (d < bd) { bd = d; T = b; } } if (!T) T = evac;
+    if (!cam.see(T.x, T.y, -50)) { const a = ang(P.x, P.y, T.x, T.y); K.tri(W / 2 + Math.cos(a) * 150, H / 2 + Math.sin(a) * 150, 13, a, '#0e7490'); txt(Math.round(dist(P.x, P.y, T.x, T.y) / 20) + ' m', W / 2 + Math.cos(a) * 118, H / 2 + Math.sin(a) * 118, 12, '#083344', 'center', 800); }
+  },
+});
+</script>
+</body>
+</html>

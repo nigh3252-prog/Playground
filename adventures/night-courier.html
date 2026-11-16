@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Night Courier — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* NIGHT COURIER — a drift car, a sleeping city, seven parcels and a clock.
+   Analog throttle, a handbrake that swings the tail, wardens on your bumper. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, ang, circ, ring, rect, rrect, line, txt, bar, fx, cam } = K;
+const B = 400, NB = 8, WS = B * NB, RW = 110, JOBS = 7;
+let C, blds, parks, traffic, wardens, job, jobN, timer, skids, seedN, crashes, phase, target, best;
+
+function build() {
+  const r = K.rng(seedN); blds = []; parks = [];
+  for (let j = 0; j < NB; j++) for (let i = 0; i < NB; i++) {
+    const x0 = i * B + RW / 2 + 10, y0 = j * B + RW / 2 + 10, s = B - RW - 20;
+    if (r() < 0.14) { parks.push({ x: x0, y: y0, s }); continue; }
+    const sx = r() < 0.5 ? [[0, s]] : [[0, s * r.range(0.4, 0.6) - 6], [0, 0]], sy = r() < 0.5 ? [[0, s]] : [[0, s * r.range(0.4, 0.6) - 6], [0, 0]];
+    if (sx.length > 1) sx[1] = [sx[0][1] + 12, s]; if (sy.length > 1) sy[1] = [sy[0][1] + 12, s];
+    for (const [ax, bx] of sx) for (const [ay, by] of sy) blds.push({ x: x0 + ax, y: y0 + ay, w: bx - ax, h: by - ay, hue: r.pick([220, 250, 200, 280, 20]), ht: r.int(1, 4), seed: r.int(0, 999) });
+  }
+  traffic = []; for (let i = 0; i < 12; i++) traffic.push(mkAuto(r, 150)); wardens = []; skids = [];
+}
+function mkAuto(r, sp) { const hor = r() < 0.5, k = r.int(1, NB - 1), d = r() < 0.5 ? 1 : -1; const o = { dx: hor ? d : 0, dy: hor ? 0 : d, sp, col: pick(['#64748b', '#7c3aed', '#0891b2', '#b45309', '#be123c']) }; if (hor) { o.x = r.range(200, WS - 200); o.y = k * B; } else { o.y = r.range(200, WS - 200); o.x = k * B; } return o; }
+function spot(r, far) {
+  for (let t = 0; t < 80; t++) { const hor = r() < 0.5, k = r.int(1, NB - 1), u = r.int(0, NB - 1) * B + r.range(120, B - 120), s = { x: hor ? u : k * B, y: hor ? k * B : u }; if (!far || dist(s.x, s.y, far.x, far.y) > 1100) return s; }
+  return { x: B, y: B };
+}
+function newJob() { const r = Math.random; r.range = rand; r.int = irand; job = { a: spot(r, C), b: null }; job.b = spot(r, job.a); phase = 0; target = job.a; }
+function solidAt(x, y, rad) { for (const b of blds) if (x > b.x - rad && x < b.x + b.w + rad && y > b.y - rad && y < b.y + b.h + rad) return b; return null; }
+function stepAuto(o, dt, chase) {
+  const px = o.x, py = o.y; o.x += o.dx * o.sp * dt; o.y += o.dy * o.sp * dt;
+  const ax = o.dx ? o.x : o.y, pa = o.dx ? px : py, k = Math.round(ax / B) * B;
+  if ((pa - k) * (ax - k) <= 0 && pa !== ax) {
+    const opts = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => !(dx === -o.dx && dy === -o.dy) && (o.dx ? k : o.x) + dx * B >= 0 && (o.dx ? k : o.x) + dx * B <= WS && (o.dy ? k : o.y) + dy * B >= 0 && (o.dy ? k : o.y) + dy * B <= WS);
+    let c = pick(opts);
+    if (chase) { let bd = 1e9; for (const q of opts) { const d = dist((o.dx ? k : o.x) + q[0] * B, (o.dy ? k : o.y) + q[1] * B, C.x, C.y); if (d < bd) { bd = d; c = q; } } }
+    if (o.dx) o.x = k; else o.y = k; if (c) { o.dx = c[0]; o.dy = c[1]; }
+  }
+}
+function bump(sec, x, y) { timer -= sec; crashes++; K.sfx('hit'); fx.shake(9); fx.burst(x, y, '#fde047', 14, 200, 0.4, 3); fx.text(C.x, C.y - 30, '-' + sec + 's', '#fca5a5', 18); }
+
+K.run({
+  id: 'night-courier', num: 14, title: 'NIGHT COURIER', tag: 'Drift driving against the clock', color: '#f472b6',
+  goal: 'Seven parcels across a sleeping city before the clock runs out. Every drop buys more time. Crashes cost seconds, and after the third parcel the wardens come looking.',
+  controls: [['LS', 'Steer'], ['r2', 'Throttle'], ['l2', 'Brake / reverse'], ['cross', 'Handbrake (drift)']],
+  music: { bpm: 118, root: 45, mode: 'minor', dens: 0.5, drums: true, drive: true, seed: 88, lead: 'sawtooth', leadVol: 0.04, lp: 1600, bassType: 'sawtooth' },
+  start() { seedN = irand(1, 1e9); build(); C = { x: B * 4, y: B * 4 + 20, a: 0, vx: 0, vy: 0, r: 13 }; jobN = 0; timer = 65; crashes = 0; newJob(); cam.x = C.x; cam.y = C.y; K.banner('NIGHT COURIER', 'Follow the pink arrow to the pickup'); },
+  retry() { timer = 50; C.vx = C.vy = 0; phase = 0; target = job.a; wardens.forEach((w) => { w.x = (C.x + 1600) % WS; }); },
+  update(dt) {
+    const steer = K.IN.lx, gas = Math.max(K.trig('r2'), K.IN.ly < -0.5 ? 1 : 0), brk = Math.max(K.trig('l2'), K.IN.ly > 0.6 ? 1 : 0), hb = K.down('cross');
+    const fx_ = Math.cos(C.a), fy_ = Math.sin(C.a); let vf = C.vx * fx_ + C.vy * fy_, vl = -C.vx * fy_ + C.vy * fx_;
+    vf += gas * 560 * dt; if (brk) vf -= (vf > 20 ? 900 : 320) * brk * dt;
+    vf *= 1 - (hb ? 1.1 : 0.55) * dt; vf = clamp(vf, -160, 520);
+    const grip = hb ? 1.6 : 7.5; vl *= Math.max(0, 1 - grip * dt);
+    C.a += steer * (hb ? 3.6 : 2.7) * clamp(Math.abs(vf) / 170, 0, 1) * Math.sign(vf || 1) * dt;
+    const nfx = Math.cos(C.a), nfy = Math.sin(C.a); C.vx = nfx * vf - nfy * vl; C.vy = nfy * vf + nfx * vl;
+    const slip = Math.abs(vl);
+    if (slip > 70) { skids.push({ x: C.x - nfx * 10 - nfy * 8, y: C.y - nfy * 10 + nfx * 8 }, { x: C.x - nfx * 10 + nfy * 8, y: C.y - nfy * 10 - nfx * 8 }); if (skids.length > 500) skids.splice(0, 2); if (Math.random() < dt * 20) { fx.spark(C.x - nfx * 12, C.y - nfy * 12, rand(-30, 30), rand(-30, 30), 'rgba(226,232,240,.5)', 0.5, 5); } if (Math.floor(K.time * 12) !== Math.floor((K.time - dt) * 12)) K.noise({ f: 2400, dur: 0.08, vol: Math.min(0.12, slip / 3000), type: 'bandpass', q: 3 }); }
+    if (Math.floor(K.time * 14) !== Math.floor((K.time - dt) * 14)) K.tone({ f: 55 + Math.abs(vf) * 0.3, dur: 0.09, type: 'sawtooth', vol: 0.035 + gas * 0.03, lp: 500 });
+    let nx = C.x + C.vx * dt, ny = C.y + C.vy * dt;
+    const hx = solidAt(nx, C.y, C.r), hy = solidAt(hx ? C.x : nx, ny, C.r), spd = Math.hypot(C.vx, C.vy);
+    if (hx) { nx = C.x; C.vx *= -0.3; } if (hy) { ny = C.y; C.vy *= -0.3; }
+    if ((hx || hy) && spd > 190) bump(2, C.x, C.y); else if (hx || hy) { C.vx *= 0.8; C.vy *= 0.8; }
+    C.x = clamp(nx, 14, WS - 14); C.y = clamp(ny, 14, WS - 14);
+    for (const o of traffic) { stepAuto(o, dt, false); const lxo = o.x - o.dy * 26, lyo = o.y + o.dx * 26; if (dist(lxo, lyo, C.x, C.y) < 28) { const a = ang(lxo, lyo, C.x, C.y); C.vx = Math.cos(a) * 220; C.vy = Math.sin(a) * 220; if (!o.cool || o.cool < K.time) { bump(3, lxo, lyo); o.cool = K.time + 1; } } }
+    for (const w of wardens) {
+      const d = dist(w.x, w.y, C.x, C.y);
+      if (d < 210 && K.los(w.x, w.y, C.x, C.y, (x, y) => !!solidAt(x * 20 + 10, y * 20 + 10, 0), 20)) { const a = ang(w.x, w.y, C.x, C.y); w.x += Math.cos(a) * 330 * dt; w.y += Math.sin(a) * 330 * dt; w.free = true; w.fa = a; }
+      else { if (w.free) { w.free = false; const hor = Math.abs(w.y - Math.round(w.y / B) * B) < Math.abs(w.x - Math.round(w.x / B) * B); if (hor) { w.y = Math.round(w.y / B) * B; w.dx = C.x > w.x ? 1 : -1; w.dy = 0; } else { w.x = Math.round(w.x / B) * B; w.dy = C.y > w.y ? 1 : -1; w.dx = 0; } } stepAuto(w, dt, true); }
+      if (d < 28 && (!w.cool || w.cool < K.time)) { w.cool = K.time + 2.5; bump(5, w.x, w.y); const a = ang(w.x, w.y, C.x, C.y); C.vx += Math.cos(a) * 260; C.vy += Math.sin(a) * 260; }
+    }
+    timer -= dt;
+    if (timer <= 0) { K.lose({ title: 'OUT OF TIME', text: 'Dawn catches you with the parcel still on the seat. The dispatcher gives you one more run at it.', stats: [['Delivered', jobN + ' / ' + JOBS], ['Crashes', crashes]] }); return; }
+    if (dist(C.x, C.y, target.x, target.y) < 70 && spd < 230) {
+      if (phase === 0) { phase = 1; target = job.b; K.sfx('pick'); K.hint('Parcel aboard. Go!', 1.6); fx.burst(C.x, C.y, '#f472b6', 16, 160, 0.5, 4); }
+      else {
+        jobN++; const add = Math.round(dist(job.a.x, job.a.y, job.b.x, job.b.y) / 62 + 13); timer += add; K.sfx('key'); fx.burst(C.x, C.y, '#6ee7b7', 24, 200, 0.6, 4);
+        if (jobN >= JOBS) { K.win({ title: 'LAST DROP', text: 'Seven doorsteps, seven parcels. The sun comes up on an empty passenger seat.', stats: [['Crashes', crashes], ['Seconds to spare', Math.round(timer)]] }); return; }
+        K.banner('DELIVERED ' + jobN + ' / ' + JOBS, '+' + add + ' seconds' + (jobN === 3 ? ' · a warden is on your tail' : jobN === 5 ? ' · a second warden joins' : ''));
+        if (jobN === 3 || jobN === 5) { const w = mkAuto(K.rng(irand(1, 1e6)), 300); w.x = clamp(C.x + (C.x > WS / 2 ? -1400 : 1400), B, WS - B); w.x = Math.round(w.x / B) * B; w.y = clamp(C.y, 200, WS - 200); w.dx = 0; w.dy = 1; wardens.push(w); }
+        newJob();
+      }
+    }
+    cam.follow(C.x + C.vx * 0.3, C.y + C.vy * 0.3, dt, 5); cam.zoom = K.damp(cam.zoom, 1 - clamp(spd / 2200, 0, 0.2), 3, dt); cam.bound(WS, WS);
+  },
+  draw(t) {
+    const g = K.g; rect(0, 0, W, H, '#16181f');
+    cam.begin();
+    const vx0 = cam.x - W / 2 / cam.zoom - 60, vx1 = cam.x + W / 2 / cam.zoom + 60, vy0 = cam.y - H / 2 / cam.zoom - 60, vy1 = cam.y + H / 2 / cam.zoom + 60;
+    for (let k = 0; k <= NB; k++) { const p = k * B; g.setLineDash([22, 26]); if (p > vy0 && p < vy1) line(vx0, p, vx1, p, 'rgba(250,204,21,.35)', 3); if (p > vx0 && p < vx1) line(p, vy0, p, vy1, 'rgba(250,204,21,.35)', 3); g.setLineDash([]); }
+    for (const p of parks) { if (p.x > vx1 || p.x + p.s < vx0 || p.y > vy1 || p.y + p.s < vy0) continue; rrect(p.x, p.y, p.s, p.s, 14, '#16361f'); for (let i = 0; i < 7; i++) circ(p.x + 30 + K.hash2(i, p.x, 1) * (p.s - 60), p.y + 30 + K.hash2(i, p.y, 2) * (p.s - 60), 20, '#1f5a2c'); }
+    g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = 4; g.beginPath(); for (let i = 0; i + 3 < skids.length; i += 2) { g.moveTo(skids[i].x, skids[i].y); g.lineTo(skids[i + 2].x, skids[i + 2].y); g.moveTo(skids[i + 1].x, skids[i + 1].y); g.lineTo(skids[i + 3].x, skids[i + 3].y); } g.stroke();
+    /* job markers */
+    for (const [s, col, lab, on] of [[job.a, '#f472b6', 'PICKUP', phase === 0], [job.b, '#6ee7b7', 'DROP', phase === 1]]) if (on) { circ(s.x, s.y, 70, col + '22'); ring(s.x, s.y, 70 - (t * 40 % 30), col, 3); txt(lab, s.x, s.y, 16, col, 'center', 900); }
+    const car = (x, y, a, col, lights, w) => { g.save(); g.translate(x, y); g.rotate(a); if (lights) { g.fillStyle = 'rgba(254,249,195,.13)'; g.beginPath(); g.moveTo(12, -7); g.lineTo(190, -70); g.lineTo(190, 70); g.lineTo(12, 7); g.fill(); } rrect(-17, -10, 34, 20, 5, col); rrect(-6, -8, 13, 16, 3, 'rgba(15,23,42,.8)'); rect(14, -9, 3, 5, '#fef9c3'); rect(14, 4, 3, 5, '#fef9c3'); rect(-17, -9, 2, 5, '#ef4444'); rect(-17, 4, 2, 5, '#ef4444'); if (w) { rect(-3, -10, 6, 20, Math.floor(t * 6) % 2 ? '#3b82f6' : '#ef4444'); } g.restore(); };
+    for (const o of traffic) { const x = o.x - o.dy * 26, y = o.y + o.dx * 26; if (x > vx0 && x < vx1 && y > vy0 && y < vy1) car(x, y, Math.atan2(o.dy, o.dx), o.col, true); }
+    for (const w of wardens) car(w.x, w.y, w.free ? w.fa : Math.atan2(w.dy, w.dx), '#e2e8f0', true, true);
+    car(C.x, C.y, C.a, '#f472b6', true);
+    for (const b of blds) {
+      if (b.x > vx1 || b.x + b.w < vx0 || b.y > vy1 || b.y + b.h < vy0) continue;
+      rect(b.x + 8, b.y + 10, b.w, b.h, 'rgba(0,0,0,.35)'); rect(b.x, b.y, b.w, b.h, K.hsl(b.hue, 18, 17)); rect(b.x + 6, b.y + 6, b.w - 12, b.h - 12, K.hsl(b.hue, 20, 22 + b.ht * 2));
+      for (let wy = b.y + 16; wy < b.y + b.h - 18; wy += 22) for (let wx = b.x + 16; wx < b.x + b.w - 18; wx += 22) { const n = K.hash2(wx, wy, b.seed); if (n > 0.62) rect(wx, wy, 9, 9, n > 0.9 ? 'rgba(125,211,252,.8)' : 'rgba(253,224,71,.7)'); }
+    }
+    for (let j = 0; j <= NB; j++) for (let i = 0; i <= NB; i++) { const x = i * B + 62, y = j * B + 62; if (x > vx0 && x < vx1 && y > vy0 && y < vy1) { circ(x, y, 46, 'rgba(253,230,138,.07)'); circ(x, y, 4, '#fde68a'); } }
+    fx.draw(); cam.end();
+    /* HUD */
+    const low = timer < 12; rrect(W / 2 - 70, 10, 140, 44, 12, low && Math.floor(t * 4) % 2 ? 'rgba(127,29,29,.9)' : 'rgba(8,10,18,.8)');
+    txt(Math.max(0, timer).toFixed(1), W / 2, 33, 28, low ? '#fecaca' : '#fff', 'center', 900);
+    for (let i = 0; i < JOBS; i++) rrect(24 + i * 22, 20, 16, 16, 3, i < jobN ? '#6ee7b7' : 'rgba(255,255,255,.14)');
+    txt(phase === 0 ? 'Go to PICKUP' : 'Deliver to DROP', 24, 54, 13, phase === 0 ? '#f472b6' : '#6ee7b7', 'left', 800);
+    txt(Math.round(Math.hypot(C.vx, C.vy) * 0.3) + ' km/h', 936, 30, 16, '#e2e8f0', 'right', 800);
+    const a = ang(C.x, C.y, target.x, target.y), d = dist(C.x, C.y, target.x, target.y), col = phase === 0 ? '#f472b6' : '#6ee7b7';
+    if (d > 200) { K.tri(W / 2 + Math.cos(a) * 150, H / 2 + Math.sin(a) * 130, 16, a, col); txt(Math.round(d / 10) + ' m', W / 2 + Math.cos(a) * 112, H / 2 + Math.sin(a) * 100, 13, col, 'center', 800); }
+    /* minimap */
+    const mx = 836, my = 416, ms = 100 / WS; rect(mx - 4, my - 4, 108, 108, 'rgba(8,10,18,.75)'); for (let k = 0; k <= NB; k++) { rect(mx, my + k * B * ms - 0.5, 100, 1, 'rgba(255,255,255,.2)'); rect(mx + k * B * ms - 0.5, my, 1, 100, 'rgba(255,255,255,.2)'); }
+    circ(mx + target.x * ms, my + target.y * ms, 4, col); for (const w of wardens) circ(mx + w.x * ms, my + w.y * ms, 3, Math.floor(t * 6) % 2 ? '#3b82f6' : '#ef4444'); circ(mx + C.x * ms, my + C.y * ms, 3, '#fff');
+  },
+});
+</script>
+</body>
+</html>

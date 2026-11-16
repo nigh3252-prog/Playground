@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Updraft — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* UPDRAFT — a pedal glider with no engine worth the name. Height is speed and
+   speed is height; thermals are the only free lunch. Six parcels, six islands. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, dist, circ, ring, rect, rrect, line, txt, bar, hearts, fx, cam } = K;
+const SEA = 760, GAP = 2300, NI = 7;
+const NAMES = ['Kestrel Rock', 'Hanging Garden', 'The Anvil', 'Cloudmill', 'Stormwatch', 'Twin Spires', 'Sunward Reach'];
+let Gl, isl, therm, spires, storms, birds, cur, delivered, crashes, clouds;
+
+function build() {
+  const r = K.rng(irand(1, 1e9)); isl = []; therm = []; spires = []; storms = []; birds = [];
+  let y = 0;
+  for (let i = 0; i < NI; i++) {
+    isl.push({ x: i * GAP, y, w: 300, name: NAMES[i] });
+    if (i < NI - 1) {
+      const x0 = i * GAP + 320, ny = clamp(y + r.range(-170, 150), -260, 260);
+      for (let k = 0; k < 4; k++) therm.push({ x: x0 + 220 + k * 470 + r.range(-80, 80), w: r.range(130, 180), s: r.range(170, 215), ph: r() * 9 });
+      if (i >= 1) for (let k = 0; k < 1 + (i > 3 ? 1 : 0); k++) spires.push({ x: x0 + r.range(500, 1500), top: Math.max(y, ny) + r.range(170, 260), w: r.range(50, 80) });
+      if (i >= 2) storms.push({ x: x0 + r.range(500, 1300), y: Math.min(y, ny) - r.range(140, 240), w: 300, t: r() * 3 });
+      if (i >= 3) birds.push({ x: x0 + r.range(700, 1500), y: lerp(y, ny, 0.5) + r.range(-60, 60), ph: r() * 9, dir: -1 });
+      y = ny;
+    }
+  }
+  clouds = []; for (let i = 0; i < 40; i++) clouds.push([r() * NI * GAP, r.range(-700, 500), r.range(60, 160), r.range(0.3, 0.8)]);
+}
+function dock(i) { cur = i; const I = isl[i]; Gl = { x: I.x + 60, y: I.y - 16, v: 0, a: 0, st: 1, docked: true, hp: Gl ? Gl.hp : 4, inv: 0 }; }
+function crash(why) {
+  if (Gl.inv > 0) return; crashes++; Gl.hp--; K.sfx('boom'); fx.shake(12); fx.burst(Gl.x, Gl.y, '#fde68a', 30, 240, 0.8, 4, 400);
+  if (Gl.hp <= 0) { K.lose({ title: 'GROUNDED', text: why + ' The islanders patch your wings on ' + isl[cur].name + '.', stats: [['Parcels delivered', delivered + ' / 6']] }); return; }
+  K.hint(why + ' Back to ' + isl[cur].name + '.', 2.4); dock(cur);
+}
+
+K.run({
+  id: 'updraft', num: 23, title: 'UPDRAFT', tag: 'Gliding on borrowed height', color: '#38bdf8',
+  goal: 'Carry the post across six gaps of open sky. Dive to gain speed, pull up to trade it for height, ride the shimmering thermals, and save your pedal boost for when the sea gets close.',
+  controls: [['LS', 'Pitch up / down'], ['cross', 'Launch · hold to pedal'], ['square', 'Air brake (for landing)']],
+  music: { bpm: 96, root: 55, mode: 'major', dens: 0.44, seed: 15, lead: 'sine', leadVol: 0.08, long: true, prog: [0, 4, 5, 3] },
+  start() { build(); Gl = null; delivered = 0; crashes = 0; dock(0); Gl.hp = 4; cam.x = Gl.x + 240; cam.y = Gl.y - 60; K.banner('UPDRAFT', 'Press ✕ to launch. Land gently on the yellow strip of the next island.'); },
+  retry() { Gl.hp = 0; dock(cur); Gl.hp = 4; },
+  update(dt) {
+    Gl.inv -= dt;
+    if (Gl.docked) { Gl.st = Math.min(1, Gl.st + dt); if (K.hit('cross') && cur < NI - 1) { Gl.docked = false; Gl.v = 400; Gl.a = -0.32; Gl.x = isl[cur].x + isl[cur].w - 30; Gl.y = isl[cur].y - 30; Gl.inv = 0.6; K.sfx('dash'); } }
+    else {
+      const ly = K.IN.ly, boost = K.down('cross') && Gl.st > 0;
+      Gl.a = K.damp(Gl.a, 0.15 + ly * 0.85, 4, dt);
+      const brk = K.down('square'); Gl.v += (520 * Math.sin(Gl.a) - (brk ? 0.0052 : 0.0011) * Gl.v * Gl.v) * dt;
+      if (boost) { Gl.v += 250 * dt; Gl.st -= dt / 3.4; if (Math.random() < dt * 30) fx.spark(Gl.x - 20, Gl.y, -80, rand(-20, 20), '#fff', 0.3, 3); } else Gl.st = Math.min(1, Gl.st + dt / 16);
+      Gl.v = clamp(Gl.v, 40, 720); let vy = Gl.v * Math.sin(Gl.a); const vx = Gl.v * Math.cos(Gl.a);
+      if (Gl.v < 130) { vy += (130 - Gl.v) * 1.8; Gl.a += dt * 0.9; if (!Gl.stall) { Gl.stall = true; K.hint('Stalling! Nose down.', 1.2); } } else Gl.stall = false;
+      Gl.lift = 0; for (const th of therm) { const d = Math.abs(Gl.x - th.x); if (d < th.w / 2) { const k = Math.cos(d / (th.w / 2) * 1.57); vy -= th.s * k; Gl.lift = k; } }
+      for (const s of storms) if (Math.abs(Gl.x - s.x) < s.w / 2 && Gl.y > s.y && Gl.y < s.y + 420) { vy += 120; s.t -= dt; if (s.t <= 0) { s.t = 2.4; s.bolt = { x: clamp(Gl.x + rand(-40, 60), s.x - 140, s.x + 140), t: 0.7 }; } }
+      for (const s of storms) if (s.bolt) { s.bolt.t -= dt; if (s.bolt.t <= 0 && !s.bolt.hit) { s.bolt.hit = true; K.sfx('zap'); fx.flash('#fff', 0.12); if (Math.abs(Gl.x - s.bolt.x) < 36 && Gl.y > s.y) { crash('Struck by lightning.'); if (K.scene !== 'play' || Gl.docked) return; } } if (s.bolt.t < -0.2) s.bolt = null; }
+      Gl.x += vx * dt; Gl.y += vy * dt;
+      if (Math.floor(K.time * 9) !== Math.floor((K.time - dt) * 9)) K.noise({ f: 300 + Gl.v * 2, dur: 0.14, vol: 0.02 + Gl.v / 16000, type: 'bandpass', q: 0.7 });
+      if (Gl.y > SEA - 6) { crash('Into the sea.'); return; }
+      for (const s of spires) if (Math.abs(Gl.x - s.x) < s.w / 2 + 8 && Gl.y > s.top) { crash('You clipped a spire.'); return; }
+      for (const b of birds) { b.ph += dt; b.x += b.dir * 90 * dt; if (Math.abs(b.x - Gl.x) > 1400) b.dir = Gl.x > b.x ? 1 : -1; for (let k = 0; k < 5; k++) { const bx = b.x + k * 26, by = b.y + Math.sin(b.ph * 2 + k) * 30 + Math.abs(k - 2) * 14; if (dist(bx, by, Gl.x, Gl.y) < 18) { Gl.v *= 0.55; K.sfx('hit'); fx.burst(bx, by, '#f8fafc', 8, 120, 0.4, 3); b.x += 200; } } }
+      for (let i = cur + 1; i <= cur + 1 && i < NI; i++) {
+        const I = isl[i]; if (Gl.x > I.x + I.w + 500) { crash('You overshot ' + I.name + '.'); return; }
+        if (Gl.x < I.x - 10 || Gl.x > I.x + I.w + 10) continue;
+        if (Gl.y > I.y - 14 && Gl.y < I.y + 16 && vy >= -20) {
+          if (Gl.v > 480 || vy > 260) { crash('Too hot on the approach. Use the air brake.'); return; }
+          delivered++; dock(i); Gl.hp = Math.min(4, Gl.hp + 1); K.sfx('key'); fx.burst(Gl.x, Gl.y, '#6ee7b7', 24, 180, 0.7, 4);
+          if (i === NI - 1) { K.win({ title: 'LAST POST', text: 'Sunward Reach has not had a letter in eleven years. They ring every bell they own.', stats: [['Crashes', crashes], ['Wings left', Gl.hp]] }); return; }
+          K.banner(I.name.toUpperCase(), 'Parcel ' + delivered + ' of 6 delivered'); return;
+        } else if (Gl.y >= I.y + 16 && Gl.y < I.y + 150) { crash('You flew into the cliff.'); return; }
+      }
+    }
+    cam.x = K.damp(cam.x, Gl.x + 260, 5, dt); cam.y = K.damp(cam.y, clamp(Gl.y - 30, -900, SEA - 250), 4, dt);
+  },
+  draw(t) {
+    const g = K.g; const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#3b82c4'); sky.addColorStop(1, '#bfe3f5'); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    for (const c of clouds) { const x = ((c[0] - cam.x * c[3]) % 4000 + 4000) % 4000 - 300, y = (c[1] - cam.y * c[3]) * 0.6 + 200; g.fillStyle = 'rgba(255,255,255,' + c[3] * 0.6 + ')'; g.beginPath(); g.ellipse(x, y, c[2], c[2] * 0.3, 0, 0, TAU); g.ellipse(x + c[2] * 0.4, y - c[2] * 0.16, c[2] * 0.6, c[2] * 0.26, 0, 0, TAU); g.fill(); }
+    cam.begin(); const x0 = cam.x - W / 2 - 100, x1 = cam.x + W / 2 + 100;
+    rect(x0, SEA, x1 - x0, 600, '#1e5f8a'); for (let x = Math.floor(x0 / 70) * 70; x < x1; x += 70) line(x + Math.sin(t + x) * 10, SEA + 8, x + 30 + Math.sin(t + x) * 10, SEA + 8, 'rgba(255,255,255,.4)', 2);
+    for (const th of therm) { if (th.x < x0 - 100 || th.x > x1 + 100) continue; for (let k = 0; k < 14; k++) { const yy = SEA - ((t * 120 + k * 110 + th.ph * 50) % 1500), xx = th.x + Math.sin(yy * 0.012 + k) * th.w * 0.35; g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 2; g.beginPath(); g.moveTo(xx, yy); g.quadraticCurveTo(xx + 10, yy - 20, xx - 4, yy - 40); g.stroke(); } }
+    for (const s of spires) { if (s.x < x0 - 100 || s.x > x1 + 100) continue; K.poly([[s.x - s.w / 2 - 20, SEA + 10], [s.x - s.w / 2, s.top + 30], [s.x - 6, s.top], [s.x + s.w / 2, s.top + 40], [s.x + s.w / 2 + 24, SEA + 10]], '#4b5563'); K.poly([[s.x - s.w / 2 + 6, s.top + 60], [s.x - 6, s.top], [s.x + 4, s.top + 90]], '#6b7280'); }
+    for (const s of storms) { if (s.x < x0 - 300 || s.x > x1 + 300) continue; g.fillStyle = 'rgba(30,41,59,.14)'; g.fillRect(s.x - s.w / 2, s.y, s.w, 420); for (let k = 0; k < 5; k++) circ(s.x - 120 + k * 60, s.y + Math.sin(k * 2) * 12, 56, k % 2 ? '#334155' : '#475569'); if (s.bolt) { if (s.bolt.t > 0) { g.globalAlpha = 0.5 + 0.5 * Math.sin(t * 40); line(s.bolt.x, s.y + 40, s.bolt.x, s.y + 420, 'rgba(253,224,71,.5)', 2); g.globalAlpha = 1; } else { let yy = s.y + 30, xx = s.bolt.x; g.strokeStyle = '#fef9c3'; g.lineWidth = 5; g.beginPath(); g.moveTo(xx, yy); while (yy < s.y + 430) { yy += 40; xx = s.bolt.x + rand(-16, 16); g.lineTo(xx, yy); } g.stroke(); } } }
+    for (const b of birds) for (let k = 0; k < 5; k++) { const bx = b.x + k * 26, by = b.y + Math.sin(b.ph * 2 + k) * 30 + Math.abs(k - 2) * 14, f = Math.sin(b.ph * 10 + k) * 6; line(bx - 9, by - f, bx, by, '#1f2937', 2.5); line(bx + 9, by - f, bx, by, '#1f2937', 2.5); }
+    isl.forEach((I, i) => {
+      if (I.x + I.w < x0 || I.x > x1) return;
+      K.poly([[I.x - 20, I.y], [I.x + I.w + 20, I.y], [I.x + I.w - 30, I.y + 90], [I.x + I.w / 2 + 20, I.y + 190], [I.x + 60, I.y + 110]], '#7c5a3c'); rrect(I.x - 24, I.y - 8, I.w + 48, 18, 8, '#4ade80'); rect(I.x + 30, I.y - 10, I.w - 60, 5, i > cur ? '#fde047' : '#e5e7eb');
+      rect(I.x + 20, I.y - 60, 6, 52, '#5b3a1e'); K.poly([[I.x + 26, I.y - 60], [I.x + 60, I.y - 50 + Math.sin(t * 5) * 3], [I.x + 26, I.y - 40]], i <= cur ? '#6ee7b7' : '#f87171'); rrect(I.x + I.w - 90, I.y - 44, 50, 36, 4, '#e7d3b0'); K.poly([[I.x + I.w - 96, I.y - 44], [I.x + I.w - 65, I.y - 66], [I.x + I.w - 34, I.y - 44]], '#b45309');
+      txt(I.name, I.x + I.w / 2, I.y + 34, 13, 'rgba(255,255,255,.8)', 'center', 800);
+    });
+    if (Gl.inv <= 0 || Math.floor(t * 14) % 2 || Gl.docked) { g.save(); g.translate(Gl.x, Gl.y); g.rotate(Gl.a); K.poly([[-26, -3], [22, -6], [34, 0], [22, 3], [-26, 2]], '#f8fafc'); K.poly([[-8, -4], [10, -4], [0, -26], [-18, -22]], '#ef4444'); K.poly([[-26, -3], [-20, -3], [-30, -16]], '#ef4444'); circ(8, -1, 4, '#1e293b'); if (K.down('cross') && !Gl.docked && Gl.st > 0) { g.rotate(t * 30); line(-34, -8, -34, 8, '#94a3b8', 3); } g.restore(); }
+    fx.draw(); cam.end();
+    hearts(24, 26, Gl.hp, 4, '#38bdf8'); txt('PEDAL', 130, 26, 11, '#fff', 'left', 800); bar(176, 17, 120, 18, Gl.st, Gl.st < 0.25 ? '#ef4444' : '#fde047');
+    txt(Math.round(Gl.v * 0.3) + ' kt', 320, 26, 14, Gl.v < 150 && !Gl.docked ? '#fecaca' : '#fff', 'left', 800); txt('ALT ' + Math.round((SEA - Gl.y) / 4) + ' m', 400, 26, 14, SEA - Gl.y < 220 && !Gl.docked ? '#fecaca' : '#fff', 'left', 800);
+    if (Gl.lift > 0.2 && !Gl.docked) txt('▲ LIFT', 510, 26, 14, '#fde047', 'left', 900);
+    for (let i = 0; i < 6; i++) rrect(800 + i * 22, 17, 16, 16, 3, i < delivered ? '#6ee7b7' : 'rgba(0,0,0,.25)');
+    const nx = isl[Math.min(NI - 1, cur + 1)]; if (!Gl.docked) { const d = nx.x - Gl.x; txt(nx.name + ' · ' + Math.max(0, Math.round(d / 10)) + ' m', W / 2, 54, 13, '#fff', 'center', 800); const dy = nx.y - Gl.y; K.tri(W - 40, clamp(H / 2 + dy * 0.5, 80, H - 60), 12, 0, '#fde047'); }
+    else if (cur < NI - 1) { g.globalAlpha = 0.6 + 0.4 * Math.sin(t * 5); K.glyph('cross', W / 2 - 50, 470, 14); txt('LAUNCH', W / 2 - 28, 471, 18, '#fff', 'left', 900); g.globalAlpha = 1; }
+  },
+});
+</script>
+</body>
+</html>

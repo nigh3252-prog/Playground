@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07080e">
+<title>Chimera Trail — Thirty Adventures</title>
+</head>
+<body>
+<script src="kit.js"></script>
+<script>
+"use strict";
+/* CHIMERA TRAIL — turn-based beast battles with timed strikes and guards.
+   Bind wild beasts, fuse two into one at the altars, and walk your chimera up
+   the trail to the Warden. */
+const { W, H, TAU, rand, irand, pick, clamp, lerp, circ, ring, rect, rrect, line, txt, bar, fx } = K;
+const EL = { ember: { col: '#fb923c', beats: 'moss', sp: 'Cinder Burst' }, moss: { col: '#4ade80', beats: 'tide', sp: 'Thorn Lash' }, tide: { col: '#38bdf8', beats: 'ember', sp: 'Riptide' }, storm: { col: '#c4b5fd', beats: '', sp: 'Thunderclap' } };
+const SY = ['ka', 'ru', 'mo', 'zi', 'ta', 'lo', 'ven', 'dra', 'shi', 'ox', 'ul', 'bri', 'gor', 'ae', 'nim', 'pho'];
+const TRAIL = ['battle', 'battle', 'altar', 'battle', 'shrine', 'elite', 'altar', 'battle', 'shrine', 'boss'];
+let party, act, node, st, foe, menuI, msg, msgT, ring_, sigils, pickI, alt, queue, won, fused, bg;
+
+function mkBeast(el, lv, seed) {
+  const r = K.rng(seed || irand(1, 1e9)); const b = { el, sp: el, name: (r.pick(SY) + r.pick(SY)).replace(/^./, (c) => c.toUpperCase()), max: Math.round(26 + lv * 5 + r.range(0, 5)), atk: Math.round((6 + lv * 1.25 + r.range(0, 1.5)) * 10) / 10, ch: 0, parts: { horn: r() < 0.5, wing: r() < 0.4, tail: r() < 0.6, spike: r() < 0.4, eyes: r.int(1, 3), fat: r.range(0.85, 1.2) } }; b.hp = b.max; return b;
+}
+function fuse(a, b) { const c = { el: a.el, sp: b.el, name: a.name.slice(0, Math.ceil(a.name.length / 2)) + b.name.slice(Math.floor(b.name.length / 2)).toLowerCase(), max: Math.round((a.max + b.max) * 0.66), atk: Math.round((a.atk + b.atk) * 0.66 * 10) / 10, ch: 0, parts: { horn: a.parts.horn || b.parts.horn, wing: a.parts.wing || b.parts.wing, tail: a.parts.tail || b.parts.tail, spike: a.parts.spike || b.parts.spike, eyes: Math.max(a.parts.eyes, b.parts.eyes), fat: (a.parts.fat + b.parts.fat) / 2 + 0.12 }, fusedCol: EL[b.el].col }; c.hp = c.max; return c; }
+function mult(atkEl, defEl) { return EL[atkEl].beats === defEl ? 1.5 : EL[defEl].beats === atkEl ? 0.67 : 1; }
+function say(s, next, dur) { msg = s; msgT = dur || 1.3; queue = next || null; st = 'msg'; }
+function enterNode() {
+  const k = TRAIL[node]; menuI = 0;
+  if (k === 'altar') { if (party.length < 2) { say('An altar of two bowls. You have only one beast to offer. You walk on.', () => advance(), 2.4); return; } st = 'altar'; alt = []; return; }
+  if (k === 'shrine') { for (const b of party) { b.hp = b.max; } sigils = Math.min(5, sigils + 1); K.sfx('power'); say('A spring shrine. Every beast is made whole, and you find a binding sigil.', () => advance(), 2.6); return; }
+  const lv = node + (k === 'elite' ? 2.5 : 0);
+  if (k === 'boss') { foe = mkBeast('storm', 12); foe.name = 'The Warden'; foe.max = foe.hp = 150; foe.atk = 12; foe.boss = true; foe.parts = { horn: true, wing: true, tail: true, spike: true, eyes: 3, fat: 1.5 }; }
+  else { foe = mkBeast(pick(['ember', 'moss', 'tide']), lv); if (k === 'elite') { foe.max = foe.hp = Math.round(foe.max * 1.5); foe.name = 'Elder ' + foe.name; foe.elite = true; } }
+  act = party.findIndex((b) => b.hp > 0); st = 'menu'; say(foe.boss ? 'The Warden of the Trail unfolds itself from the summit stones.' : 'A wild ' + foe.name + ' blocks the trail!', () => { st = 'menu'; }, 1.6);
+}
+function advance() { node++; st = 'map'; }
+function foeTurn() { if (foe.hp <= 0) return winBattle(); const special = foe.ch >= 2; if (special) foe.ch = 0; else foe.ch++; if (foe.boss && special) foe.sp = pick(['ember', 'moss', 'tide', 'storm']); ring_ = { t: 0, dur: foe.boss ? 0.85 : 1.05, who: 'foe', special, hit: false }; st = 'eAtk'; }
+function winBattle() {
+  K.sfx('win'); won++; for (const b of party) { b.max = Math.round(b.max * 1.08); b.atk = Math.round(b.atk * 1.07 * 10) / 10; if (b.hp > 0) b.hp = Math.min(b.max, b.hp + Math.round(b.max * 0.25)); }
+  if (foe.boss) { st = 'done'; K.win({ title: 'THE WARDEN YIELDS', text: 'It bows its three-eyed head to ' + party[act].name + '. The trail above the summit is open, and it goes on a long way.', stats: [['Beasts in your party', party.length], ['Fusions made', fused]] }); return; }
+  say(foe.name + ' falls. Your beasts grow stronger.', () => advance(), 1.8);
+}
+function afterPlayer() { if (foe.hp <= 0) return winBattle(); say('', () => foeTurn(), 0.35); }
+function drawBeast(b, x, y, s, flip, t, flash) {
+  const g = K.g, c = flash ? '#fff' : EL[b.el].col, c2 = flash ? '#fff' : (b.fusedCol || EL[b.el].col), p = b.parts, bob = Math.sin(t * 3 + x) * 3 * s;
+  g.save(); g.translate(x, y + bob); g.scale(flip ? -s : s, s);
+  if (p.wing) { K.poly([[-10, -20], [-58, -62 + Math.sin(t * 6) * 8], [-30, -8]], c2); K.poly([[10, -20], [40, -66 + Math.sin(t * 6) * 8], [26, -8]], c2); }
+  if (p.tail) { g.strokeStyle = c2; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(-28, 10); g.quadraticCurveTo(-64, 12, -62, -18 + Math.sin(t * 4) * 6); g.stroke(); }
+  g.fillStyle = c; g.beginPath(); g.ellipse(0, 0, 36 * p.fat, 30, 0, 0, TAU); g.fill();
+  if (b.fusedCol) { g.fillStyle = c2; g.beginPath(); g.ellipse(-6, 8, 24 * p.fat, 16, 0, 0, TAU); g.fill(); }
+  if (p.spike) for (let i = -2; i <= 2; i++) K.tri(i * 12, -30, 9, -Math.PI / 2, c2);
+  circ(26, -16, 20, c); if (p.horn) { K.poly([[20, -32], [14, -58], [30, -34]], '#fef3c7'); K.poly([[34, -30], [44, -52], [42, -26]], '#fef3c7'); }
+  for (let i = 0; i < p.eyes; i++) { circ(22 + i * 8, -20 + (i % 2) * 6, 4, '#fff'); circ(23 + i * 8, -20 + (i % 2) * 6, 2, '#111'); }
+  rect(-22, 22, 9, 16, c); rect(10, 22, 9, 16, c); rect(30, -8, 12, 3, '#111');
+  g.restore();
+}
+
+K.run({
+  id: 'chimera-trail', num: 26, title: 'CHIMERA TRAIL', tag: 'Bind · fuse · battle', color: '#fb923c',
+  goal: 'Climb the trail with a party of beasts. Ember burns Moss, Moss drinks Tide, Tide drowns Ember. Press ✕ as the ring closes to strike hard or guard well. Fuse two beasts at an altar to make a chimera with both their powers.',
+  controls: [['LS', 'Choose'], ['cross', 'Confirm · time your hit'], ['circle', 'Back']],
+  music: { bpm: 110, root: 47, mode: 'dorian', dens: 0.5, seed: 64, lead: 'square', leadVol: 0.045, lp: 1700, drums: true },
+  start() { party = []; node = 0; sigils = 3; won = 0; fused = 0; pickI = 0; st = 'pick'; msg = ''; this.opts = ['ember', 'moss', 'tide'].map((e, i) => mkBeast(e, 1.5, 1000 + i * 77 + irand(0, 999))); bg = []; for (let i = 0; i < 30; i++) bg.push([rand(0, W), rand(0, 300), rand(1, 3)]); },
+  retry() { for (const b of party) { b.hp = b.max; b.ch = 0; } sigils = Math.max(sigils, 2); enterNode(); },
+  update(dt) {
+    const up = K.IN.ny < 0, down = K.IN.ny > 0, left = K.IN.nx < 0, right = K.IN.nx > 0, ok = K.hit('cross'), back = K.hit('circle');
+    if (st === 'pick') { if (left || right) { pickI = (pickI + (right ? 1 : 2)) % 3; K.sfx('move'); } if (ok) { party.push(this.opts[pickI]); act = 0; K.sfx('select'); st = 'map'; } return; }
+    if (st === 'map') { if (ok) { K.sfx('select'); enterNode(); } return; }
+    if (st === 'msg') { msgT -= dt; if (msgT <= 0 || (ok && msgT < 1)) { const q = queue; queue = null; msg = ''; if (q) q(); } return; }
+    if (st === 'altar') {
+      if (left || right) { menuI = (menuI + (right ? 1 : party.length - 1)) % party.length; K.sfx('move'); }
+      if (back) { K.sfx('back'); say('You leave the altar cold.', () => advance(), 1.2); return; }
+      if (ok) { if (alt.includes(menuI)) alt = alt.filter((i) => i !== menuI); else alt.push(menuI); K.sfx('select'); if (alt.length === 2) { const a = party[alt[0]], b = party[alt[1]], c = fuse(a, b); party = party.filter((_, i) => !alt.includes(i)); party.push(c); fused++; K.sfx('key'); fx.flash('#fff', 0.4); fx.shake(8); say(a.name + ' and ' + b.name + ' become ' + c.name + ': ' + c.el + ' body, ' + EL[c.sp].sp + '.', () => advance(), 3); } }
+      return;
+    }
+    const me = party[act];
+    if (st === 'menu') {
+      const items = ['Strike', EL[me.sp].sp, 'Swap beast', 'Bind'];
+      if (up || down) { menuI = (menuI + (down ? 1 : 3)) % 4; K.sfx('move'); }
+      if (ok) {
+        if (menuI === 0 || menuI === 1) { if (menuI === 1 && me.ch < 2) { K.sfx('bad'); K.hint('Needs 2 charge. Strike to build it.', 1.5); return; } ring_ = { t: 0, dur: 0.8, who: 'me', special: menuI === 1, hit: false }; st = 'pAtk'; K.sfx('select'); }
+        else if (menuI === 2) { if (party.filter((b) => b.hp > 0).length < 2) { K.sfx('bad'); return; } st = 'swap'; menuI = 0; K.sfx('select'); }
+        else { if (foe.boss || sigils <= 0 || party.length >= 3) { K.sfx('bad'); K.hint(foe.boss ? 'The Warden cannot be bound.' : sigils <= 0 ? 'No sigils left.' : 'Your party is full (3).', 1.6); return; } sigils--; const ch = clamp(1.05 - foe.hp / foe.max * (foe.elite ? 1.1 : 0.9), 0.1, 0.95); if (Math.random() < ch) { K.sfx('key'); foe.hp = Math.max(foe.hp, Math.round(foe.max * 0.5)); foe.ch = 0; delete foe.elite; party.push(foe); won++; say(foe.name + ' is bound to you!', () => advance(), 1.8); } else { K.sfx('bad'); say('The sigil shatters. ' + foe.name + ' breaks free.', () => foeTurn(), 1.4); } }
+      }
+      return;
+    }
+    if (st === 'swap') { if (up || down) { menuI = (menuI + (down ? 1 : party.length - 1)) % party.length; K.sfx('move'); } if (back) { st = 'menu'; menuI = 2; return; } if (ok && party[menuI].hp > 0 && menuI !== act) { act = menuI; K.sfx('select'); if (this.forced) { this.forced = false; st = 'menu'; menuI = 0; } else say(party[act].name + ' steps in.', () => foeTurn(), 0.9); } return; }
+    if (st === 'pAtk' || st === 'eAtk') {
+      const R = ring_; R.t += dt; const f = R.t / R.dur;
+      if (ok && !R.pressed) { R.pressed = true; R.q = Math.abs(1 - f); }
+      if (f >= 1.12 && !R.hit) {
+        R.hit = true; const good = R.pressed && R.q < 0.13, okk = R.pressed && R.q < 0.26;
+        if (R.who === 'me') { const el = R.special ? me.sp : 'storm', m = R.special ? mult(el, foe.el) * 1.9 : 1, d = Math.max(1, Math.round(me.atk * m * (good ? 1.4 : okk ? 1.15 : 1) * rand(0.92, 1.08))); foe.hp = Math.max(0, foe.hp - d); if (R.special) me.ch = 0; else me.ch = Math.min(2, me.ch + 1); foe.flash = 0.2; K.sfx(R.special ? 'boom' : 'hit'); fx.shake(R.special ? 10 : 5); fx.text(690, 180, '-' + d + (good ? ' PERFECT' : ''), good ? '#fde047' : '#fff', 22); if (R.special && m > 2) fx.text(690, 150, 'STRONG', '#6ee7b7', 14); if (R.special && m < 1.5) fx.text(690, 150, 'RESISTED', '#fca5a5', 14); fx.burst(690, 250, R.special ? EL[el].col : '#fff', 18, 220, 0.5, 4); afterPlayer(); }
+        else { const el = R.special ? foe.sp : 'storm', m = R.special ? mult(el, me.el) * 1.8 : 1, d = Math.max(1, Math.round(foe.atk * m * (good ? 0.45 : okk ? 0.7 : 1) * rand(0.92, 1.08))); me.hp = Math.max(0, me.hp - d); me.flash = 0.2; K.sfx(good ? 'clank' : 'hurt'); fx.shake(good ? 3 : 8); fx.text(270, 220, '-' + d + (good ? ' GUARD' : ''), good ? '#6ee7b7' : '#fca5a5', 22); fx.burst(270, 300, R.special ? EL[el].col : '#fff', 14, 200, 0.5, 4);
+          if (me.hp <= 0) { if (party.some((b) => b.hp > 0)) { this.forced = true; say(me.name + ' is down! Choose another.', () => { st = 'swap'; menuI = party.findIndex((b) => b.hp > 0); }, 1.3); } else { st = 'done'; K.lose({ title: 'YOUR BEASTS ARE SPENT', text: 'You carry them back down to the last cairn and let them rest. The trail will keep.', stats: [['Trail', (node + 1) + ' / ' + TRAIL.length]] }); } }
+          else say('', () => { st = 'menu'; menuI = 0; }, 0.4); }
+      }
+    }
+    for (const b of party.concat(foe ? [foe] : [])) b.flash = (b.flash || 0) - dt;
+  },
+  draw(t) {
+    const g = K.g; const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#1e1b3a'); sky.addColorStop(1, '#7c3f58'); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    for (const s of bg) circ(s[0], s[1], s[2] * 0.6, 'rgba(255,255,255,.6)');
+    K.poly([[0, 360], [180, 200], [330, 320], [520, 150], [700, 300], [860, 190], [960, 280], [960, 540], [0, 540]], '#3b2a4a'); rect(0, 380, W, 160, '#2a1f35');
+    if (st === 'pick') {
+      txt('CHOOSE YOUR FIRST BEAST', W / 2, 70, 26, '#fff', 'center', 900);
+      this.opts.forEach((b, i) => { const x = 240 + i * 240, sel = i === pickI; rrect(x - 100, 130, 200, 300, 16, sel ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.3)'); if (sel) K.rrectS(x - 100, 130, 200, 300, 16, EL[b.el].col, 3); drawBeast(b, x - 6, 250, sel ? 1.3 : 1.1, false, t); txt(b.name, x, 340, 20, '#fff', 'center', 900); txt(b.el.toUpperCase(), x, 366, 13, EL[b.el].col, 'center', 800); txt('beats ' + EL[b.el].beats, x, 388, 12, '#cbd5e1', 'center', 600); txt('HP ' + b.max + ' · ATK ' + b.atk, x, 410, 12, '#cbd5e1', 'center', 600); });
+      K.glyph('cross', W / 2 - 40, 480, 13); txt('Take it', W / 2 - 20, 481, 16, '#fff', 'left', 800); return;
+    }
+    if (st === 'map' || (st === 'msg' && !foe) || st === 'altar' || (st === 'msg' && TRAIL[node] !== 'battle' && TRAIL[node] !== 'elite' && TRAIL[node] !== 'boss')) {
+      for (let i = 0; i < TRAIL.length; i++) { const x = 90 + i * 86, y = 150 - Math.sin(i * 0.7) * 30 - i * 6; if (i) line(x - 86, 150 - Math.sin((i - 1) * 0.7) * 30 - (i - 1) * 6, x, y, 'rgba(255,255,255,.3)', 3); const k = TRAIL[i]; circ(x, y, i === node ? 20 : 14, i < node ? '#6ee7b7' : k === 'boss' ? '#c4b5fd' : k === 'altar' ? '#fde047' : k === 'shrine' ? '#38bdf8' : k === 'elite' ? '#f87171' : '#e2e8f0'); txt({ battle: '⚔', elite: '☠', altar: '✦', shrine: '♥', boss: '♛' }[k], x, y + 1, 14, '#1e1b3a', 'center', 900); if (i === node) ring(x, y, 26 + Math.sin(t * 5) * 3, '#fff', 2); }
+      party.forEach((b, i) => { const x = 250 + i * 230, sel = st === 'altar' && i === menuI, chosen = st === 'altar' && alt.includes(i); if (st === 'altar') { rrect(x - 96, 250, 192, 210, 14, chosen ? 'rgba(253,224,71,.25)' : 'rgba(0,0,0,.3)'); if (sel) K.rrectS(x - 96, 250, 192, 210, 14, '#fde047', 3); } drawBeast(b, x - 6, 350, 1.05, false, t); txt(b.name, x, 420, 16, '#fff', 'center', 800); txt(b.el + (b.sp !== b.el ? ' / ' + b.sp : '') + ' · HP ' + b.hp + '/' + b.max + ' · ATK ' + b.atk, x, 442, 11, '#cbd5e1', 'center', 600); });
+      if (st === 'map') { g.globalAlpha = 0.6 + 0.4 * Math.sin(t * 5); K.glyph('cross', W / 2 - 100, 500, 13); txt({ battle: 'Walk on: a wild beast ahead', elite: 'Walk on: an elder beast ahead', altar: 'Approach the fusion altar', shrine: 'Rest at the shrine', boss: 'Face the Warden' }[TRAIL[node]], W / 2 - 80, 501, 16, '#fff', 'left', 800); g.globalAlpha = 1; }
+      if (st === 'altar') { txt('FUSION ALTAR · choose two beasts to make one', W / 2, 224, 16, '#fde047', 'center', 800); K.glyph('circle', W / 2 - 60, 500, 11); txt('Leave', W / 2 - 42, 501, 14, '#e2e8f0', 'left', 700); }
+    } else if (foe) {
+      const me = party[act];
+      drawBeast(foe, 690, 250, foe.boss ? 1.7 : foe.elite ? 1.4 : 1.2, true, t, foe.flash > 0); if (me) drawBeast(me, 270, 330, 1.35, false, t, me.flash > 0);
+      const plate = (b, x, y) => { rrect(x, y, 250, 58, 10, 'rgba(8,8,18,.8)'); txt(b.name, x + 12, y + 17, 15, '#fff', 'left', 800); txt(b.el.toUpperCase() + (b.sp !== b.el ? '+' + b.sp.toUpperCase() : ''), x + 238, y + 17, 11, EL[b.el].col, 'right', 800); bar(x + 10, y + 30, 170, 14, b.hp / b.max, b.hp / b.max < 0.3 ? '#ef4444' : '#4ade80'); txt(b.hp + '/' + b.max, x + 186, y + 38, 11, '#e2e8f0', 'left', 700); for (let i = 0; i < 2; i++) circ(x + 228 + i * 0, y + 38, 0, '#000'); for (let i = 0; i < 2; i++) rrect(x + 224 - 0 + i * 12 - 6, y + 44, 9, 6, 2, i < b.ch ? '#fde047' : 'rgba(255,255,255,.15)'); };
+      plate(foe, 560, 60); if (me) plate(me, 120, 400);
+      if (st === 'menu' || st === 'swap') {
+        const items = st === 'menu' ? ['Strike', EL[me.sp].sp + (me.ch < 2 ? '  (charge ' + me.ch + '/2)' : '  READY'), 'Swap beast', 'Bind  (' + sigils + ' sigils)'] : party.map((b) => b.name + '  ' + b.hp + '/' + b.max + (b.hp <= 0 ? '  DOWN' : ''));
+        rrect(560, 330, 330, items.length * 40 + 20, 12, 'rgba(8,8,18,.9)');
+        items.forEach((s, i) => { const sel = i === menuI; if (sel) rrect(570, 340 + i * 40, 310, 36, 8, '#fb923c'); txt(s, 586, 359 + i * 40, 15, sel ? '#1e1b3a' : (st === 'menu' && i === 1 && me.ch < 2 ? '#64748b' : '#fff'), 'left', 800); });
+        if (st === 'menu' && menuI === 1) { const m = mult(me.sp, foe.el); txt(m > 1 ? 'Strong against ' + foe.el : m < 1 ? 'Weak against ' + foe.el : 'Even against ' + foe.el, 725, 318, 12, m > 1 ? '#6ee7b7' : m < 1 ? '#fca5a5' : '#cbd5e1', 'center', 700); }
+      }
+      if ((st === 'pAtk' || st === 'eAtk') && ring_ && !ring_.hit) { const R = ring_, x = R.who === 'me' ? 690 : 270, y = R.who === 'me' ? 250 : 330, f = R.t / R.dur; ring(x, y, 34, '#fff', 4); ring(x, y, 34 + Math.max(0, 1 - f) * 120, R.who === 'me' ? '#fde047' : '#f87171', 5); K.glyph('cross', x, y, 16); txt(R.who === 'me' ? (R.special ? EL[party[act].sp].sp.toUpperCase() + '!' : 'STRIKE!') : (R.special ? foe.name + ': ' + EL[foe.sp].sp + '! GUARD!' : 'GUARD!'), W / 2, 130, 20, R.who === 'me' ? '#fde047' : '#fca5a5', 'center', 900); }
+    }
+    if (msg) { rrect(180, 466, 600, 54, 12, 'rgba(8,8,18,.92)'); K.wrap(msg, W / 2, 484, 560, 20, 15, '#fff', 'center', 700); }
+    fx.draw();
+    txt('TRAIL ' + Math.min(TRAIL.length, node + 1) + ' / ' + TRAIL.length, 20, 22, 13, '#fed7aa', 'left', 800); txt('SIGILS ' + sigils, 940, 22, 13, '#fde047', 'right', 800);
+  },
+});
+</script>
+</body>
+</html>
