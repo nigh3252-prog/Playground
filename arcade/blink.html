@@ -142,6 +142,7 @@ ARC.game({
       p: { x: g.W / 2, y: g.H / 2, vx: 0, vy: 0, ang: 0, charges: MAXCH, recharge: 0, focus: 1, aiming: false, aimLen: 0, inv: 1, dashFx: 0, dead: false },
       enemies: [], bullets: [], tele: [], gibs: [], slashes: [], ghosts: [], queue: [], queueT: 0, wave: 0, combo: 0, comboT: 0, banner: 0, deadT: 0, bg: 0,
     };
+    g.S = S;
     S.decal = document.createElement('canvas'); S.decal.width = Math.ceil(g.W); S.decal.height = g.H;
     nextWave(g);
   },

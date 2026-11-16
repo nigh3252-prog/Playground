@@ -36,7 +36,7 @@ for (const f of ['index.html', ...files]) {
       await page.evaluate(() => { const p = __pad; p.axes[0] = Math.random() * 2 - 1; p.axes[1] = Math.random() * 2 - 1; p.axes[2] = Math.random() * 2 - 1; p.axes[3] = Math.random() * 2 - 1; for (const i of [0, 1, 2, 3, 5, 7]) __press(i, Math.random() < 0.4); });
       await page.waitForTimeout(100);
     }
-    await page.evaluate(() => { for (const i of [0, 1, 2, 3, 5, 7]) __press(i, false); });
+    await page.evaluate(() => { for (const i of [0, 1, 2, 3, 5, 7]) __press(i, false); __pad.axes.fill(0); });
     await page.screenshot({ path: path.join(shots, 'arc-' + f.replace('.html', '') + '-play.png') });
     // pause works
     await tap(9);

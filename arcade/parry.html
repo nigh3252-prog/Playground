@@ -97,6 +97,7 @@ ARC.game({
   buttons: [{ id: 'a', label: 'PARRY', big: true, color: '#7fe8ff' }],
   init(g) {
     S = { p: { x: g.W / 2, y: g.H / 2, hp: 3, act: 0, cd: 0, inv: 0, face: 0, swing: 0 }, enemies: [], bullets: [], wave: 0, chain: 0, maxChain: 0, banner: 0, over: 0, wreck: [] };
+    g.S = S;
     nextWave(g);
   },
   resize(g) { if (S) { S.p.x = g.W / 2; S.p.y = g.H / 2; } },

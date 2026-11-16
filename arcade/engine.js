@@ -401,7 +401,7 @@
       slowmo(scale, dur) { this._slowScale = scale; this._slow = Math.max(this._slow, dur); },
       flash(color, a = 0.5) { this._flashColor = color; this._flash = Math.max(this._flash, a); },
       addScore(n) { this.score += n; },
-      gameOver(msg) { if (this.state !== 'play') return; this.state = 'over'; this._overMsg = msg || ''; this._overT = 0; this._newBest = false; if (this.score > this.best) { this.best = this.score; store.set('best:' + def.id, this.best); this._newBest = true; } sfx.over(); touch.clear(); },
+      gameOver(msg) { if (this.state !== 'play') return; this.state = 'over'; this._menuSel = 0; this._overMsg = msg || ''; this._overT = 0; this._newBest = false; if (this.score > this.best) { this.best = this.score; store.set('best:' + def.id, this.best); this._newBest = true; } sfx.over(); touch.clear(); },
       restart() { this.fx.clear(); this.score = 0; this.t = 0; this.timeScale = 1; this._slow = 0; this._stop = 0; this._shake = 0; this._flash = 0; this.cam = { x: 0, y: 0, zoom: 1 }; def.init(this); this.state = 'play'; sfx.start(); touch.clear(); },
     };
     const tb = el('div', { class: 'arc-tb' });

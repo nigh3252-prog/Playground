@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>FLAIL</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const LMAX = 165, LMIN = 55, BR = 17, PR = 15, VMAX = 1200;
+let S, hum = null;
+
+function startHum() {
+  const A = ARC.audio; if (!A.ctx || hum) return;
+  try {
+    const c = A.ctx, src = c.createBufferSource(); src.buffer = A.noise; src.loop = true;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 4; f.frequency.value = 300;
+    const gn = c.createGain(); gn.gain.value = 0;
+    src.connect(f); f.connect(gn); gn.connect(A.master); src.start();
+    hum = { f, gn };
+  } catch (e) { }
+}
+function setHum(speed, on) {
+  if (!hum) return; const c = ARC.audio.ctx; const k = clamp(speed / VMAX, 0, 1);
+  hum.f.frequency.setTargetAtTime(200 + k * 1400, c.currentTime, 0.03);
+  hum.gn.gain.setTargetAtTime(on ? k * k * 0.35 : 0, c.currentTime, 0.05);
+}
+
+function spawn(g) {
+  const side = (Math.random() * 4) | 0;
+  let x, y;
+  if (side === 0) { x = -20; y = rand(0, g.H); } else if (side === 1) { x = g.W + 20; y = rand(0, g.H); } else if (side === 2) { x = rand(0, g.W); y = -20; } else { x = rand(0, g.W); y = g.H + 20; }
+  const lv = S.level; const r = Math.random();
+  let k = 'grunt';
+  if (lv >= 2 && r < 0.2) k = 'bomber';
+  else if (lv >= 3 && r < 0.38) k = 'shield';
+  else if (lv >= 4 && r < 0.5) k = 'swarm';
+  const def = {
+    grunt: { r: 14, hp: 240, spd: 70, col: '#7cff6b', pts: 50 },
+    bomber: { r: 15, hp: 250, spd: 60, col: '#ffcc33', pts: 80 },
+    shield: { r: 22, hp: 780, spd: 45, col: '#4aa8ff', pts: 200 },
+    swarm: { r: 9, hp: 150, spd: 120, col: '#ff6bd5', pts: 30 },
+  }[k];
+  const n = k === 'swarm' ? 4 : 1;
+  for (let i = 0; i < n; i++) S.enemies.push({ k, x: x + rand(-20, 20), y: y + rand(-20, 20), vx: 0, vy: 0, ...def, spd: def.spd + lv * 4, stun: 0, flash: 0 });
+}
+
+function explode(g, x, y) {
+  g.fx.burst(x, y, 40, { color: ['#ffcc33', '#ff6b2e', '#fff'], speed: 600, size: 5 });
+  g.fx.ring(x, y, { r: 10, to: 130, color: '#ffcc33', life: 0.4, w: 10 });
+  g.sfx.boom(1.1); g.shake(14); g.flash('#ffcc33', 0.15);
+  for (const e of S.enemies) if (!e.dead && Math.hypot(e.x - x, e.y - y) < 120) { e.pendingBoom = 0.08 + Math.random() * 0.08; }
+  const p = S.p; if (Math.hypot(p.x - x, p.y - y) < 80) hurt(g);
+}
+function kill(g, e, spd, nx, ny) {
+  e.dead = true;
+  S.combo++; S.comboT = 1.8;
+  const mult = spd > 880 ? 3 : spd > 600 ? 2 : 1;
+  const pts = e.pts * mult * (1 + Math.floor(S.combo / 4));
+  g.addScore(pts);
+  g.fx.pop(e.x, e.y - 22, (mult > 1 ? ['', '', 'HEAVY ', 'BRUTAL '][mult] : '') + '+' + pts, { color: mult === 3 ? '#ff5a3d' : mult === 2 ? '#ffd84a' : '#fff', size: 16 + mult * 4 });
+  g.fx.burst(e.x, e.y, 18 + mult * 8, { color: [e.col, '#fff'], speed: 300 + spd * 0.4, size: 4, angle: Math.atan2(ny, nx), spread: 0.9, drag: 4 });
+  S.splats.push({ x: e.x, y: e.y, r: e.r * 1.6, col: e.col, rot: rand(0, TAU) });
+  if (S.splats.length > 120) S.splats.shift();
+  if (e.k === 'bomber') explode(g, e.x, e.y);
+}
+function hurt(g) {
+  const p = S.p; if (p.inv > 0 || p.hp <= 0) return;
+  p.hp--; p.inv = 1.4; S.combo = 0;
+  g.shake(16); g.flash('#ff2040', 0.4); g.sfx.hurt(); g.hitstop(0.09); g.haptic(1, 150);
+  for (const e of S.enemies) { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1; if (d < 140) { e.vx += dx / d * 500; e.vy += dy / d * 500; e.stun = 0.5; } }
+  if (p.hp <= 0) { S.over = 1.0; g.slowmo(0.2, 1); }
+}
+
+ARC.game({
+  id: 'flail', title: 'FLAIL', color: '#ffd84a', tagline: 'Pull the chain in and the spin speeds up. Physics does the killing.',
+  help: [
+    { pad: 'Ⓛ move (swing the ball)  ·  HOLD Ⓐ reel in = spin faster  ·  Ⓑ dash', touch: 'Left thumb: move/swing  ·  HOLD REEL: spin faster  ·  DASH' },
+    'Speed is damage. Slow hits just shove. Hot ball = instant kill.',
+    'Yellow bombers chain-explode. Blue shields need a red-hot ball.',
+  ],
+  buttons: [{ id: 'a', label: 'REEL', big: true, color: '#ffd84a' }, { id: 'b', label: 'DASH' }],
+  init(g) {
+    S = { p: { x: g.W / 2, y: g.H / 2, vx: 0, vy: 0, hp: 3, inv: 1, dash: 0, dcd: 0 }, b: { x: g.W / 2 + LMAX, y: g.H / 2, vx: 0, vy: 300 }, L: LMAX, enemies: [], splats: [], trail: [], spawnT: 1, level: 1, levelT: 0, combo: 0, comboT: 0, over: 0, maxSpd: 0 };
+    g.S = S;
+    startHum();
+  },
+  update(g, dt, rdt) {
+    startHum();
+    const I = g.input, p = S.p, b = S.b;
+    if (S.over > 0) { S.over -= rdt; setHum(0, false); if (S.over <= 0) g.gameOver('Top ball speed ' + Math.round(S.maxSpd)); }
+    if (g.state !== 'play') setHum(0, false);
+    // level ramp
+    S.levelT += dt; if (S.levelT > 22) { S.levelT = 0; S.level++; g.fx.pop(g.W / 2, 80, 'LEVEL ' + S.level, { color: '#ffd84a', size: 30 }); g.sfx.select(0.8); }
+    S.spawnT -= dt;
+    if (S.spawnT <= 0 && S.over <= 0) { spawn(g); S.spawnT = Math.max(0.45, 1.8 - S.level * 0.13) * rand(0.7, 1.2); }
+    // player
+    p.inv -= dt; p.dcd -= dt; p.dash -= dt;
+    if ((I.pressed('b') || I.pressed('x')) && p.dcd <= 0 && p.hp > 0) {
+      const m = Math.hypot(I.mx, I.my); const dx = m > 0.2 ? I.mx / m : p.vx / (Math.hypot(p.vx, p.vy) || 1), dy = m > 0.2 ? I.my / m : p.vy / (Math.hypot(p.vx, p.vy) || 1);
+      p.vx = dx * 720; p.vy = dy * 720; p.dash = 0.14; p.dcd = 0.6; g.sfx.dash(); g.fx.burst(p.x, p.y, 10, { color: '#fff', speed: 200, size: 3, angle: Math.atan2(-dy, -dx), spread: 0.6 });
+    }
+    const sp = 250;
+    if (p.dash <= 0 && p.hp > 0) { p.vx = lerp(p.vx, I.mx * sp, 1 - Math.exp(-dt * 10)); p.vy = lerp(p.vy, I.my * sp, 1 - Math.exp(-dt * 10)); }
+    p.x = clamp(p.x + p.vx * dt, PR, g.W - PR); p.y = clamp(p.y + p.vy * dt, PR, g.H - PR);
+    // chain length — reel in to spin up
+    const reel = (I.down('a') || I.down('rb') || I.down('rt')) && p.hp > 0;
+    const Lt = reel ? LMIN : LMAX;
+    const Lold = S.L;
+    S.L = Lt < S.L ? Math.max(Lt, S.L - dt * 420) : Math.min(Lt, S.L + dt * 260);
+    // ball physics (substeps for stability at high speed)
+    const steps = 4, h = dt / steps;
+    for (let s = 0; s < steps; s++) {
+      b.vx *= Math.exp(-0.35 * h); b.vy *= Math.exp(-0.35 * h);
+      b.x += b.vx * h; b.y += b.vy * h;
+      const dx = b.x - p.x, dy = b.y - p.y, d = Math.hypot(dx, dy) || 1;
+      const L = lerp(Lold, S.L, (s + 1) / steps);
+      if (d > L) {
+        const nx = dx / d, ny = dy / d;
+        // taut rope: remove outward radial velocity (relative to the player), keep tangential
+        const rvx = b.vx - p.vx, rvy = b.vy - p.vy;
+        const vr = rvx * nx + rvy * ny;
+        let tvx = rvx - vr * nx, tvy = rvy - vr * ny;
+        // angular momentum conservation when the rope shortens
+        const Lp = lerp(Lold, S.L, s / steps);
+        if (L < Lp) { const k = Lp / L; tvx *= k; tvy *= k; }
+        const vrKeep = vr < 0 ? vr : 0;
+        b.vx = p.vx + tvx + vrKeep * nx; b.vy = p.vy + tvy + vrKeep * ny;
+        b.x = p.x + nx * L; b.y = p.y + ny * L;
+        // gentle spin assist: rope pulled by player motion adds energy, keeps it lively
+        const tl = Math.hypot(tvx, tvy) || 1;
+        if (reel) { b.vx += tvx / tl * 950 * h; b.vy += tvy / tl * 950 * h; }
+      }
+      const spd = Math.hypot(b.vx, b.vy); if (spd > VMAX) { b.vx *= VMAX / spd; b.vy *= VMAX / spd; }
+      // walls
+      if (b.x < BR) { b.x = BR; b.vx = Math.abs(b.vx) * 0.7; wallHit(g, spd); } if (b.x > g.W - BR) { b.x = g.W - BR; b.vx = -Math.abs(b.vx) * 0.7; wallHit(g, spd); }
+      if (b.y < BR) { b.y = BR; b.vy = Math.abs(b.vy) * 0.7; wallHit(g, spd); } if (b.y > g.H - BR) { b.y = g.H - BR; b.vy = -Math.abs(b.vy) * 0.7; wallHit(g, spd); }
+    }
+    const spd = Math.hypot(b.vx, b.vy);
+    S.maxSpd = Math.max(S.maxSpd, spd);
+    if (g.state === 'play' && S.over <= 0) setHum(spd, true);
+    S.trail.push({ x: b.x, y: b.y, s: spd }); if (S.trail.length > 14) S.trail.shift();
+    // enemies
+    for (const e of S.enemies) {
+      if (e.dead) continue;
+      if (e.pendingBoom != null) { e.pendingBoom -= dt; if (e.pendingBoom <= 0) { e.pendingBoom = null; kill(g, e, 800, 0, 0); continue; } }
+      e.flash -= dt; e.stun -= dt;
+      const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+      if (e.stun <= 0) { e.vx = lerp(e.vx, dx / d * e.spd, 1 - Math.exp(-dt * 3)); e.vy = lerp(e.vy, dy / d * e.spd, 1 - Math.exp(-dt * 3)); }
+      else { e.vx *= Math.exp(-dt * 4); e.vy *= Math.exp(-dt * 4); }
+      e.x += e.vx * dt; e.y += e.vy * dt;
+      // ball collision
+      const bx = e.x - b.x, by = e.y - b.y, bd = Math.hypot(bx, by);
+      if (bd < e.r + BR) {
+        const nx = bx / (bd || 1), ny = by / (bd || 1);
+        const rel = Math.hypot(b.vx - e.vx, b.vy - e.vy);
+        if (rel > e.hp) {
+          kill(g, e, rel, b.vx, b.vy);
+          g.hitstop(clamp(rel / 14000, 0.02, 0.09)); g.shake(clamp(rel / 90, 3, 14));
+          g.sfx.hit(0.7 + rel / 1500); if (rel > 1000) g.sfx.heavy(1.3);
+          g.haptic(clamp(rel / VMAX, 0.2, 1), 50);
+          b.vx *= 0.9; b.vy *= 0.9;
+        } else if (e.flash <= 0) {
+          e.vx += nx * (200 + rel * 0.7); e.vy += ny * (200 + rel * 0.7); e.stun = 0.6; e.flash = 0.15;
+          const vn = b.vx * nx + b.vy * ny; if (vn > 0) { b.vx -= 1.6 * vn * nx; b.vy -= 1.6 * vn * ny; }
+          g.sfx.clang(0.6); g.shake(4); g.fx.burst(b.x + nx * BR, b.y + ny * BR, 8, { color: '#fff', speed: 250, size: 2.5, shape: 'line' });
+          if (e.k === 'shield') g.fx.pop(e.x, e.y - 30, 'TOO SLOW', { color: '#4aa8ff', size: 14 });
+        }
+      }
+      if (!e.dead && p.hp > 0 && d < e.r + PR - 2 && p.dash <= 0) hurt(g);
+      // separation
+      for (const o of S.enemies) if (o !== e && !o.dead) { const sx = e.x - o.x, sy = e.y - o.y, sd = Math.hypot(sx, sy); if (sd > 0 && sd < e.r + o.r) { const k = (e.r + o.r - sd) * 0.5; e.x += sx / sd * k; e.y += sy / sd * k; } }
+    }
+    S.enemies = S.enemies.filter(e => !e.dead && e.x > -200 && e.x < g.W + 200 && e.y > -200 && e.y < g.H + 200);
+    if (S.comboT > 0) { S.comboT -= dt; if (S.comboT <= 0) S.combo = 0; }
+  },
+  draw(g, ctx) {
+    const p = S.p, b = S.b;
+    ctx.fillStyle = '#16120c'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.fillStyle = '#1d1810';
+    for (let x = 0; x < g.W; x += 60) for (let y = (x / 60 % 2) * 30; y < g.H; y += 60) ctx.fillRect(x, y, 30, 30);
+    for (const s of S.splats) { ctx.globalAlpha = 0.28; ctx.fillStyle = s.col; ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.rot); ctx.beginPath(); ctx.ellipse(0, 0, s.r, s.r * 0.7, 0, 0, TAU); ctx.fill(); ctx.restore(); }
+    ctx.globalAlpha = 1;
+    // enemies
+    for (const e of S.enemies) {
+      ctx.fillStyle = e.flash > 0 ? '#fff' : e.col;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, TAU); ctx.fill();
+      if (e.k === 'shield') { ctx.strokeStyle = '#bfe0ff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(e.x, e.y, e.r - 4, 0, TAU); ctx.stroke(); }
+      if (e.k === 'bomber') { ctx.fillStyle = Math.floor(g.time * 6) % 2 ? '#ff3d2e' : '#2a1a00'; ctx.beginPath(); ctx.arc(e.x, e.y, 5, 0, TAU); ctx.fill(); }
+      const a = Math.atan2(p.y - e.y, p.x - e.x); ctx.fillStyle = '#16120c';
+      ctx.beginPath(); ctx.arc(e.x + Math.cos(a) * e.r * 0.45, e.y + Math.sin(a) * e.r * 0.45, e.r * 0.22, 0, TAU); ctx.fill();
+    }
+    // chain
+    const spd = Math.hypot(b.vx, b.vy); const heat = clamp(spd / VMAX, 0, 1);
+    const links = 10;
+    ctx.fillStyle = '#9a8f80';
+    for (let i = 1; i < links; i++) { const t = i / links; ctx.beginPath(); ctx.arc(lerp(p.x, b.x, t), lerp(p.y, b.y, t), 3, 0, TAU); ctx.fill(); }
+    // trail — color by heat
+    ctx.lineCap = 'round';
+    for (let i = 1; i < S.trail.length; i++) {
+      const a = S.trail[i - 1], c = S.trail[i]; const k = i / S.trail.length; const h = clamp(c.s / VMAX, 0, 1);
+      ctx.strokeStyle = h > 0.7 ? `rgba(255,80,40,${k * 0.8})` : h > 0.45 ? `rgba(255,216,74,${k * 0.6})` : `rgba(255,255,255,${k * 0.25})`;
+      ctx.lineWidth = BR * 2 * k; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+    }
+    // ball
+    const bc = heat > 0.7 ? '#ff5a3d' : heat > 0.45 ? '#ffd84a' : '#d8d2c8';
+    if (heat > 0.45) { ctx.fillStyle = heat > 0.7 ? '#ff5a3d33' : '#ffd84a22'; ctx.beginPath(); ctx.arc(b.x, b.y, BR * (1.8 + heat), 0, TAU); ctx.fill(); }
+    ctx.fillStyle = bc; ctx.beginPath(); ctx.arc(b.x, b.y, BR, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffffff55'; ctx.beginPath(); ctx.arc(b.x - 5, b.y - 5, 5, 0, TAU); ctx.fill();
+    for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + g.time * 4; ctx.fillStyle = bc; ctx.beginPath(); ctx.moveTo(b.x + Math.cos(a) * (BR + 7), b.y + Math.sin(a) * (BR + 7)); ctx.lineTo(b.x + Math.cos(a + 0.35) * BR, b.y + Math.sin(a + 0.35) * BR); ctx.lineTo(b.x + Math.cos(a - 0.35) * BR, b.y + Math.sin(a - 0.35) * BR); ctx.fill(); }
+    // player
+    if (p.hp > 0 || S.over > 0.5) {
+      const blink = p.inv > 0 && Math.floor(g.time * 20) % 2;
+      ctx.fillStyle = blink ? '#ff6b8a' : '#f2ead8'; ctx.beginPath(); ctx.arc(p.x, p.y, PR, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#16120c'; const a = Math.atan2(b.y - p.y, b.x - p.x); ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * 6, p.y + Math.sin(a) * 6, 4, 0, TAU); ctx.fill();
+      if (p.dcd > 0) { ctx.strokeStyle = '#ffffff44'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, PR + 5, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - p.dcd / 0.6)); ctx.stroke(); }
+    }
+    g.fx.draw(ctx);
+  },
+  hudExtra(g, ctx) {
+    for (let i = 0; i < 3; i++) g.text(i < S.p.hp ? '♥' : '♡', 24 + i * 24, 86, 22, i < S.p.hp ? '#ff6b8a' : '#ffffff44', 'left');
+    const spd = Math.hypot(S.b.vx, S.b.vy); const k = clamp(spd / VMAX, 0, 1);
+    ctx.fillStyle = '#ffffff18'; ctx.fillRect(g.W / 2 - 100, 18, 200, 8);
+    ctx.fillStyle = k > 0.7 ? '#ff5a3d' : k > 0.45 ? '#ffd84a' : '#d8d2c8'; ctx.fillRect(g.W / 2 - 100, 18, 200 * k, 8);
+    g.text(Math.round(spd) + ' SPD', g.W / 2, 38, 12, '#ffffffaa', 'center', 700);
+    if (S.combo > 2) g.text(S.combo + ' SMASH', g.W - 24, 80, 22, '#ffd84a', 'right');
+  },
+});
+function wallHit(g, spd) { if (spd > 500 && !S._wallCd) { g.sfx.hit(0.5); g.shake(spd / 200); S._wallCd = true; setTimeout(() => S._wallCd = false, 80); } }
+})();
+</script>
+</body>
+</html>
