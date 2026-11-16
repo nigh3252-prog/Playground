@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08101b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Playground">
+  <meta name="description" content="Revisit experiments, find something unexpected, and keep the useful ideas.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <title>Playground Hub</title>
+  <style>
+    :root {color-scheme:dark; --bg:#08101b; --surface:#111e2d; --surface2:#1b2a3b; --edge:#314357; --text:#f2f6fb; --muted:#a9bbca; --accent:#78e0d5; --warm:#ffd081}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{overflow-x:hidden}
+    button,input,textarea{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .hidden,[hidden]{display:none!important}
+    .wrap{width:min(1150px,100%);margin:0 auto;padding:clamp(18px,4vw,40px)}
+    .topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .identity{display:flex;align-items:center;gap:14px;font-size:.88rem;color:var(--muted);letter-spacing:.09em;text-transform:uppercase;font-weight:750}
+    .identity .glyph{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--edge);background:var(--surface);border-radius:12px;color:var(--accent);font-size:1.2rem}
+    h1{font-size:clamp(2.15rem,7vw,4.4rem);line-height:1.04;letter-spacing:-.06em;margin:40px 0 10px;max-width:810px}
+    .lede{max-width:660px;color:var(--muted);line-height:1.5;font-size:1.06rem;margin:0 0 26px}
+    .actionrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .btn{border:1px solid var(--edge);border-radius:14px;background:var(--surface);color:var(--text);min-height:43px;padding:10px 15px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+    .btn:hover{background:var(--surface2)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#062329}
+    .btn.primary:hover{background:#a4f2e9}
+    .btn.soft{background:transparent}
+    .btn.small{min-height:37px;padding:7px 10px;font-size:.85rem}
+    .catalog-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:28px 0 15px}
+    .search{width:min(100%,450px);background:var(--surface);border:1px solid var(--edge);border-radius:14px;color:var(--text);min-height:46px;padding:0 14px}
+    .search::placeholder,textarea::placeholder{color:#8196a8}
+    .filters{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 23px}
+    .filter{border:1px solid var(--edge);background:transparent;border-radius:999px;color:var(--muted);padding:7px 12px;font-size:.86rem;text-transform:capitalize}
+    .filter.active{background:#24453f;border-color:#40877d;color:#dcfffa}
+    .resultline{color:var(--muted);font-size:.85rem}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:13px}
+    .tile{background:linear-gradient(145deg,#192a3c,#101b29);border:1px solid var(--edge);border-radius:19px;padding:18px;min-height:192px;display:flex;flex-direction:column;gap:11px;text-align:left;color:var(--text);width:100%;transition:border-color .2s,transform .2s}
+    .tile:hover{border-color:var(--accent);transform:translateY(-2px)}
+    .tile-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+    .kind{color:var(--accent);text-transform:uppercase;letter-spacing:.12em;font-size:.69rem;font-weight:800}
+    .visits{color:var(--muted);font-size:.75rem}
+    .tile-title{font-size:1.23rem;font-weight:730;letter-spacing:-.025em}
+    .tile-summary{color:var(--muted);font-size:.91rem;line-height:1.43;flex:1}
+    .chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+    .chip{border:1px solid #385061;border-radius:8px;padding:4px 7px;color:#b6cddd;font-size:.72rem}
+    .chip.archived{border-color:#74634c;color:var(--warm)}
+    .tile-meta{color:var(--warm);font-size:.83rem}
+    .empty{border:1px dashed var(--edge);border-radius:16px;padding:32px;text-align:center;color:var(--muted)}
+    .footer{padding:32px 0 14px;color:var(--muted);font-size:.8rem;line-height:1.5}
+    #player{position:fixed;inset:0;z-index:20;background:#030810;width:100vw;height:100vh;height:100dvh;overflow:hidden}
+    #playerFrame{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;background:#02060a}
+    #playerToggle{position:absolute;z-index:24;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));max-width:min(280px,55vw);display:flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid #ffffff40;border-radius:999px;background:#0a1826bd;backdrop-filter:blur(12px);color:white;font-size:.81rem;font-weight:700;white-space:nowrap}
+    #playerToggle .text{overflow:hidden;text-overflow:ellipsis}
+    #playerToggle[data-open="true"]{border-color:var(--accent)}
+    #playerMenu{position:absolute;z-index:25;top:max(48px,calc(env(safe-area-inset-top) + 49px));left:max(8px,env(safe-area-inset-left));width:min(365px,calc(100vw - 16px));max-height:calc(100dvh - 58px);overflow-y:auto;border:1px solid #486173;border-radius:18px;background:#0e1b2cf5;box-shadow:0 18px 65px #0009;padding:15px;backdrop-filter:blur(16px)}
+    #playerMenu h2{font-size:1.07rem;margin:1px 0 4px}
+    #playerMenu p{font-size:.8rem;color:var(--muted);margin:0 0 12px}
+    .menu-row{display:flex;gap:7px;margin:9px 0;flex-wrap:wrap}
+    .menu-row>.btn{flex:1}
+    .panel-label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:750;margin:17px 0 8px}
+    .reaction{flex:1;border:1px solid var(--edge);border-radius:11px;background:#192a3b;color:var(--text);min-height:40px;font-size:.83rem;padding:8px 9px;white-space:nowrap}
+    .reaction.active{border-color:var(--accent);background:#21423f}
+    #noteInput{background:#0a1522;color:var(--text);border:1px solid var(--edge);border-radius:12px;min-height:95px;width:100%;resize:vertical;padding:10px;font-size:.89rem}
+    #noteHistory{display:grid;gap:8px;margin-top:10px;max-height:130px;overflow:auto}
+    .note{background:#192838;padding:9px 10px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;color:#d9e9f1;font-size:.8rem;line-height:1.4}
+    .note time{display:block;color:var(--muted);font-size:.7rem;margin-bottom:5px}
+    .fineprint{color:var(--muted);font-size:.74rem;line-height:1.45}
+    #toast{position:fixed;z-index:50;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);border:1px solid #48766f;background:#11352f;color:#d9fff8;box-shadow:0 15px 40px #0009;border-radius:999px;padding:10px 17px;white-space:nowrap;max-width:95vw;overflow:hidden;text-overflow:ellipsis;font-size:.85rem}
+    @media(orientation:landscape) and (max-height:470px){#playerMenu{max-height:calc(100dvh - 55px)}.panel-label{margin-top:9px}#noteInput{min-height:60px}}
+    @media(prefers-reduced-motion:reduce){.tile{transition:none}}
+  </style>
+  <script src="hub.js" defer></script>
+</head>
+<body>
+  <main id="catalog" class="wrap">
+    <header>
+      <div class="topline">
+        <div class="identity"><span class="glyph" aria-hidden="true">✳</span> Playground / hub</div>
+        <button class="btn soft small" id="exportData" type="button">↓ Export my notes</button>
+      </div>
+      <h1>Find something<br>unexpected.</h1>
+      <p class="lede">Little games, wild prototypes, odd mechanics and good ideas. Explore freely, keep the sparks, and move on whenever you want.</p>
+      <div class="actionrow">
+        <button id="surprise" class="btn primary" type="button">✳ Surprise me</button>
+        <button id="resume" class="btn" type="button" hidden>↗ Resume last experiment</button>
+        <span class="resultline" id="summary" role="status">Loading experiments…</span>
+      </div>
+    </header>
+    <section aria-label="Experiments">
+      <div class="catalog-controls">
+        <label for="gallerySearch" style="font-weight:700">Explore the collection</label>
+        <input id="gallerySearch" class="search" type="search" autocomplete="off" placeholder="Search games, mechanics, tags…" aria-label="Search experiments">
+      </div>
+      <nav id="filters" class="filters" aria-label="Filter by experiment type"></nav>
+      <div id="grid" class="grid"></div>
+      <p class="empty hidden" id="empty">Nothing matches those filters. Try another search.</p>
+    </section>
+    <footer class="footer">Feedback and sessions stay in this browser unless you export them. Older experiments may occasionally need to open separately.</footer>
+  </main>
+
+  <section id="player" class="hidden" aria-label="Experiment player">
+    <iframe id="playerFrame" title="Experiment" allow="autoplay; fullscreen; gamepad" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <button id="playerToggle" type="button" aria-expanded="false" aria-controls="playerMenu" data-open="false" title="Open Playground controls"><span aria-hidden="true">☰</span><span id="viewerName" class="text">Experiment</span></button>
+    <aside id="playerMenu" hidden aria-label="Experiment controls">
+      <div class="topline">
+        <h2 id="menuTitle">Experiment</h2>
+        <button class="btn soft small" id="menuClose" type="button" aria-label="Hide controls">✕</button>
+      </div>
+      <p id="menuDescription"></p>
+      <div class="menu-row">
+        <button class="btn small" id="home" type="button">⌂ Library</button>
+        <button class="btn primary small" id="playerSurprise" type="button">✳ Surprise</button>
+      </div>
+      <div class="menu-row">
+        <button class="btn small" id="prev" type="button">← Previous</button>
+        <button class="btn small" id="next" type="button">Next →</button>
+      </div>
+      <div class="menu-row">
+        <button class="btn small" id="fullscreen" type="button">⛶ Fullscreen</button>
+        <button class="btn small" id="newTab" type="button">↗ Open separately</button>
+      </div>
+      <div id="sessionClock" class="fineprint"></div>
+      <span class="panel-label">What do you think?</span>
+      <div id="reactions" class="menu-row" aria-label="Quick reaction">
+        <button class="reaction" data-reaction="spark" type="button">✨ Spark</button>
+        <button class="reaction" data-reaction="revisit" type="button">🔖 Revisit</button>
+        <button class="reaction" data-reaction="pass" type="button">➖ Pass</button>
+      </div>
+      <label class="panel-label" for="noteInput">Playtest notes or pasted transcript</label>
+      <textarea id="noteInput" maxlength="20000" placeholder="What worked? What didn't? Which specific bit is worth keeping?"></textarea>
+      <div class="menu-row">
+        <button class="btn primary small" id="saveNote" type="button">Save note</button>
+        <button class="btn small" id="exportViewer" type="button">↓ Export feedback</button>
+      </div>
+      <div id="noteHistory" aria-label="Earlier notes"></div>
+      <p class="fineprint">Only this browser stores your feedback for now. Export it before clearing your data.</p>
+    </aside>
+  </section>
+  <div id="toast" hidden role="status" aria-live="polite"></div>
+</body>
+</html>
