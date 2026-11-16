@@ -78,7 +78,7 @@ function reflect(g, b, perfect) {
 }
 
 function hurt(g, b) {
-  const p = S.p;
+  const p = S.p; if (p.hp <= 0) return;
   p.hp--; p.inv = 1.0; S.chain = 0;
   g.hitstop(0.1); g.shake(16); g.flash('#ff2040', 0.45); g.sfx.hurt(); g.haptic(1, 160);
   g.fx.burst(p.x, p.y, 30, { color: ['#ff2040', '#fff'], speed: 420, size: 4 });

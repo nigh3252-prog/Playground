@@ -23,6 +23,7 @@
     ctx: null, master: null, noise: null, muted: store.get('muted', false),
     unlock() {
       try {
+        if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; // play through the iPhone silent switch
         if (!this.ctx) {
           const AC = window.AudioContext || window.webkitAudioContext;
           if (!AC) return;
@@ -44,6 +45,9 @@
     setMuted(m) { this.muted = m; store.set('muted', m); if (this.master) this.master.gain.value = m ? 0 : 0.55; },
     tone(f, dur, o = {}) {
       if (!this.ok()) return;
+      try { this._tone(f, dur, o); } catch (e) { }
+    },
+    _tone(f, dur, o) {
       const c = this.ctx, t = c.currentTime + (o.delay || 0);
       const osc = c.createOscillator(), g = c.createGain();
       osc.type = o.type || 'square';
@@ -60,6 +64,9 @@
     },
     hiss(dur, o = {}) {
       if (!this.ok()) return;
+      try { this._hiss(dur, o); } catch (e) { }
+    },
+    _hiss(dur, o) {
       const c = this.ctx, t = c.currentTime + (o.delay || 0);
       const src = c.createBufferSource(); src.buffer = this.noise;
       src.playbackRate.value = o.rate || 1;
@@ -218,6 +225,8 @@
       const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
       const am = Math.hypot(ax, ay); if (am > 1) { ax /= am; ay /= am; }
       this.mx = mx; this.my = my; this.ax = ax; this.ay = ay;
+      if (!this._t0) this._t0 = performance.now();
+      if (performance.now() - this._t0 < 350) { this.prev = Object.assign({}, r); this.raw = r; return; }
       this.raw = r;
       const now = performance.now();
       for (const b of BTN) if (r[b] && !this.prev[b]) this._stamp[b] = now;
@@ -478,11 +487,12 @@
       if (g.state === 'play' || g.state === 'over' || g.state === 'title') {
         const simDt = g.state === 'title' ? rdt * 0.6 : dt;
         if (g.state === 'play') g.t += simDt;
-        if (g.state !== 'title' || def.attract) {
+        if (g.state === 'play' || (g.state === 'title' && def.attract)) {
           def.update(g, simDt, rdt);
         }
         g.fx.update(simDt);
       }
+      if (def.frame) def.frame(g, rdt);
       g._shake = Math.max(0, g._shake - rdt * 60 * Math.max(1, g._shake * 0.12));
       g._flash = Math.max(0, g._flash - rdt * 3);
       // draw
@@ -495,7 +505,8 @@
       if (def.hud) def.hud(g, ctx); else drawHud(g, ctx);
       if (g._flash > 0) { ctx.globalAlpha = Math.min(1, g._flash); ctx.fillStyle = g._flashColor; ctx.fillRect(0, 0, g.W, g.H); ctx.globalAlpha = 1; }
       if (g.state === 'title') drawTitle(g, ctx);
-      else if (g.state === 'pause') drawMenu(g, ctx, 'PAUSED', MENU.pause);
+      else if (g.state === 'pause') { drawMenu(g, ctx, 'PAUSED', MENU.pause); drawHelp(g, ctx, g.H * 0.37, 14); }
+      if ((g.state === 'title' || g.state === 'pause') && !audio.muted && !(audio.ctx && audio.ctx.state === 'running')) text(ctx, '🔈 tap the screen once for sound', g.W / 2, g.H - 14, 12, '#ffffffaa', 'center', 700);
       else if (g.state === 'over') drawOver(g, ctx);
     }
 
@@ -531,6 +542,13 @@
       ctx.globalAlpha = 0.5 + 0.5 * blink;
       text(ctx, touchMode ? 'TAP TO START' : 'PRESS Ⓐ TO START', g.W / 2, g.H * 0.91, 22, '#fff');
       ctx.globalAlpha = 1;
+    }
+    function drawHelp(g, ctx, y0, size) {
+      const touchMode = I.lastDevice === 'touch';
+      (def.help || []).forEach((l, i) => {
+        const s = typeof l === 'string' ? l : (touchMode ? l.touch : l.pad) || l.pad || l.touch;
+        text(ctx, s, g.W / 2, y0 + i * (size + 8), size, '#dfe7ff', 'center', 650);
+      });
     }
     function drawMenu(g, ctx, title, items, sub) {
       dim(ctx);

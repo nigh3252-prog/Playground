@@ -88,6 +88,7 @@ ARC.game({
     g.S = S;
     startHum();
   },
+  frame(g) { if (g.state !== 'play') setHum(0, false); },
   update(g, dt, rdt) {
     startHum();
     const I = g.input, p = S.p, b = S.b;

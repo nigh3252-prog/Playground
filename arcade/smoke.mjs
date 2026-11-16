@@ -11,7 +11,7 @@ const reg = readFileSync(path.join(dir, 'games.js'), 'utf8');
 let files = [...reg.matchAll(/file:\s*'([^']+)'/g)].map(m => m[1]);
 if (process.argv.length > 2) files = process.argv.slice(2);
 const shots = process.env.SHOTS || '/tmp';
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 let fails = 0;
 for (const f of ['index.html', ...files]) {
   const page = await browser.newPage({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1 });
@@ -37,6 +37,8 @@ for (const f of ['index.html', ...files]) {
       await page.waitForTimeout(100);
     }
     await page.evaluate(() => { for (const i of [0, 1, 2, 3, 5, 7]) __press(i, false); __pad.axes.fill(0); });
+    const aud = await page.evaluate(() => ARC.audio.ctx ? ARC.audio.ctx.state : 'none');
+    if (aud !== 'running') errs.push('audio not running: ' + aud);
     await page.screenshot({ path: path.join(shots, 'arc-' + f.replace('.html', '') + '-play.png') });
     // pause works
     await tap(9);
