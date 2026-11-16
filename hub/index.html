@@ -40,6 +40,13 @@
     .filters{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 23px}
     .filter{border:1px solid var(--edge);background:transparent;border-radius:999px;color:var(--muted);padding:7px 12px;font-size:.86rem;text-transform:capitalize}
     .filter.active{background:#24453f;border-color:#40877d;color:#dcfffa}
+    .input-picker{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:18px 0 13px}
+    .input-title{font-weight:720;font-size:.88rem;color:var(--muted)}
+    .input-choices{display:flex;flex-wrap:wrap;gap:7px}
+    .input-option{border:1px solid var(--edge);background:var(--surface);color:var(--text);font-weight:650;padding:8px 12px;border-radius:10px;min-height:40px;font-size:.84rem}
+    .input-option.active{background:#24504b;border-color:var(--accent);color:#edfffc}
+    .input-note{font-size:.76rem;color:var(--muted);line-height:1.3;margin:0 0 13px}
+    .control-chip{border:1px solid #477f83;background:#183b44;border-radius:8px;padding:4px 8px;color:#bff7f2;font-size:.74rem;font-weight:700}
     .resultline{color:var(--muted);font-size:.85rem}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:13px}
     .tile{background:linear-gradient(145deg,#192a3c,#101b29);border:1px solid var(--edge);border-radius:19px;padding:18px;min-height:192px;display:flex;flex-direction:column;gap:11px;text-align:left;color:var(--text);width:100%;transition:border-color .2s,transform .2s}
@@ -99,6 +106,11 @@
         <label for="gallerySearch" style="font-weight:700">Explore the collection</label>
         <input id="gallerySearch" class="search" type="search" autocomplete="off" placeholder="Search games, mechanics, tags…" aria-label="Search experiments">
       </div>
+      <div class="input-picker" aria-label="Preferred controls">
+        <span class="input-title">I'm playing with</span>
+        <nav id="inputFilters" class="input-choices" aria-label="Filter experiments by controls"></nav>
+      </div>
+      <p class="input-note" id="inputHint">Recommendations are based on available control code, not verified device testing. Surprise Me uses your chosen controls.</p>
       <nav id="filters" class="filters" aria-label="Filter by experiment type"></nav>
       <div id="grid" class="grid"></div>
       <p class="empty hidden" id="empty">Nothing matches those filters. Try another search.</p>
@@ -115,6 +127,7 @@
         <button class="btn soft small" id="menuClose" type="button" aria-label="Hide controls">✕</button>
       </div>
       <p id="menuDescription"></p>
+      <div id="menuInputLabel" class="menu-row" aria-label="Recommended control style"></div>
       <div class="menu-row">
         <button class="btn small" id="home" type="button">⌂ Library</button>
         <button class="btn primary small" id="playerSurprise" type="button">✳ Surprise</button>
