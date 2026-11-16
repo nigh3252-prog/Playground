@@ -15,4 +15,5 @@ window.ARC_GAMES = [
   { file: 'tether.html', title: 'TETHER', color: '#7dffcf', blurb: 'Drop an anchor — you are the other end of a laser. Sweep the swarm.' },
   { file: 'sling.html', title: 'SLING', color: '#7dff6b', blurb: 'Pull back and launch yourself through a pinball room of targets.' },
   { file: 'surf.html', title: 'SURF', color: '#9fd8ff', blurb: 'Dive the valleys, launch off crests, flip, outrun the avalanche.' },
+  { file: 'still.html', title: 'STILL', color: '#ff5a1f', blurb: 'Time only moves when you do. One hit shatters you.' },
 ];
