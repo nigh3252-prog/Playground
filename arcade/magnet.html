@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>MAGNET</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const PR = 14, CR = 17, RANGE = 380, CONE = 0.6, KILL_V = 300;
+let S;
+
+function crate(x, y) { return { x, y, vx: 0, vy: 0, r: CR, held: false, drop: 0.5, hits: 0, rot: rand(0, TAU) }; }
+function spawnEnemy(g) {
+  const side = (Math.random() * 4) | 0; let x, y;
+  if (side === 0) { x = -20; y = rand(20, g.H - 20); } else if (side === 1) { x = g.W + 20; y = rand(20, g.H - 20); } else if (side === 2) { x = rand(20, g.W - 20); y = -20; } else { x = rand(20, g.W - 20); y = g.H + 20; }
+  const r = Math.random(); let k = 'walker';
+  if (S.lv >= 2 && r < 0.3) k = 'shooter'; else if (S.lv >= 3 && r < 0.45) k = 'armor';
+  S.enemies.push({ k, x, y, vx: 0, vy: 0, r: k === 'armor' ? 19 : 14, spd: (k === 'armor' ? 45 : k === 'shooter' ? 55 : 80) + S.lv * 4, cool: rand(1.5, 2.5), stun: 0, flash: 0 });
+}
+function crush(g, e, c, sp) {
+  e.dead = true; c.hits++;
+  S.combo++; S.comboT = 2;
+  const pts = (e.k === 'armor' ? 250 : 100) * c.hits * (1 + Math.floor(S.combo / 4));
+  g.addScore(pts);
+  g.fx.pop(e.x, e.y - 22, (c.hits > 1 ? '×' + c.hits + ' ' : '') + '+' + pts, { color: c.hits > 1 ? '#ffd84a' : '#fff', size: 16 + c.hits * 3 });
+  g.fx.burst(e.x, e.y, 22, { color: [e.k === 'shooter' ? '#c08bff' : e.k === 'armor' ? '#ffb03d' : '#ff5e7a', '#fff'], speed: 300 + sp * 0.3, size: 4, angle: Math.atan2(c.vy, c.vx), spread: 0.9 });
+  g.sfx.heavy(1.2 + c.hits * 0.1); g.hitstop(0.04 + Math.min(0.06, sp / 20000)); g.shake(5 + sp / 150); g.haptic(0.6, 50);
+  c.vx *= 0.82; c.vy *= 0.82;
+}
+function hurt(g) {
+  const p = S.p; if (p.inv > 0 || p.hp <= 0) return;
+  p.hp--; p.inv = 1.3; S.combo = 0; g.hitstop(0.09); g.shake(14); g.flash('#ff2040', 0.4); g.sfx.hurt(); g.haptic(1, 150);
+  if (p.hp <= 0) { S.overT = 1.1; g.slowmo(0.25, 1); }
+}
+
+ARC.game({
+  id: 'magnet', title: 'MAGNET', color: '#4ad6ff', tagline: 'Pull the steel in. Throw it through them.',
+  help: [
+    { pad: 'Ⓛ move/aim  ·  HOLD Ⓐ pull crates (catch one as a shield)  ·  RELEASE to fling  ·  Ⓑ repulse blast', touch: 'Left thumb: move/aim  ·  HOLD PULL to catch, release to fling  ·  BLAST' },
+    'Fast crates crush everything in the way — line them up.',
+    'A held crate blocks bullets. Orange brutes need a really fast hit.',
+  ],
+  buttons: [{ id: 'a', label: 'PULL', big: true, color: '#4ad6ff' }, { id: 'b', label: 'BLAST' }],
+  init(g) {
+    S = { p: { x: g.W / 2, y: g.H / 2, vx: 0, vy: 0, aim: 0, hp: 4, inv: 1, pulling: false, bcd: 0, held: null }, crates: [], enemies: [], bullets: [], spawnT: 1.5, crateT: 2, lv: 1, lvT: 0, combo: 0, comboT: 0, overT: 0, kills: 0 };
+    g.S = S;
+    for (let i = 0; i < 5; i++) S.crates.push(crate(rand(60, g.W - 60), rand(60, g.H - 60)));
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p;
+    if (S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver('Level ' + S.lv); return; } }
+    S.lvT += dt; if (S.lvT > 22) { S.lvT = 0; S.lv++; g.fx.pop(g.W / 2, 90, 'LEVEL ' + S.lv, { color: '#4ad6ff', size: 28 }); }
+    S.spawnT -= dt; if (S.spawnT <= 0) { spawnEnemy(g); S.spawnT = Math.max(0.6, 2.2 - S.lv * 0.15) * rand(0.7, 1.2); }
+    S.crateT -= dt; if (S.crateT <= 0 && S.crates.length < 9) { S.crateT = 2.5; S.crates.push(crate(rand(60, g.W - 60), rand(60, g.H - 60))); }
+    if (S.comboT > 0) { S.comboT -= dt; if (S.comboT <= 0) S.combo = 0; }
+    p.inv -= dt; p.bcd -= dt;
+    if (p.hp > 0) {
+      const sp = p.held ? 210 : 250;
+      p.vx = lerp(p.vx, I.mx * sp, 1 - Math.exp(-dt * 12)); p.vy = lerp(p.vy, I.my * sp, 1 - Math.exp(-dt * 12));
+      let ax = I.ax, ay = I.ay; if (Math.hypot(ax, ay) < 0.3) { ax = I.mx; ay = I.my; }
+      if (Math.hypot(ax, ay) > 0.3) p.aim = ARC.util.angLerp(p.aim, Math.atan2(ay, ax), 1 - Math.exp(-rdt * 16));
+    } else { p.vx *= 0.9; p.vy *= 0.9; }
+    p.x = clamp(p.x + p.vx * dt, PR, g.W - PR); p.y = clamp(p.y + p.vy * dt, PR, g.H - PR);
+    const pull = (I.down('a') || I.down('rt') || I.down('lt')) && p.hp > 0;
+    const fx = Math.cos(p.aim), fy = Math.sin(p.aim);
+    if (pull) {
+      if (!p.pulling) { p.pulling = true; g.sfx.charge(0.6); }
+      for (const c of S.crates) {
+        if (c.held || c.drop > 0) continue;
+        const dx = c.x - p.x, dy = c.y - p.y, d = Math.hypot(dx, dy);
+        if (d > RANGE) continue;
+        const ang = Math.atan2(dy, dx); const off = Math.abs(((ang - p.aim + Math.PI) % TAU + TAU) % TAU - Math.PI);
+        if (off > CONE) continue;
+        const f = 1500 * (1 - d / RANGE * 0.5);
+        c.vx -= dx / d * f * dt; c.vy -= dy / d * f * dt;
+        if (!p.held && d < PR + CR + 26) { c.held = true; p.held = c; c.hits = 0; g.sfx.clang(0.7); g.shake(3); g.haptic(0.3, 30); }
+      }
+    } else if (p.pulling) {
+      p.pulling = false;
+      if (p.held) {
+        const c = p.held; c.held = false; p.held = null;
+        c.vx = fx * 1050 + p.vx * 0.3; c.vy = fy * 1050 + p.vy * 0.3; c.hits = 0;
+        p.vx -= fx * 160; p.vy -= fy * 160;
+        g.sfx.whoosh(0.8); g.audio.tone(90, 0.15, { type: 'sine', vol: 0.4, to: 40 }); g.shake(5);
+      }
+    }
+    if (p.held) { const c = p.held; c.x = lerp(c.x, p.x + fx * (PR + CR + 8), 1 - Math.exp(-dt * 25)); c.y = lerp(c.y, p.y + fy * (PR + CR + 8), 1 - Math.exp(-dt * 25)); c.vx = p.vx; c.vy = p.vy; c.rot = p.aim; }
+    // repulse blast
+    if ((I.pressed('b') || I.pressed('x') || I.pressed('rb')) && p.bcd <= 0 && p.hp > 0) {
+      p.bcd = 0.9;
+      if (p.held) { p.held.held = false; p.held = null; }
+      g.fx.ring(p.x, p.y, { r: 10, to: 170, color: '#4ad6ff', life: 0.3, w: 8 }); g.sfx.boom(1.6); g.shake(6);
+      for (const c of S.crates) { const dx = c.x - p.x, dy = c.y - p.y, d = Math.hypot(dx, dy) || 1; if (d < 180) { const k = 900 * (1 - d / 220); c.vx += dx / d * k; c.vy += dy / d * k; c.hits = 0; } }
+      for (const e of S.enemies) { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1; if (d < 150) { e.vx = dx / d * 420; e.vy = dy / d * 420; e.stun = 0.6; } }
+      for (const b of S.bullets) if (Math.hypot(b.x - p.x, b.y - p.y) < 160) b.dead = true;
+    }
+    // crates physics
+    for (const c of S.crates) {
+      if (c.drop > 0) { c.drop -= dt; if (c.drop <= 0) { g.sfx.hit(0.5); g.fx.burst(c.x, c.y, 8, { color: '#8a9aa8', speed: 120, size: 3 }); } continue; }
+      if (!c.held) {
+        c.vx *= Math.exp(-dt * 1.6); c.vy *= Math.exp(-dt * 1.6);
+        c.x += c.vx * dt; c.y += c.vy * dt;
+        c.rot += Math.hypot(c.vx, c.vy) * dt * 0.01;
+        if (c.x < CR) { c.x = CR; c.vx = Math.abs(c.vx) * 0.7; } if (c.x > g.W - CR) { c.x = g.W - CR; c.vx = -Math.abs(c.vx) * 0.7; }
+        if (c.y < CR) { c.y = CR; c.vy = Math.abs(c.vy) * 0.7; } if (c.y > g.H - CR) { c.y = g.H - CR; c.vy = -Math.abs(c.vy) * 0.7; }
+      }
+      const sp = Math.hypot(c.vx - (c.held ? p.vx : 0), c.vy - (c.held ? p.vy : 0));
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        const dx = e.x - c.x, dy = e.y - c.y, d = Math.hypot(dx, dy);
+        if (d < e.r + CR) {
+          const need = e.k === 'armor' ? 650 : KILL_V;
+          if (!c.held && sp > need) crush(g, e, c, sp);
+          else { const nx = dx / (d || 1), ny = dy / (d || 1); e.x = c.x + nx * (e.r + CR); e.y = c.y + ny * (e.r + CR); e.vx += nx * 200; e.vy += ny * 200; e.stun = 0.3; if (!c.held) { c.vx *= 0.6; c.vy *= 0.6; } if (sp > 200) g.sfx.clang(0.6); }
+        }
+      }
+    }
+    // crate-crate collisions
+    for (let i = 0; i < S.crates.length; i++) for (let j = i + 1; j < S.crates.length; j++) {
+      const a = S.crates[i], b = S.crates[j]; if (a.drop > 0 || b.drop > 0) continue;
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+      if (d > 0 && d < CR * 2) {
+        const nx = dx / d, ny = dy / d, o = (CR * 2 - d) / 2;
+        if (!a.held) { a.x -= nx * o; a.y -= ny * o; } if (!b.held) { b.x += nx * o; b.y += ny * o; }
+        const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+        if (rv < 0) { const imp = -rv * 0.9; if (!a.held) { a.vx -= nx * imp; a.vy -= ny * imp; } if (!b.held) { b.vx += nx * imp; b.vy += ny * imp; } if (imp > 250) { g.sfx.clang(0.8); g.shake(2); } }
+      }
+    }
+    // enemies
+    for (const e of S.enemies) {
+      if (e.dead) continue;
+      e.stun -= dt; e.cool -= dt;
+      const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+      if (e.stun <= 0) {
+        const want = e.k === 'shooter' ? (d > 240 ? 1 : -0.5) : 1;
+        e.vx = lerp(e.vx, dx / d * e.spd * want, 1 - Math.exp(-dt * 3)); e.vy = lerp(e.vy, dy / d * e.spd * want, 1 - Math.exp(-dt * 3));
+        if (e.k === 'shooter' && e.cool <= 0 && p.hp > 0) { e.cool = rand(1.8, 2.8); S.bullets.push({ x: e.x, y: e.y, vx: dx / d * 230, vy: dy / d * 230 }); g.sfx.zap(1.1); }
+      } else { e.vx *= Math.exp(-dt * 4); e.vy *= Math.exp(-dt * 4); }
+      e.x += e.vx * dt; e.y += e.vy * dt;
+      if (p.hp > 0 && d < e.r + PR - 2) hurt(g);
+    }
+    S.enemies = S.enemies.filter(e => !e.dead && e.x > -100 && e.x < g.W + 100 && e.y > -100 && e.y < g.H + 100);
+    for (const b of S.bullets) {
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      for (const c of S.crates) if (c.drop <= 0 && Math.hypot(c.x - b.x, c.y - b.y) < CR + 4) { b.dead = true; g.sfx.clang(1.6); g.fx.burst(b.x, b.y, 5, { color: '#fff', speed: 160, size: 2 }); break; }
+      if (!b.dead && p.hp > 0 && Math.hypot(b.x - p.x, b.y - p.y) < PR) { b.dead = true; hurt(g); }
+      if (b.x < -10 || b.x > g.W + 10 || b.y < -10 || b.y > g.H + 10) b.dead = true;
+    }
+    S.bullets = S.bullets.filter(b => !b.dead);
+  },
+  draw(g, ctx) {
+    const p = S.p;
+    ctx.fillStyle = '#10161c'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.fillStyle = '#ffffff06'; for (let x = 0; x < g.W; x += 64) for (let y = 0; y < g.H; y += 64) ctx.fillRect(x + 2, y + 2, 60, 60);
+    // pull cone
+    if (S.p.pulling && p.hp > 0) {
+      ctx.fillStyle = '#4ad6ff14'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, RANGE, p.aim - CONE, p.aim + CONE); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#4ad6ff44'; ctx.lineWidth = 2; for (let i = 0; i < 4; i++) { const r = RANGE * (1 - ((g.time * 1.5 + i / 4) % 1)); ctx.beginPath(); ctx.arc(p.x, p.y, r, p.aim - CONE, p.aim + CONE); ctx.stroke(); }
+    }
+    for (const c of S.crates) {
+      if (c.drop > 0) { ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.arc(c.x, c.y, CR * (1 - c.drop), 0, TAU); ctx.fill(); continue; }
+      const sp = Math.hypot(c.vx, c.vy);
+      ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot);
+      ctx.fillStyle = sp > KILL_V && !c.held ? '#e8f4ff' : '#8a9aa8'; ctx.fillRect(-CR, -CR, CR * 2, CR * 2);
+      ctx.strokeStyle = '#4a5866'; ctx.lineWidth = 3; ctx.strokeRect(-CR + 3, -CR + 3, CR * 2 - 6, CR * 2 - 6);
+      ctx.beginPath(); ctx.moveTo(-CR + 3, -CR + 3); ctx.lineTo(CR - 3, CR - 3); ctx.stroke();
+      ctx.restore();
+      if (c.held) { ctx.strokeStyle = '#4ad6ff'; ctx.lineWidth = 2; ctx.strokeRect(c.x - CR - 4, c.y - CR - 4, CR * 2 + 8, CR * 2 + 8); }
+    }
+    for (const e of S.enemies) {
+      ctx.fillStyle = e.k === 'shooter' ? '#c08bff' : e.k === 'armor' ? '#ffb03d' : '#ff5e7a';
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, TAU); ctx.fill();
+      if (e.k === 'armor') { ctx.strokeStyle = '#ffe0b0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.x, e.y, e.r - 5, 0, TAU); ctx.stroke(); }
+      ctx.fillStyle = '#10161c'; const a = Math.atan2(p.y - e.y, p.x - e.x); ctx.beginPath(); ctx.arc(e.x + Math.cos(a) * e.r * 0.45, e.y + Math.sin(a) * e.r * 0.45, e.r * 0.22, 0, TAU); ctx.fill();
+    }
+    for (const b of S.bullets) { ctx.fillStyle = '#c08bff'; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, TAU); ctx.fill(); }
+    if (p.hp > 0 || S.overT > 0.6) {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.aim);
+      ctx.fillStyle = p.inv > 0 && Math.floor(g.time * 20) % 2 ? '#ff6b8a' : '#e8f4ff'; ctx.beginPath(); ctx.arc(0, 0, PR, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ff3d5a'; ctx.fillRect(PR - 6, -9, 8, 6); ctx.fillStyle = '#4ad6ff'; ctx.fillRect(PR - 6, 3, 8, 6);
+      ctx.restore();
+      if (p.bcd > 0) { ctx.strokeStyle = '#4ad6ff55'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, PR + 5, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - p.bcd / 0.9)); ctx.stroke(); }
+    }
+    g.fx.draw(ctx);
+  },
+  hudExtra(g, ctx) {
+    for (let i = 0; i < 4; i++) g.text(i < S.p.hp ? '♥' : '♡', 24 + i * 24, 86, 22, i < S.p.hp ? '#ff6b8a' : '#ffffff44', 'left');
+    if (S.combo > 1) g.text(S.combo + ' CRUSH', g.W - 24, 80, 22, '#ffd84a', 'right');
+  },
+});
+})();
+</script>
+</body>
+</html>
