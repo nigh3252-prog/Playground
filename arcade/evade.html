@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>EVADE</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU, segCircle } = ARC.util;
+const PR = 12, PERFECT = 0.2;
+const BOSSES = [
+  { name: 'THE WARDEN', col: '#ff5e5e', hp: 50, moves: ['sweep', 'slam', 'charge'], spd: 1 },
+  { name: 'TWIN MOON', col: '#b38bff', hp: 70, moves: ['sweep', 'ring', 'volley', 'slam'], spd: 1.12 },
+  { name: 'IRON TIDE', col: '#4ad6ff', hp: 90, moves: ['charge', 'ring', 'slam', 'sweep', 'volley'], spd: 1.25 },
+];
+let S;
+
+function newBoss(g) {
+  const i = S.bossN, base = BOSSES[i % BOSSES.length], loop = Math.floor(i / BOSSES.length);
+  S.boss = { ...base, x: g.W * 0.65, y: g.H / 2, vx: 0, vy: 0, r: 46, hp: base.hp * (1 + loop * 0.5), max: base.hp * (1 + loop * 0.5), spd: base.spd + loop * 0.15, face: Math.PI, atk: null, cool: 1.6, flash: 0, stun: 0, enter: 1 };
+  S.banner = 1.6;
+}
+function startAttack(g) {
+  const B = S.boss, p = S.p; const mv = B.moves[(Math.random() * B.moves.length) | 0];
+  const ang = Math.atan2(p.y - B.y, p.x - B.x);
+  const w = { sweep: 0.75, slam: 0.95, charge: 0.85, ring: 0.8, volley: 0.7 }[mv] / B.spd;
+  B.atk = { mv, t: 0, wind: w, active: 0.12, ang, tx: p.x, ty: p.y, done: false };
+  g.audio.tone(mv === 'slam' ? 160 : 260, w, { type: 'sawtooth', vol: 0.05, to: mv === 'slam' ? 80 : 520 });
+}
+function inHit(a, x, y) {
+  const B = S.boss;
+  if (a.mv === 'sweep') { const d = Math.hypot(x - B.x, y - B.y); const off = Math.abs(((Math.atan2(y - B.y, x - B.x) - a.ang + Math.PI) % TAU + TAU) % TAU - Math.PI); return d < 190 && off < 1.05; }
+  if (a.mv === 'slam') return Math.hypot(x - a.tx, y - a.ty) < 88;
+  if (a.mv === 'charge') return segCircle(a.sx, a.sy, B.x, B.y, x, y, B.r + PR);
+  if (a.mv === 'ring') { const d = Math.hypot(x - B.x, y - B.y); return Math.abs(d - a.ringR) < 16; }
+  return false;
+}
+function onDodged(g) {
+  const p = S.p;
+  if (p.dodgeT < PERFECT && S.flow <= 0.5) {
+    S.flow = 2.2; S.perfects++;
+    g.fx.pop(p.x, p.y - 40, 'PERFECT — FLOW', { color: '#7dffcf', size: 22 });
+    g.flash('#7dffcf', 0.25); g.hitstop(0.08); g.sfx.clang(1.5); g.sfx.combo(8); g.haptic(0.6, 60);
+    g.fx.ring(p.x, p.y, { r: 10, to: 120, color: '#7dffcf', life: 0.4, w: 6 });
+    g.addScore(200);
+  }
+}
+function hurt(g, dmg = 1) {
+  const p = S.p; if (p.inv > 0 || p.hp <= 0) return;
+  p.hp -= dmg; p.inv = 0.9; S.chain = 0;
+  g.hitstop(0.1); g.shake(14); g.flash('#ff2040', 0.4); g.sfx.hurt(); g.haptic(1, 150);
+  const B = S.boss, dx = p.x - B.x, dy = p.y - B.y, d = Math.hypot(dx, dy) || 1; p.vx = dx / d * 500; p.vy = dy / d * 500; p.kb = 0.15;
+  if (p.hp <= 0) { S.overT = 1.3; g.slowmo(0.25, 1.2); }
+}
+
+ARC.game({
+  id: 'evade', title: 'EVADE', color: '#7dffcf', tagline: 'Dodge at the last instant. Then make it hurt.',
+  help: [
+    { pad: 'Ⓛ move  ·  Ⓑ / Ⓡ1 dodge (invincible)  ·  Ⓐ slash combo (auto-faces the boss)', touch: 'Left thumb: move  ·  DODGE is invincible  ·  SLASH auto-faces the boss' },
+    'Dodge just before a hit lands = FLOW: the boss slows, your hits triple.',
+    'Red zones fire when they fill. Read them, wait, then roll.',
+  ],
+  buttons: [{ id: 'a', label: 'SLASH', big: true, color: '#7dffcf' }, { id: 'b', label: 'DODGE' }],
+  init(g) {
+    S = { p: { x: g.W * 0.25, y: g.H / 2, vx: 0, vy: 0, hp: 5, inv: 1, dodge: 0, dodgeT: 9, dcd: 0, atk: 0, combo: 0, comboT: 0, face: 0, kb: 0 }, bossN: 0, boss: null, shots: [], flow: 0, chain: 0, perfects: 0, overT: 0, banner: 0, slashes: [] };
+    g.S = S; newBoss(g);
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p, B = S.boss;
+    if (S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver('Bosses beaten: ' + S.bossN + '  ·  ' + S.perfects + ' perfect dodges'); return; } }
+    S.banner -= rdt;
+    S.flow -= dt;
+    const bdt = S.flow > 0 ? dt * 0.25 : dt; // boss lives in slow time during FLOW
+    // player
+    p.inv -= dt; p.dcd -= dt; p.dodge -= dt; p.dodgeT += dt; p.atk -= dt; p.comboT -= dt; p.kb -= dt;
+    p.face = Math.atan2(B.y - p.y, B.x - p.x);
+    if (p.hp > 0) {
+      if ((I.pressed('b') || I.pressed('rb') || I.pressed('x')) && p.dcd <= 0) {
+        const m = Math.hypot(I.mx, I.my); const a = m > 0.2 ? Math.atan2(I.my, I.mx) : p.face + Math.PI;
+        p.vx = Math.cos(a) * 640; p.vy = Math.sin(a) * 640; p.dodge = 0.24; p.dodgeT = 0; p.inv = Math.max(p.inv, 0.26); p.dcd = 0.42;
+        g.sfx.dash(1.1);
+      }
+      if (I.buffered('a', 150) && p.atk <= 0 && p.dodge <= 0) {
+        I.consume('a');
+        p.combo = p.comboT > 0 ? (p.combo + 1) % 3 : 0; p.comboT = 0.6; p.atk = p.combo === 2 ? 0.32 : 0.2;
+        // lunge a little toward the boss
+        p.vx += Math.cos(p.face) * 220; p.vy += Math.sin(p.face) * 220;
+        S.slashes.push({ x: p.x, y: p.y, a: p.face, t: 0.15, big: p.combo === 2 });
+        g.sfx.whoosh(p.combo === 2 ? 0.8 : 1.3);
+        const reach = p.combo === 2 ? 74 : 60;
+        if (Math.hypot(B.x - p.x, B.y - p.y) < B.r + reach && B.enter <= 0) {
+          const dmg = (p.combo === 2 ? 2 : 1) * (S.flow > 0 ? 3 : 1);
+          B.hp -= dmg; B.flash = 0.08; S.chain++;
+          g.addScore(10 * dmg * (1 + Math.floor(S.chain / 10)));
+          g.fx.burst(B.x - Math.cos(p.face) * B.r * 0.8, B.y - Math.sin(p.face) * B.r * 0.8, 10 + dmg * 3, { color: [B.col, '#fff'], speed: 320, size: 3, angle: p.face, spread: 1 });
+          g.hitstop(S.flow > 0 ? 0.06 : 0.035); g.shake(S.flow > 0 ? 6 : 3); g.sfx.hit(S.flow > 0 ? 1.4 : 1); g.haptic(0.4, 30);
+          if (S.flow > 0) g.fx.pop(B.x, B.y - B.r - 10, '-' + dmg, { color: '#7dffcf', size: 18 });
+          if (B.hp <= 0) {
+            const bonus = 3000 * (S.bossN + 1); g.addScore(bonus);
+            g.fx.burst(B.x, B.y, 140, { color: [B.col, '#fff', '#ffd84a'], speed: 700, size: 5 });
+            g.fx.pop(g.W / 2, g.H * 0.35, B.name + ' FALLS  +' + bonus, { color: '#ffd84a', size: 26, life: 1.6 });
+            g.sfx.boom(0.7); g.sfx.boom(1.3); g.shake(24); g.hitstop(0.2); g.flash('#fff', 0.7); g.slowmo(0.3, 1.2);
+            S.bossN++; p.hp = Math.min(5, p.hp + 2); S.shots = []; newBoss(g); return;
+          }
+        }
+      }
+      if (p.dodge <= 0 && p.kb <= 0) { const sp = p.atk > 0 ? 90 : 240; p.vx = lerp(p.vx, I.mx * sp, 1 - Math.exp(-dt * 12)); p.vy = lerp(p.vy, I.my * sp, 1 - Math.exp(-dt * 12)); }
+    }
+    p.x = clamp(p.x + p.vx * dt, PR, g.W - PR); p.y = clamp(p.y + p.vy * dt, PR, g.H - PR);
+    // boss pushes the player out of its body
+    { const dx = p.x - B.x, dy = p.y - B.y, d = Math.hypot(dx, dy) || 1; if (d < B.r + PR) { p.x = B.x + dx / d * (B.r + PR); p.y = B.y + dy / d * (B.r + PR); } }
+    // boss
+    B.flash -= dt;
+    if (B.enter > 0) { B.enter -= rdt; return; }
+    const a = B.atk;
+    if (!a) {
+      B.cool -= bdt;
+      const dx = p.x - B.x, dy = p.y - B.y, d = Math.hypot(dx, dy) || 1;
+      B.face = ARC.util.angLerp(B.face, Math.atan2(dy, dx), 1 - Math.exp(-bdt * 4));
+      const want = d > 150 ? 70 * B.spd : -30;
+      B.vx = lerp(B.vx, dx / d * want, 1 - Math.exp(-bdt * 2)); B.vy = lerp(B.vy, dy / d * want, 1 - Math.exp(-bdt * 2));
+      B.x = clamp(B.x + B.vx * bdt, B.r, g.W - B.r); B.y = clamp(B.y + B.vy * bdt, B.r, g.H - B.r);
+      if (B.cool <= 0 && p.hp > 0) startAttack(g);
+    } else {
+      a.t += bdt;
+      if (a.t < a.wind) {
+        if (a.mv === 'sweep' || a.mv === 'charge') a.ang = ARC.util.angLerp(a.ang, Math.atan2(p.y - B.y, p.x - B.x), 1 - Math.exp(-bdt * (a.t < a.wind * 0.6 ? 6 : 0)));
+        if (a.mv === 'slam' && a.t < a.wind * 0.55) { a.tx = lerp(a.tx, p.x, 1 - Math.exp(-bdt * 5)); a.ty = lerp(a.ty, p.y, 1 - Math.exp(-bdt * 5)); }
+        B.face = a.ang;
+      } else if (!a.fired) {
+        a.fired = true; a.sx = B.x; a.sy = B.y;
+        if (a.mv === 'charge') { const L = 330; B.x = clamp(B.x + Math.cos(a.ang) * L, B.r, g.W - B.r); B.y = clamp(B.y + Math.sin(a.ang) * L, B.r, g.H - B.r); g.sfx.dash(0.6); g.shake(8); }
+        if (a.mv === 'slam') { g.sfx.boom(1.3); g.shake(12); g.fx.ring(a.tx, a.ty, { r: 10, to: 90, color: B.col, life: 0.3, w: 8 }); g.fx.burst(a.tx, a.ty, 20, { color: [B.col, '#fff'], speed: 300, size: 4 }); }
+        if (a.mv === 'sweep') { g.sfx.whoosh(0.6); g.shake(6); }
+        if (a.mv === 'volley') { for (let i = -2; i <= 2; i++) S.shots.push({ x: B.x, y: B.y, vx: Math.cos(a.ang + i * 0.22) * 260 * B.spd, vy: Math.sin(a.ang + i * 0.22) * 260 * B.spd }); g.sfx.zap(0.8); }
+        if (a.mv === 'ring') { a.ringR = B.r; g.sfx.boom(1.6); }
+      }
+      if (a.fired && a.mv !== 'volley') {
+        if (a.mv === 'ring') a.ringR += 420 * bdt;
+        const live = a.mv === 'ring' ? a.ringR < Math.max(g.W, g.H) : a.t < a.wind + a.active;
+        if (live && !a.hitDone && inHit(a, p.x, p.y)) {
+          if (p.inv > 0 && p.dodge > -0.05) { a.hitDone = true; onDodged(g); }
+          else if (p.inv <= 0) { a.hitDone = true; hurt(g, a.mv === 'slam' ? 2 : 1); }
+        }
+        if (!live) a.done = true;
+      } else if (a.fired) a.done = true;
+      if (a.done && a.t > a.wind + 0.35) { B.atk = null; B.cool = rand(0.5, 1.2) / B.spd; }
+    }
+    for (const s of S.shots) {
+      s.x += s.vx * bdt; s.y += s.vy * bdt;
+      if (!s.dead && Math.hypot(s.x - p.x, s.y - p.y) < PR + 6) { if (p.inv > 0) { if (!s.dodged) { s.dodged = true; onDodged(g); } } else { s.dead = true; hurt(g); } }
+      if (s.x < -20 || s.x > g.W + 20 || s.y < -20 || s.y > g.H + 20) s.dead = true;
+    }
+    S.shots = S.shots.filter(s => !s.dead);
+    for (const sl of S.slashes) sl.t -= dt; S.slashes = S.slashes.filter(s => s.t > 0);
+  },
+  draw(g, ctx) {
+    const p = S.p, B = S.boss, a = B.atk;
+    ctx.fillStyle = S.flow > 0 ? '#0a1a16' : '#120d12'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.strokeStyle = '#ffffff08'; ctx.lineWidth = 1; for (let r = 60; r < g.W; r += 60) { ctx.beginPath(); ctx.arc(g.W / 2, g.H / 2, r, 0, TAU); ctx.stroke(); }
+    // telegraphs: fill from the inside as the wind-up completes
+    if (a && !a.fired) {
+      const k = clamp(a.t / a.wind, 0, 1);
+      ctx.fillStyle = '#ff204022'; ctx.strokeStyle = '#ff2040aa'; ctx.lineWidth = 2;
+      if (a.mv === 'sweep') { ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.arc(B.x, B.y, 190, a.ang - 1.05, a.ang + 1.05); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ff204055'; ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.arc(B.x, B.y, 190 * k, a.ang - 1.05, a.ang + 1.05); ctx.closePath(); ctx.fill(); }
+      if (a.mv === 'slam') { ctx.beginPath(); ctx.arc(a.tx, a.ty, 88, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ff204055'; ctx.beginPath(); ctx.arc(a.tx, a.ty, 88 * k, 0, TAU); ctx.fill(); }
+      if (a.mv === 'charge') { const ex = B.x + Math.cos(a.ang) * 330, ey = B.y + Math.sin(a.ang) * 330; ctx.lineWidth = (B.r + PR) * 2; ctx.strokeStyle = '#ff204022'; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(ex, ey); ctx.stroke(); ctx.strokeStyle = '#ff204055'; ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(lerp(B.x, ex, k), lerp(B.y, ey, k)); ctx.stroke(); ctx.lineCap = 'butt'; }
+      if (a.mv === 'ring') { ctx.strokeStyle = `rgba(255,32,64,${k})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(B.x, B.y, B.r + 10 + (1 - k) * 30, 0, TAU); ctx.stroke(); }
+      if (a.mv === 'volley') { for (let i = -2; i <= 2; i++) { ctx.strokeStyle = `rgba(255,32,64,${0.2 + k * 0.5})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(B.x + Math.cos(a.ang + i * 0.22) * 260, B.y + Math.sin(a.ang + i * 0.22) * 260); ctx.stroke(); } }
+    }
+    if (a && a.fired && a.mv === 'ring') { ctx.strokeStyle = B.col; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(B.x, B.y, a.ringR, 0, TAU); ctx.stroke(); }
+    if (a && a.fired && a.mv === 'sweep' && a.t < a.wind + 0.15) { ctx.fillStyle = B.col + '88'; ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.arc(B.x, B.y, 190, a.ang - 1.05, a.ang + 1.05); ctx.closePath(); ctx.fill(); }
+    // boss
+    ctx.save(); ctx.translate(B.x, B.y); ctx.rotate(B.face);
+    const sc = B.enter > 0 ? 1 - B.enter * 0.5 : 1; ctx.scale(sc, sc);
+    ctx.fillStyle = B.flash > 0 ? '#fff' : B.col; ctx.beginPath(); ctx.arc(0, 0, B.r, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#120d12'; ctx.beginPath(); ctx.arc(B.r * 0.45, -12, 7, 0, TAU); ctx.arc(B.r * 0.45, 12, 7, 0, TAU); ctx.fill();
+    if (a && !a.fired) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(B.r * 0.45, -12, 3, 0, TAU); ctx.arc(B.r * 0.45, 12, 3, 0, TAU); ctx.fill(); }
+    ctx.restore();
+    for (const s of S.shots) { ctx.fillStyle = B.col; ctx.beginPath(); ctx.arc(s.x, s.y, 7, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, s.y, 3, 0, TAU); ctx.fill(); }
+    for (const sl of S.slashes) { const k = sl.t / 0.15; ctx.strokeStyle = S.flow > 0 ? `rgba(125,255,207,${k})` : `rgba(255,255,255,${k})`; ctx.lineWidth = (sl.big ? 8 : 5) * k + 1; ctx.beginPath(); ctx.arc(sl.x, sl.y, sl.big ? 60 : 46, sl.a - 1, sl.a + 1); ctx.stroke(); }
+    if (p.hp > 0 || S.overT > 0.7) {
+      if (p.dodge > 0) for (let i = 1; i < 4; i++) { ctx.globalAlpha = 0.25 / i; ctx.fillStyle = '#7dffcf'; ctx.beginPath(); ctx.arc(p.x - p.vx * 0.02 * i, p.y - p.vy * 0.02 * i, PR, 0, TAU); ctx.fill(); }
+      ctx.globalAlpha = 1;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.face);
+      ctx.fillStyle = p.inv > 0 && p.dodge <= 0 && Math.floor(g.time * 20) % 2 ? '#ff6b8a' : '#eafff8'; ctx.beginPath(); ctx.arc(0, 0, PR, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#7dffcf'; ctx.fillRect(PR - 3, -2, 14, 4);
+      ctx.restore();
+      if (p.dcd > 0) { ctx.strokeStyle = '#7dffcf55'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, PR + 5, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - p.dcd / 0.42)); ctx.stroke(); }
+    }
+    g.fx.draw(ctx);
+    if (S.flow > 0) { const gr = ctx.createRadialGradient(p.x, p.y, 60, p.x, p.y, g.W * 0.7); gr.addColorStop(0, 'rgba(125,255,207,0)'); gr.addColorStop(1, `rgba(125,255,207,${Math.min(0.25, S.flow * 0.2)})`); ctx.fillStyle = gr; ctx.fillRect(0, 0, g.W, g.H); }
+    if (S.banner > 0) { ctx.globalAlpha = Math.min(1, S.banner * 2); g.text(B.name, g.W / 2, g.H * 0.28, 42, B.col); ctx.globalAlpha = 1; }
+  },
+  hudExtra(g, ctx) {
+    const B = S.boss;
+    ctx.fillStyle = '#ffffff18'; ctx.fillRect(g.W / 2 - 170, 14, 340, 8); ctx.fillStyle = B.col; ctx.fillRect(g.W / 2 - 170, 14, 340 * Math.max(0, B.hp / B.max), 8);
+    g.text(B.name, g.W / 2, 34, 11, '#ffffffaa', 'center', 700);
+    for (let i = 0; i < 5; i++) { ctx.fillStyle = i < S.p.hp ? '#ff6b8a' : '#ffffff22'; ctx.fillRect(22 + i * 16, 78, 12, 10); }
+    if (S.flow > 0) g.text('FLOW ×3', g.W - 24, 80, 26, '#7dffcf', 'right');
+    else if (S.chain > 4) g.text(S.chain + ' HITS', g.W - 24, 80, 20, '#fff', 'right');
+  },
+});
+})();
+</script>
+</body>
+</html>

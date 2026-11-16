@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>PARRY</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const PR = 20, PARRY_R = 64, WINDOW = 0.13, WHIFF_CD = 0.32, PERFECT_D = 40;
+let S;
+const COL = { pistol: '#4ad6ff', shotgun: '#ff9a2e', heavy: '#ff3d5a', sniper: '#c6ff4a', burst: '#d07bff' };
+
+function ringPos(g, a) { const cx = g.W / 2, cy = g.H / 2; return { x: cx + Math.cos(a) * (g.W / 2 - 60), y: cy + Math.sin(a) * (g.H / 2 - 50) }; }
+function spawnEnemy(g, kind) {
+  let a, tries = 0;
+  do { a = rand(0, TAU); tries++; } while (tries < 40 && S.enemies.some(e => Math.abs(((e.a - a + Math.PI) % TAU + TAU) % TAU - Math.PI) < 0.45));
+  const hp = kind === 'heavy' ? 3 : kind === 'shotgun' ? 2 : 1;
+  S.enemies.push({ kind, a, hp, max: hp, cool: rand(1.2, 2.2) + S.enemies.length * 0.4, flash: 0, in: 0, aimT: 0, burstN: 0, drift: rand(-0.06, 0.06) });
+}
+function waveList(n) {
+  const L = [];
+  const count = Math.min(9, 2 + Math.floor(n * 0.8));
+  for (let i = 0; i < count; i++) {
+    const r = Math.random();
+    let k = 'pistol';
+    if (n >= 2 && r < 0.22) k = 'shotgun';
+    else if (n >= 3 && r < 0.36) k = 'heavy';
+    else if (n >= 4 && r < 0.5) k = 'sniper';
+    else if (n >= 5 && r < 0.62) k = 'burst';
+    L.push(k);
+  }
+  return L;
+}
+function nextWave(g) { S.wave++; for (const k of waveList(S.wave)) spawnEnemy(g, k); S.banner = 1.3; g.sfx.select(0.7); }
+
+function fire(g, e, ang, spd, o = {}) {
+  const P = ringPos(g, e.a);
+  S.bullets.push({ x: P.x, y: P.y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, r: o.r || 7, heavy: !!o.heavy, src: e, ref: false, col: COL[e.kind], trail: [], warned: false, pierce: 0 });
+}
+function enemyFire(g, e) {
+  const P = ringPos(g, e.a), cx = g.W / 2, cy = g.H / 2;
+  const ang = Math.atan2(cy - P.y, cx - P.x);
+  const sp = 1 + S.wave * 0.04;
+  if (e.kind === 'pistol') { fire(g, e, ang, 230 * sp); e.cool = rand(1.6, 2.6); g.sfx.zap(1.1); }
+  if (e.kind === 'shotgun') { for (const d of [-0.16, 0, 0.16]) fire(g, e, ang + d, 200 * sp, { r: 6 }); e.cool = rand(2.4, 3.2); g.sfx.zap(0.8); }
+  if (e.kind === 'heavy') { fire(g, e, ang, 130 * sp, { r: 15, heavy: true }); e.cool = rand(3, 4); g.sfx.heavy(1.4); }
+  if (e.kind === 'sniper') { fire(g, e, ang, 620 * sp, { r: 5 }); e.cool = rand(2.6, 3.4); e.aimT = 0; g.sfx.zap(1.8); }
+  if (e.kind === 'burst') { e.burstN = 4; e.burstT = 0; e.cool = rand(3, 3.8); }
+}
+
+function reflect(g, b, perfect) {
+  const p = S.p, I = g.input;
+  let ang;
+  const sm = Math.hypot(I.mx, I.my);
+  if (sm > 0.35) ang = Math.atan2(I.my, I.mx);
+  else if (b.src && S.enemies.includes(b.src)) { const P = ringPos(g, b.src.a); ang = Math.atan2(P.y - b.y, P.x - b.x); }
+  else ang = Math.atan2(b.y - p.y, b.x - p.x);
+  const spd = perfect ? 900 : 560;
+  b.vx = Math.cos(ang) * spd; b.vy = Math.sin(ang) * spd; b.ref = true; b.perfect = perfect; b.pierce = perfect ? 2 : 0; b.homing = sm <= 0.35 ? b.src : null;
+  b.col = perfect ? '#ffffff' : '#ffd84a';
+  S.chain++;
+  S.maxChain = Math.max(S.maxChain, S.chain);
+  p.cd = 0; // successful parry resets recovery — chains stay fluid
+  const pts = (perfect ? 60 : 20) * (1 + Math.floor(S.chain / 5));
+  g.addScore(pts);
+  g.fx.burst(b.x, b.y, perfect ? 26 : 12, { color: perfect ? ['#fff', '#7fe8ff'] : ['#ffd84a', '#fff'], speed: perfect ? 560 : 320, size: 3, shape: 'line', angle: ang, spread: 1.1 });
+  g.fx.ring(p.x, p.y, { r: PR, to: perfect ? 110 : 70, color: perfect ? '#fff' : '#ffd84a', life: perfect ? 0.32 : 0.22, w: perfect ? 8 : 4 });
+  if (perfect) {
+    g.hitstop(b.heavy ? 0.12 : 0.07); g.shake(b.heavy ? 12 : 6); g.flash('#bff4ff', b.heavy ? 0.35 : 0.15);
+    g.fx.pop(b.x, b.y - 24, b.heavy ? 'CRUSH!' : 'PERFECT', { color: '#bff4ff', size: b.heavy ? 26 : 18 });
+  } else { g.hitstop(0.03); g.shake(3); }
+  g.sfx.clang(perfect ? 1 + Math.min(S.chain, 20) * 0.025 : 0.75);
+  g.haptic(perfect ? 0.7 : 0.35, 50);
+}
+
+function hurt(g, b) {
+  const p = S.p; if (p.hp <= 0) return;
+  p.hp--; p.inv = 1.0; S.chain = 0;
+  g.hitstop(0.1); g.shake(16); g.flash('#ff2040', 0.45); g.sfx.hurt(); g.haptic(1, 160);
+  g.fx.burst(p.x, p.y, 30, { color: ['#ff2040', '#fff'], speed: 420, size: 4 });
+  // clear nearby bullets to give breathing room
+  for (const o of S.bullets) if (!o.ref && Math.hypot(o.x - p.x, o.y - p.y) < 160) o.dead = true;
+  if (p.hp <= 0) { S.over = 1.0; g.slowmo(0.2, 1); }
+}
+
+ARC.game({
+  id: 'parry', title: 'PARRY', color: '#7fe8ff', tagline: 'Late is perfect. Perfect is lethal.',
+  help: [
+    { pad: 'Ⓐ / Ⓡ parry — wait for the shot to reach you  ·  Ⓛ aim the return', touch: 'PARRY button — wait till the shot reaches you  ·  left thumb aims the return' },
+    'Late parry = PERFECT: faster, piercing, chains don\'t break.',
+    'Whiffing leaves you open. Red orbs must be parried — never tanked.',
+  ],
+  buttons: [{ id: 'a', label: 'PARRY', big: true, color: '#7fe8ff' }],
+  init(g) {
+    S = { p: { x: g.W / 2, y: g.H / 2, hp: 3, act: 0, cd: 0, inv: 0, face: 0, swing: 0 }, enemies: [], bullets: [], wave: 0, chain: 0, maxChain: 0, banner: 0, over: 0, wreck: [] };
+    g.S = S;
+    nextWave(g);
+  },
+  resize(g) { if (S) { S.p.x = g.W / 2; S.p.y = g.H / 2; } },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p;
+    if (S.over > 0) { S.over -= rdt; if (S.over <= 0) g.gameOver('Wave ' + S.wave + '  ·  best chain ' + S.maxChain); }
+    // parry input (buffered so slightly-early presses during recovery still come out)
+    p.cd -= dt; p.act -= dt; p.inv -= dt; p.swing -= rdt;
+    const want = I.buffered('a', 90) || I.buffered('rb', 90) || I.buffered('rt', 90) || I.buffered('x', 90);
+    if (want && p.cd <= 0 && p.act <= 0 && p.hp > 0) {
+      I.consume('a'); I.consume('rb'); I.consume('rt'); I.consume('x');
+      p.act = WINDOW; p.cd = WHIFF_CD; p.swing = 0.18; p.hits = 0;
+      g.sfx.whoosh(1.2);
+    }
+    if (Math.hypot(I.mx, I.my) > 0.3) p.face = ARC.util.angLerp(p.face, Math.atan2(I.my, I.mx), 1 - Math.exp(-rdt * 20));
+    // enemies
+    const cx = g.W / 2, cy = g.H / 2;
+    for (const e of S.enemies) {
+      e.flash -= dt; e.in = Math.min(1, e.in + dt * 2);
+      e.a += e.drift * dt;
+      if (e.in < 1 || S.over > 0) continue;
+      e.cool -= dt;
+      if (e.kind === 'sniper' && e.cool < 0.9) e.aimT = 1 - e.cool / 0.9;
+      if (e.kind === 'burst' && e.burstN > 0) {
+        e.burstT -= dt;
+        if (e.burstT <= 0) { const P = ringPos(g, e.a); fire(g, e, Math.atan2(cy - P.y, cx - P.x) + rand(-0.05, 0.05), 260 + S.wave * 6, { r: 5 }); e.burstN--; e.burstT = 0.16; g.sfx.zap(1.4); }
+      }
+      if (e.cool <= 0) enemyFire(g, e);
+    }
+    // bullets
+    for (const b of S.bullets) {
+      if (b.dead) continue;
+      if (b.homing && S.enemies.includes(b.homing)) {
+        const P = ringPos(g, b.homing.a); const sp = Math.hypot(b.vx, b.vy);
+        const want = Math.atan2(P.y - b.y, P.x - b.x), cur = Math.atan2(b.vy, b.vx);
+        const na = ARC.util.angLerp(cur, want, 1 - Math.exp(-dt * 8)); b.vx = Math.cos(na) * sp; b.vy = Math.sin(na) * sp;
+      }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      b.trail.push(b.x, b.y); if (b.trail.length > 16) b.trail.splice(0, 2);
+      const d = Math.hypot(b.x - p.x, b.y - p.y);
+      if (!b.ref) {
+        if (!b.warned && d < 150) { b.warned = true; g.audio.tone(b.heavy ? 300 : 1200, 0.03, { type: 'sine', vol: 0.05 }); }
+        if (p.act > 0 && d < PARRY_R + b.r) { reflect(g, b, d < PERFECT_D + b.r || b.heavy && d < PERFECT_D + b.r + 8); continue; }
+        if (d < PR + b.r) {
+          if (p.inv > 0) { b.dead = true; continue; }
+          b.dead = true; hurt(g, b); continue;
+        }
+      } else {
+        for (const e of S.enemies) {
+          if (e.hp <= 0) continue;
+          const P = ringPos(g, e.a);
+          if (Math.hypot(P.x - b.x, P.y - b.y) < 26 + b.r) {
+            e.hp -= b.heavy ? 3 : b.perfect ? 2 : 1; e.flash = 0.12;
+            g.fx.burst(P.x, P.y, 14, { color: [COL[e.kind], '#fff'], speed: 380, size: 3 });
+            if (e.hp <= 0) {
+              const pts = 150 * (1 + Math.floor(S.chain / 5));
+              g.addScore(pts); g.fx.pop(P.x, P.y - 30, '+' + pts, { color: '#ffd84a', size: 22 });
+              g.fx.burst(P.x, P.y, 34, { color: [COL[e.kind], '#fff', '#ffd84a'], speed: 520, size: 4.5 });
+              g.fx.ring(P.x, P.y, { r: 10, to: 90, color: COL[e.kind], life: 0.4 });
+              g.sfx.boom(1.4); g.shake(9); g.hitstop(0.05);
+            } else g.sfx.hit(1.2);
+            if (b.pierce > 0) b.pierce--; else { b.dead = true; break; }
+          }
+        }
+        // reflected bullets can also eat enemy bullets
+        for (const o of S.bullets) if (!o.dead && !o.ref && Math.hypot(o.x - b.x, o.y - b.y) < o.r + b.r + 2) { o.dead = true; g.fx.burst(o.x, o.y, 6, { color: '#fff', speed: 200, size: 2 }); g.addScore(10); }
+      }
+      if (b.x < -60 || b.x > g.W + 60 || b.y < -60 || b.y > g.H + 60) b.dead = true;
+    }
+    S.bullets = S.bullets.filter(b => !b.dead);
+    S.enemies = S.enemies.filter(e => e.hp > 0);
+    if (!S.enemies.length && S.over <= 0) { if (!S.clearT) { S.clearT = 1.1; g.addScore(300 * S.wave); g.fx.pop(cx, cy - 80, 'WAVE CLEAR', { color: '#7fe8ff', size: 30 }); if (p.hp < 3 && S.wave % 3 === 0) { p.hp++; g.fx.pop(cx, cy - 50, '+1 ♥', { color: '#ff6b8a', size: 22 }); } } }
+    if (S.clearT) { S.clearT -= dt; if (S.clearT <= 0) { S.clearT = 0; nextWave(g); } }
+    if (S.banner > 0) S.banner -= rdt;
+  },
+  draw(g, ctx) {
+    const p = S.p, cx = g.W / 2, cy = g.H / 2;
+    const bg = ctx.createRadialGradient(cx, cy, 20, cx, cy, g.W * 0.6);
+    bg.addColorStop(0, '#131a2a'); bg.addColorStop(1, '#06070c');
+    ctx.fillStyle = bg; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    // orbit track
+    ctx.strokeStyle = '#ffffff10'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(cx, cy, g.W / 2 - 60, g.H / 2 - 50, 0, 0, TAU); ctx.stroke();
+    // timing rings: outer = parry reach, inner = perfect zone
+    ctx.strokeStyle = '#ffffff18'; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.arc(cx, cy, PARRY_R, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = '#7fe8ff30'; ctx.beginPath(); ctx.arc(cx, cy, PERFECT_D, 0, TAU); ctx.stroke();
+    // sniper lasers
+    for (const e of S.enemies) if (e.kind === 'sniper' && e.cool < 0.9 && e.in >= 1) {
+      const P = ringPos(g, e.a); ctx.strokeStyle = `rgba(198,255,74,${0.15 + e.aimT * 0.6})`; ctx.lineWidth = 1 + e.aimT * 2;
+      ctx.beginPath(); ctx.moveTo(P.x, P.y); ctx.lineTo(cx, cy); ctx.stroke();
+    }
+    // enemies
+    for (const e of S.enemies) {
+      const P = ringPos(g, e.a); const s = e.in;
+      ctx.save(); ctx.translate(P.x, P.y); ctx.scale(s, s); ctx.rotate(Math.atan2(cy - P.y, cx - P.x));
+      ctx.fillStyle = e.flash > 0 ? '#fff' : COL[e.kind];
+      const r = e.kind === 'heavy' ? 26 : 20;
+      ctx.beginPath(); ctx.moveTo(r, 0); ctx.lineTo(-r * 0.7, -r * 0.8); ctx.lineTo(-r * 0.7, r * 0.8); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#06070c'; ctx.beginPath(); ctx.arc(0, 0, r * 0.32, 0, TAU); ctx.fill();
+      // charge telegraph
+      const tel = e.kind === 'burst' && e.burstN > 0 ? 1 : clamp(1 - e.cool / 0.6, 0, 1);
+      if (tel > 0) { ctx.fillStyle = '#fff'; ctx.globalAlpha = tel; ctx.beginPath(); ctx.arc(r * 0.6, 0, 4 + tel * 4, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
+      ctx.restore();
+      for (let i = 0; i < e.max; i++) { ctx.fillStyle = i < e.hp ? COL[e.kind] : '#ffffff22'; ctx.fillRect(P.x - e.max * 5 + i * 10, P.y + 28, 8, 3); }
+    }
+    // bullets with trails
+    ctx.lineCap = 'round';
+    for (const b of S.bullets) {
+      const t = b.trail;
+      if (t.length > 3) { ctx.strokeStyle = b.col; ctx.globalAlpha = 0.35; ctx.lineWidth = b.r * 1.3; ctx.beginPath(); ctx.moveTo(t[0], t[1]); for (let i = 2; i < t.length; i += 2) ctx.lineTo(t[i], t[i + 1]); ctx.stroke(); ctx.globalAlpha = 1; }
+      ctx.fillStyle = b.col; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.fill();
+      if (!b.ref) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.45, 0, TAU); ctx.fill(); }
+      if (b.heavy && !b.ref) { ctx.strokeStyle = '#ff3d5a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 5 + Math.sin(g.time * 20) * 2, 0, TAU); ctx.stroke(); }
+    }
+    // incoming-closest indicator ring shrinks to perfect zone
+    let near = null, nd = 1e9;
+    for (const b of S.bullets) if (!b.ref) { const d = Math.hypot(b.x - cx, b.y - cy); if (d < nd) { nd = d; near = b; } }
+    if (near && nd < 220) { const k = clamp((nd - PERFECT_D) / 180, 0, 1); ctx.strokeStyle = nd < PERFECT_D + near.r ? '#fff' : nd < PARRY_R + near.r ? '#ffd84a' : '#ffffff55'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, PERFECT_D + k * 180, 0, TAU); ctx.stroke(); }
+    // player
+    const blink = p.inv > 0 && Math.floor(g.time * 20) % 2;
+    if (p.hp > 0 || S.over > 0.6) {
+      ctx.save(); ctx.translate(p.x, p.y);
+      if (p.swing > 0) { const k = p.swing / 0.18; ctx.fillStyle = `rgba(127,232,255,${0.35 * k})`; ctx.beginPath(); ctx.arc(0, 0, PARRY_R * (1.1 - k * 0.3), 0, TAU); ctx.fill(); ctx.strokeStyle = `rgba(255,255,255,${k})`; ctx.lineWidth = 4 * k; ctx.beginPath(); ctx.arc(0, 0, PARRY_R, 0, TAU); ctx.stroke(); }
+      ctx.fillStyle = blink ? '#ff6b8a' : p.cd > 0 && p.act <= 0 ? '#8a99b8' : '#eaf6ff';
+      ctx.beginPath(); ctx.arc(0, 0, PR, 0, TAU); ctx.fill();
+      ctx.rotate(p.face); ctx.fillStyle = '#7fe8ff'; ctx.fillRect(PR - 6, -9, 8, 18);
+      ctx.restore();
+    }
+    g.fx.draw(ctx);
+    if (S.banner > 0) { ctx.globalAlpha = Math.min(1, S.banner * 2); g.text('WAVE ' + S.wave, cx, g.H * 0.22, 44, '#7fe8ff'); ctx.globalAlpha = 1; }
+  },
+  hudExtra(g, ctx) {
+    for (let i = 0; i < 3; i++) g.text(i < S.p.hp ? '♥' : '♡', 24 + i * 24, 86, 22, i < S.p.hp ? '#ff6b8a' : '#ffffff44', 'left');
+    if (S.chain > 1) g.text('CHAIN ' + S.chain + (S.chain >= 5 ? '  ×' + (1 + Math.floor(S.chain / 5)) : ''), g.W - 24, 80, 22, '#ffd84a', 'right');
+    g.text('WAVE ' + S.wave, g.W / 2, 26, 14, '#ffffff88', 'center', 700);
+  },
+});
+})();
+</script>
+</body>
+</html>

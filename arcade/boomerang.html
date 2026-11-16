@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>BOOMERANG</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const PR = 14, BR = 13;
+let S;
+
+function newRang(p, ang, charge) {
+  const sp = 620 + charge * 380;
+  return { x: p.x, y: p.y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, ang, t: 0, outT: 0.38 + charge * 0.32, back: false, spin: 0, hits: new Set(), throwHits: 0, curve: S.curve, power: charge };
+}
+function stepRang(r, p, dt) {
+  r.t += dt; r.spin += dt * 28;
+  if (!r.back) {
+    const k = Math.max(0, 1 - r.t / r.outT);
+    const sp = Math.hypot(r.vx, r.vy) || 1;
+    const nx = r.vx / sp, ny = r.vy / sp;
+    // decelerate + curve sideways
+    const tgt = (620 + r.power * 380) * k + 60;
+    r.vx = nx * tgt; r.vy = ny * tgt;
+    const ca = r.curve * 2.4 * dt; const c = Math.cos(ca), s = Math.sin(ca);
+    const vx = r.vx * c - r.vy * s, vy = r.vx * s + r.vy * c; r.vx = vx; r.vy = vy;
+    if (r.t >= r.outT) { r.back = true; r.backT = 0; }
+  } else {
+    r.backT += dt;
+    const dx = p.x - r.x, dy = p.y - r.y, d = Math.hypot(dx, dy) || 1;
+    const want = Math.min(1100, 250 + r.backT * 1400);
+    r.vx = lerp(r.vx, dx / d * want, 1 - Math.exp(-dt * 7)); r.vy = lerp(r.vy, dy / d * want, 1 - Math.exp(-dt * 7));
+  }
+  r.x += r.vx * dt; r.y += r.vy * dt;
+}
+function predict(p, ang, charge) {
+  const r = newRang(p, ang, charge), pts = [];
+  const fake = { x: p.x, y: p.y };
+  for (let i = 0; i < 70; i++) { stepRang(r, fake, 1 / 60); if (i % 2 === 0) pts.push(r.x, r.y); if (r.back && Math.hypot(r.x - fake.x, r.y - fake.y) < 20) break; }
+  return pts;
+}
+
+function spawn(g) {
+  const side = (Math.random() * 4) | 0; let x, y;
+  if (side === 0) { x = -20; y = rand(30, g.H - 30); } else if (side === 1) { x = g.W + 20; y = rand(30, g.H - 30); } else if (side === 2) { x = rand(30, g.W - 30); y = -20; } else { x = rand(30, g.W - 30); y = g.H + 20; }
+  const lv = S.lv, r = Math.random();
+  let k = 'walker';
+  if (lv >= 2 && r < 0.3) k = 'shield';
+  else if (lv >= 3 && r < 0.45) k = 'split';
+  else if (lv >= 4 && r < 0.55) k = 'runner';
+  const D = { walker: { r: 15, spd: 60, col: '#ff8a3d', hp: 1 }, shield: { r: 17, spd: 48, col: '#4aa8ff', hp: 1 }, split: { r: 20, spd: 42, col: '#c86bff', hp: 2 }, runner: { r: 11, spd: 120, col: '#ff3d6b', hp: 1 } }[k];
+  S.enemies.push({ k, x, y, vx: 0, vy: 0, face: 0, ...D, spd: D.spd + lv * 3, flash: 0, stun: 0 });
+}
+function hurt(g) {
+  const p = S.p; if (p.inv > 0 || p.hp <= 0) return;
+  p.hp--; p.inv = 1.3; S.combo = 0;
+  g.shake(14); g.flash('#ff2040', 0.4); g.sfx.hurt(); g.hitstop(0.08); g.haptic(1, 150);
+  for (const e of S.enemies) { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1; if (d < 130) { e.vx = dx / d * 400; e.vy = dy / d * 400; e.stun = 0.5; } }
+  if (p.hp <= 0) { S.over = 1; g.slowmo(0.2, 1); }
+}
+
+ARC.game({
+  id: 'boomerang', title: 'BOOMERANG', color: '#ffb03d', tagline: 'It always comes back. Make the trip count.',
+  help: [
+    { pad: 'Ⓛ move  ·  HOLD Ⓐ charge + aim (Ⓡ stick aims too)  ·  RELEASE throw  ·  Ⓑ recall', touch: 'Left thumb: move/aim  ·  HOLD THROW, release  ·  RECALL snaps it back' },
+    'Hits going out AND coming back. Catch it to keep the combo.',
+    'Blue shields block the front — hit them on the return.  Ⓛ1/Ⓡ1 flip the curve.',
+  ],
+  buttons: [{ id: 'a', label: 'THROW', big: true, color: '#ffb03d' }, { id: 'b', label: 'RECALL' }],
+  init(g) {
+    S = { p: { x: g.W / 2, y: g.H / 2, vx: 0, vy: 0, hp: 3, inv: 1, aim: 0, charge: 0, charging: false }, rang: null, enemies: [], spawnT: 1, lv: 1, lvT: 0, combo: 0, over: 0, curve: 1, catches: 0 };
+    g.S = S;
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p;
+    if (S.over > 0) { S.over -= rdt; if (S.over <= 0) g.gameOver('Level ' + S.lv + '  ·  ' + S.catches + ' catches'); }
+    S.lvT += dt; if (S.lvT > 20) { S.lvT = 0; S.lv++; g.fx.pop(g.W / 2, 90, 'LEVEL ' + S.lv, { color: '#ffb03d', size: 28 }); g.sfx.select(0.8); }
+    S.spawnT -= dt; if (S.spawnT <= 0 && S.over <= 0) { spawn(g); S.spawnT = Math.max(0.5, 2 - S.lv * 0.15) * rand(0.7, 1.2); }
+    if (I.pressed('lb')) { S.curve = -1; g.sfx.blip(0.8); } if (I.pressed('rb')) { S.curve = 1; g.sfx.blip(1.2); }
+    p.inv -= dt;
+    // aim: right stick if used, else left stick
+    const useR = Math.hypot(I.ax, I.ay) > 0.3;
+    const ax = useR ? I.ax : I.mx, ay = useR ? I.ay : I.my;
+    if (Math.hypot(ax, ay) > 0.25) p.aim = ARC.util.angLerp(p.aim, Math.atan2(ay, ax), 1 - Math.exp(-rdt * 20));
+    // move (slower while charging)
+    const sp = p.charging ? 120 : 240;
+    if (p.hp > 0) { p.vx = lerp(p.vx, I.mx * sp, 1 - Math.exp(-dt * 12)); p.vy = lerp(p.vy, I.my * sp, 1 - Math.exp(-dt * 12)); }
+    else { p.vx *= 0.9; p.vy *= 0.9; }
+    p.x = clamp(p.x + p.vx * dt, PR, g.W - PR); p.y = clamp(p.y + p.vy * dt, PR, g.H - PR);
+    // throw
+    const btn = I.down('a') || I.down('rt');
+    if (!S.rang && p.hp > 0) {
+      if (btn) { if (!p.charging) { p.charging = true; p.charge = 0; } p.charge = Math.min(1, p.charge + dt / 0.55); }
+      else if (p.charging) {
+        p.charging = false; S.rang = newRang(p, p.aim, p.charge);
+        g.sfx.whoosh(0.8 + p.charge * 0.5); g.shake(2 + p.charge * 3);
+        if (p.charge >= 1) g.fx.burst(p.x, p.y, 10, { color: '#ffb03d', speed: 300, size: 3, angle: p.aim, spread: 0.4 });
+      }
+    } else if (!S.rang) p.charging = false;
+    // boomerang
+    const r = S.rang;
+    if (r) {
+      if ((I.pressed('b') || I.pressed('x')) && !r.back) { r.back = true; r.backT = 0.25; g.sfx.zap(0.7); }
+      stepRang(r, p, dt);
+      if (Math.floor(r.spin / 4) !== Math.floor((r.spin - dt * 28) / 4)) g.audio.tone(r.back ? 700 : 520, 0.03, { type: 'triangle', vol: 0.04 });
+      const sp2 = Math.hypot(r.vx, r.vy) || 1;
+      for (const e of S.enemies) {
+        if (e.dead || r.hits.has(e)) continue;
+        if (Math.hypot(e.x - r.x, e.y - r.y) < e.r + BR) {
+          // shield blocks hits travelling toward its face
+          if (e.k === 'shield') {
+            const fx = Math.cos(e.face), fy = Math.sin(e.face);
+            const dot = (r.vx / sp2) * fx + (r.vy / sp2) * fy;
+            if (dot < 0.1) { r.hits.add(e); e.flash = 0.1; e.vx += r.vx * 0.3; e.vy += r.vy * 0.3; e.stun = 0.4; r.back = true; r.backT = Math.max(r.backT || 0, 0.2); g.sfx.clang(0.8); g.shake(4); g.fx.burst(r.x, r.y, 10, { color: ['#bfe0ff', '#fff'], speed: 300, size: 2.5, shape: 'line' }); g.fx.pop(e.x, e.y - 26, 'BLOCKED', { color: '#4aa8ff', size: 13 }); continue; }
+          }
+          r.hits.add(e); e.hp--; e.flash = 0.12; e.vx += r.vx * 0.35; e.vy += r.vy * 0.35; e.stun = 0.35;
+          r.throwHits++;
+          if (e.hp <= 0) {
+            e.dead = true;
+            const pts = 100 * r.throwHits * (1 + Math.floor(S.combo / 3)) * (r.back && e.k === 'shield' ? 2 : 1);
+            g.addScore(pts);
+            g.fx.pop(e.x, e.y - 22, (r.throwHits > 1 ? '×' + r.throwHits + ' ' : '') + '+' + pts, { color: r.throwHits > 2 ? '#ffd84a' : '#fff', size: 16 + r.throwHits * 3 });
+            g.fx.burst(e.x, e.y, 22, { color: [e.col, '#fff'], speed: 420, size: 4, angle: Math.atan2(r.vy, r.vx), spread: 0.8 });
+            if (e.k === 'split') for (const s of [-1, 1]) S.enemies.push({ k: 'runner', x: e.x + s * 10, y: e.y, vx: -r.vy / sp2 * 300 * s, vy: r.vx / sp2 * 300 * s, face: 0, r: 11, spd: 110 + S.lv * 3, col: '#e0a0ff', hp: 1, flash: 0, stun: 0.4 });
+            g.hitstop(0.03 + Math.min(0.06, r.throwHits * 0.012)); g.shake(5 + r.throwHits);
+            g.sfx.hit(1 + r.throwHits * 0.1); g.haptic(0.5, 40);
+          } else { g.sfx.hit(0.8); g.fx.burst(e.x, e.y, 8, { color: '#fff', speed: 250, size: 2.5 }); }
+        }
+      }
+      // catch
+      if (r.back && Math.hypot(r.x - p.x, r.y - p.y) < PR + BR + 6 && r.t > 0.12) {
+        S.rang = null; S.catches++;
+        if (r.throwHits > 0) { S.combo++; g.fx.pop(p.x, p.y - 34, 'CATCH ×' + S.combo, { color: '#ffb03d', size: 18 }); g.sfx.combo(S.combo); g.addScore(50 * S.combo); }
+        else { if (S.combo > 0) g.fx.pop(p.x, p.y - 34, 'combo lost', { color: '#ffffff88', size: 13 }); S.combo = 0; g.sfx.pickup(0.7); }
+        g.fx.ring(p.x, p.y, { r: 10, to: 40, color: '#ffb03d', life: 0.2 });
+        // instant re-throw if A is already held → feels great to "catch and fling"
+        if (btn && p.hp > 0) { p.charging = true; p.charge = 0.5; }
+      }
+    }
+    // enemies
+    for (const e of S.enemies) {
+      if (e.dead) continue;
+      e.flash -= dt; e.stun -= dt;
+      const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+      e.face = ARC.util.angLerp(e.face, Math.atan2(dy, dx), 1 - Math.exp(-dt * 3));
+      if (e.stun <= 0) { e.vx = lerp(e.vx, dx / d * e.spd, 1 - Math.exp(-dt * 3)); e.vy = lerp(e.vy, dy / d * e.spd, 1 - Math.exp(-dt * 3)); }
+      else { e.vx *= Math.exp(-dt * 5); e.vy *= Math.exp(-dt * 5); }
+      e.x += e.vx * dt; e.y += e.vy * dt;
+      for (const o of S.enemies) if (o !== e && !o.dead) { const sx = e.x - o.x, sy = e.y - o.y, sd = Math.hypot(sx, sy); if (sd > 0 && sd < e.r + o.r) { const k = (e.r + o.r - sd) * 0.5; e.x += sx / sd * k; e.y += sy / sd * k; } }
+      if (d < e.r + PR - 3 && p.hp > 0) hurt(g);
+    }
+    S.enemies = S.enemies.filter(e => !e.dead);
+  },
+  draw(g, ctx) {
+    const p = S.p;
+    ctx.fillStyle = '#1b2a1c'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.fillStyle = '#213322';
+    for (let i = 0; i < 60; i++) { const x = (i * 137.5) % g.W, y = (i * 91.7) % g.H; ctx.fillRect(x, y, 3, 8); ctx.fillRect(x + 4, y + 2, 3, 6); }
+    // aim preview
+    if (p.charging && !S.rang) {
+      const pts = predict(p, p.aim, p.charge);
+      ctx.fillStyle = p.charge >= 1 ? '#ffd84a' : '#ffffff88';
+      for (let i = 0; i < pts.length; i += 2) { ctx.beginPath(); ctx.arc(pts[i], pts[i + 1], 2.4, 0, TAU); ctx.fill(); }
+      ctx.strokeStyle = '#ffb03d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, PR + 8, -Math.PI / 2, -Math.PI / 2 + TAU * p.charge); ctx.stroke();
+    }
+    for (const e of S.enemies) {
+      ctx.fillStyle = e.flash > 0 ? '#fff' : e.col; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1b2a1c'; ctx.beginPath(); ctx.arc(e.x + Math.cos(e.face) * e.r * 0.45, e.y + Math.sin(e.face) * e.r * 0.45, e.r * 0.22, 0, TAU); ctx.fill();
+      if (e.k === 'shield') { ctx.strokeStyle = '#d6ecff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 6, e.face - 1.2, e.face + 1.2); ctx.stroke(); }
+      if (e.k === 'split' && e.hp > 1) { ctx.strokeStyle = '#fff6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(e.x, e.y - e.r); ctx.lineTo(e.x, e.y + e.r); ctx.stroke(); }
+    }
+    // player
+    if (p.hp > 0 || S.over > 0.5) {
+      ctx.fillStyle = p.inv > 0 && Math.floor(g.time * 20) % 2 ? '#ff6b8a' : '#f6efe0';
+      ctx.beginPath(); ctx.arc(p.x, p.y, PR, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#f6efe0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.aim) * (PR + 2), p.y + Math.sin(p.aim) * (PR + 2)); ctx.lineTo(p.x + Math.cos(p.aim) * (PR + 9), p.y + Math.sin(p.aim) * (PR + 9)); ctx.stroke();
+      if (!S.rang) drawRang(ctx, p.x - 4, p.y - 4, g.time * (p.charging ? 20 : 0) - 0.7, 0.7);
+    }
+    const r = S.rang;
+    if (r) {
+      drawRang(ctx, r.x, r.y, r.spin, 1);
+      ctx.strokeStyle = r.back ? '#ffb03d55' : '#ffffff22'; ctx.lineWidth = 2; ctx.setLineDash([3, 7]); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(r.x, r.y); ctx.stroke(); ctx.setLineDash([]);
+    }
+    g.fx.draw(ctx);
+  },
+  hudExtra(g, ctx) {
+    for (let i = 0; i < 3; i++) g.text(i < S.p.hp ? '♥' : '♡', 24 + i * 24, 86, 22, i < S.p.hp ? '#ff6b8a' : '#ffffff44', 'left');
+    if (S.combo > 0) g.text('CATCH ×' + S.combo, g.W - 24, 80, 22, '#ffb03d', 'right');
+    g.text('CURVE ' + (S.curve > 0 ? '↻' : '↺'), g.W / 2, 26, 14, '#ffffff88', 'center', 700);
+  },
+});
+function drawRang(ctx, x, y, a, s) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.scale(s, s);
+  ctx.fillStyle = '#ffb03d'; ctx.strokeStyle = '#7a3e00'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-14, -10); ctx.quadraticCurveTo(0, -2, 14, -10); ctx.lineTo(16, -5); ctx.quadraticCurveTo(0, 6, -16, -5); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+})();
+</script>
+</body>
+</html>

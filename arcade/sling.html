@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>SLING</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const GRAV = 900, R = 12, VMAX = 1050;
+let S;
+
+function room(g) {
+  S.room++;
+  S.targets = []; S.bumpers = []; S.spikes = [];
+  const nb = 3 + Math.min(4, S.room);
+  for (let i = 0; i < nb; i++) S.bumpers.push({ x: rand(80, g.W - 80), y: rand(80, g.H - 170), r: rand(20, 30), flash: 0 });
+  const nt = 6 + Math.min(6, S.room);
+  for (let i = 0; i < nt; i++) {
+    let x, y, ok, tries = 0;
+    do { x = rand(40, g.W - 40); y = rand(40, g.H - 90); ok = S.bumpers.every(b => Math.hypot(b.x - x, b.y - y) > b.r + 30); tries++; } while (!ok && tries < 30);
+    S.targets.push({ x, y, r: 12, hit: false, moving: S.room > 2 && Math.random() < 0.3 ? rand(30, 80) : 0, x0: x, ph: rand(0, TAU) });
+  }
+  if (S.room > 1) { const n = Math.min(4, S.room - 1); for (let i = 0; i < n; i++) { const side = (Math.random() * 3) | 0; if (side === 0) S.spikes.push({ x0: rand(60, g.W - 260), y0: 0, x1: 0, y1: 0, len: rand(120, 200), dir: 'top' }); else S.spikes.push({ side: side === 1 ? 'left' : 'right', y: rand(60, g.H - 200), len: rand(80, 150) }); } }
+  S.time = Math.min(S.time + 18, 30);
+  S.banner = 1.2;
+}
+function predict(p, vx, vy, n) {
+  const pts = []; let x = p.x, y = p.y; const h = 1 / 60;
+  for (let i = 0; i < n; i++) { vy += GRAV * h; x += vx * h; y += vy * h; if (x < R || x > S.W - R) vx = -vx * 0.8; if (y < R) vy = -vy * 0.8; if (y > S.H - 40 - R) break; if (i % 3 === 0) pts.push(x, y); }
+  return pts;
+}
+
+ARC.game({
+  id: 'sling', title: 'SLING', color: '#7dff6b', tagline: 'Pull back. Let go. Ricochet through everything.',
+  help: [
+    { pad: 'HOLD Ⓐ aim (slow-mo in air)  ·  Ⓛ pull back — further = stronger  ·  RELEASE to fly', touch: 'HOLD SLING to aim  ·  left thumb pulls back  ·  RELEASE to fly' },
+    'One air-sling per flight. Bumpers recharge it and boost you.',
+    'Hit every target before the clock runs out. Multi-hit flights score big.',
+  ],
+  buttons: [{ id: 'a', label: 'SLING', big: true, color: '#7dff6b' }],
+  init(g) {
+    S = { p: { x: g.W / 2, y: g.H - 40 - R, vx: 0, vy: 0, ground: true, air: 1, aiming: false, pullX: 0, pullY: 0, inv: 0 }, room: 0, time: 12, flight: 0, overT: 0, trail: [], W: g.W, H: g.H, banner: 0, rooms: 0 };
+    g.S = S; room(g);
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p; S.W = g.W; S.H = g.H;
+    const floor = g.H - 40;
+    if (S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver('Rooms cleared: ' + (S.room - 1)); return; } }
+    S.banner -= rdt;
+    // timer
+    if (S.overT <= 0) { S.time -= dt * (p.aiming ? 0.3 : 1); if (S.time <= 0) { S.time = 0; S.overT = 1.2; g.sfx.over(); g.slowmo(0.3, 1); } }
+    // aiming
+    const canSling = p.ground || p.air > 0;
+    const hold = I.down('a') || I.down('rt') || I.down('rb');
+    if (hold && canSling && S.overT <= 0) {
+      if (!p.aiming) { p.aiming = true; g.sfx.charge(0.8); }
+      const sx = I.mx, sy = I.my; const m = Math.hypot(sx, sy);
+      if (m > 0.15) { p.pullX = lerp(p.pullX, sx, 1 - Math.exp(-rdt * 20)); p.pullY = lerp(p.pullY, sy, 1 - Math.exp(-rdt * 20)); }
+    } else if (p.aiming) {
+      p.aiming = false;
+      const m = Math.min(1, Math.hypot(p.pullX, p.pullY));
+      if (m > 0.2) {
+        const a = Math.atan2(-p.pullY, -p.pullX), sp = 300 + m * (VMAX - 300);
+        p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp;
+        if (!p.ground) p.air--;
+        p.ground = false; S.flight = 0;
+        g.sfx.whoosh(0.7 + m * 0.6); g.audio.tone(200 + m * 300, 0.1, { type: 'triangle', vol: 0.15, to: 600 + m * 400 }); g.shake(2 + m * 3);
+        g.fx.burst(p.x, p.y, 10, { color: '#7dff6b', speed: 200, size: 3, angle: a + Math.PI, spread: 0.6 });
+      }
+      p.pullX = p.pullY = 0;
+    }
+    const tdt = p.aiming && !p.ground ? dt * 0.25 : dt;
+    // physics
+    if (!p.ground) {
+      p.vy += GRAV * tdt;
+      p.x += p.vx * tdt; p.y += p.vy * tdt;
+      if (p.x < R) { p.x = R; p.vx = Math.abs(p.vx) * 0.8; wallTap(g); } if (p.x > g.W - R) { p.x = g.W - R; p.vx = -Math.abs(p.vx) * 0.8; wallTap(g); }
+      if (p.y < R) { p.y = R; p.vy = Math.abs(p.vy) * 0.8; wallTap(g); }
+      if (p.y > floor - R) {
+        p.y = floor - R;
+        if (Math.abs(p.vy) > 220) { p.vy = -Math.abs(p.vy) * 0.45; p.vx *= 0.8; wallTap(g); }
+        else { p.vy = 0; p.vx *= Math.exp(-tdt * 6); if (Math.abs(p.vx) < 30) { p.vx = 0; p.ground = true; p.air = 1; if (S.flight >= 2) endFlight(g); S.flight = 0; } }
+      }
+    }
+    // bumpers
+    for (const b of S.bumpers) {
+      b.flash -= dt;
+      const dx = p.x - b.x, dy = p.y - b.y, d = Math.hypot(dx, dy);
+      if (d < b.r + R) {
+        const nx = dx / d, ny = dy / d; p.x = b.x + nx * (b.r + R + 0.5); p.y = b.y + ny * (b.r + R + 0.5);
+        const vn = p.vx * nx + p.vy * ny; p.vx -= 2 * vn * nx; p.vy -= 2 * vn * ny;
+        const sp = Math.max(Math.hypot(p.vx, p.vy), 520) * 1.05; const k = Math.min(VMAX * 1.1, sp) / (Math.hypot(p.vx, p.vy) || 1); p.vx *= k; p.vy *= k;
+        p.ground = false; p.air = 1; b.flash = 0.12;
+        g.addScore(10); g.sfx.clang(1.3 + Math.random() * 0.2); g.shake(4); g.hitstop(0.025);
+        g.fx.ring(b.x, b.y, { r: b.r, to: b.r + 20, color: '#ffd84a', life: 0.2, w: 4 });
+      }
+    }
+    // spikes
+    for (const s of S.spikes) {
+      let hit = false;
+      if (s.dir === 'top') hit = p.y < 24 && p.x > s.x0 && p.x < s.x0 + s.len;
+      else if (s.side === 'left') hit = p.x < 24 && p.y > s.y && p.y < s.y + s.len;
+      else hit = p.x > g.W - 24 && p.y > s.y && p.y < s.y + s.len;
+      if (hit && p.inv <= 0) { p.inv = 1; S.time = Math.max(0, S.time - 3); g.fx.pop(p.x, p.y + 30, '-3s', { color: '#ff3d5a', size: 20 }); g.sfx.hurt(); g.shake(10); g.flash('#ff3d5a', 0.3); }
+    }
+    p.inv -= dt;
+    // targets
+    for (const t of S.targets) {
+      if (t.moving) { t.ph += dt; t.x = t.x0 + Math.sin(t.ph) * t.moving; }
+      if (!t.hit && Math.hypot(t.x - p.x, t.y - p.y) < t.r + R + 2) {
+        t.hit = true; S.flight++;
+        const pts = 100 * S.flight; g.addScore(pts);
+        g.fx.burst(t.x, t.y, 18, { color: ['#7dff6b', '#fff', '#ffd84a'], speed: 320, size: 3.5 });
+        g.fx.pop(t.x, t.y - 22, (S.flight > 1 ? '×' + S.flight + ' ' : '') + '+' + pts, { color: S.flight > 2 ? '#ffd84a' : '#fff', size: 15 + Math.min(15, S.flight * 2) });
+        g.sfx.combo(S.flight); g.hitstop(0.035); g.shake(3);
+      }
+    }
+    if (S.targets.every(t => t.hit) && S.overT <= 0) {
+      const tb = Math.floor(S.time) * 50; g.addScore(tb + 500);
+      g.fx.pop(g.W / 2, g.H / 2 - 40, 'ROOM CLEAR +' + (tb + 500), { color: '#7dff6b', size: 30, life: 1.3 });
+      g.sfx.start(); g.flash('#7dff6b', 0.2);
+      if (S.flight >= 2) endFlight(g); S.flight = 0;
+      room(g);
+    }
+    S.trail.push(p.x, p.y); if (S.trail.length > 30) S.trail.splice(0, 2);
+  },
+  draw(g, ctx) {
+    const p = S.p, floor = g.H - 40;
+    ctx.fillStyle = '#0e1a10'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.strokeStyle = '#7dff6b10'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = 0; x < g.W; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, floor); } ctx.stroke();
+    ctx.fillStyle = '#1f3a20'; ctx.fillRect(-50, floor, g.W + 100, 60); ctx.fillStyle = '#7dff6b55'; ctx.fillRect(-50, floor, g.W + 100, 3);
+    // spikes
+    ctx.fillStyle = '#ff3d5a';
+    for (const s of S.spikes) {
+      ctx.beginPath();
+      if (s.dir === 'top') for (let x = s.x0; x < s.x0 + s.len; x += 16) { ctx.moveTo(x, 0); ctx.lineTo(x + 8, 18); ctx.lineTo(x + 16, 0); }
+      else if (s.side === 'left') for (let y = s.y; y < s.y + s.len; y += 16) { ctx.moveTo(0, y); ctx.lineTo(18, y + 8); ctx.lineTo(0, y + 16); }
+      else for (let y = s.y; y < s.y + s.len; y += 16) { ctx.moveTo(g.W, y); ctx.lineTo(g.W - 18, y + 8); ctx.lineTo(g.W, y + 16); }
+      ctx.fill();
+    }
+    for (const b of S.bumpers) { ctx.fillStyle = b.flash > 0 ? '#fff' : '#ffd84a'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.fill(); ctx.fillStyle = '#0e1a10'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.55, 0, TAU); ctx.fill(); ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.3, 0, TAU); ctx.fill(); }
+    for (const t of S.targets) if (!t.hit) { ctx.strokeStyle = '#7dff6b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, TAU); ctx.stroke(); ctx.fillStyle = '#7dff6b'; ctx.beginPath(); ctx.arc(t.x, t.y, 4 + Math.sin(g.time * 6 + t.ph) * 1.5, 0, TAU); ctx.fill(); }
+    // trail
+    const tr = S.trail; for (let i = 2; i < tr.length; i += 2) { ctx.strokeStyle = `rgba(125,255,107,${i / tr.length * 0.5})`; ctx.lineWidth = i / tr.length * R * 1.6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(tr[i - 2], tr[i - 1]); ctx.lineTo(tr[i], tr[i + 1]); ctx.stroke(); }
+    // aim
+    if (p.aiming) {
+      const m = Math.min(1, Math.hypot(p.pullX, p.pullY));
+      if (m > 0.2) {
+        const a = Math.atan2(-p.pullY, -p.pullX), sp = 300 + m * (VMAX - 300);
+        const pts = predict(p, Math.cos(a) * sp, Math.sin(a) * sp, 90);
+        ctx.fillStyle = '#ffffffaa'; for (let i = 0; i < pts.length; i += 2) { ctx.beginPath(); ctx.arc(pts[i], pts[i + 1], 2.5 * (1 - i / pts.length / 1.5), 0, TAU); ctx.fill(); }
+        // rubber band
+        ctx.strokeStyle = '#7dff6b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(p.x - 18, p.y - 6); ctx.lineTo(p.x + p.pullX * 50, p.y + p.pullY * 50); ctx.lineTo(p.x + 18, p.y - 6); ctx.stroke();
+      }
+      ctx.strokeStyle = '#ffffff33'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, 50, 0, TAU); ctx.stroke();
+    }
+    ctx.fillStyle = p.inv > 0 && Math.floor(g.time * 20) % 2 ? '#ff3d5a' : '#e8ffe0'; ctx.beginPath(); ctx.arc(p.x + (p.aiming ? p.pullX * 30 : 0), p.y + (p.aiming ? p.pullY * 30 : 0), R, 0, TAU); ctx.fill();
+    if (!p.ground) for (let i = 0; i < 1; i++) { ctx.fillStyle = p.air > 0 ? '#7dff6b' : '#ffffff33'; ctx.beginPath(); ctx.arc(p.x, p.y - R - 8, 3.5, 0, TAU); ctx.fill(); }
+    if (p.aiming && !p.ground) { ctx.fillStyle = '#7dff6b10'; ctx.fillRect(0, 0, g.W, g.H); }
+    g.fx.draw(ctx);
+    if (S.banner > 0) { ctx.globalAlpha = Math.min(1, S.banner * 2); g.text('ROOM ' + S.room, g.W / 2, g.H * 0.3, 44, '#7dff6b'); ctx.globalAlpha = 1; }
+  },
+  hudExtra(g, ctx) {
+    const t = S.time; g.text(t.toFixed(1), g.W / 2, 30, 30, t < 5 && Math.floor(g.time * 4) % 2 ? '#ff3d5a' : '#fff');
+    g.text(S.targets.filter(x => !x.hit).length + ' left', g.W / 2, 56, 12, '#ffffffaa', 'center', 700);
+    if (S.flight > 1) g.text('FLIGHT ×' + S.flight, g.W - 24, 80, 24, '#ffd84a', 'right');
+  },
+});
+function wallTap(g) { const sp = Math.hypot(S.p.vx, S.p.vy); if (sp > 300) { g.sfx.hit(0.5 + sp / 2000); g.shake(sp / 250); } }
+function endFlight(g) { if (S.flight >= 3) { const b = S.flight * S.flight * 25; g.addScore(b); g.fx.pop(S.p.x, S.p.y - 50, 'FLIGHT BONUS +' + b, { color: '#ffd84a', size: 20 }); } }
+})();
+</script>
+</body>
+</html>

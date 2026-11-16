@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>TOP</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const COLS = ['#ff5e5e', '#5ee3ff', '#b38bff', '#7dff9b', '#ff9a2e'];
+let S;
+const ring = g => ({ x: g.W / 2, y: g.H / 2 + 6, R: g.H * 0.44 });
+
+function top(o) { return Object.assign({ vx: 0, vy: 0, r: 20, spin: 100, ang: 0, dash: 0, charge: 0, falling: 0, dead: false, flash: 0 }, o); }
+function wave(g) {
+  S.wave++;
+  const A = ring(g); const n = Math.min(5, 1 + Math.floor(S.wave / 1.5));
+  for (let i = 0; i < n; i++) {
+    const a = i / n * TAU + rand(-0.3, 0.3) + Math.PI;
+    const big = S.wave >= 3 && Math.random() < 0.3;
+    S.tops.push(top({ x: A.x + Math.cos(a) * A.R * 0.7, y: A.y + Math.sin(a) * A.R * 0.7, col: COLS[(i + S.wave) % COLS.length], ai: true, r: big ? 27 : 19, mass0: big ? 1.7 : 1, cool: rand(1, 2.5), aggr: 0.7 + S.wave * 0.08, spin: 90 + S.wave * 2 }));
+  }
+  S.banner = 1.2;
+}
+function mass(t) { return (t.mass0 || 1) * (0.5 + t.spin / 100) * (t.dash > 0 ? 2.2 : 1); }
+
+ARC.game({
+  id: 'top', title: 'TOP', color: '#ff9a2e', tagline: 'Spin is life. Rev up, slam in, ring them out.',
+  help: [
+    { pad: 'Ⓛ glide  ·  HOLD Ⓐ rev (charges spin + dash)  ·  RELEASE to slam in the stick direction', touch: 'Left thumb: glide  ·  HOLD REV, release to slam' },
+    'Spin = health AND weight. Revving refills it — but you\'re a sitting duck.',
+    'The rim only gives way to a hard hit. Knock rivals over, or grind their spin to zero.',
+  ],
+  buttons: [{ id: 'a', label: 'REV', big: true, color: '#ff9a2e' }],
+  init(g) {
+    const A = ring(g);
+    S = { p: null, tops: [], wave: 0, banner: 0, overT: 0, combo: 0, comboT: 0, outs: 0 };
+    S.p = top({ x: A.x, y: A.y + A.R * 0.4, col: '#ffd84a', player: true, mass0: 1.1 });
+    S.tops.push(S.p);
+    g.S = S; wave(g);
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p, A = ring(g);
+    if (S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver('Wave ' + S.wave + '  ·  ' + S.outs + ' ring-outs'); return; } }
+    if (S.comboT > 0) { S.comboT -= dt; if (S.comboT <= 0) S.combo = 0; }
+    S.banner -= rdt;
+    // player control
+    if (!p.dead && !p.falling) {
+      const rev = I.down('a') || I.down('rt') || I.down('rb');
+      if (rev) {
+        if (p.charge === 0) g.sfx.charge(0.6);
+        p.charge = Math.min(1, p.charge + dt / 0.8); p.spin = Math.min(100, p.spin + dt * 22);
+        p.vx *= Math.exp(-dt * 3); p.vy *= Math.exp(-dt * 3);
+        if (Math.random() < 0.3) g.audio.tone(200 + p.charge * 500, 0.04, { type: 'sawtooth', vol: 0.03 });
+        if (Math.hypot(I.mx, I.my) > 0.3) p.aimA = Math.atan2(I.my, I.mx);
+      } else {
+        if (p.charge > 0.12) {
+          const a = Math.hypot(I.mx, I.my) > 0.3 ? Math.atan2(I.my, I.mx) : (p.aimA != null ? p.aimA : Math.atan2(p.vy, p.vx));
+          const sp = 240 + p.charge * 600;
+          p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp; p.dash = 0.18 + p.charge * 0.2;
+          g.sfx.dash(0.7 + p.charge * 0.5); g.shake(2 + p.charge * 4);
+          g.fx.burst(p.x, p.y, 12, { color: ['#ffd84a', '#fff'], speed: 260, size: 3, angle: a + Math.PI, spread: 0.5 });
+        }
+        p.charge = 0;
+        p.vx += I.mx * 520 * dt; p.vy += I.my * 520 * dt;
+      }
+    }
+    // AI
+    for (const t of S.tops) {
+      if (!t.ai || t.dead || t.falling) continue;
+      t.cool -= dt;
+      const dx = p.x - t.x, dy = p.y - t.y, d = Math.hypot(dx, dy) || 1;
+      // steer toward player but away from the rim
+      const cx = A.x - t.x, cy = A.y - t.y, cd = Math.hypot(cx, cy) || 1;
+      const rim = clamp((cd - A.R * 0.6) / (A.R * 0.4), 0, 1);
+      t.vx += (dx / d * (1 - rim) + cx / cd * rim * 1.6) * 360 * t.aggr * dt;
+      t.vy += (dy / d * (1 - rim) + cy / cd * rim * 1.6) * 360 * t.aggr * dt;
+      if (t.cool <= 0 && d < 260 && !p.dead) {
+        t.cool = rand(1.6, 3) / t.aggr;
+        const lead = 0.25; const tx = p.x + p.vx * lead - t.x, ty = p.y + p.vy * lead - t.y, td = Math.hypot(tx, ty) || 1;
+        const sp = 380 + S.wave * 25; t.vx = tx / td * sp; t.vy = ty / td * sp; t.dash = 0.35; g.sfx.whoosh(1.2);
+      }
+    }
+    // physics
+    for (const t of S.tops) {
+      if (t.dead) continue;
+      t.flash -= dt; t.dash -= dt; t.knock = (t.knock || 0) - dt;
+      if (t.falling) { t.falling -= dt; t.x += t.vx * dt; t.y += t.vy * dt; if (t.falling <= 0) t.dead = true; continue; }
+      // bowl slope pulls toward the center, friction is low (tops glide)
+      const cx = A.x - t.x, cy = A.y - t.y, cd = Math.hypot(cx, cy) || 1;
+      t.vx += cx / A.R * 110 * dt; t.vy += cy / A.R * 110 * dt;
+      t.vx *= Math.exp(-dt * 0.6); t.vy *= Math.exp(-dt * 0.6);
+      const sp = Math.hypot(t.vx, t.vy); const cap = t.dash > 0 ? 1100 : 420; if (sp > cap) { t.vx *= cap / sp; t.vy *= cap / sp; }
+      t.x += t.vx * dt; t.y += t.vy * dt;
+      t.spin -= dt * (t.player ? 2.2 : 1.6 + S.wave * 0.1);
+      t.ang += dt * (6 + t.spin * 0.25);
+      // wobble & topple
+      if (t.spin <= 0) {
+        t.dead = true; g.fx.burst(t.x, t.y, 24, { color: [t.col, '#fff'], speed: 260, size: 4 });
+        if (t.player) { S.overT = 1.2; g.slowmo(0.3, 1); g.sfx.hurt(); g.flash('#ff2040', 0.4); }
+        else score(g, t, 'TOPPLED', 150);
+        continue;
+      }
+      // rim lip: slow contact bounces back; only a hard hit carries over the edge
+      if (cd > A.R - t.r * 0.6) {
+        const ox = -cx / cd, oy = -cy / cd; const vo = t.vx * ox + t.vy * oy;
+        if (vo > 0 && (vo < 300 || !(t.knock > 0))) { t.vx -= 1.5 * vo * ox; t.vy -= 1.5 * vo * oy; t.x = A.x + ox * (A.R - t.r * 0.6); t.y = A.y + oy * (A.R - t.r * 0.6); }
+      }
+      // ring out
+      if (cd > A.R + t.r * 0.3) {
+        t.falling = 0.45; g.sfx.whoosh(0.5); g.audio.tone(400, 0.5, { type: 'sine', vol: 0.15, to: 80 });
+        if (t.player) { S.overT = 1.3; g.slowmo(0.3, 1); g.flash('#ff2040', 0.4); g.shake(10); }
+        else { S.outs++; score(g, t, 'RING OUT', 300); }
+      }
+    }
+    // collisions
+    const L = S.tops.filter(t => !t.dead && !t.falling);
+    for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+      const a = L[i], b = L[j];
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), rr = a.r + b.r;
+      if (d <= 0 || d >= rr) continue;
+      const nx = dx / d, ny = dy / d;
+      const ma = mass(a), mb = mass(b);
+      const ov = rr - d; a.x -= nx * ov * mb / (ma + mb); a.y -= ny * ov * mb / (ma + mb); b.x += nx * ov * ma / (ma + mb); b.y += ny * ov * ma / (ma + mb);
+      const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+      if (rv >= 0) continue;
+      const e = 1.15; // spinning tops are bouncy — rims spark
+      const J = -(1 + e) * rv / (1 / ma + 1 / mb);
+      a.vx -= J * nx / ma; a.vy -= J * ny / ma; b.vx += J * nx / mb; b.vy += J * ny / mb;
+      // spin damage: lighter / slower one loses more
+      const hit = Math.abs(rv);
+      a.spin -= hit * 0.018 * mb / ma; b.spin -= hit * 0.018 * ma / mb;
+      a.flash = b.flash = 0.08; a.knock = b.knock = 0.8;
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      g.fx.burst(mx, my, Math.min(30, 6 + hit / 25), { color: ['#fff', '#ffd84a', '#ff9a2e'], speed: 200 + hit * 0.6, size: 2.5, shape: 'line' });
+      g.sfx.clang(0.8 + Math.random() * 0.4); if (hit > 400) g.sfx.hit(0.7);
+      const involvesP = a.player || b.player;
+      g.shake(Math.min(14, hit / (involvesP ? 50 : 90))); g.hitstop(Math.min(0.08, hit / 9000));
+      if (involvesP) g.haptic(Math.min(1, hit / 800), 50);
+    }
+    S.tops = S.tops.filter(t => !t.dead || t.player);
+    if (!S.tops.some(t => t.ai) && !p.dead && S.overT <= 0) {
+      g.addScore(400 * S.wave); g.fx.pop(A.x, A.y - 60, 'WAVE CLEAR', { color: '#ff9a2e', size: 30 }); p.spin = Math.min(100, p.spin + 35); wave(g);
+    }
+  },
+  draw(g, ctx) {
+    const A = ring(g), p = S.p;
+    ctx.fillStyle = '#0d0a14'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    // stadium dish
+    const gr = ctx.createRadialGradient(A.x, A.y, 10, A.x, A.y, A.R);
+    gr.addColorStop(0, '#3a2c4a'); gr.addColorStop(0.85, '#241a30'); gr.addColorStop(1, '#4a3a5c');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(A.x, A.y, A.R, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#ff9a2e'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = '#ffffff10'; ctx.lineWidth = 1; for (let r = 40; r < A.R; r += 40) { ctx.beginPath(); ctx.arc(A.x, A.y, r, 0, TAU); ctx.stroke(); }
+    // charge aim
+    if (p.charge > 0 && !p.dead) {
+      const a = Math.hypot(g.input.mx, g.input.my) > 0.3 ? Math.atan2(g.input.my, g.input.mx) : (p.aimA != null ? p.aimA : 0);
+      ctx.strokeStyle = `rgba(255,216,74,${0.3 + p.charge * 0.6})`; ctx.lineWidth = 3; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + Math.cos(a) * (60 + p.charge * 160), p.y + Math.sin(a) * (60 + p.charge * 160)); ctx.stroke(); ctx.setLineDash([]);
+    }
+    for (const t of S.tops) {
+      if (t.dead) continue;
+      const s = t.falling ? Math.max(0.1, t.falling / 0.45) : 1;
+      const wob = t.spin < 30 ? (30 - t.spin) / 30 : 0;
+      ctx.save(); ctx.translate(t.x + Math.sin(g.time * 20) * wob * 4, t.y); ctx.scale(s, s * (1 - wob * 0.15));
+      ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(3, 5, t.r, t.r * 0.9, 0, 0, TAU); ctx.fill();
+      ctx.rotate(t.ang);
+      ctx.fillStyle = t.flash > 0 ? '#fff' : t.col; ctx.beginPath(); ctx.arc(0, 0, t.r, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#0d0a14'; for (let i = 0; i < 3; i++) { ctx.rotate(TAU / 3); ctx.beginPath(); ctx.moveTo(t.r * 0.25, 0); ctx.lineTo(t.r * 0.95, -t.r * 0.25); ctx.lineTo(t.r * 0.95, t.r * 0.1); ctx.fill(); }
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, t.r * 0.22, 0, TAU); ctx.fill();
+      ctx.restore();
+      if (!t.falling) { ctx.strokeStyle = t.spin < 30 ? '#ff3d5a' : '#ffffff66'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(t.x, t.y, t.r + 6, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0, t.spin) / 100); ctx.stroke(); }
+      if (t.player && t.charge > 0) { ctx.strokeStyle = '#ffd84a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(t.x, t.y, t.r + 12 + Math.sin(g.time * 30) * 2, 0, TAU * t.charge); ctx.stroke(); }
+    }
+    g.fx.draw(ctx);
+    if (S.banner > 0) { ctx.globalAlpha = Math.min(1, S.banner * 2); g.text('WAVE ' + S.wave, A.x, A.y - 30, 40, '#ff9a2e'); ctx.globalAlpha = 1; }
+  },
+  hudExtra(g, ctx) {
+    const p = S.p; ctx.fillStyle = '#ffffff18'; ctx.fillRect(22, 80, 120, 8); ctx.fillStyle = p.spin < 30 ? '#ff3d5a' : '#ffd84a'; ctx.fillRect(22, 80, 120 * Math.max(0, p.spin) / 100, 8);
+    g.text('SPIN', 22, 100, 11, '#ffffffaa', 'left', 700);
+    if (S.combo > 1) g.text(S.combo + '× KO', g.W - 24, 80, 22, '#ffd84a', 'right');
+  },
+});
+function score(g, t, label, base) {
+  S.combo++; S.comboT = 3;
+  const pts = base * S.combo; g.addScore(pts);
+  g.fx.pop(t.x, t.y - 30, label + '  +' + pts, { color: label === 'RING OUT' ? '#ff9a2e' : '#fff', size: 20 });
+  g.sfx.boom(1.4); g.shake(8); g.hitstop(0.06);
+}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>DRIFT</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const ROADW = 150, SEG = 40, TOP = 560, CP_EVERY = 110;
+const TIERS = [[0.55, '#4ac8ff', 140], [1.25, '#ff9a2e', 240], [2.1, '#d26bff', 360]];
+let S;
+
+function genRoad() {
+  const R = S.road;
+  while (R.length < S.ci + 220) {
+    const last = R[R.length - 1];
+    if (S.bendN <= 0) {
+      S.bendN = (rand(8, 26)) | 0;
+      const diff = Math.min(1, R.length / 1500);
+      const sharp = rand(0.02, 0.05 + diff * 0.06);
+      S.bend = Math.random() < 0.25 ? 0 : sharp * (Math.random() < 0.5 ? -1 : 1);
+    }
+    S.bendN--;
+    S.ang += S.bend;
+    R.push({ x: last.x + Math.cos(S.ang) * SEG, y: last.y + Math.sin(S.ang) * SEG, a: S.ang, cp: R.length % CP_EVERY === 0 });
+  }
+}
+function nearest(x, y) {
+  const R = S.road; let bi = S.ci, bd = 1e12;
+  for (let i = Math.max(0, S.ci - 10); i < Math.min(R.length - 1, S.ci + 40); i++) {
+    const d = (R[i].x - x) ** 2 + (R[i].y - y) ** 2; if (d < bd) { bd = d; bi = i; }
+  }
+  // distance to the segment between bi and bi+1 for accuracy
+  const a = R[bi], b = R[bi + 1]; const dx = b.x - a.x, dy = b.y - a.y; const t = clamp(((x - a.x) * dx + (y - a.y) * dy) / (dx * dx + dy * dy), 0, 1);
+  return { i: bi, d: Math.hypot(x - (a.x + dx * t), y - (a.y + dy * t)) };
+}
+
+ARC.game({
+  id: 'drift', title: 'DRIFT', color: '#d26bff', tagline: 'Slide long, release clean, beat the clock.',
+  help: [
+    { pad: 'Ⓛ steer  ·  HOLD Ⓐ / Ⓡ2 drift  ·  RELEASE for mini-boost  ·  Ⓑ brake', touch: 'Left thumb: steer  ·  HOLD DRIFT through corners, release for boost  ·  BRAKE' },
+    'Longer slides charge hotter boosts: blue → orange → PURPLE.',
+    'Grass slows you. Checkpoints add time.',
+  ],
+  buttons: [{ id: 'a', label: 'DRIFT', big: true, color: '#d26bff' }, { id: 'b', label: 'BRAKE' }],
+  init(g) {
+    S = { road: [{ x: 0, y: 0, a: -Math.PI / 2 }], ang: -Math.PI / 2, bend: 0, bendN: 12, ci: 0, car: { x: 0, y: 0, h: -Math.PI / 2, vx: 0, vy: -200, drift: false, charge: 0, boost: 0, steer: 0 }, camA: -Math.PI / 2, time: 22, skids: [], dist: 0, driftPts: 0, cpHit: 0, overT: 0, lastCp: 0, best: 0 };
+    g.S = S;
+    for (let i = 0; i < 6; i++) S.road.push({ x: 0, y: -SEG * (i + 1), a: -Math.PI / 2 });
+    genRoad();
+  },
+  attract: true,
+  update(g, dt, rdt) {
+    const I = g.input, c = S.car, playing = g.state === 'play';
+    if (playing && S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) g.gameOver(Math.floor(S.dist) + ' m  ·  ' + S.cpHit + ' checkpoints'); }
+    const near = nearest(c.x, c.y); S.ci = near.i; genRoad();
+    const fx = Math.cos(c.h), fy = Math.sin(c.h);
+    let fwd = c.vx * fx + c.vy * fy, lat = -c.vx * fy + c.vy * fx;
+    const spd = Math.hypot(c.vx, c.vy);
+    // input (title screen: autopilot follows the road)
+    let steer, drift, brake;
+    if (playing && S.overT <= 0) { steer = I.mx; drift = I.down('a') || I.down('rt') || I.down('rb'); brake = I.down('b') || I.down('lt'); }
+    else if (!playing) { const ahead = S.road[Math.min(S.road.length - 1, near.i + 4)]; const want = Math.atan2(ahead.y - c.y, ahead.x - c.x); let d = ((want - c.h + Math.PI) % TAU + TAU) % TAU - Math.PI; steer = clamp(d * 2.5, -1, 1); drift = Math.abs(d) > 0.35; brake = false; }
+    else { steer = 0; drift = false; brake = true; }
+    c.steer = lerp(c.steer, steer, 1 - Math.exp(-dt * 14));
+    const offroad = near.d > ROADW / 2;
+    // drift state
+    if (drift && !c.drift && spd > 200 && Math.abs(c.steer) > 0.2) { c.drift = true; c.dir = Math.sign(c.steer); c.charge = 0; if (playing) g.sfx.whoosh(0.5); }
+    if (c.drift && (!drift || spd < 140)) {
+      c.drift = false;
+      let tier = -1; for (let i = 0; i < TIERS.length; i++) if (c.charge >= TIERS[i][0]) tier = i;
+      if (tier >= 0 && spd > 140) {
+        c.boost = 0.5 + tier * 0.35; c.boostPow = TIERS[tier][2]; c.boostCol = TIERS[tier][1];
+        if (playing) { g.sfx.dash(0.8 + tier * 0.25); g.shake(3 + tier * 2); g.fx.pop(g.W / 2, g.H * 0.45, ['BOOST', 'SUPER BOOST', 'ULTRA BOOST'][tier], { color: TIERS[tier][1], size: 22 + tier * 4 }); g.haptic(0.3 + tier * 0.2, 60); }
+      }
+    }
+    // steering
+    const turnBase = 2.6 * clamp(spd / 220, 0, 1);
+    let turn = c.steer * turnBase;
+    if (c.drift) turn = (c.dir * 0.95 + c.steer * 0.7) * turnBase * 0.68; // committed slide, counter-steer to widen
+    c.h += turn * dt;
+    // throttle (auto) / brake / boost
+    const top = offroad ? 230 : TOP + (c.boost > 0 ? c.boostPow : 0);
+    let acc = brake ? -700 : (fwd < top ? 420 : -260);
+    if (c.boost > 0) { c.boost -= dt; acc += 900; }
+    fwd += acc * dt; if (fwd > top && !brake) fwd = lerp(fwd, top, 1 - Math.exp(-dt * (offroad ? 4 : 1.5)));
+    fwd = Math.max(fwd, 0);
+    // grip
+    const grip = c.drift ? 1.5 : offroad ? 5 : 9;
+    lat *= Math.exp(-grip * dt);
+    if (c.drift) {
+      lat += -c.dir * 420 * dt * clamp(fwd / 400, 0, 1); // keep the tail out
+      if (Math.abs(lat) > 60 && !offroad) { c.charge += dt; if (playing) S.driftPts += Math.abs(lat) * dt * 0.2; }
+      else c.charge = Math.max(0, c.charge - dt * 0.5);
+    }
+    const f2x = Math.cos(c.h), f2y = Math.sin(c.h);
+    c.vx = f2x * fwd - f2y * lat; c.vy = f2y * fwd + f2x * lat;
+    c.x += c.vx * dt; c.y += c.vy * dt;
+    // hard wall far off the road — keeps you from cutting across bends
+    if (near.d > ROADW / 2 + 70) { const R = S.road[near.i]; const dx = c.x - R.x, dy = c.y - R.y, d = Math.hypot(dx, dy) || 1; c.x -= dx / d * (near.d - ROADW / 2 - 70); c.y -= dy / d * (near.d - ROADW / 2 - 70); c.vx *= 0.7; c.vy *= 0.7; if (playing && spd > 200) { g.shake(6); g.sfx.hit(0.5); } }
+    // skid marks + sparks
+    if (c.drift || (offroad && spd > 120)) {
+      const bx = c.x - f2x * 14, by = c.y - f2y * 14;
+      S.skids.push({ x: bx - f2y * 9, y: by + f2x * 9, x2: bx + f2y * 9, y2: by - f2x * 9, off: offroad });
+      if (S.skids.length > 700) S.skids.splice(0, 50);
+      if (c.drift && playing) {
+        let tier = -1; for (let i = 0; i < TIERS.length; i++) if (c.charge >= TIERS[i][0]) tier = i;
+        if (tier >= 0 && Math.random() < 0.7) g.fx.burst(bx, by, 1, { color: TIERS[tier][1], speed: 160, size: 2.5, life: 0.3, drag: 5 });
+        if (tier >= 0 && c.lastTier !== tier) { g.sfx.charge(1 + tier * 0.5); g.audio.tone(500 + tier * 250, 0.08, { type: 'triangle', vol: 0.12 }); }
+        c.lastTier = tier;
+      }
+    } else c.lastTier = -1;
+    if (offroad && spd > 100 && Math.random() < 0.4) g.fx.burst(c.x - f2x * 16, c.y - f2y * 16, 1, { color: '#8a6a3a', speed: 80, size: 4, life: 0.5 });
+    // progress, checkpoints, timer
+    if (playing) {
+      const prog = near.i * SEG / 10;
+      if (prog > S.dist) { g.addScore((prog - S.dist)); S.dist = prog; }
+      const cpIdx = Math.floor(near.i / CP_EVERY);
+      if (cpIdx > S.lastCp) {
+        S.lastCp = cpIdx; S.cpHit++;
+        const bonus = Math.max(5.5, 11 - S.cpHit * 0.4);
+        S.time += bonus; g.addScore(500); g.sfx.select(1.3); g.flash('#ffffff', 0.12);
+        g.fx.pop(g.W / 2, g.H * 0.3, 'CHECKPOINT +' + bonus.toFixed(1) + 's', { color: '#7fffd4', size: 26 });
+      }
+      if (S.driftPts >= 1) { const n = Math.floor(S.driftPts); g.addScore(n); S.driftPts -= n; }
+      if (S.overT <= 0) { S.time -= dt; if (S.time <= 0) { S.time = 0; S.overT = 1.2; g.sfx.over(); } }
+    }
+    S.camA = ARC.util.angLerp(S.camA, c.h, 1 - Math.exp(-dt * 4));
+  },
+  draw(g, ctx) {
+    const c = S.car;
+    ctx.fillStyle = '#2d5a27'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.save();
+    ctx.translate(g.W / 2, g.H * 0.68);
+    ctx.rotate(-S.camA - Math.PI / 2);
+    const spd = Math.hypot(c.vx, c.vy);
+    const z = 1.3 * (1 - clamp((spd - 300) / 1500, 0, 0.18)); ctx.scale(z, z);
+    ctx.translate(-c.x, -c.y);
+    // grass tufts (world anchored)
+    ctx.fillStyle = '#336a2c';
+    const gx = Math.floor(c.x / 60), gy = Math.floor(c.y / 60);
+    for (let i = gx - 12; i <= gx + 12; i++) for (let j = gy - 12; j <= gy + 12; j++) { const h = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453; const f = h - Math.floor(h); if (f < 0.35) ctx.fillRect(i * 60 + f * 50, j * 60 + f * 120 % 50, 6, 6); }
+    // road
+    const R = S.road; const i0 = Math.max(0, S.ci - 25), i1 = Math.min(R.length, S.ci + 60);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    const path = () => { ctx.beginPath(); ctx.moveTo(R[i0].x, R[i0].y); for (let i = i0 + 1; i < i1; i++) ctx.lineTo(R[i].x, R[i].y); };
+    path(); ctx.strokeStyle = '#a07a4a'; ctx.lineWidth = ROADW + 140; ctx.globalAlpha = 0.25; ctx.stroke(); ctx.globalAlpha = 1;
+    path(); ctx.strokeStyle = '#e8e8e8'; ctx.lineWidth = ROADW + 14; ctx.stroke();
+    path(); ctx.strokeStyle = '#d63a3a'; ctx.lineWidth = ROADW + 14; ctx.setLineDash([20, 20]); ctx.stroke(); ctx.setLineDash([]);
+    path(); ctx.strokeStyle = '#3a3a44'; ctx.lineWidth = ROADW; ctx.stroke();
+    path(); ctx.strokeStyle = '#ffffff55'; ctx.lineWidth = 3; ctx.setLineDash([24, 28]); ctx.stroke(); ctx.setLineDash([]);
+    // checkpoints
+    for (let i = i0; i < i1; i++) if (R[i].cp && i > 0) { const a = R[i].a; ctx.strokeStyle = Math.floor(g.time * 4) % 2 ? '#7fffd4' : '#fff'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(R[i].x - Math.sin(a) * ROADW / 2, R[i].y + Math.cos(a) * ROADW / 2); ctx.lineTo(R[i].x + Math.sin(a) * ROADW / 2, R[i].y - Math.cos(a) * ROADW / 2); ctx.stroke(); }
+    // skids
+    ctx.strokeStyle = '#15151a88'; ctx.lineWidth = 4; ctx.beginPath();
+    for (const s of S.skids) { ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + 0.1, s.y + 0.1); ctx.moveTo(s.x2, s.y2); ctx.lineTo(s.x2 + 0.1, s.y2 + 0.1); }
+    ctx.stroke();
+    g.fx.draw(ctx);
+    // car
+    ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.h);
+    if (c.boost > 0) { ctx.fillStyle = c.boostCol; ctx.globalAlpha = 0.8; ctx.beginPath(); ctx.moveTo(-18, -6); ctx.lineTo(-34 - Math.random() * 20, 0); ctx.lineTo(-18, 6); ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.fillStyle = '#111'; for (const [x, y] of [[10, -11], [10, 11], [-11, -11], [-11, 11]]) ctx.fillRect(x - 5, y - 3, 10, 6);
+    ctx.fillStyle = '#d26bff'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-18, -10, 36, 20, 5) : ctx.rect(-18, -10, 36, 20); ctx.fill();
+    ctx.fillStyle = '#2a1840'; ctx.fillRect(-4, -8, 10, 16);
+    ctx.fillStyle = '#fff6c0'; ctx.fillRect(15, -8, 3, 4); ctx.fillRect(15, 4, 3, 4);
+    ctx.restore();
+    ctx.restore();
+    // speed streaks
+    if (spd > 600) { ctx.strokeStyle = '#ffffff20'; ctx.lineWidth = 2; for (let i = 0; i < 8; i++) { const x = (i * 131 + g.time * 50) % g.W, y = (i * 77 + g.time * 1300) % g.H; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + (spd - 550) * 0.2); ctx.stroke(); } }
+  },
+  hudExtra(g, ctx) {
+    const c = S.car;
+    const t = S.time; const warn = t < 6;
+    g.text(t.toFixed(1), g.W / 2, 34, 34, warn && Math.floor(g.time * 4) % 2 ? '#ff4060' : '#fff');
+    g.text(Math.floor(S.dist) + ' m', g.W / 2, 62, 13, '#ffffffaa', 'center', 700);
+    g.text(Math.round(Math.hypot(c.vx, c.vy) / 4) + ' km/h', g.W - 24, 80, 18, '#fff', 'right');
+    if (c.drift) {
+      let tier = -1; for (let i = 0; i < TIERS.length; i++) if (c.charge >= TIERS[i][0]) tier = i;
+      const next = TIERS[Math.min(2, tier + 1)][0], prev = tier >= 0 ? TIERS[tier][0] : 0;
+      const k = tier >= 2 ? 1 : clamp((c.charge - prev) / (next - prev), 0, 1);
+      ctx.fillStyle = '#0008'; ctx.fillRect(g.W / 2 - 80, g.H - 30, 160, 10);
+      ctx.fillStyle = tier >= 0 ? TIERS[tier][1] : '#fff'; ctx.fillRect(g.W / 2 - 80, g.H - 30, 160 * (tier >= 2 ? 1 : k), 10);
+    }
+  },
+});
+})();
+</script>
+</body>
+</html>

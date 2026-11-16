@@ -1,0 +1,23 @@
+// Arcade registry — launcher reads this. Add one line per finished game.
+window.ARC_GAMES = [
+  { file: 'blink.html', title: 'BLINK', color: '#ff3d5a', blurb: 'Freeze time, aim, blink-slash. Kills refund dashes.' },
+  { file: 'parry.html', title: 'PARRY', color: '#7fe8ff', blurb: 'Late is perfect. Reflect every shot back where it came from.' },
+  { file: 'flail.html', title: 'FLAIL', color: '#ffd84a', blurb: 'Wrecking ball on a chain. Reel in to spin faster — speed is damage.' },
+  { file: 'swing.html', title: 'SWING', color: '#4af0ff', blurb: 'Grapple-swing over lava. Release at the top of the arc for speed.' },
+  { file: 'boomerang.html', title: 'BOOMERANG', color: '#ffb03d', blurb: 'Charge, curve, catch. Hits both ways — shields only from behind.' },
+  { file: 'pogo.html', title: 'POGO', color: '#ffd84a', blurb: 'Climb a tower on monsters\' heads. Tap the strike late for a super bounce.' },
+  { file: 'drift.html', title: 'DRIFT', color: '#d26bff', blurb: 'Endless rally road. Hold the slide, release for blue → orange → purple boosts.' },
+  { file: 'orbit.html', title: 'ORBIT', color: '#59d0ff', blurb: 'Lock onto planets, sling off the tangent, climb the galaxy.' },
+  { file: 'polarity.html', title: 'POLARITY', color: '#3df2ff', blurb: 'Flip color to eat matching bullets, then unleash them as homing lasers.' },
+  { file: 'juggle.html', title: 'JUGGLE', color: '#ff8a3d', blurb: 'Side-view brawler. Launch, juggle in the air, slam into shockwaves.' },
+  { file: 'rocket.html', title: 'ROCKET', color: '#ff6a2e', blurb: 'No jump button — rocket-jump everywhere. Stay airborne to stack the multiplier.' },
+  { file: 'graze.html', title: 'GRAZE', color: '#ff5ea8', blurb: 'Bullet-hell boss rush. Skim bullets to charge Overdrive. Never touch.' },
+  { file: 'tether.html', title: 'TETHER', color: '#7dffcf', blurb: 'Drop an anchor — you are the other end of a laser. Sweep the swarm.' },
+  { file: 'sling.html', title: 'SLING', color: '#7dff6b', blurb: 'Pull back and launch yourself through a pinball room of targets.' },
+  { file: 'surf.html', title: 'SURF', color: '#9fd8ff', blurb: 'Dive the valleys, launch off crests, flip, outrun the avalanche.' },
+  { file: 'still.html', title: 'STILL', color: '#ff5a1f', blurb: 'Time only moves when you do. One hit shatters you.' },
+  { file: 'magnet.html', title: 'MAGNET', color: '#4ad6ff', blurb: 'Telekinesis: pull steel crates in, fling them through the crowd.' },
+  { file: 'hookshot.html', title: 'HOOKSHOT', color: '#ffb03d', blurb: 'Matador with a grappling hook: yank them through you into the saws.' },
+  { file: 'top.html', title: 'TOP', color: '#ff9a2e', blurb: 'Spinning-top sumo. Rev up, slam in, ring rivals out of the bowl.' },
+  { file: 'evade.html', title: 'EVADE', color: '#7dffcf', blurb: 'Boss duels. Dodge at the last instant to enter FLOW and hit triple.' },
+];

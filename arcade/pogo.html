@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>POGO</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const GRAV = 1500, PW = 12, PH = 18, BOUNCE = 720, SUPER = 960, PERFECT_MS = 0.11;
+let S;
+
+function shaft(g) { const w = Math.min(560, g.W - 40); return { x0: (g.W - w) / 2, x1: (g.W + w) / 2 }; }
+function gen(g) {
+  const sh = shaft(g);
+  while (S.genY > S.camY - 200) {
+    const h = -S.genY / 10;
+    S.genY -= rand(60, 92) + Math.min(36, h * 0.02);
+    const n = Math.random() < 0.42 ? 2 : 1;
+    for (let i = 0; i < n; i++) {
+      const r = Math.random(); let k = 'bubble';
+      if (h > 20 && r < 0.3) k = 'bat';
+      if (h > 60 && r > 0.82) k = 'spike';
+      if (h > 120 && r > 0.7 && r <= 0.82) k = 'ghost';
+      const x = rand(sh.x0 + 30, sh.x1 - 30);
+      S.objs.push({ k, x, y: S.genY + rand(-15, 15), x0: x, ph: rand(0, TAU), r: k === 'spike' ? 16 : k === 'bat' ? 15 : 14, spd: rand(40, 90) * (Math.random() < 0.5 ? -1 : 1), dead: false, flash: 0 });
+    }
+    if (Math.random() < 0.08) S.objs.push({ k: 'gem', x: rand(sh.x0 + 30, sh.x1 - 30), y: S.genY - 40, r: 10, ph: 0, dead: false });
+  }
+  S.objs = S.objs.filter(o => o.y < S.camY + g.H + 400 && !o.gone);
+}
+function die(g) {
+  const p = S.p; if (p.dead) return;
+  p.dead = true; S.overT = 1; g.slowmo(0.25, 0.9); g.flash('#7dff4a', 0.45); g.shake(16); g.sfx.hurt(); g.haptic(1, 200);
+  g.fx.burst(p.x, p.y, 36, { color: ['#7dff4a', '#fff'], speed: 450, size: 4 });
+}
+function bounce(g, o, perfect) {
+  const p = S.p;
+  p.vy = -(perfect ? SUPER : BOUNCE); p.stance = 0; p.slashUsed = false; p.squash = 0.15;
+  S.chain++; S.chainT = 1.6; S.maxChain = Math.max(S.maxChain, S.chain);
+  const pts = (perfect ? 30 : 10) * S.chain;
+  g.addScore(pts);
+  if (o.k === 'bubble' || o.k === 'bat' || o.k === 'ghost') o.dead = true;
+  const col = o.k === 'bat' ? '#ff6bd5' : o.k === 'spike' ? '#ff4040' : o.k === 'ghost' ? '#c8b0ff' : '#5fd8ff';
+  g.fx.burst(o.x, o.y, perfect ? 24 : 12, { color: [col, '#fff'], speed: perfect ? 420 : 280, size: 3.5, angle: Math.PI / 2, spread: 1.4, grav: 600 });
+  g.fx.ring(o.x, o.y - 4, { r: 6, to: perfect ? 60 : 36, color: perfect ? '#ffd84a' : '#fff', life: 0.25 });
+  if (perfect) { g.fx.pop(p.x, p.y + 30, 'PERFECT', { color: '#ffd84a', size: 16, vy: 60 }); g.hitstop(0.05); g.shake(5); }
+  else { g.hitstop(0.025); g.shake(2.5); }
+  if (o.k === 'spike') g.sfx.clang(1 + S.chain * 0.02); else g.sfx.jump(0.9 + Math.min(S.chain, 30) * 0.035);
+  if (perfect) g.sfx.combo(Math.min(S.chain, 24));
+  g.haptic(perfect ? 0.6 : 0.3, 35);
+}
+
+ARC.game({
+  id: 'pogo', title: 'POGO', color: '#ffd84a', tagline: 'Never touch down. Climb on their heads.',
+  help: [
+    { pad: 'Ⓛ drift  ·  Ⓐ down-strike (tap right before impact = SUPER bounce)  ·  Ⓑ air slash', touch: 'Left thumb: drift  ·  STRIKE right before impact = SUPER  ·  SLASH' },
+    'Holding the strike works — but tapping it late bounces higher.',
+    'Spikes only bounce you off the tip. The acid keeps rising.',
+  ],
+  buttons: [{ id: 'a', label: 'STRIKE', big: true, color: '#ffd84a' }, { id: 'b', label: 'SLASH' }],
+  init(g) {
+    const sh = shaft(g);
+    S = { p: { x: g.W / 2, y: 300, vx: 0, vy: -BOUNCE, stance: 0, stanceT: 9, face: 1, slash: 0, slashUsed: false, squash: 0, dead: false }, objs: [], camY: 0, genY: 360, acid: 800, chain: 0, chainT: 0, maxChain: 0, top: 300, overT: 0 };
+    g.S = S;
+    S.objs.push({ k: 'bubble', x: g.W / 2, y: 420, r: 14, ph: 0, x0: g.W / 2, spd: 0, dead: false });
+    gen(g);
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p, sh = shaft(g);
+    if (p.dead) { S.overT -= rdt; if (S.overT <= 0) g.gameOver(Math.floor((300 - S.top) / 10) + ' m  ·  best chain ' + S.maxChain); }
+    if (!p.dead) {
+      // stance: pressing starts a fresh strike window; holding keeps it
+      if (I.pressed('a') || I.pressed('rb') || I.pressed('rt')) { p.stanceT = 0; g.sfx.whoosh(1.6); }
+      const held = I.down('a') || I.down('rb') || I.down('rt');
+      p.stance = held || p.stanceT < 0.18 ? 1 : 0;
+      p.stanceT += dt;
+      // air slash: horizontal burst, small lift, once per bounce
+      if ((I.pressed('b') || I.pressed('x')) && !p.slashUsed) {
+        p.slashUsed = true; p.slash = 0.18; const d = Math.abs(I.mx) > 0.2 ? Math.sign(I.mx) : p.face; p.face = d;
+        p.vx = d * 520; p.vy = Math.min(p.vy, -260); g.sfx.dash(1.1);
+      }
+      p.slash -= dt;
+      if (Math.abs(I.mx) > 0.2) p.face = Math.sign(I.mx);
+      const ax = I.mx * 2400;
+      if (p.slash <= 0) p.vx = lerp(p.vx, I.mx * 300, 1 - Math.exp(-dt * 8)); else p.vx += ax * dt * 0.2;
+      p.vy += GRAV * dt * (p.stance ? 1.35 : 1);
+      p.vy = Math.min(p.vy, p.stance ? 950 : 750);
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.x < sh.x0 + PW) { p.x = sh.x0 + PW; p.vx = Math.abs(p.vx) * 0.4; } if (p.x > sh.x1 - PW) { p.x = sh.x1 - PW; p.vx = -Math.abs(p.vx) * 0.4; }
+      p.squash -= dt;
+      // collisions
+      for (const o of S.objs) {
+        if (o.dead || o.k === 'gem' && o.got) continue;
+        const ox = o.x, oy = o.y;
+        if (o.k === 'gem') { if (Math.hypot(ox - p.x, oy - p.y) < 22) { o.got = o.dead = true; g.addScore(200); g.sfx.pickup(1.4); g.fx.pop(ox, oy - 20, '+200', { color: '#ff6bd5', size: 16 }); } continue; }
+        const dx = p.x - ox, dy = (p.y + PH) - oy;
+        // pogo contact: feet/spear above the object while falling
+        if (p.vy > 0 && Math.abs(dx) < o.r + PW && dy > -o.r - 14 && dy < o.r * 0.6) {
+          if (p.stance) { bounce(g, o, p.stanceT <= PERFECT_MS); continue; }
+          if (o.k === 'bubble') { o.dead = true; p.vy = -BOUNCE * 0.62; S.chain = 0; g.sfx.blip(0.6); g.fx.burst(ox, oy, 8, { color: '#5fd8ff', speed: 160, size: 2.5 }); continue; }
+        }
+        // body contact with dangerous things
+        if ((o.k === 'bat' || o.k === 'spike' || o.k === 'ghost') && Math.hypot(dx, p.y - oy) < o.r + PW - 2) {
+          if (p.slash > 0 && o.k !== 'spike') { o.dead = true; g.addScore(50); g.sfx.hit(1.2); g.hitstop(0.04); g.fx.burst(ox, oy, 16, { color: ['#ff6bd5', '#fff'], speed: 300, size: 3 }); p.slashUsed = false; continue; }
+          die(g);
+        }
+      }
+      // chain timeout
+      if (S.chainT > 0) { S.chainT -= dt; if (S.chainT <= 0) S.chain = 0; }
+      S.top = Math.min(S.top, p.y);
+      const hNow = Math.floor((300 - S.top) / 10);
+      if (hNow > (S.lastH || 0)) { g.addScore((hNow - (S.lastH || 0)) * 5); if (Math.floor(hNow / 100) > Math.floor((S.lastH || 0) / 100)) { g.fx.pop(p.x, p.y - 50, hNow + ' m', { color: '#fff', size: 26 }); g.sfx.select(1.1); } S.lastH = hNow; }
+    }
+    // objects move
+    for (const o of S.objs) {
+      o.ph += dt;
+      if (o.k === 'bat') { o.x += o.spd * dt; if (o.x < sh.x0 + o.r || o.x > sh.x1 - o.r) o.spd *= -1; o.y += Math.sin(o.ph * 4) * 20 * dt; }
+      if (o.k === 'ghost') { const dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy) || 1; if (d < 260) { o.x += dx / d * 45 * dt; o.y += dy / d * 45 * dt; } }
+      if (o.k === 'bubble') o.y += Math.sin(o.ph * 2) * 8 * dt;
+      if (o.dead && o.k === 'bubble') { o.regrow = (o.regrow || 3) - dt; if (o.regrow <= 0) { o.dead = false; o.regrow = 0; g.fx.ring(o.x, o.y, { r: 2, to: o.r, color: '#5fd8ff', life: 0.25, w: 2 }); } }
+      else if (o.dead && !o.gone) { o.gone = true; }
+    }
+    // acid rises — faster the higher you go, and catches up if you dawdle
+    const h = (300 - S.top) / 10;
+    const spd = 16 + Math.min(80, h * 0.1) + Math.max(0, (S.acid - p.y - 380) * 0.4);
+    S.acid -= spd * dt;
+    S.acid = Math.min(S.acid, p.y + 640);
+    if (p.y + PH > S.acid && !p.dead) die(g);
+    // camera keeps player around 45% height
+    const ty = p.y - g.H * 0.45;
+    S.camY = lerp(S.camY, Math.min(ty, S.acid - g.H + 40), 1 - Math.exp(-dt * 6));
+    gen(g);
+  },
+  draw(g, ctx) {
+    const p = S.p, sh = shaft(g), cy = S.camY;
+    const hue = (-cy / 40) % 360;
+    ctx.fillStyle = `hsl(${250 + Math.sin(-cy / 3000) * 30},40%,9%)`; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    // bricks parallax
+    ctx.fillStyle = '#ffffff07';
+    const off = (-cy * 0.5) % 40;
+    for (let y = -40; y < g.H + 40; y += 40) for (let x = 0; x < g.W; x += 80) ctx.fillRect(x + ((y / 40) % 2 ? 40 : 0), y + off, 76, 36);
+    ctx.save(); ctx.translate(0, -cy);
+    // shaft walls
+    ctx.fillStyle = '#0006'; ctx.fillRect(0, cy - 10, sh.x0, g.H + 20); ctx.fillRect(sh.x1, cy - 10, g.W - sh.x1, g.H + 20);
+    ctx.fillStyle = '#ffd84a33'; ctx.fillRect(sh.x0 - 3, cy - 10, 3, g.H + 20); ctx.fillRect(sh.x1, cy - 10, 3, g.H + 20);
+    // height markers
+    ctx.fillStyle = '#ffffff30'; ctx.font = '700 12px ui-rounded,system-ui'; ctx.textAlign = 'left';
+    for (let m = Math.ceil((300 - (cy + g.H)) / 500) * 50; m * 10 < 300 - cy + 50; m += 50) { const y = 300 - m * 10; ctx.fillRect(sh.x0, y, 12, 2); ctx.fillText(m + 'm', sh.x0 + 16, y + 4); }
+    for (const o of S.objs) {
+      if (o.dead && o.k === 'bubble') { ctx.strokeStyle = '#5fd8ff33'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(o.x, o.y, o.r * (1 - (o.regrow || 0) / 3), 0, TAU); ctx.stroke(); ctx.setLineDash([]); continue; }
+      if (o.dead) continue;
+      if (o.k === 'bubble') { ctx.strokeStyle = '#5fd8ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, TAU); ctx.stroke(); ctx.fillStyle = '#5fd8ff22'; ctx.fill(); ctx.fillStyle = '#fff8'; ctx.beginPath(); ctx.arc(o.x - 4, o.y - 5, 3, 0, TAU); ctx.fill(); }
+      if (o.k === 'bat') {
+        const fl = Math.sin(o.ph * 18) * 8; ctx.fillStyle = '#ff6bd5';
+        ctx.beginPath(); ctx.moveTo(o.x - 22, o.y - fl); ctx.lineTo(o.x - 6, o.y - 4); ctx.lineTo(o.x + 6, o.y - 4); ctx.lineTo(o.x + 22, o.y - fl); ctx.lineTo(o.x + 8, o.y + 6); ctx.lineTo(o.x - 8, o.y + 6); ctx.fill();
+        ctx.beginPath(); ctx.arc(o.x, o.y, 9, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(o.x - 5, o.y - 2, 3, 3); ctx.fillRect(o.x + 2, o.y - 2, 3, 3);
+      }
+      if (o.k === 'spike') { ctx.fillStyle = '#ff4040'; ctx.beginPath(); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; const rr = i % 2 ? o.r - 5 : o.r + 5; ctx.lineTo(o.x + Math.cos(a) * rr, o.y + Math.sin(a) * rr); } ctx.fill(); ctx.fillStyle = '#ffd0d0'; ctx.beginPath(); ctx.arc(o.x, o.y - o.r - 3, 3, 0, TAU); ctx.fill(); }
+      if (o.k === 'ghost') { ctx.globalAlpha = 0.85; ctx.fillStyle = '#c8b0ff'; ctx.beginPath(); ctx.arc(o.x, o.y, o.r, Math.PI, 0); ctx.lineTo(o.x + o.r, o.y + o.r); for (let i = 0; i < 4; i++) ctx.lineTo(o.x + o.r - (i + 0.5) * o.r / 2, o.y + o.r - (i % 2 ? 0 : 6)); ctx.lineTo(o.x - o.r, o.y + o.r); ctx.fill(); ctx.globalAlpha = 1; }
+      if (o.k === 'gem') { ctx.fillStyle = '#ff6bd5'; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(g.time * 3); ctx.fillRect(-6, -6, 12, 12); ctx.restore(); }
+    }
+    // player
+    if (!p.dead) {
+      ctx.save(); ctx.translate(p.x, p.y);
+      const sq = p.squash > 0 ? p.squash / 0.15 : 0; ctx.scale(1 - sq * 0.25 + Math.min(0.15, Math.abs(p.vy) / 5000), 1 + sq * 0.35);
+      ctx.fillStyle = '#ffd84a'; ctx.fillRect(-PW, -PH, PW * 2, PH * 2 - 4);
+      ctx.fillStyle = '#2a1f00'; ctx.fillRect(p.face * 3 - 3, -PH + 6, 4, 4);
+      if (p.stance) { ctx.fillStyle = p.stanceT <= PERFECT_MS ? '#fff' : '#ffe9a0'; ctx.beginPath(); ctx.moveTo(-4, PH - 4); ctx.lineTo(4, PH - 4); ctx.lineTo(0, PH + 22); ctx.fill(); }
+      else { ctx.fillStyle = '#ffe9a0'; ctx.fillRect(p.face * PW, -PH - 4, 3, 26); }
+      if (p.slash > 0) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.face * 10, 0, 30, p.face > 0 ? -1.2 : Math.PI - 1.2, p.face > 0 ? 1.2 : Math.PI + 1.2); ctx.stroke(); }
+      ctx.restore();
+    }
+    // acid
+    const ag = ctx.createLinearGradient(0, S.acid - 20, 0, S.acid + 200);
+    ag.addColorStop(0, '#7dff4a00'); ag.addColorStop(0.1, '#7dff4acc'); ag.addColorStop(1, '#1f6a10');
+    ctx.fillStyle = ag; ctx.beginPath(); ctx.moveTo(0, S.acid + 400);
+    for (let x = 0; x <= g.W; x += 16) ctx.lineTo(x, S.acid + Math.sin(x * 0.05 + g.time * 4) * 4);
+    ctx.lineTo(g.W, S.acid + 400); ctx.fill();
+    g.fx.draw(ctx);
+    ctx.restore();
+    // danger edge
+    const gap = S.acid - p.y; if (gap < 200 && !p.dead) { ctx.fillStyle = `rgba(125,255,74,${(1 - gap / 200) * 0.25})`; ctx.fillRect(0, g.H - 30, g.W, 30); }
+  },
+  hudExtra(g, ctx) {
+    g.text(Math.floor((300 - S.top) / 10) + ' m', g.W / 2, 26, 20, '#fff');
+    if (S.chain > 1) { g.text('CHAIN ' + S.chain, g.W - 24, 80, 22 + Math.min(14, S.chain), '#ffd84a', 'right'); ctx.fillStyle = '#ffd84a'; ctx.fillRect(g.W - 144, 100, 120 * Math.max(0, S.chainT / 1.6), 4); }
+  },
+});
+})();
+</script>
+</body>
+</html>
