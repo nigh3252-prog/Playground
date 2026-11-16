@@ -5,11 +5,24 @@
   const STORAGE_KEY = 'playground.hub.v1';
   const MAX_SESSIONS = 500;
   const MAX_EVENTS = 80;
+  const CONTROL_LABELS = {
+    touch: 'Touchscreen',
+    backbone: 'Backbone preferred',
+    either: 'Touch + Backbone',
+    unverified: 'Controls unverified'
+  };
+  const INPUT_CHOICES = [
+    { id: 'all', label: 'Anything' },
+    { id: 'touch', label: 'Touchscreen' },
+    { id: 'backbone', label: 'Backbone' },
+    { id: 'unverified', label: 'Unverified' }
+  ];
   const $ = (id) => document.getElementById(id);
   const frame = $('playerFrame');
-  const blank = () => ({ version: 1, feedback: {}, visits: {}, sessions: [], lastId: null });
+  const blank = () => ({ version: 1, feedback: {}, visits: {}, sessions: [], lastId: null, selectedInput: 'all' });
   let entries = [];
   let selectedKind = 'all';
+  let selectedInput = 'all';
   let current = null;
   let session = null;
   let clockTimer = null;
@@ -24,7 +37,9 @@
         feedback: parsed.feedback && typeof parsed.feedback === 'object' ? parsed.feedback : {},
         visits: parsed.visits && typeof parsed.visits === 'object' ? parsed.visits : {},
         sessions: Array.isArray(parsed.sessions) ? parsed.sessions.slice(0, MAX_SESSIONS) : [],
-        lastId: typeof parsed.lastId === 'string' ? parsed.lastId : null
+        lastId: typeof parsed.lastId === 'string' ? parsed.lastId : null,
+        selectedInput: INPUT_CHOICES.some((choice) => choice.id === parsed.selectedInput)
+          ? parsed.selectedInput : 'all'
       };
     } catch {
       return blank();
@@ -32,6 +47,7 @@
   }
 
   let state = loadState();
+  selectedInput = state.selectedInput;
 
   function toast(message) {
     const node = $('toast');
@@ -122,10 +138,18 @@
     return tag;
   }
 
+  function matchesInput(entry) {
+    const control = CONTROL_LABELS[entry.bestWith] ? entry.bestWith : 'unverified';
+    if (selectedInput === 'all') return true;
+    if (selectedInput === 'unverified') return control === 'unverified';
+    return control === selectedInput || control === 'either';
+  }
+
   function filteredEntries() {
     const q = $('gallerySearch').value.trim().toLowerCase();
     return entries.filter((entry) => {
       if (selectedKind !== 'all' && entry.kind !== selectedKind) return false;
+      if (!matchesInput(entry)) return false;
       return !q || [entry.title, entry.summary, entry.kind, ...(entry.tags || [])]
         .join(' ').toLowerCase().includes(q);
     });
@@ -158,6 +182,7 @@
       desc.textContent = entry.summary;
       const chips = document.createElement('span');
       chips.className = 'chips';
+      chips.append(makeChip(CONTROL_LABELS[entry.bestWith] || CONTROL_LABELS.unverified, 'control-chip'));
       for (const tag of (entry.tags || []).slice(0, 3)) chips.append(makeChip(tag));
       if (entry.archived) chips.append(makeChip('archived', 'archived'));
       const feedback = state.feedback[entry.id];
@@ -176,10 +201,30 @@
     $('empty').classList.toggle('hidden', list.length !== 0);
     $('summary').textContent = entries.length + ' experiments · ' +
       entries.filter((entry) => state.visits[entry.id]).length + ' explored';
-    $('surprise').disabled = !entries.some((entry) => entry.surprise !== false && !entry.archived);
+    $('surprise').disabled = eligibleEntries().length === 0;
     const last = titleFor(state.lastId);
     $('resume').hidden = !last;
     if (last) $('resume').textContent = '↗ Revisit ' + last.title;
+  }
+
+  function renderInputFilters() {
+    const nav = $('inputFilters');
+    nav.replaceChildren();
+    for (const choice of INPUT_CHOICES) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'input-option' + (choice.id === selectedInput ? ' active' : '');
+      btn.textContent = choice.label;
+      btn.setAttribute('aria-pressed', String(choice.id === selectedInput));
+      btn.addEventListener('click', () => {
+        selectedInput = choice.id;
+        state.selectedInput = choice.id;
+        persist();
+        renderInputFilters();
+        renderCatalog();
+      });
+      nav.append(btn);
+    }
   }
 
   function renderFilters() {
@@ -284,6 +329,10 @@
     $('viewerName').textContent = entry.title;
     $('menuTitle').textContent = entry.title;
     $('menuDescription').textContent = entry.summary;
+    const controlBadge = document.createElement('span');
+    controlBadge.className = 'control-chip';
+    controlBadge.textContent = CONTROL_LABELS[entry.bestWith] || CONTROL_LABELS.unverified;
+    $('menuInputLabel').replaceChildren(controlBadge);
     $('noteInput').value = '';
     $('playerFrame').title = entry.title;
     renderNotes();
@@ -310,7 +359,7 @@
   }
 
   function eligibleEntries() {
-    return entries.filter((entry) => entry.surprise !== false && !entry.archived);
+    return entries.filter((entry) => entry.surprise !== false && !entry.archived && matchesInput(entry));
   }
 
   function surprise() {
@@ -373,6 +422,7 @@
       experiments: entries.map(({ id, title, kind, tags, path }) => ({ id, title, kind, tags, path })),
       feedback: state.feedback,
       visits: state.visits,
+      preferredControls: state.selectedInput,
       sessions: records
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -459,6 +509,7 @@
         return true;
       });
       renderFilters();
+      renderInputFilters();
       renderCatalog();
     } catch (error) {
       $('summary').textContent = 'Could not load the experiment catalog.';
