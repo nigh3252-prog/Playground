@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Thumb Arcade</title>
+<style>
+  :root{color-scheme:dark}
+  html,body{margin:0;height:100%;background:#05060a;color:#fff;font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+  body{background:radial-gradient(circle at 15% 0%,#ff3d5a22,transparent 40%),radial-gradient(circle at 90% 100%,#3d7bff22,transparent 45%),#05060a}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:max(14px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 8px max(18px,env(safe-area-inset-left))}
+  h1{margin:0;font-size:30px;letter-spacing:-.02em;font-weight:900}
+  h1 small{display:block;font-size:12px;font-weight:700;color:#ffffff88;letter-spacing:.08em;margin-top:2px}
+  .tb{display:flex;gap:8px}
+  .tb button{width:44px;height:44px;border-radius:12px;border:1px solid #ffffff26;background:#ffffff10;color:#fff;font-size:20px}
+  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;
+    padding:8px max(18px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
+  a.card{display:block;position:relative;min-height:112px;padding:14px 14px 12px;border-radius:16px;text-decoration:none;color:#fff;
+    background:#ffffff0b;border:2px solid #ffffff14;overflow:hidden;transition:transform .12s,border-color .12s,background .12s}
+  a.card b{display:block;font-size:24px;font-weight:900;letter-spacing:.02em}
+  a.card span{display:block;font-size:12.5px;line-height:1.35;color:#ffffffb0;margin-top:6px}
+  a.card i{position:absolute;right:12px;top:14px;font-style:normal;font-size:11px;font-weight:800;color:#ffffff70}
+  a.card.sel,a.card:focus-visible{transform:translateY(-3px) scale(1.02);background:#ffffff16;outline:none}
+  a.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+  .soon{opacity:.35;pointer-events:none}
+  footer{padding:0 18px 24px;color:#ffffff66;font-size:12px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <h1>THUMB ARCADE<small>ACTION GAMES FOR PHONE + BACKBONE</small></h1>
+  <div class="tb"><button id="fs" aria-label="Fullscreen">⛶</button></div>
+</header>
+<div id="grid"></div>
+<footer>Ⓛ / D-pad choose · Ⓐ play · In game: ☰/Start pause · Select/View quick-restart · Ⓑ on game-over returns here.<br>
+iPhone: Share → Add to Home Screen gives true fullscreen. Keyboard: WASD/arrows + Space/J K L I.</footer>
+<script src="games.js"></script>
+<script src="engine.js"></script>
+<script>
+(() => {
+  const grid = document.getElementById('grid');
+  const games = window.ARC_GAMES;
+  games.forEach((g, i) => {
+    const a = document.createElement('a');
+    a.className = 'card'; a.href = g.file; a.style.setProperty('--c', g.color);
+    const best = ARC.store.get('best:' + g.file.replace('.html', ''), 0);
+    a.innerHTML = `<i>${String(i + 1).padStart(2, '0')}${best ? ' · BEST ' + Math.floor(best) : ''}</i><b style="color:${g.color}">${g.title}</b><span>${g.blurb}</span>`;
+    grid.appendChild(a);
+  });
+  const cards = [...grid.querySelectorAll('a.card')];
+  let sel = Math.min(ARC.store.get('launcherSel', 0), cards.length - 1);
+  const mark = () => { cards.forEach((c, i) => { c.classList.toggle('sel', i === sel); c.style.borderColor = i === sel ? games[i].color : ''; }); cards[sel] && cards[sel].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
+  document.getElementById('fs').onclick = () => ARC.toggleFullscreen();
+  const I = ARC.makeInput();
+  let last = performance.now(), padSeen = false;
+  function cols() { if (cards.length < 2) return 1; const y0 = cards[0].offsetTop; let n = 0; for (const c of cards) { if (c.offsetTop !== y0) break; n++; } return n || 1; }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    I.poll(dt);
+    if (I.lastDevice === 'pad' && !padSeen) { padSeen = true; mark(); }
+    if (!padSeen && I.lastDevice !== 'keys') return;
+    if (I.lastDevice === 'keys') padSeen = true;
+    const c = cols();
+    let moved = false;
+    if (I.nav.x) { sel = Math.max(0, Math.min(cards.length - 1, sel + I.nav.x)); moved = true; }
+    if (I.nav.y) { sel = Math.max(0, Math.min(cards.length - 1, sel + I.nav.y * c)); moved = true; }
+    if (moved) { mark(); ARC.store.set('launcherSel', sel); }
+    if (I.pressed('a') || I.pressed('start')) { ARC.store.set('launcherSel', sel); location.href = games[sel].file; }
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

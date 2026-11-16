@@ -1,0 +1,9 @@
+{
+  "name": "Thumb Arcade",
+  "short_name": "Arcade",
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05060a",
+  "theme_color": "#05060a"
+}
