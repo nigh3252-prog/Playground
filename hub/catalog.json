@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "description": "First-pass catalog. Entries are independent; add a URL and metadata to enroll more Playground experiments.",
+  "entries": [
+    {
+      "id": "sudden-impact",
+      "title": "Sudden Impact",
+      "path": "../sudden-impact-pilebunker.html",
+      "kind": "game",
+      "tags": [
+        "combat",
+        "impact",
+        "action"
+      ],
+      "summary": "Pilebunker impact experiment."
+    },
+    {
+      "id": "pocket-hole",
+      "title": "Pocket Hole Hoarder",
+      "path": "../pocket_hole_hoarder_storage_fix.html",
+      "kind": "game",
+      "tags": [
+        "inventory",
+        "experiment"
+      ],
+      "summary": "Pocket Hole Hoarder build with storage changes."
+    },
+    {
+      "id": "southpoint",
+      "title": "Southpoint",
+      "path": "../southpoint.html",
+      "kind": "game",
+      "tags": [
+        "prototype"
+      ],
+      "summary": "Standalone Southpoint experiment."
+    },
+    {
+      "id": "punch-lab",
+      "title": "Punch Lab",
+      "path": "../punch-lab.html",
+      "kind": "lab",
+      "tags": [
+        "combat",
+        "feel",
+        "action"
+      ],
+      "summary": "Experiment with punching and combat feel."
+    },
+    {
+      "id": "melee-director",
+      "title": "Melee Combat Director",
+      "path": "../melee_combat_director_lab_v6.html",
+      "kind": "lab",
+      "tags": [
+        "combat",
+        "AI",
+        "systems"
+      ],
+      "summary": "Melee combat directing laboratory, version 6."
+    },
+    {
+      "id": "fusion-lab",
+      "title": "Fusion Lab",
+      "path": "../fusion-lab-v2.html",
+      "kind": "lab",
+      "tags": [
+        "systems",
+        "experiment"
+      ],
+      "summary": "Second version of the Fusion Lab experiment."
+    },
+    {
+      "id": "robot-puppet",
+      "title": "Robot Puppet",
+      "path": "../puppet-gate1.html",
+      "kind": "3D",
+      "tags": [
+        "character",
+        "animation",
+        "controls"
+      ],
+      "summary": "Robot puppet and controller experiment."
+    },
+    {
+      "id": "midair-ground",
+      "title": "Midair Ground Slice",
+      "path": "../threejs_midair_lifted_ground_slice_v1.html",
+      "kind": "3D",
+      "tags": [
+        "world",
+        "geometry",
+        "three.js"
+      ],
+      "summary": "Three.js lifted ground-slice visual experiment."
+    },
+    {
+      "id": "city-buildings",
+      "title": "Procedural City — Buildings",
+      "path": "../procedural-city-buildings.html",
+      "kind": "world",
+      "tags": [
+        "procedural",
+        "city",
+        "generation"
+      ],
+      "summary": "Procedural city with terrain, roads, lots and buildings."
+    },
+    {
+      "id": "city-roads",
+      "title": "Procedural City — Roads",
+      "path": "../procedural-city-roads.html",
+      "kind": "world",
+      "tags": [
+        "procedural",
+        "city",
+        "generation"
+      ],
+      "summary": "Procedural city with terrain, roads and lots."
+    },
+    {
+      "id": "city-terrain",
+      "title": "Procedural City — Terrain",
+      "path": "../procedural-city-terrain.html",
+      "kind": "world",
+      "tags": [
+        "procedural",
+        "terrain",
+        "generation"
+      ],
+      "summary": "Procedural city terrain starting point."
+    },
+    {
+      "id": "watershed",
+      "title": "Watershed",
+      "path": "../regional-world.html",
+      "kind": "world",
+      "tags": [
+        "terrain",
+        "simulation",
+        "generation"
+      ],
+      "summary": "Regional terrain, hydrology and environment exploration.",
+      "archived": true,
+      "surprise": false
+    }
+  ]
+}
