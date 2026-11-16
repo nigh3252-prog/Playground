@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>SURF</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+let S;
+function terrain(x) {
+  const K = S.keys;
+  let i = Math.floor((x - K.x0) / K.dx); if (i < 0) i = 0; if (i >= K.h.length - 1) i = K.h.length - 2;
+  const t = (x - K.x0 - i * K.dx) / K.dx; const k = (1 - Math.cos(t * Math.PI)) / 2;
+  return lerp(K.h[i], K.h[i + 1], k);
+}
+function slope(x) { return Math.atan2(terrain(x + 2) - terrain(x - 2), 4); }
+function extend() {
+  const K = S.keys;
+  while (K.x0 + K.h.length * K.dx < S.r.x + 3000) {
+    const n = K.h.length; const prev = K.h[n - 1];
+    // alternate valleys and crests, drifting downhill overall so speed can grow
+    const up = n % 2 === 0;
+    const amp = rand(60, 150 + Math.min(120, n * 1.5));
+    K.h.push(up ? prev - amp : prev + amp * 1.25);
+  }
+}
+function wipe(g) {
+  const r = S.r; r.crash = 0.8; r.vx *= 0.35; r.vy = 0; S.combo = 0;
+  g.sfx.hurt(); g.shake(10); g.fx.burst(r.x, r.y, 26, { color: ['#fff', '#cfe8ff'], speed: 300, size: 4, grav: 600 });
+  g.fx.pop(r.x, r.y - 50, 'WIPEOUT', { color: '#ff6b8a', size: 22 });
+}
+
+ARC.game({
+  id: 'surf', title: 'SURF', color: '#9fd8ff', tagline: 'Dive into every valley. Fly off every crest.',
+  help: [
+    { pad: 'HOLD Ⓐ dive (heavy) on downslopes  ·  RELEASE before crests to launch  ·  Ⓛ spin in the air', touch: 'HOLD DIVE going downhill  ·  RELEASE to launch  ·  left thumb spins' },
+    'Land matching the slope = PERFECT boost. Land sideways = wipeout.',
+    'Full flips score big. The avalanche never stops.',
+  ],
+  buttons: [{ id: 'a', label: 'DIVE', big: true, color: '#9fd8ff' }],
+  attract: true,
+  init(g) {
+    S = { keys: { x0: -400, dx: 360, h: [300, 300, 280] }, r: { x: 200, y: 0, vx: 320, vy: 0, rot: 0, air: false, spin: 0, crash: 0, airT: 0 }, aval: -300, avalSp: 260, combo: 0, dist: 0, cam: { x: 0, y: 0, z: 1 }, trail: [], overT: 0, flipsTot: 0 };
+    g.S = S; extend(); S.r.y = terrain(200);
+  },
+  update(g, dt, rdt) {
+    const I = g.input, r = S.r, playing = g.state === 'play';
+    if (playing && S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver(Math.floor(S.dist) + ' m  ·  ' + S.flipsTot + ' flips'); return; } }
+    extend();
+    let dive, spin;
+    if (playing) { dive = I.down('a') || I.down('rt') || I.down('rb') || I.down('b'); spin = I.mx; }
+    else { const sl = slope(r.x); dive = !r.air && sl > 0.05; spin = 0; }
+    if (S.overT > 0) { dive = false; spin = 0; }
+    r.crash -= dt;
+    const G = dive ? 2900 : 1150;
+    if (!r.air) {
+      const a = slope(r.x); const tx = Math.cos(a), ty = Math.sin(a);
+      let v = r.vx * tx + r.vy * ty;
+      v += G * Math.sin(a) * dt;
+      v -= v * 0.06 * dt; // snow friction
+      v = Math.max(v, 140);
+      if (r.crash > 0) v = Math.min(v, 220);
+      r.vx = tx * v; r.vy = ty * v;
+      r.x += r.vx * dt; r.y += r.vy * dt;
+      const ty2 = terrain(r.x);
+      // leave the ground when terrain falls away faster than our arc would
+      const sl2 = slope(r.x);
+      const wantVy = r.vx * Math.tan(sl2);
+      if (r.vy < wantVy - 40 && !dive) { r.air = true; r.airT = 0; r.spin = 0; if (playing) g.sfx.whoosh(0.9); }
+      else r.y = ty2;
+      r.rot = ARC.util.angLerp(r.rot, a, 1 - Math.exp(-dt * 18));
+    } else {
+      r.airT += dt;
+      r.vy += G * dt; r.x += r.vx * dt; r.y += r.vy * dt;
+      const ds = clamp(spin, -1, 1) * 7.5 * dt; r.rot += ds; r.spin += ds;
+      const ty2 = terrain(r.x);
+      if (r.y >= ty2) {
+        r.y = ty2; r.air = false;
+        const a = slope(r.x);
+        let diff = ((r.rot - a + Math.PI) % TAU + TAU) % TAU - Math.PI;
+        const flips = Math.floor(Math.abs(r.spin) / TAU + 0.15);
+        const tx = Math.cos(a), ty = Math.sin(a);
+        let v = r.vx * tx + r.vy * ty;
+        if (Math.abs(diff) > 1.0) { r.vx = tx * v; r.vy = ty * v; if (playing) wipe(g); }
+        else {
+          if (playing) {
+            if (flips > 0) { S.combo += flips; S.flipsTot += flips; const pts = 500 * flips * S.combo; g.addScore(pts); g.fx.pop(r.x, r.y - 70, (flips > 1 ? flips + '× ' : '') + 'FLIP  +' + pts, { color: '#ffd84a', size: 20 + flips * 4 }); g.sfx.combo(S.combo * 2); }
+            if (Math.abs(diff) < 0.3 && a > 0.05) { v *= 1.18; g.fx.pop(r.x, r.y - 40, 'PERFECT', { color: '#9fd8ff', size: 18 }); g.sfx.pickup(1.2); g.addScore(100); g.fx.burst(r.x, r.y, 14, { color: '#fff', speed: 260, size: 3, angle: -Math.PI / 2 - 0.4, spread: 0.8 }); }
+            else if (Math.abs(diff) > 0.6) { v *= 0.8; g.sfx.hit(0.6); }
+            else g.sfx.hit(0.8);
+            if (r.airT > 0.8) g.addScore(Math.floor(r.airT * 60));
+            g.shake(Math.min(8, Math.abs(r.vy) / 150));
+          }
+          r.vx = tx * v; r.vy = ty * v; r.rot = a;
+        }
+      }
+    }
+    // snow spray
+    if (!r.air && dive && Math.random() < 0.6) g.fx.burst(r.x - 10, r.y, 1, { color: '#ffffff', speed: 120, size: 3, angle: Math.PI + 0.6, spread: 0.4, life: 0.4 });
+    // avalanche
+    S.avalSp += dt * (playing ? 5 : 0);
+    S.aval += S.avalSp * dt;
+    if (!playing) S.aval = Math.max(S.aval, r.x - 900); else S.aval = Math.max(S.aval, r.x - 1100);
+    if (playing && r.x - S.aval < 30 && S.overT <= 0) { S.overT = 1; g.slowmo(0.3, 1); g.flash('#ffffff', 0.7); g.shake(20); g.sfx.boom(0.6); }
+    if (playing) { const d = r.x / 20; if (d > S.dist) { g.addScore((d - S.dist) * (1 + Math.min(4, S.combo * 0.25))); S.dist = d; } }
+    // camera
+    const spd = Math.hypot(r.vx, r.vy);
+    const ground = terrain(r.x + 200);
+    const z = clamp(1.15 - (Math.max(0, ground - r.y) / 900) - spd / 6000, 0.55, 1.05);
+    S.cam.z = lerp(S.cam.z, z, 1 - Math.exp(-dt * 2));
+    S.cam.x = lerp(S.cam.x, r.x + clamp(r.vx * 0.25, 0, 260), 1 - Math.exp(-dt * 6));
+    S.cam.y = lerp(S.cam.y, (r.y + ground) / 2, 1 - Math.exp(-dt * 4));
+    S.trail.push(r.x, r.y); if (S.trail.length > 40) S.trail.splice(0, 2);
+  },
+  draw(g, ctx) {
+    const r = S.r, c = S.cam;
+    const sky = ctx.createLinearGradient(0, 0, 0, g.H); sky.addColorStop(0, '#1d3b7a'); sky.addColorStop(1, '#ffc2a8');
+    ctx.fillStyle = sky; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    // far mountains
+    ctx.fillStyle = '#5a6fa8'; ctx.beginPath(); ctx.moveTo(0, g.H);
+    for (let x = 0; x <= g.W + 20; x += 20) { const wx = x + c.x * 0.1; ctx.lineTo(x, g.H * 0.55 + Math.sin(wx * 0.006) * 50 + Math.sin(wx * 0.017) * 20); }
+    ctx.lineTo(g.W, g.H); ctx.fill();
+    ctx.save();
+    ctx.translate(g.W * 0.38, g.H * 0.55); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y);
+    const x0 = c.x - g.W * 0.38 / c.z - 20, x1 = c.x + g.W * 0.62 / c.z + 20;
+    // snow
+    ctx.fillStyle = '#eef6ff'; ctx.beginPath(); ctx.moveTo(x0, c.y + 2000);
+    for (let x = x0; x <= x1; x += 10) ctx.lineTo(x, terrain(x));
+    ctx.lineTo(x1, c.y + 2000); ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.beginPath(); for (let x = x0; x <= x1; x += 10) ctx.lineTo(x, terrain(x)); ctx.stroke();
+    ctx.fillStyle = '#c9dcf2'; for (let x = Math.floor(x0 / 90) * 90; x < x1; x += 90) { const y = terrain(x); ctx.beginPath(); ctx.moveTo(x, y + 20); ctx.lineTo(x + 40, y + 40); ctx.lineTo(x - 30, y + 46); ctx.fill(); }
+    // trail
+    const t = S.trail; ctx.strokeStyle = '#9fd8ff88'; ctx.lineWidth = 3; ctx.beginPath(); for (let i = 0; i < t.length; i += 2) ctx.lineTo(t[i], t[i + 1] - 2); ctx.stroke();
+    // rider
+    ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.rot);
+    ctx.fillStyle = '#ff5ea8'; ctx.fillRect(-20, -4, 40, 5); // board
+    ctx.fillStyle = r.crash > 0 ? '#ff6b8a' : '#1d2a4a'; ctx.fillRect(-6, -30, 12, 26);
+    ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.arc(0, -36, 7, 0, TAU); ctx.fill();
+    ctx.restore();
+    // avalanche wall
+    const ax = S.aval;
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(ax - 2000, c.y + 2000);
+    for (let y = c.y - 900; y < c.y + 900; y += 30) ctx.lineTo(ax + Math.sin(y * 0.05 + g.time * 8) * 25, y);
+    ctx.lineTo(ax - 2000, c.y + 2000); ctx.fill();
+    g.fx.draw(ctx);
+    ctx.restore();
+    // edge warning
+    const gap = r.x - S.aval; if (gap < 500) { const k = 1 - gap / 500; ctx.fillStyle = `rgba(255,255,255,${k * 0.5})`; ctx.fillRect(0, 0, 40 + k * 80, g.H); }
+  },
+  hudExtra(g, ctx) {
+    g.text(Math.floor(S.dist) + ' m', g.W / 2, 26, 20, '#fff');
+    if (S.combo > 0) g.text('FLIP COMBO ×' + S.combo, g.W - 24, 80, 20, '#ffd84a', 'right');
+    g.text(Math.round(Math.hypot(S.r.vx, S.r.vy) / 6) + ' km/h', g.W - 24, 104, 13, '#ffffffcc', 'right', 700);
+    const gap = S.r.x - S.aval; g.text('AVALANCHE ' + Math.max(0, Math.floor(gap / 20)) + ' m', 22, 86, 12, gap < 400 ? '#ff6b8a' : '#ffffffaa', 'left', 700);
+  },
+});
+})();
+</script>
+</body>
+</html>
