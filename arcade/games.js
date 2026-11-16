@@ -9,4 +9,5 @@ window.ARC_GAMES = [
   { file: 'drift.html', title: 'DRIFT', color: '#d26bff', blurb: 'Endless rally road. Hold the slide, release for blue → orange → purple boosts.' },
   { file: 'orbit.html', title: 'ORBIT', color: '#59d0ff', blurb: 'Lock onto planets, sling off the tangent, climb the galaxy.' },
   { file: 'polarity.html', title: 'POLARITY', color: '#3df2ff', blurb: 'Flip color to eat matching bullets, then unleash them as homing lasers.' },
+  { file: 'juggle.html', title: 'JUGGLE', color: '#ff8a3d', blurb: 'Side-view brawler. Launch, juggle in the air, slam into shockwaves.' },
 ];
