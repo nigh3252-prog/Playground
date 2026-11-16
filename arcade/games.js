@@ -7,4 +7,5 @@ window.ARC_GAMES = [
   { file: 'boomerang.html', title: 'BOOMERANG', color: '#ffb03d', blurb: 'Charge, curve, catch. Hits both ways — shields only from behind.' },
   { file: 'pogo.html', title: 'POGO', color: '#ffd84a', blurb: 'Climb a tower on monsters\' heads. Tap the strike late for a super bounce.' },
   { file: 'drift.html', title: 'DRIFT', color: '#d26bff', blurb: 'Endless rally road. Hold the slide, release for blue → orange → purple boosts.' },
+  { file: 'orbit.html', title: 'ORBIT', color: '#59d0ff', blurb: 'Lock onto planets, sling off the tangent, climb the galaxy.' },
 ];

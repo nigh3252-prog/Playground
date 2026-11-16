@@ -138,7 +138,7 @@ ARC.game({
     ctx.translate(g.W / 2, g.H * 0.68);
     ctx.rotate(-S.camA - Math.PI / 2);
     const spd = Math.hypot(c.vx, c.vy);
-    const z = 1 - clamp((spd - 300) / 1500, 0, 0.18); ctx.scale(z, z);
+    const z = 1.3 * (1 - clamp((spd - 300) / 1500, 0, 0.18)); ctx.scale(z, z);
     ctx.translate(-c.x, -c.y);
     // grass tufts (world anchored)
     ctx.fillStyle = '#336a2c';
