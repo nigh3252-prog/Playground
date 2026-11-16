@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>SWING</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const GRAV = 1250, RANGE = 340, PR = 10, LAVA = 505;
+let S;
+
+function genAhead(g) {
+  while (S.genX < S.cam + g.W + 500) {
+    const d = S.genX / 10; // meters
+    const gap = rand(150, 230) + Math.min(110, d * 0.03);
+    S.genX += gap;
+    const y = rand(55, 250);
+    S.anchors.push({ x: S.genX, y, used: 0 });
+    if (Math.random() < 0.35) S.rings.push({ x: S.genX + gap * 0.5, y: y + rand(110, 220), r: 34, got: false });
+    if (d > 120 && Math.random() < clamp(0.15 + d / 4000, 0, 0.55)) {
+      const my = rand(180, 420);
+      S.mines.push({ x: S.genX + rand(-60, 60), y: my, r: 16, ph: rand(0, TAU), amp: d > 400 ? rand(20, 60) : 0 });
+    }
+    if (Math.random() < 0.12) S.gems.push({ x: S.genX + rand(-40, 40), y: y + rand(60, 140), got: false });
+  }
+  const cut = S.cam - 300;
+  S.anchors = S.anchors.filter(a => a.x > cut); S.rings = S.rings.filter(r => r.x > cut); S.mines = S.mines.filter(m => m.x > cut); S.gems = S.gems.filter(m => m.x > cut);
+}
+function pickAnchor() {
+  const p = S.p; let best = null, bs = -1e9;
+  for (const a of S.anchors) {
+    const dx = a.x - p.x, dy = a.y - p.y, d = Math.hypot(dx, dy);
+    if (d > RANGE || d < 40 || dy > -20) continue;
+    // prefer up-forward at ~55°, a bit ahead of current velocity
+    const ang = Math.atan2(-dy, dx); // 0 = forward, pi/2 = up
+    const s = -Math.abs(ang - 0.95) * 140 - Math.abs(d - 200) * 0.35 + (dx > 0 ? 40 : -60);
+    if (s > bs) { bs = s; best = a; }
+  }
+  return best;
+}
+function die(g, why) {
+  const p = S.p; if (p.dead) return;
+  p.dead = true; S.overT = 1.1; g.slowmo(0.25, 0.9); g.shake(16); g.flash(why === 'lava' ? '#ff6a00' : '#ff2050', 0.5); g.sfx.hurt(); g.haptic(1, 200);
+  g.fx.burst(p.x, p.y, 40, { color: why === 'lava' ? ['#ff6a00', '#ffd84a', '#fff'] : ['#ff2050', '#fff'], speed: 500, size: 4, vy: why === 'lava' ? -300 : 0, grav: 600 });
+}
+
+ARC.game({
+  id: 'swing', title: 'SWING', color: '#4af0ff', tagline: 'Let go at the top of the arc. Never touch the lava.',
+  help: [
+    { pad: 'HOLD Ⓐ grapple (auto-aims the lit anchor)  ·  RELEASE to fly  ·  Ⓛ pump', touch: 'HOLD GRAPPLE to swing  ·  RELEASE to fly  ·  left thumb: pump' },
+    'Release on the up-swing for a PERFECT RELEASE speed boost.',
+    'Ⓑ dive: plunge to build speed. Rings boost. Mines kill.',
+  ],
+  buttons: [{ id: 'a', label: 'GRAPPLE', big: true, color: '#4af0ff' }, { id: 'b', label: 'DIVE' }],
+  init(g) {
+    S = { p: { x: 120, y: 160, vx: 260, vy: -100, hook: null, L: 0, dead: false, shoot: 0, airT: 0 }, anchors: [], rings: [], mines: [], gems: [], cam: 0, genX: 180, trail: [], overT: 0, dist: 0, style: 0, mult: 1, releaseFx: 0, swings: 0 };
+    g.S = S;
+    S.anchors.push({ x: 260, y: 70, used: 0 });
+    genAhead(g);
+  },
+  attract: true,
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p;
+    const playing = g.state === 'play';
+    if (p.dead) { S.overT -= rdt; if (S.overT <= 0 && playing) g.gameOver(Math.floor(S.dist) + ' m  ·  ' + S.swings + ' swings'); }
+    // attract mode autopilot on title
+    const hold = playing ? (I.down('a') || I.down('rb') || I.down('rt')) : (p.hook ? !(p.vy < -150 && p.vx > 0 && p.x > p.hook.x) : p.vy > 0);
+    if (!p.dead) {
+      if (hold && !p.hook && S.canShoot !== false) {
+        const a = pickAnchor();
+        if (a) {
+          p.hook = a; p.L = Math.max(60, Math.hypot(a.x - p.x, a.y - p.y)); p.shoot = 0.07; a.used = 1; S.swings++;
+          if (playing) { g.sfx.zap(1.6); g.haptic(0.3, 30); }
+        } else if (playing && I.pressed('a')) g.sfx.blip(0.5);
+      }
+      if (!hold && p.hook) {
+        // release — reward upward-forward release
+        const ang = Math.atan2(-p.vy, p.vx), spd = Math.hypot(p.vx, p.vy);
+        if (p.vx > 0 && ang > 0.25 && ang < 1.25 && spd > 380) {
+          p.vx *= 1.14; p.vy *= 1.14; S.style += 1; S.mult = Math.min(8, S.mult + 1);
+          if (playing) { g.fx.pop(p.x, p.y - 30, 'PERFECT ×' + S.mult, { color: '#4af0ff', size: 20 }); g.sfx.combo(S.mult); g.fx.ring(p.x, p.y, { r: 8, to: 60, color: '#4af0ff', life: 0.3 }); }
+          S.releaseFx = 0.25;
+        } else if (playing) g.sfx.whoosh(1.4);
+        p.hook = null;
+      }
+      // dive
+      if (playing && (I.down('b') || I.down('x')) && !p.hook) { p.vy += 2200 * dt; if (I.pressed('b') || I.pressed('x')) g.sfx.whoosh(0.7); }
+      // physics
+      p.vy += GRAV * dt;
+      if (!p.hook) p.vx += I.mx * 160 * dt * (playing ? 1 : 0);
+      p.vx *= Math.exp(-0.05 * dt);
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.hook) {
+        const a = p.hook; let dx = p.x - a.x, dy = p.y - a.y, d = Math.hypot(dx, dy) || 1;
+        p.L = Math.max(55, p.L - dt * 35); // slow reel keeps energy up
+        if (d > p.L) {
+          const nx = dx / d, ny = dy / d; p.x = a.x + nx * p.L; p.y = a.y + ny * p.L;
+          const vr = p.vx * nx + p.vy * ny; if (vr > 0) { p.vx -= vr * nx; p.vy -= vr * ny; }
+        }
+        // pump: stick along the tangent adds energy
+        if (playing) { const tx = -dy / d, ty = dx / d; const pump = (I.mx * tx + I.my * ty); const s = Math.sign(p.vx * tx + p.vy * ty); if (pump * s > 0) { p.vx += tx * pump * 260 * dt; p.vy += ty * pump * 260 * dt; } }
+      }
+      p.shoot -= dt; S.releaseFx -= dt;
+      // speed cap
+      const sp = Math.hypot(p.vx, p.vy); if (sp > 1500) { p.vx *= 1500 / sp; p.vy *= 1500 / sp; }
+      if (p.y < -200) p.vy = Math.max(p.vy, 0);
+      // collisions
+      if (p.y > LAVA - PR) { if (playing) die(g, 'lava'); else { p.vy = -900; } }
+      for (const m of S.mines) { const my = m.y + Math.sin(g.time * 2 + m.ph) * m.amp; if (Math.hypot(m.x - p.x, my - p.y) < m.r + PR - 2) { if (playing) die(g, 'mine'); else p.vy = -600; } }
+      for (const r of S.rings) if (!r.got && Math.abs(p.x - r.x) < 14 && Math.abs(p.y - r.y) < r.r) {
+        r.got = true; const sp2 = Math.hypot(p.vx, p.vy) || 1; p.vx += p.vx / sp2 * 220; p.vy += p.vy / sp2 * 220;
+        if (playing) { g.addScore(100 * S.mult); g.sfx.pickup(1.2); g.fx.ring(r.x, r.y, { r: r.r, to: r.r * 2.2, color: '#ffd84a', life: 0.35 }); g.fx.pop(r.x, r.y - 40, 'BOOST +' + 100 * S.mult, { color: '#ffd84a', size: 18 }); g.shake(4); }
+      }
+      for (const m of S.gems) if (!m.got && Math.hypot(m.x - p.x, m.y - p.y) < 22) { m.got = true; if (playing) { g.addScore(250 * S.mult); g.sfx.pickup(1.6); g.fx.burst(m.x, m.y, 16, { color: ['#ff6bd5', '#fff'], speed: 260, size: 3 }); g.fx.pop(m.x, m.y - 24, '+' + 250 * S.mult, { color: '#ff6bd5', size: 18 }); } }
+      // multiplier decays when you dawdle on the rope or crawl
+      if (sp < 300) S.mult = Math.max(1, S.mult - dt * 0.6);
+      // score by distance
+      const nd = Math.max(S.dist, p.x / 10);
+      if (playing) g.addScore((nd - S.dist) * Math.floor(S.mult));
+      S.dist = nd;
+      if (playing && Math.floor(S.dist / 250) > Math.floor((S.dist - 1) / 250) && S.dist > 10) { g.fx.pop(p.x, p.y - 60, Math.floor(S.dist) + ' m', { color: '#fff', size: 26 }); g.sfx.select(1.2); }
+    }
+    // camera
+    const look = clamp(p.vx * 0.18, -40, 160);
+    S.cam = lerp(S.cam, p.x - g.W * 0.33 + look, 1 - Math.exp(-dt * 5));
+    S.trail.push(p.x, p.y); if (S.trail.length > 40) S.trail.splice(0, 2);
+    genAhead(g);
+  },
+  draw(g, ctx) {
+    const p = S.p, cam = S.cam;
+    const sky = ctx.createLinearGradient(0, 0, 0, g.H);
+    sky.addColorStop(0, '#0a0620'); sky.addColorStop(0.7, '#2a0d35'); sky.addColorStop(1, '#5a1a20');
+    ctx.fillStyle = sky; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    // moon
+    ctx.fillStyle = '#ffe9c4'; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.arc(g.W * 0.78, 90, 44, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+    // parallax skyline
+    for (const [par, col, hMin, hMax, w] of [[0.15, '#1a0f30', 120, 260, 70], [0.35, '#120a22', 80, 200, 50]]) {
+      ctx.fillStyle = col;
+      const off = cam * par; const start = Math.floor(off / w) - 1;
+      for (let i = start; i < start + g.W / w + 3; i++) {
+        const h = hMin + ((Math.sin(i * 12.9898) * 43758.5453) % 1 + 1) % 1 * (hMax - hMin);
+        ctx.fillRect(i * w - off, LAVA - h, w - 4, h);
+      }
+    }
+    ctx.save(); ctx.translate(-cam, 0);
+    // lava
+    const lg = ctx.createLinearGradient(0, LAVA - 30, 0, g.H);
+    lg.addColorStop(0, '#ff6a0000'); lg.addColorStop(0.4, '#ff6a00'); lg.addColorStop(1, '#ffd84a');
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(cam - 20, g.H + 20);
+    for (let x = cam - 20; x <= cam + g.W + 40; x += 20) ctx.lineTo(x, LAVA + Math.sin(x * 0.03 + g.time * 3) * 5);
+    ctx.lineTo(cam + g.W + 40, g.H + 20); ctx.fill();
+    // range ring + target preview
+    const target = !p.hook && !p.dead ? pickAnchor() : null;
+    // anchors
+    for (const a of S.anchors) {
+      const near = Math.hypot(a.x - p.x, a.y - p.y) < RANGE;
+      ctx.fillStyle = a === target ? '#fff' : near ? '#4af0ff' : '#4af0ff55';
+      ctx.beginPath(); ctx.arc(a.x, a.y, a === target ? 8 : 6, 0, TAU); ctx.fill();
+      if (a === target) { ctx.strokeStyle = '#4af0ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(a.x, a.y, 14 + Math.sin(g.time * 12) * 2, 0, TAU); ctx.stroke(); }
+    }
+    // rings & gems & mines
+    for (const r of S.rings) if (!r.got) { ctx.strokeStyle = '#ffd84a'; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(r.x, r.y, 9, r.r, 0, 0, TAU); ctx.stroke(); }
+    for (const m of S.gems) if (!m.got) { ctx.fillStyle = '#ff6bd5'; ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(g.time * 2); ctx.fillRect(-7, -7, 14, 14); ctx.restore(); }
+    for (const m of S.mines) {
+      const my = m.y + Math.sin(g.time * 2 + m.ph) * m.amp;
+      ctx.fillStyle = '#ff2050'; ctx.beginPath();
+      for (let i = 0; i < 16; i++) { const a = i / 16 * TAU + g.time; const rr = i % 2 ? m.r : m.r + 7; ctx.lineTo(m.x + Math.cos(a) * rr, my + Math.sin(a) * rr); }
+      ctx.fill(); ctx.fillStyle = '#2a0010'; ctx.beginPath(); ctx.arc(m.x, my, 6, 0, TAU); ctx.fill();
+    }
+    // trail
+    const t = S.trail; const sp = Math.hypot(p.vx, p.vy);
+    if (t.length > 4) { ctx.strokeStyle = sp > 800 ? '#4af0ff' : '#ffffff'; ctx.lineCap = 'round'; for (let i = 2; i < t.length; i += 2) { ctx.globalAlpha = i / t.length * 0.5; ctx.lineWidth = i / t.length * 8; ctx.beginPath(); ctx.moveTo(t[i - 2], t[i - 1]); ctx.lineTo(t[i], t[i + 1]); ctx.stroke(); } ctx.globalAlpha = 1; }
+    // rope
+    if (p.hook && !p.dead) {
+      const a = p.hook; const k = p.shoot > 0 ? 1 - p.shoot / 0.07 : 1;
+      ctx.strokeStyle = '#e8fbff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(lerp(p.x, a.x, k), lerp(p.y, a.y, k)); ctx.stroke();
+    }
+    if (!p.dead) {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx));
+      const st = clamp(sp / 900, 0, 0.6);
+      ctx.scale(1 + st, 1 - st * 0.5);
+      ctx.fillStyle = S.releaseFx > 0 ? '#4af0ff' : '#fff'; ctx.beginPath(); ctx.arc(0, 0, PR, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ff2a6d'; ctx.fillRect(-PR - 8, -3, 10, 6);
+      ctx.restore();
+    }
+    g.fx.draw(ctx);
+    ctx.restore();
+    // speed lines
+    if (sp > 750 && !p.dead) { ctx.strokeStyle = '#ffffff22'; ctx.lineWidth = 2; for (let i = 0; i < 10; i++) { const y = (i * 97 + g.time * 900) % g.H; const x = (i * 211 + g.time * 1600) % g.W; ctx.beginPath(); ctx.moveTo(g.W - x, y); ctx.lineTo(g.W - x + (sp - 700) * 0.15, y); ctx.stroke(); } }
+  },
+  hudExtra(g, ctx) {
+    g.text(Math.floor(S.dist) + ' m', g.W / 2, 26, 20, '#fff');
+    const m = Math.floor(S.mult); if (m > 1) g.text('×' + m, g.W - 24, 80, 30, '#4af0ff', 'right');
+    g.text(Math.round(Math.hypot(S.p.vx, S.p.vy) / 10) + ' km/h', g.W - 24, g.H - 24, 14, '#ffffff99', 'right', 700);
+  },
+});
+})();
+</script>
+</body>
+</html>
