@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>GRAZE</title>
+</head>
+<body>
+<script src="engine.js"></script>
+<script>
+(() => {
+const { clamp, rand, lerp, TAU } = ARC.util;
+const HIT = 3.5, GR = 24;
+let S;
+const PAT = ['spiral', 'rings', 'fans', 'flower', 'walls', 'rain'];
+
+function bullet(x, y, a, sp, o = {}) { S.bullets.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: o.r || 5, col: o.col || '#ff5ea8', acc: o.acc || 0, grazed: false, t: 0, curve: o.curve || 0 }); }
+function emit(g, dt) {
+  const B = S.boss, p = S.p, lv = S.lv, k = 1 + lv * 0.12;
+  B.pt += dt; B.et -= dt;
+  const aim = Math.atan2(p.y - B.y, p.x - B.x);
+  switch (B.pat) {
+    case 'spiral': if (B.et <= 0) { B.et = 0.06 / k; B.a += 0.27; for (let i = 0; i < 2 + (lv > 2); i++) bullet(B.x, B.y, B.a + i * TAU / (2 + (lv > 2)), 150 * k, { col: '#ff5ea8' }); } break;
+    case 'rings': if (B.et <= 0) { B.et = 0.85 / k; const n = 18 + lv * 3; B.a += TAU / n / 2; for (let i = 0; i < n; i++) bullet(B.x, B.y, B.a + i * TAU / n, 130 * k, { col: '#5ee3ff', r: 6 }); } break;
+    case 'fans': if (B.et <= 0) { B.et = 0.55 / k; for (let i = -3; i <= 3; i++) bullet(B.x, B.y, aim + i * 0.13, 230 * k, { col: '#ffd84a', r: 4 }); } break;
+    case 'flower': if (B.et <= 0) { B.et = 0.12 / k; B.a += 0.13; for (let i = 0; i < 5; i++) bullet(B.x, B.y, B.a + i * TAU / 5, 90 * k, { col: '#b38bff', acc: 60, curve: 0.6 }); } break;
+    case 'walls': if (B.et <= 0) { B.et = 1.1 / k; const gap = rand(60, g.H - 60); for (let y = 10; y < g.H; y += 22) if (Math.abs(y - gap) > 46) bullet(g.W + 10, y, Math.PI, 150 * k, { col: '#7dff9b', r: 5 }); } break;
+    case 'rain': if (B.et <= 0) { B.et = 0.05 / k; bullet(rand(g.W * 0.15, g.W), -8, Math.PI / 2 + rand(-0.3, 0.3) + 0.25, rand(120, 200) * k, { col: '#ff8a3d', r: 4 }); } break;
+  }
+}
+function nextPattern() { const B = S.boss; let n; do { n = PAT[(Math.random() * PAT.length) | 0]; } while (n === B.pat); B.pat = n; B.pt = 0; B.et = 0.8; }
+function newBoss(g) {
+  const hp = 220 + S.lv * 120;
+  S.boss = { x: g.W + 80, y: g.H / 2, hp, max: hp, pat: 'fans', pt: 0, et: 1.5, a: 0, flash: 0, ty: g.H / 2, mt: 0, enter: 1.4 };
+}
+function hurt(g) {
+  const p = S.p; if (p.inv > 0 || p.lives <= 0) return;
+  p.lives--; p.inv = 2.4; S.gmult = 1;
+  g.hitstop(0.12); g.shake(16); g.flash('#ffffff', 0.5); g.sfx.hurt(); g.haptic(1, 180);
+  g.fx.burst(p.x, p.y, 40, { color: ['#fff', '#5ee3ff'], speed: 450, size: 4 });
+  for (const b of S.bullets) if (Math.hypot(b.x - p.x, b.y - p.y) < 220) b.dead = true;
+  if (p.lives <= 0) { S.overT = 1.2; g.slowmo(0.2, 1); }
+}
+
+ARC.game({
+  id: 'graze', title: 'GRAZE', color: '#ff5ea8', tagline: 'Danger is fuel. Skim the bullets, never touch.',
+  help: [
+    { pad: 'Ⓛ fly (auto-fire)  ·  HOLD Ⓐ focus (slow + tight)  ·  Ⓑ OVERDRIVE when full', touch: 'Left thumb: fly (auto-fire)  ·  HOLD FOCUS  ·  OVERDRIVE when full' },
+    'Your hitbox is the white dot. Brushing bullets charges the meter.',
+    'Chain grazes for a multiplier. Overdrive clears the screen + triples damage.',
+  ],
+  buttons: [{ id: 'a', label: 'FOCUS', big: true, color: '#ff5ea8' }, { id: 'b', label: 'DRIVE' }],
+  init(g) {
+    S = { p: { x: 120, y: g.H / 2, lives: 3, inv: 2, fire: 0 }, bullets: [], shots: [], meter: 0, gmult: 1, gT: 0, grazes: 0, od: 0, lv: 1, overT: 0, kills: 0 };
+    g.S = S; newBoss(g);
+  },
+  update(g, dt, rdt) {
+    const I = g.input, p = S.p, B = S.boss;
+    if (S.overT > 0) { S.overT -= rdt; if (S.overT <= 0) { g.gameOver('Boss ' + S.lv + '  ·  ' + S.grazes + ' grazes'); return; } }
+    p.inv -= dt;
+    const focus = I.down('a') || I.down('lt') || I.down('lb');
+    if (p.lives > 0) {
+      const sp = focus ? 140 : 300;
+      p.x = clamp(p.x + I.mx * sp * dt, 10, g.W - 10); p.y = clamp(p.y + I.my * sp * dt, 10, g.H - 10);
+      p.fire -= dt;
+      if (p.fire <= 0) { p.fire = 0.07; const spread = focus ? 0.02 : 0.14; for (const a of [-spread, 0, spread]) S.shots.push({ x: p.x + 10, y: p.y, vx: Math.cos(a) * 1000, vy: Math.sin(a) * 1000 }); }
+      if ((I.pressed('b') || I.pressed('x') || I.pressed('rb')) && S.meter >= 1) {
+        S.meter = 0; S.od = 3.2;
+        let n = 0; for (const b of S.bullets) { b.dead = true; n++; g.fx.burst(b.x, b.y, 1, { color: '#ffd84a', speed: 60, size: 2 }); }
+        g.addScore(n * 10 * S.gmult); g.fx.pop(g.W / 2, g.H / 2, 'OVERDRIVE  +' + n * 10 * S.gmult, { color: '#ffd84a', size: 32, life: 1.2 });
+        g.flash('#ffd84a', 0.4); g.shake(10); g.sfx.boom(0.8); g.hitstop(0.1); g.fx.ring(p.x, p.y, { r: 10, to: g.W, color: '#ffd84a', life: 0.6, w: 12 });
+      }
+    }
+    S.od -= dt;
+    // boss movement + patterns
+    if (B.enter > 0) { B.enter -= dt; B.x = lerp(B.x, g.W * 0.8, 1 - Math.exp(-dt * 3)); }
+    else {
+      B.mt -= dt; if (B.mt <= 0) { B.mt = rand(1.5, 3); B.ty = rand(80, g.H - 80); }
+      B.y = lerp(B.y, B.ty, 1 - Math.exp(-dt * 1.2)); B.x = lerp(B.x, g.W * 0.8, 1 - Math.exp(-dt * 2));
+      if (p.lives > 0) emit(g, dt);
+      if (B.pt > 7) nextPattern();
+    }
+    B.flash -= dt;
+    // shots
+    for (const s of S.shots) {
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      if (B.enter <= 0 && Math.abs(s.x - B.x) < 36 && Math.abs(s.y - B.y) < 36) {
+        s.dead = true; B.hp -= S.od > 0 ? 3 : 1; B.flash = 0.04; g.addScore(1);
+        if (Math.random() < 0.3) g.fx.burst(s.x, s.y, 1, { color: '#fff', speed: 120, size: 2 });
+        if (B.hp <= 0) {
+          S.kills++; const bonus = 5000 * S.lv;
+          g.addScore(bonus); g.fx.pop(B.x, B.y - 60, 'BOSS DOWN +' + bonus, { color: '#ffd84a', size: 30, life: 1.5 });
+          g.fx.burst(B.x, B.y, 120, { color: ['#ff5ea8', '#ffd84a', '#fff'], speed: 700, size: 5 });
+          g.sfx.boom(0.7); g.sfx.boom(1.2); g.shake(24); g.hitstop(0.2); g.flash('#fff', 0.7); g.slowmo(0.3, 1);
+          for (const b of S.bullets) { b.dead = true; g.addScore(5); }
+          S.lv++; if (p.lives < 3) p.lives++; newBoss(g); break;
+        }
+      }
+      if (s.x > g.W + 20 || s.y < -20 || s.y > g.H + 20) s.dead = true;
+    }
+    S.shots = S.shots.filter(s => !s.dead);
+    // bullets + graze
+    if (S.gT > 0) { S.gT -= dt; if (S.gT <= 0) S.gmult = 1; }
+    for (const b of S.bullets) {
+      if (b.dead) continue;
+      b.t += dt;
+      if (b.acc) { const sp = Math.hypot(b.vx, b.vy) || 1; b.vx += b.vx / sp * b.acc * dt; b.vy += b.vy / sp * b.acc * dt; }
+      if (b.curve) { const a = b.curve * dt * Math.max(0, 1 - b.t); const c = Math.cos(a), s = Math.sin(a); const vx = b.vx * c - b.vy * s; b.vy = b.vx * s + b.vy * c; b.vx = vx; }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.x < -30 || b.x > g.W + 30 || b.y < -30 || b.y > g.H + 30) { b.dead = true; continue; }
+      if (p.lives <= 0) continue;
+      const d = Math.hypot(b.x - p.x, b.y - p.y);
+      if (d < HIT + b.r - 1.5) { if (p.inv <= 0) { b.dead = true; hurt(g); } continue; }
+      if (!b.grazed && d < GR + b.r && p.inv <= 0) {
+        b.grazed = true; S.grazes++;
+        S.gT = 0.6; S.gmult = Math.min(16, S.gmult + 0.25);
+        S.meter = Math.min(1, S.meter + 0.018);
+        g.addScore(10 * Math.floor(S.gmult));
+        g.fx.burst((b.x + p.x) / 2, (b.y + p.y) / 2, 2, { color: '#fff', speed: 160, size: 1.8, life: 0.25 });
+        g.audio.tone(1400 + Math.min(S.gmult, 16) * 60, 0.025, { type: 'square', vol: 0.04 });
+      }
+    }
+    S.bullets = S.bullets.filter(b => !b.dead);
+    if (S.bullets.length > 900) S.bullets.splice(0, S.bullets.length - 900);
+  },
+  draw(g, ctx) {
+    const p = S.p, B = S.boss;
+    ctx.fillStyle = S.od > 0 ? '#1a1206' : '#08060f'; ctx.fillRect(-50, -50, g.W + 100, g.H + 100);
+    ctx.strokeStyle = '#ffffff08'; ctx.lineWidth = 1;
+    for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.arc(B.x, B.y, ((i * 60 + g.time * 40) % 720), 0, TAU); ctx.stroke(); }
+    // boss
+    ctx.save(); ctx.translate(B.x, B.y); ctx.rotate(g.time * 0.8);
+    ctx.fillStyle = B.flash > 0 ? '#fff' : '#3a1530'; ctx.strokeStyle = '#ff5ea8'; ctx.lineWidth = 3;
+    ctx.beginPath(); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU, r = i % 2 ? 26 : 40; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ff5ea8'; ctx.beginPath(); ctx.arc(0, 0, 10 + Math.sin(g.time * 8) * 2, 0, TAU); ctx.fill();
+    ctx.restore();
+    for (const s of S.shots) { ctx.fillStyle = S.od > 0 ? '#ffd84a' : '#9ff'; ctx.fillRect(s.x - 7, s.y - 1.5, 14, 3); }
+    // bullets
+    for (const b of S.bullets) { ctx.fillStyle = b.col; ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 1.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.55, 0, TAU); ctx.fill(); }
+    // player
+    if (p.lives > 0 || S.overT > 0.8) {
+      const focus = g.input.down('a') || g.input.down('lt') || g.input.down('lb');
+      if (!(p.inv > 0 && Math.floor(g.time * 16) % 2)) {
+        ctx.fillStyle = '#5ee3ff'; ctx.beginPath(); ctx.moveTo(p.x + 14, p.y); ctx.lineTo(p.x - 10, p.y - 10); ctx.lineTo(p.x - 5, p.y); ctx.lineTo(p.x - 10, p.y + 10); ctx.closePath(); ctx.fill();
+      }
+      ctx.strokeStyle = `rgba(255,255,255,${focus ? 0.5 : 0.15})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, GR, 0, TAU); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, HIT + (focus ? 1 : 0), 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#ff5ea8'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    g.fx.draw(ctx);
+  },
+  hudExtra(g, ctx) {
+    const B = S.boss;
+    ctx.fillStyle = '#ffffff18'; ctx.fillRect(g.W / 2 - 160, 14, 320, 6); ctx.fillStyle = '#ff5ea8'; ctx.fillRect(g.W / 2 - 160, 14, 320 * Math.max(0, B.hp / B.max), 6);
+    g.text('BOSS ' + S.lv + ' · ' + B.pat.toUpperCase(), g.W / 2, 32, 11, '#ffffffaa', 'center', 700);
+    for (let i = 0; i < 3; i++) g.text(i < S.p.lives ? '◆' : '◇', 24 + i * 22, 86, 18, i < S.p.lives ? '#5ee3ff' : '#ffffff44', 'left');
+    // meter
+    const full = S.meter >= 1;
+    ctx.fillStyle = '#ffffff18'; ctx.fillRect(22, 104, 120, 8); ctx.fillStyle = full ? (Math.floor(g.time * 6) % 2 ? '#ffd84a' : '#fff') : '#ffd84a'; ctx.fillRect(22, 104, 120 * S.meter, 8);
+    g.text(full ? 'OVERDRIVE READY' : 'GRAZE', 22, 124, 11, full ? '#ffd84a' : '#ffffff88', 'left', 700);
+    if (S.gmult > 1.2) g.text('×' + Math.floor(S.gmult) + ' GRAZE', g.W - 24, 80, 22, '#fff', 'right');
+  },
+});
+})();
+</script>
+</body>
+</html>

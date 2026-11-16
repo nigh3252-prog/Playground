@@ -11,4 +11,5 @@ window.ARC_GAMES = [
   { file: 'polarity.html', title: 'POLARITY', color: '#3df2ff', blurb: 'Flip color to eat matching bullets, then unleash them as homing lasers.' },
   { file: 'juggle.html', title: 'JUGGLE', color: '#ff8a3d', blurb: 'Side-view brawler. Launch, juggle in the air, slam into shockwaves.' },
   { file: 'rocket.html', title: 'ROCKET', color: '#ff6a2e', blurb: 'No jump button — rocket-jump everywhere. Stay airborne to stack the multiplier.' },
+  { file: 'graze.html', title: 'GRAZE', color: '#ff5ea8', blurb: 'Bullet-hell boss rush. Skim bullets to charge Overdrive. Never touch.' },
 ];
