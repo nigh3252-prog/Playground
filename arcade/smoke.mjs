@@ -37,13 +37,14 @@ for (const f of ['index.html', ...files]) {
     for (let k = 0; k < 40; k++) {
       await page.evaluate(() => { const p = __pad; p.axes[0] = Math.random() * 2 - 1; p.axes[1] = Math.random() * 2 - 1; p.axes[2] = Math.random() * 2 - 1; p.axes[3] = Math.random() * 2 - 1; for (const i of [0, 1, 2, 3, 5, 7]) __press(i, Math.random() < 0.4); });
       await page.waitForTimeout(100);
+      if (await st() !== 'play') break; // died: stop random input before it navigates the menu
     }
     await page.evaluate(() => { for (const i of [0, 1, 2, 3, 5, 7]) __press(i, false); __pad.axes.fill(0); });
     const aud = await page.evaluate(() => ARC.audio.ctx ? ARC.audio.ctx.state : 'none');
     if (aud !== 'running') errs.push('audio not running: ' + aud);
     await page.screenshot({ path: path.join(shots, 'arc-' + f.replace('.html', '') + '-play.png') });
     // pause works
-    if (await st() === 'over') await tap(0); // random play can legitimately die; retry
+    if (await st() === 'over') { await page.evaluate(() => __pad.axes.fill(0)); await page.waitForTimeout(800); await tap(0); } // random play can legitimately die; retry
     await tap(9);
     if (await st() !== 'pause') errs.push('pause failed, state=' + await st());
     await tap(9);
