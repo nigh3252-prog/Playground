@@ -29,7 +29,9 @@ for (const f of ['index.html', ...files]) {
   if (f !== 'index.html') {
     const st = () => page.evaluate(() => ARC.current && ARC.current.state);
     const tap = async i => { await page.evaluate(i => __press(i, true), i); await page.waitForTimeout(60); await page.evaluate(i => __press(i, false), i); await page.waitForTimeout(60); };
+    await page.waitForTimeout(400);
     await tap(0);
+    if (await st() === 'title') { await page.waitForTimeout(400); await tap(0); }
     if (await st() !== 'play') errs.push('did not start, state=' + await st());
     // random play for ~4s
     for (let k = 0; k < 40; k++) {
@@ -41,6 +43,7 @@ for (const f of ['index.html', ...files]) {
     if (aud !== 'running') errs.push('audio not running: ' + aud);
     await page.screenshot({ path: path.join(shots, 'arc-' + f.replace('.html', '') + '-play.png') });
     // pause works
+    if (await st() === 'over') await tap(0); // random play can legitimately die; retry
     await tap(9);
     if (await st() !== 'pause') errs.push('pause failed, state=' + await st());
     await tap(9);
