@@ -13,4 +13,5 @@ window.ARC_GAMES = [
   { file: 'rocket.html', title: 'ROCKET', color: '#ff6a2e', blurb: 'No jump button — rocket-jump everywhere. Stay airborne to stack the multiplier.' },
   { file: 'graze.html', title: 'GRAZE', color: '#ff5ea8', blurb: 'Bullet-hell boss rush. Skim bullets to charge Overdrive. Never touch.' },
   { file: 'tether.html', title: 'TETHER', color: '#7dffcf', blurb: 'Drop an anchor — you are the other end of a laser. Sweep the swarm.' },
+  { file: 'sling.html', title: 'SLING', color: '#7dff6b', blurb: 'Pull back and launch yourself through a pinball room of targets.' },
 ];
