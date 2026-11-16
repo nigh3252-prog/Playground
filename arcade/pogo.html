@@ -18,8 +18,8 @@ function gen(g) {
   const sh = shaft(g);
   while (S.genY > S.camY - 200) {
     const h = -S.genY / 10;
-    S.genY -= rand(70, 105) + Math.min(40, h * 0.02);
-    const n = Math.random() < 0.3 ? 2 : 1;
+    S.genY -= rand(60, 92) + Math.min(36, h * 0.02);
+    const n = Math.random() < 0.42 ? 2 : 1;
     for (let i = 0; i < n; i++) {
       const r = Math.random(); let k = 'bubble';
       if (h > 20 && r < 0.3) k = 'bat';
@@ -30,7 +30,7 @@ function gen(g) {
     }
     if (Math.random() < 0.08) S.objs.push({ k: 'gem', x: rand(sh.x0 + 30, sh.x1 - 30), y: S.genY - 40, r: 10, ph: 0, dead: false });
   }
-  S.objs = S.objs.filter(o => o.y < S.camY + g.H + 200 && !o.gone);
+  S.objs = S.objs.filter(o => o.y < S.camY + g.H + 400 && !o.gone);
 }
 function die(g) {
   const p = S.p; if (p.dead) return;
@@ -121,13 +121,14 @@ ARC.game({
       if (o.k === 'bat') { o.x += o.spd * dt; if (o.x < sh.x0 + o.r || o.x > sh.x1 - o.r) o.spd *= -1; o.y += Math.sin(o.ph * 4) * 20 * dt; }
       if (o.k === 'ghost') { const dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy) || 1; if (d < 260) { o.x += dx / d * 45 * dt; o.y += dy / d * 45 * dt; } }
       if (o.k === 'bubble') o.y += Math.sin(o.ph * 2) * 8 * dt;
-      if (o.dead && !o.gone) { o.gone = true; }
+      if (o.dead && o.k === 'bubble') { o.regrow = (o.regrow || 3) - dt; if (o.regrow <= 0) { o.dead = false; o.regrow = 0; g.fx.ring(o.x, o.y, { r: 2, to: o.r, color: '#5fd8ff', life: 0.25, w: 2 }); } }
+      else if (o.dead && !o.gone) { o.gone = true; }
     }
     // acid rises — faster the higher you go, and catches up if you dawdle
     const h = (300 - S.top) / 10;
     const spd = 16 + Math.min(80, h * 0.1) + Math.max(0, (S.acid - p.y - 380) * 0.4);
     S.acid -= spd * dt;
-    S.acid = Math.min(S.acid, p.y + 480);
+    S.acid = Math.min(S.acid, p.y + 640);
     if (p.y + PH > S.acid && !p.dead) die(g);
     // camera keeps player around 45% height
     const ty = p.y - g.H * 0.45;
@@ -150,6 +151,7 @@ ARC.game({
     ctx.fillStyle = '#ffffff30'; ctx.font = '700 12px ui-rounded,system-ui'; ctx.textAlign = 'left';
     for (let m = Math.ceil((300 - (cy + g.H)) / 500) * 50; m * 10 < 300 - cy + 50; m += 50) { const y = 300 - m * 10; ctx.fillRect(sh.x0, y, 12, 2); ctx.fillText(m + 'm', sh.x0 + 16, y + 4); }
     for (const o of S.objs) {
+      if (o.dead && o.k === 'bubble') { ctx.strokeStyle = '#5fd8ff33'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(o.x, o.y, o.r * (1 - (o.regrow || 0) / 3), 0, TAU); ctx.stroke(); ctx.setLineDash([]); continue; }
       if (o.dead) continue;
       if (o.k === 'bubble') { ctx.strokeStyle = '#5fd8ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, TAU); ctx.stroke(); ctx.fillStyle = '#5fd8ff22'; ctx.fill(); ctx.fillStyle = '#fff8'; ctx.beginPath(); ctx.arc(o.x - 4, o.y - 5, 3, 0, TAU); ctx.fill(); }
       if (o.k === 'bat') {

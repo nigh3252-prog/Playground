@@ -48,7 +48,7 @@ ARC.game({
   ],
   buttons: [{ id: 'a', label: 'DRIFT', big: true, color: '#d26bff' }, { id: 'b', label: 'BRAKE' }],
   init(g) {
-    S = { road: [{ x: 0, y: 0, a: -Math.PI / 2 }], ang: -Math.PI / 2, bend: 0, bendN: 12, ci: 0, car: { x: 0, y: 0, h: -Math.PI / 2, vx: 0, vy: -200, drift: false, charge: 0, boost: 0, steer: 0 }, camA: -Math.PI / 2, time: 32, skids: [], dist: 0, driftPts: 0, cpHit: 0, overT: 0, lastCp: 0, best: 0 };
+    S = { road: [{ x: 0, y: 0, a: -Math.PI / 2 }], ang: -Math.PI / 2, bend: 0, bendN: 12, ci: 0, car: { x: 0, y: 0, h: -Math.PI / 2, vx: 0, vy: -200, drift: false, charge: 0, boost: 0, steer: 0 }, camA: -Math.PI / 2, time: 22, skids: [], dist: 0, driftPts: 0, cpHit: 0, overT: 0, lastCp: 0, best: 0 };
     g.S = S;
     for (let i = 0; i < 6; i++) S.road.push({ x: 0, y: -SEG * (i + 1), a: -Math.PI / 2 });
     genRoad();
@@ -122,7 +122,7 @@ ARC.game({
       const cpIdx = Math.floor(near.i / CP_EVERY);
       if (cpIdx > S.lastCp) {
         S.lastCp = cpIdx; S.cpHit++;
-        const bonus = Math.max(9, 15 - S.cpHit * 0.5);
+        const bonus = Math.max(5.5, 11 - S.cpHit * 0.4);
         S.time += bonus; g.addScore(500); g.sfx.select(1.3); g.flash('#ffffff', 0.12);
         g.fx.pop(g.W / 2, g.H * 0.3, 'CHECKPOINT +' + bonus.toFixed(1) + 's', { color: '#7fffd4', size: 26 });
       }

@@ -51,6 +51,8 @@ ARC.game({
     g.S = S;
     S.planets.push({ x: g.W / 2, y: 200, r: 30, ring: 100, col: '#59d0ff', used: 0, hold: 0, spin: 0.5, moving: 0, x0: g.W / 2, ph: 0 });
     gen(g);
+    // start already in orbit around the first planet, so nobody dies in the first second
+    const p0 = S.planets[0]; S.s.on = p0; S.s.dist = p0.ring; S.s.ang = Math.PI / 2; S.s.dir = 1; S.s.x = p0.x; S.s.y = p0.y + p0.ring; S.s.auto = 1.2; p0.used = 1; p0.hold = -1.5;
   },
   update(g, dt, rdt) {
     const I = g.input, s = S.s;
@@ -64,8 +66,9 @@ ARC.game({
       s.ang += s.dir * s.spd / s.dist * dt;
       s.dist = lerp(s.dist, p.ring, 1 - Math.exp(-dt * 3));
       const nx = p.x + Math.cos(s.ang) * s.dist, ny = p.y + Math.sin(s.ang) * s.dist;
-      s.vx = (nx - s.x) / dt; s.vy = (ny - s.y) / dt; s.x = nx; s.y = ny;
-      if (!grab || p.hold >= HOLD_MAX) {
+      if (dt > 0) { s.vx = (nx - s.x) / dt; s.vy = (ny - s.y) / dt; } s.x = nx; s.y = ny;
+      s.auto = (s.auto || 0) - dt;
+      if ((!grab && s.auto <= 0) || p.hold >= HOLD_MAX) {
         // slingshot: velocity is exactly the orbit tangent
         const tx = -Math.sin(s.ang) * s.dir, ty = Math.cos(s.ang) * s.dir;
         s.vx = tx * s.spd; s.vy = ty * s.spd;

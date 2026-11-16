@@ -61,6 +61,7 @@ ARC.game({
     g.S = S;
     S.anchors.push({ x: 260, y: 70, used: 0 });
     genAhead(g);
+    S.p.hook = S.anchors[0]; S.p.L = Math.hypot(260 - 120, 70 - 160); S.auto = 0.9;
   },
   attract: true,
   update(g, dt, rdt) {
@@ -68,7 +69,8 @@ ARC.game({
     const playing = g.state === 'play';
     if (p.dead) { S.overT -= rdt; if (S.overT <= 0 && playing) g.gameOver(Math.floor(S.dist) + ' m  ·  ' + S.swings + ' swings'); }
     // attract mode autopilot on title
-    const hold = playing ? (I.down('a') || I.down('rb') || I.down('rt')) : (p.hook ? !(p.vy < -150 && p.vx > 0 && p.x > p.hook.x) : p.vy > 0);
+    S.auto = (S.auto || 0) - dt;
+    const hold = playing ? (S.auto > 0 && p.hook) || (I.down('a') || I.down('rb') || I.down('rt')) : (p.hook ? !(p.vy < -150 && p.vx > 0 && p.x > p.hook.x) : p.vy > 0);
     if (!p.dead) {
       if (hold && !p.hook && S.canShoot !== false) {
         const a = pickAnchor();

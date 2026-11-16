@@ -113,10 +113,10 @@
   #arc-touch{position:fixed;inset:0;z-index:20;touch-action:none}
   #arc-touch.hide .arc-btn,#arc-touch.hide .arc-stick{display:none}
   .arc-btns{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:210px;height:190px;pointer-events:none}
-  .arc-btn{position:absolute;width:78px;height:78px;border-radius:50%;border:2px solid #ffffff40;background:#ffffff14;color:#fff;
+  .arc-btn{position:absolute;width:78px;height:78px;border-radius:50%;border:2px solid #ffffff55;background:#0000002e;color:#fff;text-shadow:0 1px 2px #000;
     font-weight:800;font-size:12px;letter-spacing:.06em;display:flex;align-items:center;justify-content:center;text-align:center;
     pointer-events:none;box-shadow:0 4px 0 #0008;line-height:1.05}
-  .arc-btn.on{background:#ffffff40;transform:translateY(2px);box-shadow:0 2px 0 #0008}
+  .arc-btn.on{background:#ffffff55;transform:translateY(2px);box-shadow:0 2px 0 #0008}
   .arc-stick{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid #ffffff30;background:#ffffff0c;pointer-events:none;opacity:.0;transition:opacity .15s}
   .arc-stick.on{opacity:1}.arc-stick i{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:#ffffff45}
   #arc-toast{position:fixed;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);background:#000c;color:#fff;padding:9px 14px;border-radius:12px;
@@ -174,6 +174,8 @@
       _stamp: {},
       buffered(b, ms = 120) { const t = this._stamp[b]; return t != null && performance.now() - t <= ms; },
       consume(b) { this._stamp[b] = null; },
+      _blocked: {},
+      block() { for (const b of BTN) { if (this.raw[b]) this._blocked[b] = true; this.raw[b] = false; this.prev[b] = false; this._stamp[b] = null; } },
     };
     const keymap = {
       Space: 'a', KeyJ: 'a', KeyZ: 'a', KeyK: 'b', KeyX: 'b', KeyL: 'x', KeyC: 'x', KeyI: 'y', KeyV: 'y',
@@ -225,6 +227,7 @@
       const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
       const am = Math.hypot(ax, ay); if (am > 1) { ax /= am; ay /= am; }
       this.mx = mx; this.my = my; this.ax = ax; this.ay = ay;
+      for (const b in this._blocked) { if (r[b]) r[b] = false; else delete this._blocked[b]; }
       if (!this._t0) this._t0 = performance.now();
       if (performance.now() - this._t0 < 350) { this.prev = Object.assign({}, r); this.raw = r; return; }
       this.raw = r;
@@ -319,6 +322,7 @@
       e.preventDefault();
     }
     function end(e) {
+      audio.unlock();
       for (const t of e.changedTouches) {
         const s = touches.get(t.identifier); touches.delete(t.identifier);
         if (s && s.kind === 'stick') { stickId = null; I._touch.stick = false; I._touch.sx = I._touch.sy = 0; stick.classList.remove('on'); }
@@ -411,7 +415,7 @@
       flash(color, a = 0.5) { this._flashColor = color; this._flash = Math.max(this._flash, a); },
       addScore(n) { this.score += n; },
       gameOver(msg) { if (this.state !== 'play') return; this.state = 'over'; this._menuSel = 0; this._overMsg = msg || ''; this._overT = 0; this._newBest = false; if (this.score > this.best) { this.best = this.score; store.set('best:' + def.id, this.best); this._newBest = true; } sfx.over(); touch.clear(); },
-      restart() { this.fx.clear(); this.score = 0; this.t = 0; this.timeScale = 1; this._slow = 0; this._stop = 0; this._shake = 0; this._flash = 0; this.cam = { x: 0, y: 0, zoom: 1 }; def.init(this); this.state = 'play'; sfx.start(); touch.clear(); },
+      restart() { this.fx.clear(); this.score = 0; this.t = 0; this.timeScale = 1; this._slow = 0; this._stop = 0; this._shake = 0; this._flash = 0; this.cam = { x: 0, y: 0, zoom: 1 }; def.init(this); this.state = 'play'; sfx.start(); touch.clear(); I.block(); },
     };
     const tb = el('div', { class: 'arc-tb' });
     const bPause = el('button', { text: 'II', 'aria-label': 'Pause' }, tb);
@@ -443,7 +447,7 @@
     const MENU = { pause: ['RESUME', 'RESTART', 'ARCADE'], over: ['RETRY', 'ARCADE'] };
     function menuChoose(item) {
       sfx.select();
-      if (item === 'RESUME') g.state = 'play';
+      if (item === 'RESUME') { g.state = 'play'; I.block(); }
       else if (item === 'RESTART' || item === 'RETRY') g.restart();
       else if (item === 'ARCADE') location.href = 'index.html';
     }
@@ -465,7 +469,7 @@
       if (!(rdt > 0)) rdt = 1 / 60; rdt = Math.min(rdt, 1 / 30);
       g.time += rdt;
       I.poll(rdt);
-      touch.setVisible(I.lastDevice === 'touch');
+      touch.setVisible(I.lastDevice === 'touch' && g.state === 'play');
       // flow
       if (g.state === 'title') {
         if (I.pressed('a') || I.pressed('start') || g._menuTap) { g._menuTap = null; audio.unlock(); g.restart(); }
@@ -473,10 +477,10 @@
         if (I.pressed('start')) { g.state = 'pause'; g._menuSel = 0; touch.clear(); sfx.blip(); }
         else if (I.pressed('select')) { g.restart(); }
       } else if (g.state === 'pause') {
-        if (I.pressed('start') || I.pressed('b')) g.state = 'play'; else menuLogic(MENU.pause);
+        if (I.pressed('start') || I.pressed('b')) { g.state = 'play'; I.block(); } else menuLogic(MENU.pause);
       } else if (g.state === 'over') {
         g._overT += rdt;
-        if (g._overT > 0.6) { if (I.pressed('start') || I.pressed('select')) g.restart(); else if (I.pressed('b')) location.href = 'index.html'; else menuLogic(MENU.over); }
+        if (g._overT > 0.6) { if (I.pressed('start') || I.pressed('select')) g.restart(); else menuLogic(MENU.over); }
         else g._menuTap = null;
       }
       // sim
