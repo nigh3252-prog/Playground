@@ -96,53 +96,124 @@
     }
   });
   registerGame({
-    id:'paper-nautilus',title:'Paper Nautilus',genre:'Adventure',kind:'Remix',accent:'#80cee2',best:'Either',
-    description:'Pilot a folded-paper salvage boat. Play the wind in your hand to recover three pearls from each reef.',
-    controls:'D-pad or tap the chart to aim. B selects a card, A plays it. Tap a card to play it directly.',
-    sources:[drive('Bone Choir × Deck Dash','Three-card hand with spent cards returning through a discard cycle.'),drive('Air Dash Arcana','A directed burst carries the boat across an intervening reef.'),['MAGNET','PR #35','Pull a pearl toward the boat along the selected bearing.']],
+    id:'paper-nautilus',title:'Paper Nautilus',genre:'Puzzle',kind:'Remix',accent:'#80cee2',best:'Either',
+    description:'Pilot a folded-paper boat through three reefs. Choose two permanent dockyard refits and build a pearl-salvage combo.',
+    controls:'Aim with the D-pad or chart. B selects a card and A plays it. Tap cards to play. At the dock, select a refit and press A or tap it.',
+    sources:[drive('Bone Choir × Deck Dash','A three-card hand cycles through a discard pile. Dockyard rewards change how cards combine.'),drive('Air Dash Arcana','A directed burst carries the boat across an intervening reef.'),['MAGNET','PR #35','Pull a pearl toward the boat along the selected bearing.']],
     create(g){
       const charts=[
         ['..*..#.','.#.#...','S.#.*.D','..#.#..','...*...'],
-        ['.*.#..D','.#..#..','..#.*#.','S#.....','...#.*.']
+        ['.*.#..D','.#..#..','..#.*#.','S#.....','...#.*.'],
+        ['..*#..D','.#.*.*.','S...#..','..*..*.','.#..#..']
       ];
-      const cardNames=['Oar','Gust','Hook'],cardRules=['Sail 1 square','Leap 2 squares','Pull within 2'];
+      const titles=['The Teacup Shoals','The Needle Passage','The Pearl Estuary'];
+      const refits=[
+        [{name:'Towline',lines:['Hook reaches 3 squares.','A catch tows your boat','one square toward it.']},
+         {name:'Glass Keel',lines:['Gust nets every pearl','under its two-square','flight path.']}],
+        [{name:'Flywheel',lines:['A Hook catch winds Oar.','Next Oar nets a channel','up to 3 squares long.']},
+         {name:'Tide Anchor',lines:['A Gust landing primes','Hook to fish all four','bearings in one cast.']}]
+      ];
       const inks=['#b1dbcc','#e8cda7','#f0ac95'],cell=52,ox=21,oy=76;
-      let level=0,x,y,headingDir=1,hand,deck,selected,pearls,phase=0,trail=null,time=0,done=false,note='';
+      let level=0,nav,headingDir=1,hand,deck,selected,total,phase=0,trail=null,time=0,done=false,note='';
+      let atDock=false,choice=0,rig=-1,engine=-1;
       function setup(){
-        hand=[0,1,2]; deck=[1,2,0]; selected=0;pearls=new Set();trail=null;note='Bring the pearls to the striped pier.';
-        charts[level].forEach((row,r)=>[...row].forEach((v,col)=>{if(v==='S'){x=col;y=r;} if(v==='*')pearls.add(r*7+col);}));
-        g.hud('Chart '+(level+1)+'/2  ·  Pearls 0/3');
+        hand=[0,1,2];deck=[1,2,0];selected=0;trail=null;note='Bring the pearls to the striped pier.';
+        nav={x:0,y:0,pearls:new Set(),ready:false};
+        charts[level].forEach((row,r)=>[...row].forEach((v,col)=>{if(v==='S'){nav.x=col;nav.y=r;} if(v==='*')nav.pearls.add(r*7+col);}));
+        total=nav.pearls.size;status();
       }
+      function status(){g.hud('Chart '+(level+1)+'/3  ·  Pearls '+(total-nav.pearls.size)+'/'+total);}
       function water(nx,ny){return nx>=0&&nx<7&&ny>=0&&ny<5&&charts[level][ny][nx]!=='#';}
-      function play(){
-        if(done||phase)return;
-        const card=hand[selected], [dx,dy]=steps[headingDir],oldX=x,oldY=y;
+      function maneuver(start,card,dir){
+        const next={x:start.x,y:start.y,pearls:new Set(start.pearls),ready:start.ready};
+        const [dx,dy]=steps[dir];
         if(card===2){
-          let pulled=false;for(let n=1;n<=2;n++){
-            const px=x+dx*n,py=y+dy*n;if(!water(px,py))break;
-            if(pearls.delete(py*7+px)){trail={x:px,y:py,px:x,py:y,t:.45};pulled=true;break;}
+          const bearings=engine===1&&start.ready?[dir,(dir+1)%4,(dir+2)%4,(dir+3)%4]:[dir];
+          let tow=null;
+          for(const bearing of bearings){
+            const [hx,hy]=steps[bearing];
+            for(let n=1;n<=(rig===0?3:2);n++){
+              const px=start.x+hx*n,py=start.y+hy*n;if(!water(px,py))break;
+              if(next.pearls.delete(py*7+px)){if(!tow)tow=[hx,hy];break;}
+            }
           }
-          note=pulled?'A pearl rolls into the hold.':'Aim the hook down a clear line.';
+          if(tow){if(rig===0){next.x+=tow[0];next.y+=tow[1];}next.ready=engine===0;}
+        }else if(card===0&&engine===0&&start.ready){
+          for(let n=1;n<=3;n++){
+            const nx=start.x+dx*n,ny=start.y+dy*n;if(!water(nx,ny))break;
+            next.x=nx;next.y=ny;next.pearls.delete(ny*7+nx);next.ready=false;
+          }
         }else{
-          const dist=card+1,nx=x+dx*dist,ny=y+dy*dist;
-          if(water(nx,ny)){x=nx;y=ny;trail={x:oldX,y:oldY,px:x,py:y,t:.35};note='';}
-          else note='No safe landing on that bearing.';
+          const dist=card+1,nx=start.x+dx*dist,ny=start.y+dy*dist;
+          if(water(nx,ny)){
+            next.x=nx;next.y=ny;
+            if(card===1&&rig===1){next.pearls.delete((start.y+dy)*7+start.x+dx);next.pearls.delete(ny*7+nx);}
+            if(card===1&&engine===1)next.ready=true;
+          }
         }
-        deck.push(card);hand[selected]=deck.shift();g.tone([285,440,610][card],.1);
-        g.hud('Chart '+(level+1)+'/2  ·  Pearls '+(3-pearls.size)+'/3');
-        if(!pearls.size&&charts[level][y][x]==='D'){phase=.8;note='Cargo secured at the pier.';}
-        else if(!pearls.size)note='All aboard. Sail to the striped pier.';
+        return next;
       }
-      function press(k){if(done||phase)return;const d=keys.indexOf(k);if(d>=0)headingDir=d;if(k==='a')play();if(k==='b')selected=(selected+1)%3;}
+      function play(){
+        if(done||phase||atDock)return;
+        const card=hand[selected],old=nav;nav=maneuver(old,card,headingDir);
+        const caught=old.pearls.size-nav.pearls.size;
+        if(old.x!==nav.x||old.y!==nav.y)trail={x:old.x,y:old.y,px:nav.x,py:nav.y,t:.4};
+        else if(caught){const from=[...old.pearls].find(v=>!nav.pearls.has(v));trail={x:from%7,y:Math.floor(from/7),px:nav.x,py:nav.y,t:.45};}
+        if(caught)note=caught+' pearl'+(caught===1?'':'s')+' aboard.'+(nav.ready?(engine===0?' Oar wound.':' Hook primed.'):'');
+        else if(old.x===nav.x&&old.y===nav.y)note=card===2?'No pearl in reach.':'No safe landing on that bearing.';
+        else note=nav.ready?(engine===0?'Flywheel wound. Play Oar to net a channel.':'Anchor primed. Hook can fish four bearings.'):'';
+        deck.push(card);hand[selected]=deck.shift();g.tone([285,440,610][card],.1);status();
+        if(!nav.pearls.size&&charts[level][nav.y][nav.x]==='D'){phase=.8;note='Cargo secured at the pier.';}
+        else if(!nav.pearls.size)note='All aboard. Sail to the striped pier.';
+      }
+      function install(i){
+        if(level===0)rig=i;else engine=i;
+        g.say(refits[level][i].name+' fitted.');g.tone(710,.15);level++;atDock=false;setup();
+      }
+      function press(k){
+        if(done||phase)return;
+        if(atDock){if(k==='a')install(choice);else if(k==='b'||keys.includes(k))choice=1-choice;return;}
+        const d=keys.indexOf(k);if(d>=0)headingDir=d;if(k==='a')play();if(k==='b')selected=(selected+1)%3;
+      }
       function pearl(c,cx,cy){oval(c,cx,cy+4,13,7,'#396e7b');oval(c,cx,cy,8,8,'#f4dcbe');oval(c,cx-2,cy-3,3,2,'#fffbe4');}
+      function fittingIcon(c,cx,cy,id){
+        if(id===0){line(c,[[cx-20,cy+14],[cx-20,cy-16],[cx+13,cy-16],[cx+13,cy+7],[cx+6,cy+12],[cx,cy+7]],'#8dcdbb',4);}
+        if(id===1){poly(c,[[cx-26,cy-10],[cx+24,cy-10],[cx+2,cy+17]],'#9ddcde');line(c,[[cx-23,cy-8],[cx+2,cy+14],[cx+12,cy-8]],'#f7e3b4',2);}
+        if(id===2){for(let n=0;n<8;n++){const a=n*tau/8;line(c,[[cx,cy],[cx+Math.cos(a)*20,cy+Math.sin(a)*20]],'#e6bd89',3);}c.beginPath();c.arc(cx,cy,15,0,tau);c.strokeStyle='#edceaa';c.lineWidth=5;c.stroke();}
+        if(id===3){line(c,[[cx,cy-20],[cx,cy+16],[cx-16,cy+3]],'#a8c9dc',4);line(c,[[cx,cy+16],[cx+16,cy+3]],'#a8c9dc',4);line(c,[[cx-9,cy-8],[cx+9,cy-8]],'#edcfab',3);}
+      }
+      function drawDock(c){
+        wash(c,'#213e4b','#406b70');heading(c,'The Foldyard','CHART '+(level+1)+' DELIVERED  /  CHOOSE A PERMANENT REFIT','#fae9c7');
+        for(let i=0;i<2;i++){
+          const px=24+i*302,py=94,fit=refits[level][i];rect(c,px,py,290,235,choice===i?'#e6cfa7':'#719092');rect(c,px+3,py+3,284,229,'#294951');
+          fittingIcon(c,px+145,py+46,level*2+i);text(c,fit.name,px+145,py+98,26,'#fff3d8','center','Georgia');
+          fit.lines.forEach((s,n)=>text(c,s,px+145,py+139+n*21,15,'#d5e6df','center'));
+        }
+        text(c,rig>=0?'FITTED HULL  /  '+refits[0][rig].name.toUpperCase():'A hull fitting stays with your boat for the voyage.',320,353,14,'#d7e6d7','center');
+        footer(c,'Choose a fitting. Tap a panel or select it and press A.');
+      }
+      function cardText(v){
+        if(v===0&&engine===0)return ['Flywheel Oar',nav.ready?'WOUND · net up to 3':'Sail 1 · Hook winds'];
+        if(v===1&&rig===1)return ['Glass Gust','Leap 2 · net path'];
+        if(v===2&&engine===1&&nav.ready)return ['Anchor Hook','PRIMED · cast all ways'];
+        if(v===2&&rig===0)return ['Tow Hook','Pull 3 · tow boat'];
+        return [['Oar','Sail 1 square'],['Gust','Leap 2 squares'],['Hook','Pull within 2']][v];
+      }
       setup();
       return {press,tap(tx,ty){
+        if(done||phase)return;
+        if(atDock){if(ty>=94&&ty<=329&&tx>=24&&tx<=616)install(tx<320?0:1);return;}
         if(ty>=200&&ty<353&&tx>=408){selected=clamp(Math.floor((ty-200)/50),0,2);play();return;}
-        const id=selectCell(tx,ty,ox,oy,cell,7,5);if(id<0)return;const dx=id%7-x,dy=Math.floor(id/7)-y;
+        const id=selectCell(tx,ty,ox,oy,cell,7,5);if(id<0)return;const dx=id%7-nav.x,dy=Math.floor(id/7)-nav.y;
         if(dx||dy)headingDir=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0);
-      },update(dt){time+=dt;if(trail){trail.t-=dt;if(trail.t<=0)trail=null;}if(phase){phase=Math.max(0,phase-dt);if(!phase){if(level===1){done=true;g.win('Six moon pearls make a fine cargo for a boat folded from a single page.');}else{level++;setup();}}}},
+      },update(dt){time+=dt;if(trail){trail.t-=dt;if(trail.t<=0)trail=null;}if(phase){phase=Math.max(0,phase-dt);if(!phase){
+        if(level===2){done=true;g.win('Eleven pearls reach port aboard your '+refits[0][rig].name+' and '+refits[1][engine].name+' rig.');}
+        else {atDock=true;choice=0;g.hud('Foldyard  ·  Select a '+(level===0?'hull':'card engine'));}
+      }}},
         draw(c){
-          wash(c,'#18394c','#407884');heading(c,'Paper Nautilus',['THE TEACUP SHOALS','THE NEEDLE PASSAGE'][level],'#e2eee0');
+          if(atDock){drawDock(c);return;}
+          const {x,y,pearls}=nav;
+          wash(c,'#18394c','#407884');heading(c,'Paper Nautilus',titles[level].toUpperCase(),'#e2eee0');
           for(let r=0;r<5;r++)for(let col=0;col<7;col++){const px=ox+col*cell,py=oy+r*cell,cx=px+26,cy=py+26;
             rect(c,px,py,51,51,(r+col)%2?'#3c7480':'#447d86');
             for(let a=0;a<2;a++){const s=Math.sin(time*1.2+col+r+a)*2;line(c,[[px+5+a*20,py+12+a*24+s],[px+9+a*20,py+13+a*24+s],[px+15+a*20,py+12+a*24+s]],'#72a5a4',1);}
@@ -153,10 +224,16 @@
           const cx=ox+x*cell+26,cy=oy+y*cell+26;
           if(trail)line(c,[[ox+trail.x*cell+26,oy+trail.y*cell+26],[ox+trail.px*cell+26,oy+trail.py*cell+26]],'#bdd7cc',3);
           c.save();c.translate(cx,cy);c.rotate((headingDir-1)*Math.PI/2);
-          poly(c,[[-17,-9],[20,0],[-17,11],[-8,0]],'#fff5d9');poly(c,[[-8,0],[20,0],[-17,11]],'#d7a793');line(c,[[-12,-5],[14,0],[-8,0]],'#897d76',1);c.restore();
-          text(c,'SALVAGE LOG',410,92,16,'#e8d8b7');text(c,(3-pearls.size)+' / 3 pearls',410,123,23,'#fff5dd','left','Georgia');
+          poly(c,[[-17,-9],[20,0],[-17,11],[-8,0]],'#fff5d9');poly(c,[[-8,0],[20,0],[-17,11]],'#d7a793');line(c,[[-12,-5],[14,0],[-8,0]],'#897d76',1);
+          if(rig===0)line(c,[[-8,-2],[-12,-14],[6,-14],[6,-5],[3,-4]],'#b8e6d6',2);
+          if(rig===1)poly(c,[[-14,8],[12,0],[-4,15]],'#96e4ec');
+          if(engine===0)oval(c,-9,0,4,4,nav.ready?'#ffd871':'#9c8056');
+          if(engine===1)line(c,[[-10,0],[-18,0],[-18,nav.ready?10:5],[-22,3]],'#cccece',2);
+          c.restore();
+          text(c,'SALVAGE LOG',410,92,16,'#e8d8b7');text(c,(total-pearls.size)+' / '+total+' pearls',410,123,23,'#fff5dd','left','Georgia');
           text(c,'Bearing  '+['N','E','S','W'][headingDir],410,156,16);text(c,'YOUR HAND',410,185,13,'#a4d5d2');
-          hand.forEach((v,i)=>{const py=200+i*50;rect(c,409,py,207,43,selected===i?inks[v]:'#254a57');text(c,cardNames[v],421,py+14,18,selected===i?'#182c35':'#f5efdf','left','Georgia');text(c,cardRules[v],421,py+31,12,selected===i?'#29444d':'#c7e1d7');});
+          hand.forEach((v,i)=>{const py=200+i*50,[name,rule]=cardText(v);rect(c,409,py,207,43,selected===i?inks[v]:'#254a57');text(c,name,421,py+14,18,selected===i?'#182c35':'#f5efdf','left','Georgia');text(c,rule,421,py+31,12,selected===i?'#29444d':'#c7e1d7');});
+          if(rig>=0)text(c,refits[0][rig].name+(engine>=0?'  +  '+refits[1][engine].name:''),24,356,15,'#e6d3aa');
           footer(c,note||'Aim on the chart, then play a card.');}
       };
     }

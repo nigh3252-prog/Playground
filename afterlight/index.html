@@ -6,7 +6,7 @@
 </head>
 <body>
 <main id="library">
-  <nav class="mast"><a href="../index.html" id="backlink">‹ Playground</a><span class="mast-right" id="totals"></span></nav>
+  <nav class="mast"><a href="../index.html" id="backlink">‹ Playground</a><div class="mast-tools"><span class="mast-right" id="totals"></span><button class="full-icon" id="shelf-full" aria-label="Toggle fullscreen"><span aria-hidden="true"></span></button></div></nav>
   <header class="hero"><canvas id="landscape" width="1152" height="488" aria-hidden="true"></canvas>
     <div class="hero-copy"><h1>Afterlight<br><i>Arcade</i></h1><p>Twenty three-game remixes and ten originals.</p>
       <button id="surprise" class="bright"><span aria-hidden="true">✦</span> Surprise me</button></div>
@@ -17,16 +17,17 @@
   </section>
 </main>
 <main id="player" hidden>
- <header class="playbar"><button id="home" aria-label="Return to arcade">‹ Arcade</button><h1 id="game-title"></h1><button id="pause" aria-label="Pause and game details">Ⅱ</button><button id="full" aria-label="Toggle fullscreen">⛶</button></header>
+ <header class="playbar"><button id="home" aria-label="Return to arcade">‹ Arcade</button><h1 id="game-title"></h1><button id="pause" aria-label="Pause and game details">Ⅱ</button><button class="full-icon" id="full" aria-label="Toggle fullscreen"><span aria-hidden="true"></span></button></header>
  <div id="cockpit">
    <div class="dirs controls" aria-label="Movement"><button data-key="up" aria-label="Up">▲</button><button data-key="left" aria-label="Left">◀</button><button data-key="down" aria-label="Down">▼</button><button data-key="right" aria-label="Right">▶</button></div>
    <canvas id="screen" width="640" height="420" aria-label="Game board"></canvas>
    <div class="actions controls" aria-label="Actions"><button data-key="a" aria-label="Primary action A">A</button><button data-key="b" aria-label="Secondary action B">B</button></div>
  </div>
  <div class="readout"><strong id="hud"></strong><span id="message"></span></div>
+ <p id="portrait-help"></p>
  <section id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
    <div class="sheet-inner"><p class="meta" id="sheet-meta"></p><h2 id="sheet-title"></h2><p id="sheet-desc"></p>
-   <div id="sheet-play"><h3>How to play</h3><p id="help"></p><small>Keyboard: arrows / WASD · Z / Space = A · X = B · Esc = pause</small></div>
+   <div id="sheet-play"><h3>How to play</h3><p id="help"></p><small>Keyboard: arrows / WASD · Z / Space = A · X = B · Esc = pause · R = restart</small><small>Backbone: D-pad or left stick · Cross = A · Circle = B · Options = pause</small></div>
    <div class="sheet-buttons"><button id="primary" class="bright">Play</button><button id="retry">Restart</button><button id="leave">Arcade</button></div>
    <details id="credits"><summary>Remix sources</summary><ul id="parents"></ul></details></div>
  </section>

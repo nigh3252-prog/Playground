@@ -175,7 +175,7 @@
       if(focusReturn)cardById.get(focusReturn)?.focus({preventScroll:true});return;
     }
     focusReturn=id;active=game;phase='intro';library.hidden=true;player.hidden=false;
-    document.title=game.title+' · Afterlight Arcade';$('game-title').textContent=game.title;
+    document.title=game.title+' · Afterlight Arcade';$('game-title').textContent=game.title;$('portrait-help').textContent=game.controls;
     newSession();displaySheet('intro');
   }
   function begin(){
@@ -186,7 +186,7 @@
   $('primary').onclick=begin;$('home').onclick=$('leave').onclick=home;
   $('retry').onclick=()=>{newSession();mark(active.id,'seen');play();};
   $('pause').onclick=()=>{if(phase==='play')displaySheet('pause');};
-  $('full').onclick=async()=>{
+  $('shelf-full').onclick=$('full').onclick=async()=>{
     try{
       if(document.fullscreenElement)await document.exitFullscreen();
       else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
@@ -208,6 +208,7 @@
       e.preventDefault();
       if(phase==='play')displaySheet('pause');else if(phase==='pause')play();else home();return;
     }
+    if(phase==='play' && e.code==='KeyR' && !e.repeat){e.preventDefault();$('retry').click();return;}
     if(phase==='play' && keyMap[e.code]){e.preventDefault();if(!e.repeat)setKey('kb'+e.code,keyMap[e.code]);}
   });
   window.addEventListener('keyup',e=>{if(keyMap[e.code])unset('kb'+e.code);});

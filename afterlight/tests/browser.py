@@ -77,6 +77,24 @@ async def run():
             if row==catalog[0]:await page.screenshot(path=str(ROOT/'landscape.png'))
             await page.locator('#home').click()
             await page.wait_for_selector('#library:not([hidden])')
+        # Align all three photographic plates using the canvas, the lens button, and the shutter.
+        await page.evaluate("location.hash='borrowed-moons'")
+        await page.locator('#primary').click()
+        board = await page.locator('#screen').bounding_box()
+        for ordinal, (start_x, start_y) in enumerate([(-81,35),(104,-42),(-94,-57)]):
+            target = {'x': (320 - .22 * start_x) * board['width'] / 640,
+                      'y': (189 - .18 * start_y) * board['height'] / 420}
+            await page.locator('#screen').tap(position=target)
+            await page.locator('[data-key=b]').tap()
+            await page.locator('[data-key=b]').tap()
+            await page.wait_for_function("document.querySelector('#hud').textContent.includes('ready to expose')")
+            await page.locator('[data-key=a]').tap()
+            if ordinal < 2:
+                await page.wait_for_function("!document.querySelector('#hud').textContent.includes('ready to expose')")
+        await page.wait_for_selector('#sheet:not([hidden])')
+        assert 'Finished' in await page.locator('#sheet-title').inner_text()
+        await page.locator('#leave').click()
+        await page.wait_for_selector('.tile[data-game="borrowed-moons"][data-status="won"]')
         # A virtual standard gamepad drives the launcher and player without a touchscreen.
         await page.evaluate("""()=>{window.testPad={axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};Object.defineProperty(navigator,'getGamepads',{value:()=>[window.testPad]});document.activeElement.blur();}""")
         async def pad(i):

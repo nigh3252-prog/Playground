@@ -43,17 +43,24 @@
     create(g) {
       const rooms = [
         {name:'Receiving dock', bell:[177,123], drain:[335,232], exits:[['PUMP HOUSE',600,133,1],['ANNEALING',600,313,2]]},
-        {name:'Pump house', bell:[190,280], drain:[383,180], exits:[['BELFRY',600,213,3]]},
-        {name:'Annealing yard', bell:[165,132], drain:[383,291], exits:[['BELFRY',600,213,3]]},
+        {name:'Pump house', bell:[190,280], drain:[383,180], exits:[['BELFRY',600,213,3],['DOCK',49,315,0]]},
+        {name:'Annealing yard', bell:[165,132], drain:[383,291], exits:[['BELFRY',600,213,3],['DOCK',49,315,0]]},
         {name:'The cracked belfry', bell:[505,193], drain:[361,260], exits:[]}
       ];
       const p={x:81,y:220}; let room=0,units=[],tempo=0,ang=0,t=0,heat=0,hook=0,clang=0,shock=0,
         health=4,grace=0,tool='',done=false,tapped=null,target=null,firstClear=false;
-      let pull=null;
+      let pull=null,drop=0,seal=false;
+      const clearedRooms=new Set();
+      const hatch={x:129,y:315}, winch={x:548,y:90}, striker={x:421,y:113};
+      const underBell=()=>units.filter(e=>e.hp && ((e.x-505)/59)**2+((e.y-204)/43)**2<=1);
+      function dropBell(){
+        drop=.88; clang=0; tapped=null; g.tone(78,.45);
+        g.say('The keeper pin snaps. The watch looks up.');
+      }
       const asPoint=([x,y])=>({x,y});
       function init() {
-        units=Array.from({length:room===3?3:2},(_,i)=>({x:410+(i%2)*36,y:160+i*34,hp:room===0?1:2,stun:0,flash:0}));
-        p.x=84; p.y=223; tempo=.28; health=4; grace=1.3; clang=0; shock=0; tapped=null; target=null; pull=null; firstClear=false;
+        units=Array.from({length:clearedRooms.has(room)?0:room===3?3:2},(_,i)=>({x:410+(i%2)*36,y:160+i*34,hp:room===0?1:2,stun:0,flash:0}));
+        p.x=84; p.y=223; tempo=.28; health=seal?5:4; grace=1.3; clang=0; shock=0; tapped=null; target=null; pull=null; firstClear=clearedRooms.has(room);
       }
       init();
       g.say('The dock watch carries individual shields. Move to wind the chain, then swing A near a shield.');
@@ -62,15 +69,26 @@
         e.hp=Math.max(0,e.hp-n); e.flash=.32; e.stun=.95; g.tone(e.hp?177:88,.10);
       }
       function act(key) {
-        if(done)return;
+        if(done||drop>0)return;
         const r=rooms[room],bell=asPoint(r.bell),d=dist(p,bell);
+        if(room===0&&tool&&!seal&&dist(p,hatch)<(tool==='Grapnel'?95:55)&&
+            ((tool==='Grapnel'&&key==='b')||(tool==='Flywheel'&&key==='a'&&tempo>=.37))){
+          seal=true; health++; g.tone(775,.16);
+          g.say('The hatch holds a maker’s seal and a fifth heart. Its engraving shows two shields beneath a falling bell.');return;
+        }
+        if(room===3 && underBell().length>=2){
+          if(key==='b' && tool==='Grapnel' && dist(p,winch)<158){dropBell();return;}
+          if(key==='a' && tool==='Flywheel' && dist(p,striker)<58 && tempo>=.37){dropBell();return;}
+        }
         if(key==='a' && heat<=0) {
           heat=.38; shock=.32;
-          if(d<58) {
+          if(d<58 && (clang<=0 || (room===3&&units.every(e=>!e.hp)))) {
             if(room===3 && units.every(e=>!e.hp)) {
-              done=true; g.tone(488,.5); g.win('The cracked bell carries across Brasswater. The '+tool.toLowerCase()+' is engraved on its new clapper.'); return;
+              done=true; g.tone(488,.5); g.win('The cracked bell carries across Brasswater. The '+tool.toLowerCase()+' is engraved on its new clapper.'+(seal?' Beneath it sits the recovered maker’s seal.':'')); return;
             }
-            clang=4.5; target=bell; g.tone(366,.33); g.say('The watch breaks formation and follows the bell.');
+            clang=room===3?7:4.5; target=bell; g.tone(366,.33);
+            g.say(room===3?'The living shields are gathering under the cracked bell. Its keeper chain is taut.':'The watch breaks formation and follows the bell.');
+            return;
           }
           const power=tempo>=(tool==='Flywheel'?.37:.52)?2:1;
           units.forEach(e=>{if(e.hp&&dist(p,e)<(tool==='Flywheel'?88:72))knock(e,power);});
@@ -92,12 +110,22 @@
       }
       function enter(n) {
         room=n; if(n===1)tool='Grapnel'; if(n===2)tool='Flywheel';
-        init(); g.say(n===1?'The pump keeper fits a long grapnel. B reaches farther and hauls harder.':n===2?'The annealer fits a flywheel. Heavy swings charge faster and reach farther.':'Clear the last watch, then strike the cracked bell with A.');
+        init();
+        const clues=[
+          'The dock is quiet. Try your new tool on the old inspection hatch.',
+          'The long grapnel yanks harder. An engraving shows two watches under the belfry bell and a hook pulling its upper winch.',
+          'The flywheel hits harder. A chalk sketch shows two watches under the belfry bell and a hammer striking its bronze trip plate.',
+          'Ring A at the bell to gather the watch, or break the shields and ring it in peace.'
+        ];
+        g.say(clues[n]);
       }
       return {
         press:act,tap(x,y){tapped={x,y};},
         update(dt) {
-          if(done)return; t+=dt; heat-=dt; hook-=dt; shock-=dt;clang-=dt;grace-=dt;
+          if(done)return;
+          if(drop>0){drop-=dt;if(drop<=0){drop=0;done=true;g.tone(96,.5);
+              g.win('The bell takes the whole watch off duty. Its broken crown reveals the lost tide gate, and the flooded dock drains by sunrise.'+(seal?' Your maker’s seal fits the gate exactly.':''));}return;}
+          t+=dt; heat-=dt; hook-=dt; shock-=dt;clang-=dt;grace-=dt;
           if(pull && (pull.time-=dt)<=0)pull=null;
           const r=rooms[room]; let dx=dir(g,'x'),dy=dir(g,'y');
           if(dx||dy)tapped=null;
@@ -114,10 +142,10 @@
             if(dist(e,p)<23 && grace<=0){health--;grace=1.2; knock(e,0);if(health<=0){init();g.say('The keeper fishes you out. This room begins again.');}}
           });
           if(units.every(e=>!e.hp)) {
-            if(!firstClear){firstClear=true;g.say(room===0?'Both gates open. The upper pump offers a stronger hook. The lower annealer improves the hammer.':room===3?'The watch lays down its shields. Strike the great bell.':'The belfry gate opens on the east wall.');}
+            if(!firstClear){firstClear=true;clearedRooms.add(room);g.say(room===0?'Both gates open. The upper pump offers a stronger hook. The lower annealer improves the hammer.':room===3?'The watch lays down its shields. Strike the great bell.':'East leads to the belfry. The west sluice returns to a sealed dock hatch.');}
             for(const [,x,y,n] of r.exits) if(dist(p,{x,y})<32){enter(n);break;}
           }
-          g.hud('Watch '+units.filter(e=>e.hp).length+' · '+(tool||'Dock hammer')+' · Hearts '+health);
+          g.hud('Watch '+units.filter(e=>e.hp).length+' · '+(tool||'Dock hammer')+' · Hearts '+health+(room===3?' · Under bell '+underBell().length+'/2':''));
         },
         draw(c) {
           const r=rooms[room],cleared=units.every(e=>!e.hp); bg(c,'#263b43','#0d272d');
@@ -127,11 +155,24 @@
           const [hx,hy]=r.drain;dot(c,hx,hy,36,'#673f2c');dot(c,hx,hy,30,'#ed9856');for(let k=-2;k<=2;k++)line(c,hx+k*10,hy-19,hx+k*10,hy+19,'#603b2c',4);
           dot(c,311,115,9,'#d0a35d',true,3);
           r.exits.forEach(([name,x,y])=>{rect(c,x-10,y-26,32,52,cleared?'#5d957f':'#4f5149');for(let j=0;j<4;j++)line(c,x-6+j*7,y-24,x-6+j*7,y+24,'#202e30',2);label(c,name,x-16,y+4,cleared?'#b9eac7':'#96a498',10,'right');});
+          if(room===0&&tool){
+            rect(c,hatch.x-22,hatch.y-11,44,22,seal?'#1a2727':'#697574');line(c,hatch.x-17,hatch.y-8,hatch.x+17,hatch.y+8,'#c4ae82',2);
+            label(c,seal?'MAKER’S HATCH':tool==='Grapnel'?'B  HOOK HATCH':'A  HEAVY SWING',hatch.x,hatch.y+29,'#e4ca91',9,'center');
+          }
           const [bx,by]=r.bell; const bellSize=room===3?1.5:1;
-          c.save();c.translate(bx,by);c.scale(bellSize,bellSize);line(c,0,-42,0,-24,'#a69b78',3);
+          if(room===3){
+            c.save();c.translate(505,204);c.scale(1,.73);dot(c,0,0,59,'rgba(6,18,21,.58)');dot(c,0,0,59,underBell().length>=2?'#facf82':'#a2916d',true,2);c.restore();
+            const trigger=tool==='Grapnel'?winch:striker;
+            line(c,trigger.x,trigger.y,bx,92,'#ad925b',2);line(c,bx,92,bx,135,'#ad925b',2);
+            dot(c,trigger.x,trigger.y,12,'#59615a');dot(c,trigger.x,trigger.y,9,'#cfaf6b',true,3);
+            label(c,tool==='Grapnel'?'B  WINCH':'A  TRIP PLATE',trigger.x,trigger.y-18,'#f3d49a',10,'center');
+            label(c,'TOLL',bx+32,by+14,'#dcca99',9);
+          }
+          c.save();c.translate(bx,room===3?by-54+(drop>0?Math.min(1,(.88-drop)/.56)**2*67:0):by);c.scale(bellSize,bellSize);line(c,0,-42,0,-24,'#a69b78',3);
           poly(c,[[-17,7],[-12,-4],[-9,-19],[0,-24],[9,-19],[12,-3],[18,7]],'#c99b58');rect(c,-19,7,38,4,'#f4c784');dot(c,0,13,4,'#967040');
           if(room===3){line(c,3,-17,-2,-7,'#52493c',2);line(c,-2,-7,5,3,'#52493c',2);}c.restore();
-          if(clang>0)dot(c,bx,by,23+(4.5-clang)*58%85,'rgba(238,196,122,.6)',true);
+          if(drop>0&&drop<.38)dot(c,bx,by+14,18+(.38-drop)*210,'#e5bd72',true,4);
+          if(clang>0)dot(c,bx,by,23+((room===3?7:4.5)-clang)*58%85,'rgba(238,196,122,.6)',true);
           units.forEach(e=>{if(!e.hp){line(c,e.x-7,e.y+6,e.x+8,e.y+5,'#778783',3);return;}dot(c,e.x,e.y+4,12,'#20252b');dot(c,e.x,e.y-6,8,e.flash>0?'#fff2b6':'#9ca49a');poly(c,[[e.x-13,e.y-1],[e.x-1,e.y-4],[e.x,e.y+12],[e.x-7,e.y+16],[e.x-14,e.y+9]],e.hp===2?'#cf8957':'#92aaa3');});
           if(grace<=0||Math.floor(t*12)%2){dot(c,p.x,p.y+2,10,'#f3ac66');dot(c,p.x,p.y-8,7,'#efe4bf');rect(c,p.x-8,p.y-2,15,5,'#a84037');}
           const rad=shock>0?55:19+tempo*8;const mx=p.x+Math.cos(ang)*rad,my=p.y+Math.sin(ang)*rad;
@@ -140,7 +181,7 @@
           if(pull)line(c,pull.from.x,pull.from.y,pull.to.x,pull.to.y,'#dbe6be',3);
           rect(c,0,379,640,41,'#14222a');label(c,'CHAIN',16,402,'#c4cbc0',10);bar(c,62,392,100,10,tempo,'#e7ae64');
           label(c,'A  SWING / TOLL      B  GRAPNEL',623,402,'#c9c2ae',11,'right');
-          band(c,r.name,cleared?(room===3?'Strike the cracked bell.':'Walk into an open gate.'):'Break each shield. The hot drain can crack one instantly.',tool||'BRASSWATER');
+          band(c,r.name,cleared?(room===3?'Strike the cracked bell.':'Walk into an open gate.'):room===3?(tool==='Grapnel'?'Two in the shadow? Hook the winch with B.':'Two in the shadow? Wind up and swing A at the trip plate.'):'Break each shield. The hot drain can crack one instantly.',tool||'BRASSWATER');
         }
       };
     }
@@ -243,7 +284,7 @@
         [218,107,'cache','Names cairn'],[311,78,'top','Summit fire']
       ];
       const paths=[[0,1],[0,2],[1,3],[2,4],[3,5],[4,6],[5,7],[6,7],[6,8],[8,7],[7,9],[7,10],[9,10]];
-      let at=0,from=0,moving=1,grip=4,pitons=2,kit='',ember=false,open=false,cache=false,shaft=-1,stuck=0,rest=0,repeat=.08,t=0,done=false;
+      let at=0,from=0,moving=1,grip=4,pitons=2,kit='',ember=false,open=false,cache=false,shaft=-1,rest=0,repeat=.08,t=0,done=false;
       const neighbors=()=>paths.filter(e=>e.includes(at)).map(([a,b])=>a===at?b:a);
       function finish(){done=true;g.tone(570,.35);g.win(cache?'You light the signal with the names of the lost tucked under its stone. The valley answers with eleven lamps.':'A ribbon of orange unrolls over the summit. The first winter caravan can climb.');}
       function arrival(){
@@ -286,7 +327,7 @@
         } else{direction(k);repeat=.44;}
       }
       return {press,tap(x,y){const n=neighbors().find(n=>Math.hypot(holds[n][0]-x,holds[n][1]-y)<28);if(n!==undefined)climb(n);},
-        update(dt){if(done)return;t+=dt;stuck+=dt;repeat-=dt;
+        update(dt){if(done)return;t+=dt;repeat-=dt;
           if(moving<1){moving=Math.min(1,moving+dt*3.6);if(moving===1)arrival();}
           if(rest>0){rest-=dt;if(rest<=0){grip=4;g.tone(281,.12);}}
           if(moving===1&&rest<=0&&repeat<=0){for(const k of ['up','left','right','down'])if(g.held(k)){direction(k);repeat=.42;break;}}
