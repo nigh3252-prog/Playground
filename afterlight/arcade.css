@@ -15,3 +15,8 @@
 .mast-tools{display:flex;align-items:center;gap:12px}.full-icon{display:grid;place-items:center;min-width:30px;min-height:30px}.full-icon span{width:17px;height:15px;background:linear-gradient(currentColor,currentColor) left top/6px 2px,linear-gradient(currentColor,currentColor) left top/2px 6px,linear-gradient(currentColor,currentColor) right top/6px 2px,linear-gradient(currentColor,currentColor) right top/2px 6px,linear-gradient(currentColor,currentColor) left bottom/6px 2px,linear-gradient(currentColor,currentColor) left bottom/2px 6px,linear-gradient(currentColor,currentColor) right bottom/6px 2px,linear-gradient(currentColor,currentColor) right bottom/2px 6px;background-repeat:no-repeat}
 .sheet-inner small{display:block;line-height:1.45;margin:.3rem 0}#portrait-help{display:none}
 @media(orientation:portrait) and (min-height:640px){#portrait-help{display:block;flex:none;margin:0;padding:12px max(16px,5vw) 18px;color:var(--mute);font-size:.82rem;line-height:1.4;text-align:center;background:#162229}.readout{min-height:42px}.dirs,.actions{align-self:center}#cockpit{grid-template-rows:minmax(0,1fr) minmax(135px,.85fr)}}
+
+#player.bankshot #cockpit{display:flex;justify-content:center;align-items:center}
+#player.bankshot .controls,#player.bankshot #portrait-help{display:none}
+#player.bankshot #screen{width:min(100cqw,calc(100cqh * 640 / 420));height:auto;aspect-ratio:640/420;align-self:center}
+@media(orientation:portrait){#player.bankshot #screen{width:min(100cqw,calc(100cqh * 420 / 640));aspect-ratio:420/640}}

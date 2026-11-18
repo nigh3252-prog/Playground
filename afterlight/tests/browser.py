@@ -32,10 +32,16 @@ async def run():
         await page.locator('[data-kind=Original]').click()
         assert await page.locator('.tile').count()==10
         await page.locator('[data-kind=All]').click()
-        await page.locator('#search').fill('Brasswater')
+        await page.locator('#search').fill('Bankshot')
         assert await page.locator('.tile').count()==1
         await page.locator('#surprise').click()
-        await page.locator('#primary').click()
+        await page.wait_for_selector('#screen:visible')
+        assert await page.locator('#sheet').is_hidden()
+        board = await page.locator('#screen').bounding_box()
+        assert board['height'] > board['width']
+        await page.locator('#screen').tap(position={'x':board['width'] * .5, 'y':board['height'] * (640-242)/640})
+        await page.wait_for_function("document.querySelector('#hud').textContent.includes('Pack 2/4')", timeout=2500)
+        assert '3× chain' in await page.locator('#hud').inner_text()
         await page.screenshot(path=str(ROOT/'portrait.png'))
         await page.locator('#home').click()
         await page.locator('#search').fill('')
@@ -44,13 +50,17 @@ async def run():
         picked=set()
         for _ in range(5):
             await page.locator('#surprise').click()
-            await page.wait_for_selector('#sheet:not([hidden])')
-            picked.add(page.url.split('#')[-1]);await page.locator('#primary').click()
+            await page.wait_for_selector('#screen:visible')
+            picked.add(page.url.split('#')[-1])
+            if page.url.split('#')[-1] != 'bankshot':
+                await page.locator('#primary').click()
             await page.locator('#home').click()
         assert len(picked)==5,picked
         await page.set_viewport_size({'width':844,'height':390})
         for row in catalog:
             await page.evaluate("(id)=>location.hash=id",row['id'])
+            if row['id']=='bankshot':
+                await page.locator('#pause').click()
             await page.wait_for_selector('#sheet:not([hidden])')
             assert await page.locator('#sheet-title').inner_text()==row['title']
             if row['sources']:
@@ -60,8 +70,11 @@ async def run():
             await page.wait_for_selector('#sheet[hidden]',state='attached')
             geom=await page.locator('#screen').bounding_box()
             assert geom['width']>350 and geom['height']>200,(row['id'],geom)
-            await page.locator('button[data-key="right"]').tap()
-            await page.locator('button[data-key="a"]').tap()
+            if row['id']=='bankshot':
+                await page.keyboard.press('KeyZ')
+            else:
+                await page.locator('button[data-key="right"]').tap()
+                await page.locator('button[data-key="a"]').tap()
             await page.keyboard.down('ArrowDown');await page.wait_for_timeout(150);await page.keyboard.up('ArrowDown')
             await page.locator('#screen').tap(position={'x':int(geom['width']*.55),'y':int(geom['height']*.6)})
             await page.keyboard.press('KeyX')
@@ -104,8 +117,10 @@ async def run():
             await page.wait_for_timeout(70)
         await pad(13)
         await pad(0)
-        await page.wait_for_selector('#sheet:not([hidden])')
-        await pad(0)
+        await page.wait_for_selector('#screen:visible')
+        if page.url.split('#')[-1] != 'bankshot':
+            await page.wait_for_selector('#sheet:not([hidden])')
+            await pad(0)
         await page.wait_for_selector('#sheet[hidden]',state='attached')
         await pad(15);await pad(0);await pad(9)
         assert await page.locator('#primary').inner_text()=='Resume'

@@ -48,6 +48,16 @@
     osc.connect(volume).connect(audio.destination);osc.start(t);osc.stop(t+duration+.01);
     osc.onended=()=>{osc.disconnect();volume.disconnect();};
   }
+  function impact(chain){
+    if(!audio||audio.state!=='running'||phase!=='play')return;
+    const osc=audio.createOscillator(),gain=audio.createGain(),now=audio.currentTime;
+    osc.type='triangle';
+    osc.frequency.setValueAtTime(260+Math.min(chain,5)*42,now);
+    osc.frequency.exponentialRampToValueAtTime(46,now+.09);
+    gain.gain.setValueAtTime(.17,now);gain.gain.exponentialRampToValueAtTime(.0001,now+.12);
+    osc.connect(gain).connect(audio.destination);osc.start(now);osc.stop(now+.13);
+    osc.onended=()=>{osc.disconnect();gain.disconnect();};
+  }
   function textNode(tag,value,cls){
     const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=value;return el;
   }
@@ -116,6 +126,7 @@
     if(pool.length)go(pool[Math.floor(Math.random()*pool.length)].id);
   }
   $('surprise').onclick=surprise;
+  $('play-bankshot').onclick=()=>go('bankshot');
   function go(id){
     if(!games.has(id))return;
     if(location.hash==='#'+id)route();else location.hash=id;
@@ -156,7 +167,7 @@
       held(key){return phase==='play' && [...heldBySource].some(([source,value])=>value===key&&!suppressed.has(source));},
       hud(str){if(ticket===myTicket && $('hud').textContent!==String(str))$('hud').textContent=str??'';},
       say(str){if(ticket===myTicket && $('message').textContent!==String(str))$('message').textContent=str??'';},
-      tone,
+      tone,impact,
       win(message){
         if(ticket!==myTicket || phase!=='play')return;
         finishText=message||'Adventure complete.';mark(active.id,'won');displaySheet('won');
@@ -164,11 +175,22 @@
     });paint();
   }
   function paint(){
-    if(!session)return;ctx.save();try{ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,640,420);session.draw(ctx);}finally{ctx.restore();}
+    if(!session)return;
+    const vertical=active?.id==='bankshot' && matchMedia('(orientation: portrait)').matches;
+    const width=vertical?420:640,height=vertical?640:420;
+    if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
+    ctx.save();
+    try{
+      ctx.clearRect(0,0,width,height);
+      if(vertical){ctx.translate(0,height);ctx.rotate(-Math.PI/2);}
+      session.draw(ctx);
+    }finally{ctx.restore();}
   }
   function route(){
     let id;try{id=decodeURIComponent(location.hash.slice(1));}catch{id='';}
+    if(id==='brasswater-bellworks'){id='bankshot';history.replaceState(null,'','#bankshot');}
     const game=games.get(id);
+    player.classList.toggle('bankshot',id==='bankshot');
     clearInputs();ticket++;session=null;
     if(!game){
       active=null;phase='library';player.hidden=true;sheet.hidden=true;library.hidden=false;document.title='Afterlight Arcade · Playground';drawShelf();
@@ -176,7 +198,8 @@
     }
     focusReturn=id;active=game;phase='intro';library.hidden=true;player.hidden=false;
     document.title=game.title+' · Afterlight Arcade';$('game-title').textContent=game.title;$('portrait-help').textContent=game.controls;
-    newSession();displaySheet('intro');
+    newSession();
+    if(id==='bankshot'){mark(id,'seen');play();}else displaySheet('intro');
   }
   function begin(){
     if(phase==='intro')mark(active.id,'seen');
@@ -197,10 +220,22 @@
     b.onpointerdown=e=>{if(phase!=='play')return;e.preventDefault();b.setPointerCapture(e.pointerId);setKey('touch'+e.pointerId,b.dataset.key);};
     b.onlostpointercapture=b.onpointercancel=b.onpointerup=e=>unset('touch'+e.pointerId);
   }
+  function gamePoint(e){
+    const rect=canvas.getBoundingClientRect();
+    const x=(e.clientX-rect.left)*canvas.width/rect.width;
+    const y=(e.clientY-rect.top)*canvas.height/rect.height;
+    return canvas.width===420?[640-y,x]:[x,y];
+  }
   canvas.onpointerdown=e=>{
-    if(phase!=='play')return;e.preventDefault();unlockSound();const rect=canvas.getBoundingClientRect();
-    session.tap?.((e.clientX-rect.left)*640/rect.width,(e.clientY-rect.top)*420/rect.height);
+    if(phase!=='play')return;
+    e.preventDefault();unlockSound();
+    if(session.drag)canvas.setPointerCapture(e.pointerId);
+    session.tap?.(...gamePoint(e));
   };
+  canvas.onpointermove=e=>{
+    if(phase==='play'&&canvas.hasPointerCapture(e.pointerId))session.drag?.(...gamePoint(e));
+  };
+  canvas.onlostpointercapture=()=>session?.release?.();
   const keyMap={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',KeyZ:'a',Space:'a',KeyX:'b'};
   window.addEventListener('keydown',e=>{
     if(phase==='library')return;
