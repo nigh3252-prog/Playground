@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b24"><title>Afterlight Arcade · Playground</title>
+<link rel="stylesheet" href="arcade.css">
+</head>
+<body>
+<main id="library">
+  <nav class="mast"><a href="../index.html" id="backlink">‹ Playground</a><span class="mast-right" id="totals"></span></nav>
+  <header class="hero"><canvas id="landscape" width="1152" height="488" aria-hidden="true"></canvas>
+    <div class="hero-copy"><h1>Afterlight<br><i>Arcade</i></h1><p>Twenty three-game remixes and ten originals.</p>
+      <button id="surprise" class="bright"><span aria-hidden="true">✦</span> Surprise me</button></div>
+  </header>
+  <section aria-label="Game collection" class="shelf"><div class="shelf-head"><h2>The games</h2><label class="search"><span aria-hidden="true">⌕</span><input type="search" id="search" placeholder="Find a game" aria-label="Search game titles, parents and descriptions"></label></div>
+    <div class="filters"><div id="kind" role="group" aria-label="Game type"><button data-kind="All" aria-pressed="true">All</button><button data-kind="Remix" aria-pressed="false">Remixes</button><button data-kind="Original" aria-pressed="false">Originals</button></div><select id="genre" aria-label="Genre"><option value="">All genres</option><option value="Puzzle">Puzzle</option><option value="Adventure">Adventure</option></select><select id="input" aria-label="Preferred controls"><option value="">All controls</option><option>Touch</option><option>Backbone</option></select></div>
+    <div id="cards"></div><p id="empty" hidden>No games match these filters.</p>
+  </section>
+</main>
+<main id="player" hidden>
+ <header class="playbar"><button id="home" aria-label="Return to arcade">‹ Arcade</button><h1 id="game-title"></h1><button id="pause" aria-label="Pause and game details">Ⅱ</button><button id="full" aria-label="Toggle fullscreen">⛶</button></header>
+ <div id="cockpit">
+   <div class="dirs controls" aria-label="Movement"><button data-key="up" aria-label="Up">▲</button><button data-key="left" aria-label="Left">◀</button><button data-key="down" aria-label="Down">▼</button><button data-key="right" aria-label="Right">▶</button></div>
+   <canvas id="screen" width="640" height="420" aria-label="Game board"></canvas>
+   <div class="actions controls" aria-label="Actions"><button data-key="a" aria-label="Primary action A">A</button><button data-key="b" aria-label="Secondary action B">B</button></div>
+ </div>
+ <div class="readout"><strong id="hud"></strong><span id="message"></span></div>
+ <section id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+   <div class="sheet-inner"><p class="meta" id="sheet-meta"></p><h2 id="sheet-title"></h2><p id="sheet-desc"></p>
+   <div id="sheet-play"><h3>How to play</h3><p id="help"></p><small>Keyboard: arrows / WASD · Z / Space = A · X = B · Esc = pause</small></div>
+   <div class="sheet-buttons"><button id="primary" class="bright">Play</button><button id="retry">Restart</button><button id="leave">Arcade</button></div>
+   <details id="credits"><summary>Remix sources</summary><ul id="parents"></ul></details></div>
+ </section>
+</main>
+<script src="registry.js"></script>
+<script src="foundry.js"></script><script src="clockwork.js"></script><script src="voyages.js"></script><script src="kinetic.js"></script><script src="cabinet.js"></script><script src="originals.js"></script>
+<script src="landscape.js"></script><script src="arcade.js"></script>
+</body></html>
