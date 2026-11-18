@@ -5,7 +5,7 @@
   const canvas = $('screen'), ctx = canvas.getContext('2d', {alpha:false});
   const games = new Map(arcadeGames.map(game => [game.id,game]));
   const idleApi = {held:()=>false, hud(){}, say(){}, tone(){}, win(){}};
-  const stateKey = 'playground.afterlight.v1';
+  const stateKey = 'playground.afterlight.v2';
   let visits = {};
   try { visits = JSON.parse(localStorage.getItem(stateKey)) || {}; } catch {}
   function mark(id,status) {
@@ -126,7 +126,7 @@
     if(pool.length)go(pool[Math.floor(Math.random()*pool.length)].id);
   }
   $('surprise').onclick=surprise;
-  $('play-bankshot').onclick=()=>go('bankshot');
+  $('featured').onclick=()=>go('wakepost');
   function go(id){
     if(!games.has(id))return;
     if(location.hash==='#'+id)route();else location.hash=id;
@@ -150,8 +150,8 @@
     $('sheet-meta').textContent=active.kind+' / '+active.genre+' · '+(active.best==='Either'?'Touch + Backbone':active.best+' preferred');
     $('sheet-desc').textContent=mode==='won'?finishText:active.description;
     $('sheet-play').hidden=mode==='won';$('help').textContent=active.controls;
-    $('primary').textContent=mode==='intro'?'Play':mode==='pause'?'Resume':'Surprise me';
-    $('retry').hidden=mode==='intro';$('pause').disabled=true;
+    $('primary').textContent=mode==='pause'?'Resume':'Surprise me';
+    $('retry').hidden=false;$('pause').disabled=true;
     sources();$('primary').focus({preventScroll:true});
   }
   function play(){
@@ -196,13 +196,18 @@
       active=null;phase='library';player.hidden=true;sheet.hidden=true;library.hidden=false;document.title='Afterlight Arcade · Playground';drawShelf();
       if(focusReturn)cardById.get(focusReturn)?.focus({preventScroll:true});return;
     }
-    focusReturn=id;active=game;phase='intro';library.hidden=true;player.hidden=false;
+    focusReturn=id;active=game;phase='loading';library.hidden=true;player.hidden=false;
     document.title=game.title+' · Afterlight Arcade';$('game-title').textContent=game.title;$('portrait-help').textContent=game.controls;
-    newSession();
-    if(id==='bankshot'){mark(id,'seen');play();}else displaySheet('intro');
+    for(const button of document.querySelectorAll('.actions [data-key]')){
+      const key=button.dataset.key, verb=active.buttons?.[key];
+      button.hidden=active.buttons && !verb;
+      button.replaceChildren(textNode('span',key.toUpperCase()));
+      if(verb)button.append(textNode('small',verb));
+      button.setAttribute('aria-label',verb ? verb+' ('+key.toUpperCase()+')' : key.toUpperCase());
+    }
+    newSession();mark(id,'seen');play();
   }
   function begin(){
-    if(phase==='intro')mark(active.id,'seen');
     if(phase==='won'){surprise();return;}
     play();
   }
@@ -216,7 +221,31 @@
       else $('message').textContent='Fullscreen is unavailable in this browser.';
     }catch{$('message').textContent='Fullscreen is unavailable in this window.';}
   };
-  for(const b of document.querySelectorAll('[data-key]')){
+  // Sliding a thumb across the pad must release the previous direction,
+  // including when the thumb passes through the neutral center.
+  const directionPad=document.querySelector('.dirs');
+  function slideDirection(e){
+    const box=directionPad.getBoundingClientRect();
+    const nx=(e.clientX-box.left)/box.width*2-1;
+    const ny=(e.clientY-box.top)/box.height*2-1;
+    const horizontal=Math.abs(nx)>.28?(nx<0?'left':'right'):null;
+    const vertical=Math.abs(ny)>.28?(ny<0?'up':'down'):null;
+    for(const [axis,next] of [['x',horizontal],['y',vertical]]){
+      const source='dpad'+e.pointerId+axis;
+      if(heldBySource.get(source)===next)continue;
+      if(heldBySource.has(source))unset(source);
+      if(next)setKey(source,next);
+    }
+  }
+  directionPad.onpointerdown=e=>{
+    if(phase!=='play')return;
+    e.preventDefault();directionPad.setPointerCapture(e.pointerId);slideDirection(e);
+  };
+  directionPad.onpointermove=e=>{
+    if(phase==='play'&&directionPad.hasPointerCapture(e.pointerId))slideDirection(e);
+  };
+  directionPad.onlostpointercapture=e=>{unset('dpad'+e.pointerId+'x');unset('dpad'+e.pointerId+'y');};
+  for(const b of document.querySelectorAll('.actions [data-key]')){
     b.onpointerdown=e=>{if(phase!=='play')return;e.preventDefault();b.setPointerCapture(e.pointerId);setKey('touch'+e.pointerId,b.dataset.key);};
     b.onlostpointercapture=b.onpointercancel=b.onpointerup=e=>unset('touch'+e.pointerId);
   }
@@ -229,7 +258,7 @@
   canvas.onpointerdown=e=>{
     if(phase!=='play')return;
     e.preventDefault();unlockSound();
-    if(session.drag)canvas.setPointerCapture(e.pointerId);
+    if(session.drag||session.release)canvas.setPointerCapture(e.pointerId);
     session.tap?.(...gamePoint(e));
   };
   canvas.onpointermove=e=>{
