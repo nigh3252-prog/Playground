@@ -74,5 +74,6 @@
   "warden-machine-brood-ferry@v1": "b4e82f87a3a3779504e7ae94a7a482d36f14039854644628d1133299a2101a7b",
   "warden-machine-lance-drill@v1": "f2e1a9484a2ad4c5cbb809a6d4311c4a6f03c7211dd9c0260c2a5c8a53853942",
   "warden-machine-lane-battery@v1": "48e1074f6180b52d7ffa2040c7c58ae91c1d8155adcae04edf1ca91ba3fb37db",
-  "warden-machine-split-sled@v1": "4ea3de3a697ff6f910bc439516e09f91832ea206aaa1969d0cec7e68e3ea2ce2"
+  "warden-machine-split-sled@v1": "4ea3de3a697ff6f910bc439516e09f91832ea206aaa1969d0cec7e68e3ea2ce2",
+  "warden-machine-cloud-strider@v1": "5162faf0d9049722c2644fc9e38845355d02f13999faa0e436242d81325cef72"
 }

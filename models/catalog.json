@@ -1524,6 +1524,22 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "warden-machine-cloud-strider",
+      "version": "v1",
+      "name": "Cloud Strider \u00b7 Machine Lab",
+      "type": "creature",
+      "asset": "assets/warden-machine-cloud-strider-v1.glb",
+      "sha256": "5162faf0d9049722c2644fc9e38845355d02f13999faa0e436242d81325cef72",
+      "bytes": 2632516,
+      "triangles": 36492,
+      "meshes": 159,
+      "textures": 2,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original Warden six-legged carrier exported from its Machine Lab neutral pose. Instanced solid geometry and generated materials preserved; the scene-only cloud effect and game motion are not included.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
