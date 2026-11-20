@@ -513,6 +513,22 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "bulwark-modular-bare-frame",
+      "version": "v1",
+      "name": "Bulwark Modular \u00b7 Bare Frame",
+      "type": "humanoid",
+      "asset": "assets/bulwark-modular-bare-frame-v1.glb",
+      "sha256": "570f1a6fe9e02a39a94f0599ccdd13899eec10f5f39975fc97eb52ad3b29bc75",
+      "bytes": 1283608,
+      "triangles": 13518,
+      "meshes": 15,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original armor-off companion export from the Warden Bulwark Modular study. Rigid part pivots retained; no skin or animation clips.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "spirecoil",
       "version": "v3",
       "name": "Spirecoil Organic",
