@@ -54,3 +54,61 @@ test('Warden configures the real Meshopt decoder before parsing without affectin
   const plain = await parseSelectedGLB({parseAsync:value=>value},data,'https://preview.example/models/assets/');
   assert.equal(plain,data);
 });
+
+test('split GLB loads selected same-origin parts in order and verifies them before use', async () => {
+  const {fetchSplitGLB} = await import('../asset-paths.mjs');
+  const {createHash} = await import('node:crypto');
+  const hash = value => createHash('sha256').update(value).digest('hex');
+  const bytes = ['abc', 'def', 'ghi'].map(v => Buffer.from(v));
+  const expected = Buffer.concat(bytes);
+  const entry = {...output, id:'split-test', asset:null, originalFile:'Original_Test.glb',
+    bytes:expected.length, sha256:hash(expected),
+    parts:bytes.map((value,i) => ({asset:`assets/split-test-v1.glb.part${i+1}`, bytes:value.length, sha256:hash(value)}))};
+  const calls = [];
+  const controller = new AbortController();
+  const stub = async (url, opts) => {
+    assert.equal(url.origin, 'https://preview.example');
+    assert.equal(opts.signal, controller.signal);
+    assert.equal(opts.redirect, 'error');
+    return new Response(bytes[calls.push(url.pathname)-1]);
+  };
+  assert.deepEqual(Buffer.from(await fetchSplitGLB(entry,page,controller.signal,stub)),expected);
+  assert.deepEqual(calls,entry.parts.map(part => '/models/'+part.asset));
+  for (const invalid of [
+    {...entry, asset:'assets/split-test-v1.glb'},
+    {...entry, parts:[entry.parts[1], entry.parts[0], entry.parts[2]]},
+    {...entry, parts:entry.parts.map(part => ({...part,asset:'../outside.glb'}))},
+    {...entry, originalFile:'../evil.glb'},
+  ]) await assert.rejects(fetchSplitGLB(invalid,page,controller.signal,()=>assert.fail('invalid path fetched')), /Invalid split asset/);
+  await assert.rejects(fetchSplitGLB(entry,page,controller.signal,async()=>new Response('bad')), /Part integrity/);
+  await assert.rejects(fetchSplitGLB(entry,page,controller.signal,async()=>new Response('bad length')), /Part integrity/);
+  calls.length = 0;
+  await assert.rejects(fetchSplitGLB({...entry,sha256:hash('123456789')},page,controller.signal,stub), /GLB integrity/);
+  calls.length = 0;
+  await assert.rejects(fetchSplitGLB(entry,page,controller.signal,async (...args) => {
+    const response = await stub(...args);
+    controller.abort();
+    return response;
+  }), {name:'AbortError'});
+  assert.equal(calls.length,1);
+});
+
+test('the staged Iguana + Crab parts reconstruct the locked original and its native animation rig', async () => {
+  const {fetchSplitGLB} = await import('../asset-paths.mjs');
+  const {readFile} = await import('node:fs/promises');
+  const catalog = JSON.parse(await readFile(new URL('../catalog.json',import.meta.url)));
+  const entry = catalog.models.find(m => m.id === 'warden-iguana-crab');
+  assert.equal(catalog.models[0].id,'dot');
+  assert.equal(entry.originalFile, 'Warden_Iguana_Crab.glb');
+  assert.equal(entry.sha256, '4cad87c308f4ee2aaa45c58bad017865e0c568715b3582baaf818e451533cb5d');
+  const buffer = await fetchSplitGLB(entry,page,new AbortController().signal,async url => {
+    return new Response(await readFile(new URL('..'+url.pathname.slice('/models'.length),import.meta.url)));
+  });
+  const data = Buffer.from(buffer);
+  assert.equal(data.length,16_509_180);
+  const gltf = JSON.parse(data.toString('utf8',20,20+data.readUInt32LE(12)));
+  assert.equal(gltf.skins.length,1);
+  assert.equal(gltf.skins[0].joints.length,35);
+  assert.deepEqual(gltf.nodes.filter(n=>n.skin===0).map(n=>n.name),['Iguana_Body','Iguana_Crab']);
+  assert.deepEqual(gltf.animations.map(a=>a.name),['Reference_Pose','Idle_Breathe','Crawl_Preview','Crab_Settle']);
+});

@@ -548,6 +548,26 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "spirecoil",
+      "version": "v1",
+      "name": "Spirecoil Mechanical Prototype",
+      "type": "creature",
+      "asset": "assets/spirecoil-v1.glb",
+      "sha256": "297b0535f9e3f6177225108ae1c193368e09aeb351d705e583bf08a74ffd16ec",
+      "bytes": 2708372,
+      "triangles": 65112,
+      "meshes": 256,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Animation"
+        }
+      ],
+      "credits": "Original Warden mechanical prototype blending broad animal features; preserves the original hood and mandible motion.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "warden-scout-gunner",
       "version": "v2",
       "name": "Scout Gunner",
@@ -1226,6 +1246,69 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral-pose GLB exported from the original procedural Beast Mech Hangar viewer. Geometry, materials and rigid hierarchy preserved; scripted viewer motion is not included.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "warden-iguana-crab",
+      "version": "v1",
+      "name": "Warden Iguana + Crab",
+      "type": "creature",
+      "asset": null,
+      "originalFile": "Warden_Iguana_Crab.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-iguana-crab-v1.glb.part1",
+          "bytes": 5503060,
+          "sha256": "7971856337bec6924b8a24f3fd76c970f127ca733530361aaec3dc4a8c8f55a2"
+        },
+        {
+          "asset": "assets/warden-iguana-crab-v1.glb.part2",
+          "bytes": 5503060,
+          "sha256": "1aa63bd84bf2e59415f37cdea1642e5e3e75137505d8cc42b502901f101158b9"
+        },
+        {
+          "asset": "assets/warden-iguana-crab-v1.glb.part3",
+          "bytes": 5503060,
+          "sha256": "edcc28522f3ff8c096cc89a732e844cd07642fac4329c1075cb23e78524bae85"
+        }
+      ],
+      "sha256": "4cad87c308f4ee2aaa45c58bad017865e0c568715b3582baaf818e451533cb5d",
+      "bytes": 16509180,
+      "triangles": 33732,
+      "meshes": 2,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Reference_Pose"
+        },
+        {
+          "name": "Idle_Breathe"
+        },
+        {
+          "name": "Crawl_Preview"
+        },
+        {
+          "name": "Crab_Settle"
+        }
+      ],
+      "credits": "Ryan Nighswander\u2019s Warden project. Original combined Iguana and Crab export, unchanged.",
+      "license": "Public reference only; no reuse license granted."
+    },
+    {
+      "id": "warden-sump-twins",
+      "version": "v1",
+      "name": "Sump Twins \u00b7 Machine Lab",
+      "type": "creature",
+      "asset": "assets/warden-sump-twins-v1.glb",
+      "sha256": "47e5dcf321998e6e2d63ab1395f33164626c40982df0aa4b961a8250ba1c2065",
+      "bytes": 1187520,
+      "triangles": 13736,
+      "meshes": 15,
+      "textures": 2,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original Warden machine geometry and generated textures, exported from the Machine Lab at its neutral pose. Game motion is not included.",
       "license": "No public reuse license specified."
     },
     {

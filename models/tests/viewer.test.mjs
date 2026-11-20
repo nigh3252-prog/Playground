@@ -36,9 +36,10 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
       });
       window.viewerFrameCount = () => viewerFrames;
     });
-    const errors=[], glbs=[], glbURLs=[];
+    const errors=[], glbs=[], glbURLs=[], partURLs=[];
     page.on('pageerror', error=>errors.push(error.message));
     page.on('request', request => {
+      if (/\.glb\.part[1-3]$/.test(request.url())) partURLs.push(request.url());
       if (!request.url().endsWith('.glb')) return;
       glbs.push(request.url().split('/').pop());
       glbURLs.push(new URL(request.url()));
@@ -49,6 +50,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     const ready = async id => {await page.waitForFunction(id=>document.getElementById('stage').dataset.model === id, id);};
     await ready('dot'); assert.equal(await heading.textContent(),'Dot');
     assert.deepEqual(glbs,['dot-v1.glb']);
+    assert.deepEqual(partURLs,[],'default does not fetch split models');
     assert.equal(await page.locator('#metadata').isVisible(),false);
     assert.equal(await stage.locator('canvas').count(),1);
     await delay(180);
@@ -137,6 +139,24 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
           await skeleton.check();
           await page.waitForFunction(()=>document.querySelector('#stage').dataset.skeleton === '50');
           await skeleton.uncheck();
+        }
+        if (entry.id === 'warden-iguana-crab') {
+          await skeleton.check();
+          await page.waitForFunction(()=>document.querySelector('#stage').dataset.skeleton === '35');
+          await skeleton.uncheck();
+          assert.deepEqual(partURLs,entry.parts.map(part => new URL(part.asset,bench).href),
+            'only the selected split model requests fixed parts in order');
+          assert(!glbs.includes('warden-iguana-crab-v1.glb'));
+          await page.locator('#details-toggle').click();
+          const download = page.locator('#download');
+          assert.equal(await download.getAttribute('download'),entry.originalFile);
+          const reconstructed = await download.evaluate(async link => {
+            const buffer = await (await fetch(link.href)).arrayBuffer();
+            const digest = await crypto.subtle.digest('SHA-256',buffer);
+            return {bytes:buffer.byteLength,sha256:Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('')};
+          });
+          assert.deepEqual(reconstructed,{bytes:entry.bytes,sha256:entry.sha256});
+          await page.keyboard.press('Escape');
         }
         await page.getByRole('button',{name:'Play animation'}).click();
         await page.waitForFunction(() => Number(document.getElementById('scrub').value) > 0);

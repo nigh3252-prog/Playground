@@ -88,6 +88,23 @@ def canonical_armory_file(source):
     assert path.parent == ARMORY / "models" and path.resolve() == path and path.is_file(), "invalid Armory model path"
     return path
 
+def split_asset(model, ident, version):
+    parts = model["parts"]
+    assert model["asset"] is None and isinstance(parts, list) and len(parts) == 3
+    assert re.fullmatch(r"[A-Za-z0-9_-]+\.glb", model["originalFile"])
+    verified = []
+    for i, part in enumerate(parts, 1):
+        expected = f"assets/{ident}-{version}.glb.part{i}"
+        assert part["asset"] == expected, "invalid part path or order"
+        path = ROOT / expected
+        assert path.resolve() == path and path.is_file(), "invalid part file"
+        assert type(part["bytes"]) is int and 0 < part["bytes"] <= 6_000_000, "invalid part size"
+        data = path.read_bytes()
+        assert len(data) == part["bytes"] and sha256(data).hexdigest() == part["sha256"], "part integrity mismatch"
+        verified.append(data)
+    return b"".join(verified)
+
+
 def verify():
     assert (ROOT / "catalog.json").is_file(), "catalog.json missing"
     catalog = json.loads((ROOT / "catalog.json").read_text())
@@ -101,7 +118,8 @@ def verify():
     assert keys - borrowed_keys - {"dot@v1"} == sources.keys(), "original source lock must cover every locally imported revision"
     armory = armory_sources()
     assert borrowed_keys == {f"armory-{ident}@v1" for ident in armory}, "bench must list every bundled Armory model once"
-    assert len({m["asset"] for m in models}) == len(models), "duplicate asset paths"
+    assets = [m["asset"] for m in models if m["asset"] is not None]
+    assert len(set(assets)) == len(assets), "duplicate asset paths"
     for m in models:
         ident = m["id"]
         version = m["version"]
@@ -110,6 +128,7 @@ def verify():
         assert m["name"] and m["credits"] and m["license"]
         collection = m.get("sourceCollection")
         if collection == "armory":
+            assert "parts" not in m
             source_id = m["sourceId"]
             source, pack = armory[source_id]
             assert ident == f"armory-{source_id}" and version == "v1"
@@ -120,8 +139,11 @@ def verify():
             data = canonical_armory_file(source).read_bytes()
         else:
             assert collection is None and not ident.startswith("armory-")
-            assert m["asset"] == f"assets/{ident}-{version}.glb"
-            data = (ROOT / m["asset"]).read_bytes()
+            if "parts" in m:
+                data = split_asset(m, ident, version)
+            else:
+                assert m["asset"] == f"assets/{ident}-{version}.glb"
+                data = (ROOT / m["asset"]).read_bytes()
         digest = sha256(data).hexdigest()
         assert m["bytes"] == len(data) and m["sha256"] == digest, ident
         assert key not in sources or digest == sources[key], f"{key} original altered"

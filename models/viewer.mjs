@@ -4,7 +4,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createSelection, modelURL, resolveModel, stepModel} from './navigation.mjs';
 import {defaultFilters, filterModels} from './filters.mjs';
-import {assetURL} from './asset-paths.mjs';
+import {assetURL, fetchSplitGLB} from './asset-paths.mjs';
 import {parseSelectedGLB} from './parse-selected-glb.mjs';
 import {createSkeletonOverlay} from './skeleton-overlay.mjs';
 
@@ -143,7 +143,14 @@ function dispose(gltf) {
   skeletons.forEach(skeleton => skeleton.dispose());
 }
 
+let splitDownloadURL;
 function clearActive() {
+  if (splitDownloadURL) {
+    URL.revokeObjectURL(splitDownloadURL);
+    splitDownloadURL = null;
+    el('download').removeAttribute('href');
+    el('download').hidden = true;
+  }
   mixer?.stopAllAction();
   if (active && mixer) mixer.uncacheRoot(active.scene);
   skeletonOverlay.clear();
@@ -249,21 +256,36 @@ function install(entry, gltf) {
 const select = createSelection({
   async load(entry, signal) {
     if (!entry) return null;
+    if (entry.parts != null) {
+      const bytes = await fetchSplitGLB(entry, location.href, signal);
+      signal.throwIfAborted();
+      const gltf = await parseSelectedGLB(loader, bytes, new URL('./assets/',location.href).href, entry.compression);
+      return {gltf, bytes};
+    }
     const url = assetURL(entry, location.href);
     const response = await fetch(url, {signal,redirect:'error'});
     if (!response.ok) throw Error(`Model request returned ${response.status}`);
-    return parseSelectedGLB(loader, await response.arrayBuffer(), new URL('.',url).href, entry.compression);
+    return {gltf: await parseSelectedGLB(loader, await response.arrayBuffer(), new URL('.',url).href, entry.compression)};
   },
-  install(entry,glTF) {
-    if (!glTF) return;
-    try { install(entry,glTF); }
-    catch(error) {
+  install(entry,result) {
+    if (!result) return;
+    const {gltf:glTF, bytes} = result;
+    try {
+      install(entry,glTF);
+      if (bytes) {
+        splitDownloadURL = URL.createObjectURL(new Blob([bytes], {type:'model/gltf-binary'}));
+        const download = el('download');
+        download.href = splitDownloadURL;
+        download.download = entry.originalFile;
+        download.hidden = false;
+      }
+    } catch(error) {
       if (active === glTF) clearActive();
       else dispose(glTF);
       throw error;
     }
   },
-  discard:gltf => {if (gltf) dispose(gltf);},
+  discard:result => {if (result) dispose(result.gltf);},
   fail(entry) {showStatus(`Could not open ${entry.name}. You can retry or choose another model.`,true);},
 });
 
