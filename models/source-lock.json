@@ -61,5 +61,14 @@
   "beast-hangar-oryxus@v1": "106b3c5865c63a6a999f583eb845eca836dd40cca2a9cdff4c0860b75bb55640",
   "warden-iguana-crab@v1": "4cad87c308f4ee2aaa45c58bad017865e0c568715b3582baaf818e451533cb5d",
   "warden-sump-twins@v1": "47e5dcf321998e6e2d63ab1395f33164626c40982df0aa4b961a8250ba1c2065",
-  "spirecoil@v1": "297b0535f9e3f6177225108ae1c193368e09aeb351d705e583bf08a74ffd16ec"
+  "spirecoil@v1": "297b0535f9e3f6177225108ae1c193368e09aeb351d705e583bf08a74ffd16ec",
+  "warden-machine-splitter@v1": "c89fff1fc8e4439d3a1546b9275a1364cadec3bda92dbd4107c5759652d758c5",
+  "warden-machine-railworm@v1": "4d6663fc53357d9f972f15148f63af6f19432596ea71f95dc24f5a57174a7628",
+  "warden-machine-apiary@v1": "fbae8fd243d7f7c4b706fd9801a07b2254a57b7934f46d93caef9ff6b8f350d1",
+  "warden-machine-crosscut@v1": "23ba8a2eeaa151f45c1bd39ce9ced86c706870d6bf425313c600795abadea2ff",
+  "spirecoil@v2": "66a5b5efde681542c170c0555d597966d1c085b64550ad67e1ce816356a8af17",
+  "warden-machine-drop-gate@v1": "29225f305153d5bb6c53a1fa22a4aa29f37a8458732ae62ee3cdbc20e8d0cd1e",
+  "warden-machine-vacuum-well@v1": "896861264321452e972e79cd494903c4c0844b80278c9ce64ca06be3c9816dde",
+  "warden-machine-rim-saw@v1": "b9d8c8b6dee8c2cd821d549ea072ac46539f9f3f97f0930b43e39652081808da",
+  "warden-machine-baffle@v1": "264d672228e63ff5bf75fea5e94652f9a57373f72140354bc974776a0940fc32"
 }
