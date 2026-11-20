@@ -54,5 +54,9 @@
   "railgun-sunspike@v1": "6703134f301989eeec63ffc947e853f5d3ed5576a17042d5b7e271f428bbcb85",
   "warden-haunted-ice-kit@v1": "601495675160ade5a5f3196bdf05ed63bd6f89d37a88e7d67fe92db89dc61883",
   "bulwark-modular-bare-frame@v1": "570f1a6fe9e02a39a94f0599ccdd13899eec10f5f39975fc97eb52ad3b29bc75",
-  "warden@v1": "de5bff2eb86519bb1a26dc564960b078974140830d35a72ffd46c22adc005db5"
+  "warden@v1": "de5bff2eb86519bb1a26dc564960b078974140830d35a72ffd46c22adc005db5",
+  "beast-hangar-volkrex@v1": "e47621983a7b252970b5ea5bfbba327434818bf3aca328b3a32635ac9833247e",
+  "beast-hangar-solmane@v1": "56922fe61b64e3f7309c99ad068c4a9ab2efb7a873d90af42f5f2a9f28c1df35",
+  "beast-hangar-arakhne@v1": "34233d1c56ff3e6aa1cf2d5aa1c98911e019a1cadc5aa3897cd4a44b155089a1",
+  "beast-hangar-oryxus@v1": "106b3c5865c63a6a999f583eb845eca836dd40cca2a9cdff4c0860b75bb55640"
 }
