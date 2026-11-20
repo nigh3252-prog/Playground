@@ -1,4 +1,5 @@
 """Validate Model Review Bench manifest against original self-contained GLB bytes."""
+from base64 import b64decode
 from hashlib import sha256
 import json
 import re
@@ -6,6 +7,7 @@ from pathlib import Path
 import struct
 
 ROOT = Path(__file__).resolve().parents[1]
+ARMORY = ROOT.parent / "armory"
 CLIPS = {
     "dot": ["Idle"],
     "crocodilian": [],
@@ -13,7 +15,7 @@ CLIPS = {
 }
 
 
-def glb_payload(blob):
+def glb_payload(blob, *, allow_inline_images=False):
     assert len(blob) >= 20, "GLB header and JSON chunk required"
     assert struct.unpack_from("<4sII", blob) == (b"glTF", 2, len(blob)), "GLB magic, version or length mismatch"
     offset, payload, bin_count = 12, None, 0
@@ -29,8 +31,17 @@ def glb_payload(blob):
         elif kind == b"BIN\0":
             bin_count += 1
     assert offset == len(blob) and payload and bin_count == 1, "missing GLB payload"
-    assert all("uri" not in resource for key in ("buffers", "images") for resource in payload.get(key, [])), "non-embedded GLB resource"
-    assert all("bufferView" in image for image in payload.get("images", [])), "non-embedded image"
+    assert all("uri" not in buffer for buffer in payload.get("buffers", [])), "non-embedded GLB buffer"
+    for image in payload.get("images", []):
+        if "uri" not in image:
+            assert "bufferView" in image, "non-embedded image"
+            continue
+        # Existing Kenney binaries carry embedded PNGs as inline data. Their exact
+        # checked bytes are reused, never loaded from external or relative URIs.
+        embedded = re.fullmatch(r"data:image/(png|jpeg);base64,([A-Za-z0-9+/]+={0,2})", image["uri"])
+        assert allow_inline_images and embedded and "bufferView" not in image, "non-embedded image"
+        signature = b"\x89PNG\r\n\x1a\n" if embedded[1] == "png" else b"\xff\xd8\xff"
+        assert b64decode(embedded[2], validate=True).startswith(signature), "invalid inline image"
     return payload
 
 
@@ -57,6 +68,26 @@ def glb_meta(gltf, *, known_articulated=False):
     }
 
 
+
+def armory_sources():
+    catalog = json.loads((ARMORY / "catalog.json").read_text())
+    assert catalog["schema"] == "warden-armory-catalog" and catalog["version"] == 1
+    packs = {pack["id"]: pack for pack in catalog["packs"]}
+    assert len(packs) == len(catalog["packs"])
+    result = {}
+    for source in catalog["models"]:
+        ident = source["id"]
+        assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", ident) and ident not in result
+        assert source["file"] == f"models/{ident}.glb"
+        result[ident] = (source, packs[source["pack"]])
+    return result
+
+
+def canonical_armory_file(source):
+    path = ARMORY / source["file"]
+    assert path.parent == ARMORY / "models" and path.resolve() == path and path.is_file(), "invalid Armory model path"
+    return path
+
 def verify():
     assert (ROOT / "catalog.json").is_file(), "catalog.json missing"
     catalog = json.loads((ROOT / "catalog.json").read_text())
@@ -66,7 +97,10 @@ def verify():
     keys = {f'{m["id"]}@{m["version"]}' for m in models}
     sources = json.loads((ROOT / "source-lock.json").read_text())
     assert {f"{ident}@v1" for ident in CLIPS} <= keys
-    assert keys - {"dot@v1"} == sources.keys(), "original source lock must cover every imported revision"
+    borrowed_keys = {f'{m["id"]}@{m["version"]}' for m in models if m.get("sourceCollection") == "armory"}
+    assert keys - borrowed_keys - {"dot@v1"} == sources.keys(), "original source lock must cover every locally imported revision"
+    armory = armory_sources()
+    assert borrowed_keys == {f"armory-{ident}@v1" for ident in armory}, "bench must list every bundled Armory model once"
     assert len({m["asset"] for m in models}) == len(models), "duplicate asset paths"
     for m in models:
         ident = m["id"]
@@ -74,12 +108,24 @@ def verify():
         key = f"{ident}@{version}"
         assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", ident) and re.fullmatch(r"v[1-9][0-9]*(?:[a-z])?", version)
         assert m["name"] and m["credits"] and m["license"]
-        assert m["asset"] == f"assets/{ident}-{version}.glb"
-        data = (ROOT / m["asset"]).read_bytes()
+        collection = m.get("sourceCollection")
+        if collection == "armory":
+            source_id = m["sourceId"]
+            source, pack = armory[source_id]
+            assert ident == f"armory-{source_id}" and version == "v1"
+            assert m["asset"] == f'../armory/{source["file"]}'
+            assert m["type"] == "gear" and m["pack"] == pack["name"]
+            assert m["creator"] == source["creator"] and m["source"] == source["source"]
+            assert m["license"] == source["license"] and m["sha256"] == source["sha256"] and m["bytes"] == source["bytes"]
+            data = canonical_armory_file(source).read_bytes()
+        else:
+            assert collection is None and not ident.startswith("armory-")
+            assert m["asset"] == f"assets/{ident}-{version}.glb"
+            data = (ROOT / m["asset"]).read_bytes()
         digest = sha256(data).hexdigest()
         assert m["bytes"] == len(data) and m["sha256"] == digest, ident
         assert key not in sources or digest == sources[key], f"{key} original altered"
-        gltf = glb_payload(data)
+        gltf = glb_payload(data, allow_inline_images=(collection == "armory"))
         for key, value in glb_meta(gltf, known_articulated=(ident == "crocodilian")).items():
             assert m[key] == value, (ident, key)
         if ident in CLIPS and version == "v1":

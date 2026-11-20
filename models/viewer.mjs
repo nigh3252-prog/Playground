@@ -4,6 +4,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createSelection, modelURL, resolveModel, stepModel} from './navigation.mjs';
 import {defaultFilters, filterModels} from './filters.mjs';
+import {assetURL} from './asset-paths.mjs';
 import {createSkeletonOverlay} from './skeleton-overlay.mjs';
 
 const el = id => document.getElementById(id);
@@ -204,7 +205,16 @@ function seek(time) {
 
 function install(entry, gltf) {
   gltf.scene.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(gltf.scene,true);
+  const orientation = new THREE.Group();
+  orientation.add(gltf.scene);
+  const box = new THREE.Box3().setFromObject(orientation,true);
+  if (entry.sourceCollection === 'armory') {
+    const original = box.getSize(new THREE.Vector3());
+    // Match Armory's default display orientation without changing the GLB or its clips.
+    if (original.z > original.x && original.z > original.y) orientation.rotation.y = Math.PI / 2;
+    else if (original.y > original.x && original.y > original.z) orientation.rotation.z = -Math.PI / 2;
+    box.setFromObject(orientation,true);
+  }
   if (box.isEmpty()) throw Error('Model has no visible geometry');
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
@@ -213,7 +223,7 @@ function install(entry, gltf) {
   const framing = new THREE.Group();
   framing.position.copy(center).multiplyScalar(-scale);
   framing.scale.setScalar(scale);
-  framing.add(gltf.scene);
+  framing.add(orientation);
   meshGroup.add(framing);
   active = gltf;
   jointCount = skeletonOverlay.setModel(gltf.scene);
@@ -238,11 +248,8 @@ function install(entry, gltf) {
 const select = createSelection({
   async load(entry, signal) {
     if (!entry) return null;
-    const url = new URL(entry.asset, document.baseURI);
-    if (url.origin !== location.origin || !url.pathname.startsWith(new URL('./assets/',document.baseURI).pathname)) {
-      throw Error('Invalid asset location');
-    }
-    const response = await fetch(url, {signal});
+    const url = assetURL(entry, location.href);
+    const response = await fetch(url, {signal,redirect:'error'});
     if (!response.ok) throw Error(`Model request returned ${response.status}`);
     return loader.parseAsync(await response.arrayBuffer(), new URL('.',url).href);
   },
@@ -266,6 +273,7 @@ function metadata(entry) {
     Textures:entry.textures,
     'File size':Number.isFinite(entry.bytes) ? `${(entry.bytes/1e6).toFixed(2)} MB` : null,
     Rig:entry.rig,
+    ...(entry.pack ? {Pack:entry.pack} : {}),
     Clips:entry.clips?.length,
     Credits:entry.credits,
     License:entry.license,
@@ -277,8 +285,15 @@ function metadata(entry) {
     return [term,definition];
   }));
   const download = el('download');
-  download.href = entry.asset;
-  download.download = entry.asset.split('/').pop();
+  try {
+    const url = assetURL(entry, location.href);
+    download.href = url.href;
+    download.download = url.pathname.split('/').pop();
+    download.hidden = false;
+  } catch {
+    download.removeAttribute('href');
+    download.hidden = true;
+  }
 }
 function setPanel(panel, returnFocus = false) {
   const previous = openPanel;

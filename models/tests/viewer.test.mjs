@@ -11,7 +11,7 @@ const root = new URL('../../', import.meta.url);
 const port = Number(process.env.PORT || 17861);
 const origin = `http://127.0.0.1:${port}`;
 const bench = `${origin}/models/`;
-test('native review bench switches, animates, recovers and fits phones', {timeout:150000}, async () => {
+test('native review bench switches, animates, recovers and fits phones', {timeout:300000}, async () => {
   const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url)));
   const server = spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1'], {cwd:root, stdio:'ignore'});
   let browser;
@@ -36,9 +36,13 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
       });
       window.viewerFrameCount = () => viewerFrames;
     });
-    const errors=[], glbs=[];
+    const errors=[], glbs=[], glbURLs=[];
     page.on('pageerror', error=>errors.push(error.message));
-    page.on('request', request=>{if (request.url().endsWith('.glb')) glbs.push(request.url().split('/').pop());});
+    page.on('request', request => {
+      if (!request.url().endsWith('.glb')) return;
+      glbs.push(request.url().split('/').pop());
+      glbURLs.push(new URL(request.url()));
+    });
     await page.goto(bench);
     const stage = page.locator('#stage');
     const heading = page.locator('#model-name');
@@ -108,6 +112,10 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     await ready('white-mech');
     assert.equal(await page.locator('#retry').isVisible(),false);
     await page.unroute('**/crocodilian-v1.glb');
+    const armory = catalog.models.filter(model => model.sourceCollection === 'armory');
+    assert.equal(armory.length,87);
+    assert.equal(new Set(armory.map(model => model.pack)).size,7);
+    assert.equal(armory.filter(model => model.clips.length).length,6);
     for (const [index, entry] of catalog.models.entries()) {
       if (index < 3) continue;
       await page.locator('#model-picker').selectOption(String(index));
@@ -115,12 +123,15 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
         const {model,version:loadedVersion} = document.querySelector('#stage').dataset;
         return model === id && loadedVersion === version;
       }, entry);
+      const installedFrames = await page.evaluate(() => window.viewerFrameCount());
+      await page.locator('#fit').click();
+      await page.waitForFunction(frames => window.viewerFrameCount() > frames,installedFrames);
       assert.equal(await heading.textContent(), entry.name);
       assert.equal(await stage.locator('canvas').count(), 1);
       assert.equal(await page.locator('#animation').isVisible(), entry.clips.length > 0);
       assert.equal(await skeleton.isVisible(), entry.rig === 'skinned');
       if (entry.clips.length) {
-        assert.equal(await page.locator('#clip option').count(), entry.clips.length);
+        assert.deepEqual(await page.locator('#clip option').allTextContents(),entry.clips.map(clip => clip.name.replaceAll('_',' ')));
         await page.getByRole('button',{name:'Play animation'}).click();
         await page.waitForFunction(() => Number(document.getElementById('scrub').value) > 0);
         await page.getByRole('button',{name:'Pause animation'}).click();
@@ -128,6 +139,20 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     }
     await page.getByRole('button',{name:'Next model'}).click();
     await ready('dot');
+    assert(glbURLs.every(url => url.origin === origin && /^\/(?:models\/assets|armory\/models)\/[a-z0-9-]+\.glb$/.test(url.pathname)));
+    assert.deepEqual(new Set(armory.map(entry=>new URL(entry.asset,bench).pathname)),new Set(
+      glbURLs.filter(url=>url.pathname.startsWith('/armory/')).map(url=>url.pathname)));
+    glbURLs.length = 0;
+    const selected = armory.find(model => model.id === 'armory-blasters-blaster-a');
+    await page.goto(bench+`?model=${selected.id}&v=${selected.version}`);
+    await ready(selected.id);
+    await delay(180);
+    const canonicalURL = new URL(selected.asset,bench);
+    assert.deepEqual(glbURLs.map(url=>url.href),[canonicalURL.href],'Armory deep link does not fetch other models');
+    await page.locator('#details-toggle').click();
+    assert.match(await page.locator('#stats').textContent(),/Kenney/);
+    assert.match(await page.locator('#stats').textContent(),/CC0-1.0/);
+    assert.equal(await page.locator('#download').getAttribute('href'),canonicalURL.href);
     assert.deepEqual(errors,[]);
     await context.close();
     const phone = await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});

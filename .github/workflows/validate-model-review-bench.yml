@@ -4,6 +4,8 @@ on:
     paths:
       - models/**
       - armory/vendor/**
+      - armory/catalog.json
+      - armory/models/**
       - index.html
       - .github/workflows/validate-model-review-bench.yml
 permissions:
@@ -19,8 +21,9 @@ jobs:
           node-version: '22'
       - name: Verify catalog and embedded assets
         run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 models/tools/sync_armory.py --check
           python3 models/tools/verify_assets.py
-          node --test models/tests/navigation.test.mjs models/tests/filter*.test.mjs models/tests/skeleton-overlay.test.mjs
+          node --test models/tests/asset-paths.test.mjs models/tests/navigation.test.mjs models/tests/filter*.test.mjs models/tests/skeleton-overlay.test.mjs
       - name: Install browser verification runtime
         run: |
           npm install --prefix /tmp/model-bench-check playwright@1.56.1
