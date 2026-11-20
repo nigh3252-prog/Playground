@@ -1009,6 +1009,162 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "warden",
+      "version": "v1",
+      "name": "Warden",
+      "type": "humanoid",
+      "asset": "assets/warden-v1.glb",
+      "sha256": "de5bff2eb86519bb1a26dc564960b078974140830d35a72ffd46c22adc005db5",
+      "bytes": 5952076,
+      "compression": "meshopt",
+      "triangles": 171340,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "A_TPose"
+        },
+        {
+          "name": "Crouch_Fwd_Loop"
+        },
+        {
+          "name": "Crouch_Idle_Loop"
+        },
+        {
+          "name": "Dance_Loop"
+        },
+        {
+          "name": "Death01"
+        },
+        {
+          "name": "Driving_Loop"
+        },
+        {
+          "name": "Fixing_Kneeling"
+        },
+        {
+          "name": "Hit_Chest"
+        },
+        {
+          "name": "Hit_Head"
+        },
+        {
+          "name": "Idle_Loop"
+        },
+        {
+          "name": "Idle_Talking_Loop"
+        },
+        {
+          "name": "Idle_Torch_Loop"
+        },
+        {
+          "name": "Interact"
+        },
+        {
+          "name": "Jog_Fwd_Loop"
+        },
+        {
+          "name": "Jump_Land"
+        },
+        {
+          "name": "Jump_Loop"
+        },
+        {
+          "name": "Jump_Start"
+        },
+        {
+          "name": "PickUp_Table"
+        },
+        {
+          "name": "Pistol_Aim_Down"
+        },
+        {
+          "name": "Pistol_Aim_Neutral"
+        },
+        {
+          "name": "Pistol_Aim_Up"
+        },
+        {
+          "name": "Pistol_Idle_Loop"
+        },
+        {
+          "name": "Pistol_Reload"
+        },
+        {
+          "name": "Pistol_Shoot"
+        },
+        {
+          "name": "Punch_Cross"
+        },
+        {
+          "name": "Punch_Enter"
+        },
+        {
+          "name": "Punch_Jab"
+        },
+        {
+          "name": "Push_Loop"
+        },
+        {
+          "name": "Roll"
+        },
+        {
+          "name": "Roll_RM"
+        },
+        {
+          "name": "Sitting_Enter"
+        },
+        {
+          "name": "Sitting_Exit"
+        },
+        {
+          "name": "Sitting_Idle_Loop"
+        },
+        {
+          "name": "Sitting_Talking_Loop"
+        },
+        {
+          "name": "Spell_Simple_Enter"
+        },
+        {
+          "name": "Spell_Simple_Exit"
+        },
+        {
+          "name": "Spell_Simple_Idle_Loop"
+        },
+        {
+          "name": "Spell_Simple_Shoot"
+        },
+        {
+          "name": "Sprint_Loop"
+        },
+        {
+          "name": "Swim_Fwd_Loop"
+        },
+        {
+          "name": "Swim_Idle_Loop"
+        },
+        {
+          "name": "Sword_Attack"
+        },
+        {
+          "name": "Sword_Attack_RM"
+        },
+        {
+          "name": "Sword_Idle"
+        },
+        {
+          "name": "Walk_Formal_Loop"
+        },
+        {
+          "name": "Walk_Loop"
+        }
+      ],
+      "credits": "Ryan\u2019s original Warden protagonist from Warden Playground. The exact published GLB includes 46 Quaternius animation clips, retargeted to its native rig (CC0 animations).",
+      "license": "No public reuse license specified for the original Warden model."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",

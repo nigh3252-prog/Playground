@@ -22,3 +22,35 @@ test('rejects unrecognized ids, injected traversal, escaping and mismatching sou
     {...armory,version:'v2',asset:'../armory/models/blasters-blaster-a.glb'},
   ]) assert.throws(()=>assetURL(entry,page), /Invalid asset location/);
 });
+
+test('Warden configures the real Meshopt decoder before parsing without affecting ordinary selections', async () => {
+  const {parseSelectedGLB} = await import('../parse-selected-glb.mjs');
+  const {readFile} = await import('node:fs/promises');
+  const data = await readFile(new URL('../assets/warden-v1.glb', import.meta.url));
+  const gltf = JSON.parse(data.toString('utf8',20,20+data.readUInt32LE(12)));
+  assert(gltf.extensionsRequired.includes('EXT_meshopt_compression'));
+  assert.equal(new Set(gltf.skins.flatMap(s=>s.joints)).size,50);
+  const walk = gltf.animations.find(clip => clip.name === 'Walk_Loop');
+  assert(walk?.channels.length > 0);
+  const rotation = walk.channels.find(channel => channel.target.path === 'rotation'
+    && gltf.accessors[walk.samplers[channel.sampler].output].count > 2);
+  assert(rotation);
+  const output = gltf.accessors[walk.samplers[rotation.sampler].output];
+  const view = gltf.bufferViews[output.bufferView].extensions.EXT_meshopt_compression;
+  const binStart=20+data.readUInt32LE(12)+8;
+  const segment=data.subarray(binStart+view.byteOffset,binStart+view.byteOffset+view.byteLength);
+  let decoder;
+  const loader = {
+    setMeshoptDecoder(value) {decoder = value;},
+    async parseAsync() {
+      assert(decoder?.supported);
+      return decoder.decodeGltfBufferAsync(view.count,view.byteStride,segment,view.mode,view.filter);
+    },
+  };
+  const decoded=await parseSelectedGLB(loader,data,'https://preview.example/models/assets/','meshopt');
+  assert.equal(decoded.length,view.count*view.byteStride);
+  const initial=decoded.subarray(0,view.byteStride);
+  assert(decoded.some((byte,index)=>byte!==initial[index%view.byteStride]),'decoded walk rotation changes across frames');
+  const plain = await parseSelectedGLB({parseAsync:value=>value},data,'https://preview.example/models/assets/');
+  assert.equal(plain,data);
+});

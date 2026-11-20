@@ -132,6 +132,12 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
       assert.equal(await skeleton.isVisible(), entry.rig === 'skinned');
       if (entry.clips.length) {
         assert.deepEqual(await page.locator('#clip option').allTextContents(),entry.clips.map(clip => clip.name.replaceAll('_',' ')));
+        if (entry.id === 'warden') {
+          await page.locator('#clip').selectOption({label:'Walk Loop'});
+          await skeleton.check();
+          await page.waitForFunction(()=>document.querySelector('#stage').dataset.skeleton === '50');
+          await skeleton.uncheck();
+        }
         await page.getByRole('button',{name:'Play animation'}).click();
         await page.waitForFunction(() => Number(document.getElementById('scrub').value) > 0);
         await page.getByRole('button',{name:'Pause animation'}).click();

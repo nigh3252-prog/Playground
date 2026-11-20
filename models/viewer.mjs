@@ -5,6 +5,7 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createSelection, modelURL, resolveModel, stepModel} from './navigation.mjs';
 import {defaultFilters, filterModels} from './filters.mjs';
 import {assetURL} from './asset-paths.mjs';
+import {parseSelectedGLB} from './parse-selected-glb.mjs';
 import {createSkeletonOverlay} from './skeleton-overlay.mjs';
 
 const el = id => document.getElementById(id);
@@ -251,7 +252,7 @@ const select = createSelection({
     const url = assetURL(entry, location.href);
     const response = await fetch(url, {signal,redirect:'error'});
     if (!response.ok) throw Error(`Model request returned ${response.status}`);
-    return loader.parseAsync(await response.arrayBuffer(), new URL('.',url).href);
+    return parseSelectedGLB(loader, await response.arrayBuffer(), new URL('.',url).href, entry.compression);
   },
   install(entry,glTF) {
     if (!glTF) return;

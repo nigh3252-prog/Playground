@@ -126,6 +126,8 @@ def verify():
         assert m["bytes"] == len(data) and m["sha256"] == digest, ident
         assert key not in sources or digest == sources[key], f"{key} original altered"
         gltf = glb_payload(data, allow_inline_images=(collection == "armory"))
+        required_extensions = gltf.get("extensionsRequired", [])
+        assert ("EXT_meshopt_compression" in required_extensions) == (m.get("compression") == "meshopt"), (ident, "Meshopt flag")
         for key, value in glb_meta(gltf, known_articulated=(ident == "crocodilian")).items():
             assert m[key] == value, (ident, key)
         if ident in CLIPS and version == "v1":
