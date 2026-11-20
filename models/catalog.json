@@ -511,6 +511,25 @@
       "clips": [],
       "credits": "Authored modular Warden Bulwark construction study with original painted UV materials; original export preserved.",
       "license": "No public reuse license specified."
+    },
+    {
+      "id": "spirecoil",
+      "version": "v3",
+      "name": "Spirecoil Organic",
+      "asset": "assets/spirecoil-v3.glb",
+      "sha256": "4cb1d3b2e68aedeb0024060f4125bcf0d7e47a6224a26a7d7ccffa9150dac2b4",
+      "bytes": 4934340,
+      "triangles": 206038,
+      "meshes": 379,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Animation"
+        }
+      ],
+      "credits": "Original authored organic Spirecoil study inspired by bobbit worms and fireworms. Original animated GLB preserved.",
+      "license": "No public reuse license specified."
     }
   ]
 }
