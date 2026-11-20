@@ -1,0 +1,49 @@
+name: Render armory thumbnails
+on:
+  push:
+    branches: [codex/warden-armory]
+    paths:
+      - .github/workflows/render-armory-thumbnails.yml
+permissions:
+  contents: write
+jobs:
+  render:
+    if: github.repository == 'nigh3252-prog/Playground' && github.ref == 'refs/heads/codex/warden-armory'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/warden-armory
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate bundled models and syntax
+        run: |
+          python3 armory/tools/validate_assets.py
+          node --check armory/app.mjs
+          node --check armory/export.mjs
+      - name: Install Chromium
+        run: |
+          npm install --prefix /tmp/armory-check playwright@1.56.1
+          /tmp/armory-check/node_modules/.bin/playwright install --with-deps chromium
+      - name: Render actual model thumbnails and run browser checks
+        env:
+          ARMORY_PLAYWRIGHT_MODULE: /tmp/armory-check/node_modules/playwright
+        run: node armory/tools/browser_check.mjs --thumbnails
+      - name: Commit thumbnails and review screenshots
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add armory/thumbs armory/review/*.png armory/review/report.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Add model thumbnails and verified desktop and portrait screenshots"
+            git push origin HEAD:codex/warden-armory
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: armory-browser-review
+          path: |
+            armory/review/
+            armory/thumbs/

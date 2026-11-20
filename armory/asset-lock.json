@@ -1,0 +1,370 @@
+{
+  "three": "r180",
+  "downloads": [
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-a.glb",
+      "sha256": "d6d6fe0ec5baf21d7717449220799d45b95d2d663ace7b22612b255dc1a8b308",
+      "bytes": 44992
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-b.glb",
+      "sha256": "7df4457ed864bc0714fc33059ac56d198304092093b1e78dc407b6c829945a4f",
+      "bytes": 34380
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-c.glb",
+      "sha256": "1c4c53f201597b2845c3d71717e0c465af1c21d8f8c30c0e1b4358dc33133d35",
+      "bytes": 36232
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-d.glb",
+      "sha256": "c05bf6af6cded1bc76e32e455507f5d1a21cd58503ce66de33ca39e597b28280",
+      "bytes": 45072
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-e.glb",
+      "sha256": "df3e35c9286d7bfe8bde2ff7231ef40ff89b1e7caa52fbf80ea685cb601de3ca",
+      "bytes": 75444
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-f.glb",
+      "sha256": "ea389c88b7d90ede2763e1f2b5834b9fbaaaa56b8a51ebdf21f61ec46d716320",
+      "bytes": 72460
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-g.glb",
+      "sha256": "1798d7ff656116d04df516dffceceea3be174598a384a48d632b0ef1adf204cd",
+      "bytes": 56240
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-h.glb",
+      "sha256": "f124a4ffd990a248e801aa451ab7ec4abde71a18c121b571f9bb52206609b36b",
+      "bytes": 28380
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-i.glb",
+      "sha256": "d78880a941fed7785df22c5846f553b7b7560a7b9f307d2993892b0103f7d514",
+      "bytes": 38604
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-j.glb",
+      "sha256": "d0d077820b8b840e0f41947dcb4d05960d94ede7431ae3c5e137847771a2f6a1",
+      "bytes": 50632
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-k.glb",
+      "sha256": "f8df17fe6377c6cff52c8ce59d10a5a182f5ba7de4ff291843f3238698471036",
+      "bytes": 35676
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-l.glb",
+      "sha256": "2739ae04bcb1e396b599cbf4af774df73b7708512bde2a054b2918d1161f16df",
+      "bytes": 41848
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-m.glb",
+      "sha256": "ff3f1196f2e9acabbdc44143dc3b93f79f4c5e8176e54514479bd2b788477c80",
+      "bytes": 41532
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-n.glb",
+      "sha256": "e3faa048f8a90fe57fe838a7f86609bd91815358a1ac3a8dd26432f8010590f6",
+      "bytes": 38376
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-o.glb",
+      "sha256": "52da12866542e6d9948af535e8070f5cc924783ffefa32222762ee17e2bb7e98",
+      "bytes": 59396
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-p.glb",
+      "sha256": "2ffc94c6d8f12d45410012b13169988b70929c7e6ae7d4f868a188265210e49a",
+      "bytes": 80460
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-q.glb",
+      "sha256": "e2062bf76cf9ea7690acbb5ae18c9d92be5f7623ec3a2f4b363eb926d1017522",
+      "bytes": 55856
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/blaster-r.glb",
+      "sha256": "ab0b5f51ecff405238727626d558414750a9946d5e255cd1dc8bf81eebe1f1e2",
+      "bytes": 48920
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ts-scik/goop-gun/b6d7236d18e59bc6e34c68a0687fa9309ab000b6/Models/kenney_blaster-kit_2.1/Textures/colormap.png",
+      "sha256": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc",
+      "bytes": 10223
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Rifle/Scifi%20Assault%20Rifle-JqdHbURERk.glb",
+      "sha256": "0bb077776559d354b41834595c9c92ddd93318c1a893718ccf53e93f7e0a35ac",
+      "bytes": 105456
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20AR.glb",
+      "sha256": "a233a442a21c7889f583002f8ea7213cbe3ae926ba30531a6f3b954bad463d1e",
+      "bytes": 104100
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Assault%20Rifle-RGtBoJNn3N.glb",
+      "sha256": "f83ac0b0d52f97c22c6615034ebf8dc8c2b9725989e2e998aa7b603c3abad2cd",
+      "bytes": 98232
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Assault%20Rifle-j40c8VDdAQ.glb",
+      "sha256": "d249dddf433609cccf01d1abe4f8f13d9eee4e1ba33a4bd9617598e6e6a0af60",
+      "bytes": 195268
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Assault%20Rifle.glb",
+      "sha256": "0370edb381d2f298efbc9ac7dd4ec11d22d3b0137bb135df1b89a2a284af9125",
+      "bytes": 98500
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Grenade%20Launcher.glb",
+      "sha256": "3d460d09020709590d2e29216285a95b997f13eb285fb227e9a0682dd7d4d80c",
+      "bytes": 70832
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Pistol-U0Q1BrKL1y.glb",
+      "sha256": "5c6e3e7b4ab68452c3e90513a36391d77d21dba3f890d1800e8d9216ef2c357e",
+      "bytes": 88464
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Pistol-uw4B33Mm0d.glb",
+      "sha256": "c323f96420f3a3de3793f95af9efd307610a3fc253290e70d731175b94f97eb0",
+      "bytes": 55712
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Pistol.glb",
+      "sha256": "1b0bdaba36a69f4c9821a10da5234c032283fca3d8ffec6445c7a6e352e3127a",
+      "bytes": 71524
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Smg.glb",
+      "sha256": "066a677cf1a4d053eefcd94830151cdbb18374a575288c5d972c098b79d7b295",
+      "bytes": 91088
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Sniper-46615JyFm7.glb",
+      "sha256": "963ed4310d791f2035aecd241e6fd64444398e92c5ac4def6be1f4faff622f3e",
+      "bytes": 143004
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Valuncho/gameFps/3516239e064cac31c0544f7d37fec380e6a83b8f/thebox/Weapons/Sci-Fi%20Modular%20Gun%20Pack-glb/Scifi%20Sniper.glb",
+      "sha256": "2eb922524bdc5c236dc85a7a649ad1e6cf478d9bdfb06398ed80b02f65b7c685",
+      "bytes": 84024
+    },
+    {
+      "url": "https://opengameart.org/sites/default/files/ultimate_gun_pack_by_quaternius.zip",
+      "sha256": "6bbae4cd42a520bd2ed95881394293e90804a63abdaf121e3b55fa08b7311737",
+      "bytes": 7375704
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Lightning%20Gun.fbx",
+      "sha256": "83f1fbab01ea790cf288c560fc0e7409ce0c46754c833d42c493db2b66483aa8",
+      "bytes": 56476
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/LongPistol.fbx",
+      "sha256": "6f8cdaf78bb458d7009ea40324301460dc9a4130a80bd1f949b906e21f3b71a4",
+      "bytes": 58108
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/LongPistol_small.fbx",
+      "sha256": "9d726f497c05f9b03f45f9307847b181217a2ece442af9390d706d73b38177c8",
+      "bytes": 57052
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Pistol.fbx",
+      "sha256": "5d005a9b3757f9d1dbcac419668ace525d1f511a9191fb9497ad3a815fee83c2",
+      "bytes": 38588
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Ray%20Gun.fbx",
+      "sha256": "82009b2350dfce13922110c497c1044ca471ac8d01d6d5c1ec306d9e8782f455",
+      "bytes": 67420
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Rifle.fbx",
+      "sha256": "4e6414649e04f738816c2cf66bdf6e902b5c70419aaf868c1ca6251b1128a717",
+      "bytes": 55932
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Sci-Fi%20Guns%20-%20May%202018/FBX/Sniper%20rifle.fbx",
+      "sha256": "f9832465d8091bbfd62c8c4931669d4e07276228f0afd45b8a93542a5f42efe9",
+      "bytes": 49516
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/P90.fbx",
+      "sha256": "bd820ab3ba6b09c8b490023db452d3b32a80537b74199986f9f85b22edccfd9a",
+      "bytes": 85804
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Pistol.fbx",
+      "sha256": "fb8b6429c89a00cc836490a3303afd248fd89b2b667b908e2d7889c6210da226",
+      "bytes": 127980
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Revolver.fbx",
+      "sha256": "050e608afd141b3ac948b48eb5aeef124c1548e33c7ddec57efb6ed1c31ce82c",
+      "bytes": 155852
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Rifle.fbx",
+      "sha256": "e9b645b553bd3dd6083dd33a9952d1040c51a252b5d036c5e7c142938a0f00e0",
+      "bytes": 133788
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/Shotgun.fbx",
+      "sha256": "5bebd5a16a5055f1f6a84fe05bcc8c9710a947bb8ce3fba2c4e485b539672d99",
+      "bytes": 121260
+    },
+    {
+      "url": "https://raw.githubusercontent.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius/dea756baf3b3a4889d8c245e456a4791f961578a/FreeModels%20by%20Quaternius%5BPatreon%5D/FPS/Animated%20FPS%20Guns%20-%20Jun%202018/FBX/SniperRifle.fbx",
+      "sha256": "a27b040b2ff0b98c1f083dad5fef5742e5d88f3aa6e676d94fbd58a4c8c20775",
+      "bytes": 150492
+    },
+    {
+      "url": "https://opengameart.org/sites/default/files/Lee%20Enfield.zip",
+      "sha256": "bda94cf59c35d0a46a2157107acbf873f987726979028c91fd768fb5b6455847",
+      "bytes": 14276217
+    },
+    {
+      "url": "https://opengameart.org/sites/default/files/German_MG08_15_portable.zip",
+      "sha256": "26647855755e2444bf3223a4100d658bbfd3d6ddb083789e8caa0ca985574dac",
+      "bytes": 1803322
+    },
+    {
+      "url": "https://opengameart.org/sites/default/files/STENNORMALFINISHED.blend",
+      "sha256": "984250382600b5e15e94fa0ffdfd5df70ce21ce02e31180d5e18b93023cac9ec",
+      "bytes": 952400
+    },
+    {
+      "url": "https://opengameart.org/sites/default/files/antique%20guns.blend",
+      "sha256": "459fb1788e48ef3f460db2b0f3c503e477abba589808c2694d4822a6bd7233ca",
+      "bytes": 896096
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/build/three.module.min.js",
+      "sha256": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6",
+      "bytes": 338908
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/build/three.core.min.js",
+      "sha256": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+      "bytes": 381124
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/examples/jsm/controls/OrbitControls.js",
+      "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c",
+      "bytes": 38703
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/examples/jsm/loaders/GLTFLoader.js",
+      "sha256": "67ac5551fdafa6e349bd80c8f8e5e39c136d6b2fb1ad647db9abb21dc86f9e4a",
+      "bytes": 114739
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/examples/jsm/utils/BufferGeometryUtils.js",
+      "sha256": "fda7e946b8e0b5ab39b779206589e7a1079a22eb24efb89d7223e03fdfb1f751",
+      "bytes": 35539
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/examples/jsm/environments/RoomEnvironment.js",
+      "sha256": "c20f0b4677f6128a138d7152b85cbef9091f4f45cdfa05adca04d40c1697c7ae",
+      "bytes": 4899
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/LICENSE",
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "bytes": 1081
+    }
+  ]
+}
