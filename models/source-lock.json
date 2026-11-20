@@ -70,5 +70,9 @@
   "warden-machine-drop-gate@v1": "29225f305153d5bb6c53a1fa22a4aa29f37a8458732ae62ee3cdbc20e8d0cd1e",
   "warden-machine-vacuum-well@v1": "896861264321452e972e79cd494903c4c0844b80278c9ce64ca06be3c9816dde",
   "warden-machine-rim-saw@v1": "b9d8c8b6dee8c2cd821d549ea072ac46539f9f3f97f0930b43e39652081808da",
-  "warden-machine-baffle@v1": "264d672228e63ff5bf75fea5e94652f9a57373f72140354bc974776a0940fc32"
+  "warden-machine-baffle@v1": "264d672228e63ff5bf75fea5e94652f9a57373f72140354bc974776a0940fc32",
+  "warden-machine-brood-ferry@v1": "b4e82f87a3a3779504e7ae94a7a482d36f14039854644628d1133299a2101a7b",
+  "warden-machine-lance-drill@v1": "f2e1a9484a2ad4c5cbb809a6d4311c4a6f03c7211dd9c0260c2a5c8a53853942",
+  "warden-machine-lane-battery@v1": "48e1074f6180b52d7ffa2040c7c58ae91c1d8155adcae04edf1ca91ba3fb37db",
+  "warden-machine-split-sled@v1": "4ea3de3a697ff6f910bc439516e09f91832ea206aaa1969d0cec7e68e3ea2ce2"
 }
