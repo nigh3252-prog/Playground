@@ -608,6 +608,29 @@
       ],
       "credits": "Authored Warden Expansion Pack scout, painted second revision. Original animated export preserved; reference images omitted.",
       "license": "No public reuse license specified."
+    },
+    {
+      "id": "saffron-hover",
+      "version": "v2",
+      "name": "Saffron Hover",
+      "type": "other",
+      "asset": "assets/saffron-hover-v2.glb",
+      "sha256": "746836e78f4a4f267af76941dfd1663a7217111fa0dd09608d816a984fcd1eb6",
+      "bytes": 6182868,
+      "triangles": 10296,
+      "meshes": 1,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Hover_Idle"
+        },
+        {
+          "name": "Articulation_Check"
+        }
+      ],
+      "credits": "Authored Warden Expansion Pack hover machine, painted second revision. Original animated export preserved; reference images omitted.",
+      "license": "No public reuse license specified."
     }
   ]
 }
