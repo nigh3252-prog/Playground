@@ -35,5 +35,21 @@
   "warden-scout-rail@v2": "738c9dbbc28d539e3b48169b299b1b222f3e1dabe8a454e6416e4333c11a21cf",
   "warden-scout-missile@v2": "15aa8c0d5da8bd1b95d7ac02168ee7d1ea4830775a2af7bc092ea4f279c62ee4",
   "saffron-hover@v2": "746836e78f4a4f267af76941dfd1663a7217111fa0dd09608d816a984fcd1eb6",
-  "warden-ice-skull@v1": "4ed8fdb39a7234bf8cc2eab780a35dd8734453225f779ee29581faf8d6c70018"
+  "warden-ice-skull@v1": "4ed8fdb39a7234bf8cc2eab780a35dd8734453225f779ee29581faf8d6c70018",
+  "railgun-breach-engine@v2": "2044dca8a80f1843d15a8df5bf7b289974049b861a3a039c0b7f0535194390cf",
+  "railgun-breach-engine@v1": "663cc5a3d033f766865357f57a59ad2a693b034ac71b048bf2d7a38466ae8793",
+  "railgun-dynamo@v2": "cd4ea38c0362182b38aa6e6d3b0aa4c895dc50a2807e3e6bfb0601571e2a06a3",
+  "railgun-dynamo@v1": "6d7ab3f9558890596809181b015a8f0eb6e1bc09d7b874b291dd62cdaf59d55b",
+  "railgun-longbow@v2": "ed596ba6b7899b32982094d89e8e1cda944f067c0707a460f088324b46a1170d",
+  "railgun-longbow@v1": "04919350b5e09e8cb984ed133e4b121443d0f68a3b9192014435626baca06026",
+  "railgun-splitline@v2": "fba095b11c6a0376161e43ce13268990f09ef4a7a0603a63a067b5ae7884a0c9",
+  "railgun-splitline@v1": "28bdc2b455d17b2afd84ced70345793b163a71ed68b0f71d0897931ac6b25322",
+  "railgun-arc-fork@v2": "061029f984302d0636cdf163e8250d0ee15630c03b841ea8a065eccf82bdb6f0",
+  "railgun-arc-fork@v1": "17be8572d60704c7451d12ed97e74cecf4a6c44b03bfaa0920fbc461873550cd",
+  "railgun-redshift@v2": "e83b3ce649d79631240a07abaf13c0c691576bb2ab6a0e26ec1f5e5d1639ba5d",
+  "railgun-redshift@v1": "16ad210e2503c9ffe6bcc01c72dd1a053568f5ce63765c1cdeeb46110eda86b5",
+  "railgun-pale-horse@v2": "130e204cf8a86e2c0e53f0cd4dcf060db5180c407ba126395b10f22470721a22",
+  "railgun-pale-horse@v1": "11d9febac3e4f4064a5a601d7057a3bb9afc76d25b9b3e6e7cc2571977af3798",
+  "railgun-sunspike@v2": "3465f93144a23006888c94cffb4fece76fcfe8e11bfe0d8af9c8613350e74f29",
+  "railgun-sunspike@v1": "6703134f301989eeec63ffc947e853f5d3ed5576a17042d5b7e271f428bbcb85"
 }

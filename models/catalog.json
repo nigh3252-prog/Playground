@@ -649,6 +649,334 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "railgun-breach-engine",
+      "version": "v2",
+      "name": "Breach Engine",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-breach-engine-v2.glb",
+      "sha256": "2044dca8a80f1843d15a8df5bf7b289974049b861a3a039c0b7f0535194390cf",
+      "bytes": 7532752,
+      "triangles": 18272,
+      "meshes": 15,
+      "textures": 18,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-breach-engine",
+      "version": "v1",
+      "name": "Breach Engine",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-breach-engine-v1.glb",
+      "sha256": "663cc5a3d033f766865357f57a59ad2a693b034ac71b048bf2d7a38466ae8793",
+      "bytes": 7977656,
+      "triangles": 20884,
+      "meshes": 16,
+      "textures": 18,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-dynamo",
+      "version": "v2",
+      "name": "Dynamo \u2014 Open Gauntlet",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-dynamo-v2.glb",
+      "sha256": "cd4ea38c0362182b38aa6e6d3b0aa4c895dc50a2807e3e6bfb0601571e2a06a3",
+      "bytes": 7511488,
+      "triangles": 13472,
+      "meshes": 11,
+      "textures": 24,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-dynamo",
+      "version": "v1",
+      "name": "Dynamo",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-dynamo-v1.glb",
+      "sha256": "6d7ab3f9558890596809181b015a8f0eb6e1bc09d7b874b291dd62cdaf59d55b",
+      "bytes": 6745932,
+      "triangles": 10492,
+      "meshes": 13,
+      "textures": 27,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-longbow",
+      "version": "v2",
+      "name": "Longbow",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-longbow-v2.glb",
+      "sha256": "ed596ba6b7899b32982094d89e8e1cda944f067c0707a460f088324b46a1170d",
+      "bytes": 6365836,
+      "triangles": 17744,
+      "meshes": 13,
+      "textures": 24,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-longbow",
+      "version": "v1",
+      "name": "Longbow",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-longbow-v1.glb",
+      "sha256": "04919350b5e09e8cb984ed133e4b121443d0f68a3b9192014435626baca06026",
+      "bytes": 6797592,
+      "triangles": 12816,
+      "meshes": 14,
+      "textures": 30,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-splitline",
+      "version": "v2",
+      "name": "Splitline",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-splitline-v2.glb",
+      "sha256": "fba095b11c6a0376161e43ce13268990f09ef4a7a0603a63a067b5ae7884a0c9",
+      "bytes": 5660096,
+      "triangles": 9304,
+      "meshes": 8,
+      "textures": 21,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-splitline",
+      "version": "v1",
+      "name": "Splitline",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-splitline-v1.glb",
+      "sha256": "28bdc2b455d17b2afd84ced70345793b163a71ed68b0f71d0897931ac6b25322",
+      "bytes": 7230956,
+      "triangles": 13096,
+      "meshes": 10,
+      "textures": 27,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-arc-fork",
+      "version": "v2",
+      "name": "Arc Fork",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-arc-fork-v2.glb",
+      "sha256": "061029f984302d0636cdf163e8250d0ee15630c03b841ea8a065eccf82bdb6f0",
+      "bytes": 6735200,
+      "triangles": 20708,
+      "meshes": 19,
+      "textures": 21,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-arc-fork",
+      "version": "v1",
+      "name": "Arc Fork",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-arc-fork-v1.glb",
+      "sha256": "17be8572d60704c7451d12ed97e74cecf4a6c44b03bfaa0920fbc461873550cd",
+      "bytes": 6901072,
+      "triangles": 16476,
+      "meshes": 22,
+      "textures": 24,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-redshift",
+      "version": "v2",
+      "name": "Redshift",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-redshift-v2.glb",
+      "sha256": "e83b3ce649d79631240a07abaf13c0c691576bb2ab6a0e26ec1f5e5d1639ba5d",
+      "bytes": 3860468,
+      "triangles": 14000,
+      "meshes": 10,
+      "textures": 18,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-redshift",
+      "version": "v1",
+      "name": "Redshift",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-redshift-v1.glb",
+      "sha256": "16ad210e2503c9ffe6bcc01c72dd1a053568f5ce63765c1cdeeb46110eda86b5",
+      "bytes": 7119064,
+      "triangles": 16280,
+      "meshes": 18,
+      "textures": 27,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-pale-horse",
+      "version": "v2",
+      "name": "Pale Horse",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-pale-horse-v2.glb",
+      "sha256": "130e204cf8a86e2c0e53f0cd4dcf060db5180c407ba126395b10f22470721a22",
+      "bytes": 4698144,
+      "triangles": 15562,
+      "meshes": 11,
+      "textures": 27,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-pale-horse",
+      "version": "v1",
+      "name": "Pale Horse",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-pale-horse-v1.glb",
+      "sha256": "11d9febac3e4f4064a5a601d7057a3bb9afc76d25b9b3e6e7cc2571977af3798",
+      "bytes": 6956240,
+      "triangles": 15388,
+      "meshes": 13,
+      "textures": 29,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-sunspike",
+      "version": "v2",
+      "name": "Sunspike",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-sunspike-v2.glb",
+      "sha256": "3465f93144a23006888c94cffb4fece76fcfe8e11bfe0d8af9c8613350e74f29",
+      "bytes": 5548488,
+      "triangles": 8868,
+      "meshes": 10,
+      "textures": 21,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "railgun-sunspike",
+      "version": "v1",
+      "name": "Sunspike",
+      "type": "gear",
+      "pack": "Warden Railgun Armory",
+      "asset": "assets/railgun-sunspike-v1.glb",
+      "sha256": "6703134f301989eeec63ffc947e853f5d3ed5576a17042d5b7e271f428bbcb85",
+      "bytes": 6722596,
+      "triangles": 10108,
+      "meshes": 19,
+      "textures": 24,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Cycle"
+        }
+      ],
+      "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
