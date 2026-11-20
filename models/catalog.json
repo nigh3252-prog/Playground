@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "models": [
+    {
+      "id": "dot",
+      "version": "v1",
+      "name": "Dot",
+      "asset": "assets/dot-v1.glb",
+      "sha256": "23fd1b646a19314c2ccd75909ab9780f3a2d8970f30c6368c6396e50787d4e70",
+      "bytes": 616516,
+      "triangles": 8860,
+      "meshes": 63,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Idle"
+        }
+      ],
+      "credits": "Original Playground workshop droid authored for this bench; Blender generator in this repository.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "crocodilian",
+      "version": "v1",
+      "name": "Crocodilian",
+      "asset": "assets/crocodilian-v1.glb",
+      "sha256": "d2c4ba627e0aab9877bb57c6225e981274984cb44da5886060c6f9410f563de6",
+      "bytes": 1486172,
+      "triangles": 24800,
+      "meshes": 44,
+      "textures": 2,
+      "rig": "articulated",
+      "clips": [],
+      "credits": "Original Warden crocodilian mesh and painted textures, extracted unchanged from the authored Crocodilian viewer.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "white-mech",
+      "version": "v1",
+      "name": "White Mech",
+      "asset": "assets/white-mech-v1.glb",
+      "sha256": "591ea0abb423885e7d60c1bef4f3821ec692951838b6cbeb02aeba1c383e66a8",
+      "bytes": 4860396,
+      "triangles": 11768,
+      "meshes": 3,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Original White Mech geometry, baked textures, rig and preview clips authored for the White Mech viewer, extracted unchanged. Supplied reference imagery is not shipped.",
+      "license": "No public reuse license specified."
+    }
+  ]
+}

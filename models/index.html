@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1117">
+  <title>Model Review Bench · Playground</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {"imports":{"three":"../armory/vendor/three.module.min.js","three/addons/":"../armory/vendor/addons/"}}
+  </script>
+  <script type="module" src="./viewer.mjs"></script>
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <a class="back" href="../">← Playground</a>
+      <p class="mark"><span aria-hidden="true"></span> Model Review Bench</p>
+    </header>
+    <section class="bench" aria-labelledby="model-name">
+      <div class="model-bar">
+        <div>
+          <p class="eyebrow"><span id="ordinal">—</span> / Model collection</p>
+          <h1><span id="model-name">Loading models</span> <span id="model-version"></span></h1>
+        </div>
+        <button id="copy" type="button" disabled>Copy link</button>
+      </div>
+      <p id="lookup-note" hidden></p>
+      <div id="stage" role="region" aria-label="Interactive 3D model" data-model="">
+        <div class="stage-label">MODEL VIEWPORT</div>
+        <div class="stage-controls">
+          <button id="fit" type="button" disabled>Fit view</button>
+          <button id="turn-left" type="button" aria-label="Orbit left" disabled>↶</button>
+          <button id="turn-right" type="button" aria-label="Orbit right" disabled>↷</button>
+        </div>
+        <div id="message" role="status">
+          <span id="status">Opening the model catalog…</span>
+          <button id="retry" type="button" hidden>Retry</button>
+        </div>
+        <p class="stage-hint">Drag to orbit · Scroll or pinch to zoom</p>
+      </div>
+      <nav class="model-nav" aria-label="Model selection">
+        <button type="button" id="prev" aria-label="Previous model" disabled><span aria-hidden="true">←</span> <span>Previous</span></button>
+        <label for="model-picker" class="sr-only">Choose a model</label>
+        <select id="model-picker" disabled></select>
+        <button type="button" id="next" aria-label="Next model" disabled><span>Next</span> <span aria-hidden="true">→</span></button>
+      </nav>
+      <div id="animation" hidden aria-label="Animation controls">
+        <label for="clip" class="sr-only">Animation clip</label>
+        <select id="clip"></select>
+        <button type="button" id="play" aria-label="Play animation">Play</button>
+        <label for="scrub" class="sr-only">Animation time</label>
+        <input type="range" id="scrub" min="0" max="1" step="any" value="0">
+        <output id="time" for="scrub">0.00 s</output>
+        <label class="loop"><input id="loop" type="checkbox" checked> Loop</label>
+      </div>
+      <p id="static-label" hidden>Static model · No animation clips</p>
+      <details id="metadata" hidden>
+        <summary>Model details</summary>
+        <dl id="stats"></dl>
+        <p class="detail-note">Fit view changes only the display. The GLB keeps its original scale.</p>
+        <div class="detail-links">
+          <a id="download" download>Download GLB</a>
+          <a href="./catalog.json">Open model catalog</a>
+        </div>
+      </details>
+    </section>
+  </main>
+  <noscript>Enable JavaScript to use the model review bench. <a href="./catalog.json">Open the model catalog</a>.</noscript>
+</body>
+</html>
