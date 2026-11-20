@@ -633,6 +633,22 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "warden-ice-skull",
+      "version": "v1",
+      "name": "Ice Skull Prototype",
+      "type": "other",
+      "asset": "assets/warden-ice-skull-v1.glb",
+      "sha256": "4ed8fdb39a7234bf8cc2eab780a35dd8734453225f779ee29581faf8d6c70018",
+      "bytes": 321180,
+      "triangles": 13100,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original authored Warden Ice Skull prototype, an early glacial bone and enamel study. Exact original GLB preserved. This is not the later Icebloom asset.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
