@@ -1,0 +1,71 @@
+{
+  "schema": "watershed-frozen-benchmark-manifest-v1",
+  "capturedAt": "2026-09-12T20:18:12.647Z",
+  "protocol": {
+    "version": "watershed-benchmark-2-frozen",
+    "waterDataset": "USGS NHD high-resolution waterbody snapshot",
+    "riverDataset": "Natural Earth 10m rivers/lake-centerlines snapshot",
+    "populationDataset": "US Census 2020 tract population snapshot at representative points",
+    "historicalDataset": "Census 1850 largest-100 urban-place snapshot",
+    "evaluationN": 257,
+    "minimumLakeKm2": 25,
+    "riverDrainageKm2": 500,
+    "riverToleranceKm": 10,
+    "edgeBufferKm": 25,
+    "parameterProfile": "water-budget-r5-unfitted",
+    "climatePeriod": "1991-2020",
+    "noAutomaticFitting": true,
+    "frozenSnapshots": true
+  },
+  "regions": [
+    {
+      "id": "michigan",
+      "role": "calibration",
+      "waterFeatures": 1911,
+      "riverFeatures": 10,
+      "censusTracts": 8044,
+      "historicalPlaces": 4,
+      "climateStations": 37,
+      "sourcePeakM": 1063.7181510222827,
+      "observationBytes": 1586353,
+      "sourceDigest": "20992921bc526d6986f02391d992ec725e3025c048883b6c1898085d209b3fab"
+    },
+    {
+      "id": "greatbasin",
+      "role": "calibration",
+      "waterFeatures": 700,
+      "riverFeatures": 13,
+      "censusTracts": 1055,
+      "historicalPlaces": 0,
+      "climateStations": 34,
+      "sourcePeakM": 4193.084522153579,
+      "observationBytes": 451432,
+      "sourceDigest": "a45a517e232b4a3359f8ae6f665af366fbffe6ce5bd44ac746fd03d77feab5fc"
+    },
+    {
+      "id": "cascades",
+      "role": "validation",
+      "waterFeatures": 472,
+      "riverFeatures": 14,
+      "censusTracts": 2373,
+      "historicalPlaces": 0,
+      "climateStations": 38,
+      "sourcePeakM": 4125.689217980306,
+      "observationBytes": 612285,
+      "sourceDigest": "b05623efabbb6e8d7784278a583ff5ae642006d77a75e822f03bd895ede6463b"
+    },
+    {
+      "id": "appalachians",
+      "role": "validation",
+      "waterFeatures": 554,
+      "riverFeatures": 34,
+      "censusTracts": 8546,
+      "historicalPlaces": 11,
+      "climateStations": 50,
+      "sourcePeakM": 1892.0176316598004,
+      "observationBytes": 1548067,
+      "sourceDigest": "e3ed903ec2ccef5cab2ce81511ecaee664cf8347fbe8fe9e2608e375a7295f07"
+    }
+  ],
+  "note": "These files are immutable calibration/validation targets. Deployment builds do not contact source services. Refresh only by intentionally running the freeze workflow."
+}
