@@ -1,14 +1,11 @@
 """Validate Model Review Bench manifest against original self-contained GLB bytes."""
 from hashlib import sha256
 import json
+import re
 from pathlib import Path
 import struct
 
 ROOT = Path(__file__).resolve().parents[1]
-ORIGINAL_HASHES = {
-    "crocodilian": "d2c4ba627e0aab9877bb57c6225e981274984cb44da5886060c6f9410f563de6",
-    "white-mech": "591ea0abb423885e7d60c1bef4f3821ec692951838b6cbeb02aeba1c383e66a8",
-}
 CLIPS = {
     "dot": ["Idle"],
     "crocodilian": [],
@@ -37,7 +34,7 @@ def glb_payload(blob):
     return payload
 
 
-def glb_meta(gltf):
+def glb_meta(gltf, *, known_articulated=False):
     meshes = gltf["meshes"]
     triangles = 0
     for node in gltf["nodes"]:
@@ -55,7 +52,7 @@ def glb_meta(gltf):
         "triangles": triangles,
         "meshes": len(meshes),
         "textures": len(gltf.get("textures", [])),
-        "rig": "skinned" if gltf.get("skins") else "articulated",
+        "rig": "skinned" if gltf.get("skins") else "articulated" if gltf.get("animations") or known_articulated else "unrigged",
         "clips": [{"name": a["name"]} for a in gltf.get("animations", [])],
     }
 
@@ -66,19 +63,27 @@ def verify():
     assert catalog["schemaVersion"] == 1
     models = catalog["models"]
     assert len({(m["id"], m["version"]) for m in models}) == len(models), "duplicate versions"
-    assert {(m["id"], m["version"]) for m in models} == {(ident, "v1") for ident in CLIPS}
+    keys = {f'{m["id"]}@{m["version"]}' for m in models}
+    sources = json.loads((ROOT / "source-lock.json").read_text())
+    assert {f"{ident}@v1" for ident in CLIPS} <= keys
+    assert keys - {"dot@v1"} == sources.keys(), "original source lock must cover every imported revision"
+    assert len({m["asset"] for m in models}) == len(models), "duplicate asset paths"
     for m in models:
         ident = m["id"]
-        assert m["version"] == "v1" and m["name"] and m["credits"] and m["license"]
-        assert m["asset"] == f"assets/{ident}-v1.glb"
+        version = m["version"]
+        key = f"{ident}@{version}"
+        assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", ident) and re.fullmatch(r"v[1-9][0-9]*(?:[a-z])?", version)
+        assert m["name"] and m["credits"] and m["license"]
+        assert m["asset"] == f"assets/{ident}-{version}.glb"
         data = (ROOT / m["asset"]).read_bytes()
         digest = sha256(data).hexdigest()
         assert m["bytes"] == len(data) and m["sha256"] == digest, ident
-        assert ident not in ORIGINAL_HASHES or digest == ORIGINAL_HASHES[ident], f"{ident} original altered"
+        assert key not in sources or digest == sources[key], f"{key} original altered"
         gltf = glb_payload(data)
-        for key, value in glb_meta(gltf).items():
+        for key, value in glb_meta(gltf, known_articulated=(ident == "crocodilian")).items():
             assert m[key] == value, (ident, key)
-        assert sorted(c["name"] for c in m["clips"]) == sorted(CLIPS[ident]), ident
+        if ident in CLIPS and version == "v1":
+            assert sorted(c["name"] for c in m["clips"]) == sorted(CLIPS[ident]), ident
         assert m["triangles"] > 0 and m["meshes"] > 0, ident
         for animation in gltf.get("animations", []):
             channels = animation["channels"]

@@ -10,7 +10,8 @@ const root = new URL('../../', import.meta.url);
 const port = Number(process.env.PORT || 17861);
 const origin = `http://127.0.0.1:${port}`;
 const bench = `${origin}/models/`;
-test('native review bench switches, animates, recovers and fits phones', {timeout:60000}, async () => {
+test('native review bench switches, animates, recovers and fits phones', {timeout:150000}, async () => {
+  const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url)));
   const server = spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1'], {cwd:root, stdio:'ignore'});
   let browser;
   try {
@@ -50,7 +51,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     assert(framesAtRest > 0, 'the scene drew at least once');
     await delay(180);
     assert.equal(await page.evaluate(() => window.viewerFrameCount()),framesAtRest,'paused scene does not run a render loop');
-    await page.getByRole('button',{name:'Previous model'}).click();
+    await page.locator('#model-picker').selectOption(String(catalog.models.findIndex(m=>m.id==='white-mech')));
     await ready('white-mech'); assert.match(page.url(),/model=white-mech&v=v1$/);
     const walk = page.locator('#clip');
     await walk.selectOption({label:'Walk Preview'});
@@ -77,8 +78,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     assert.equal(await page.locator('#static-label').isVisible(),true);
     await page.goBack();await ready('white-mech');
     await page.goForward();await ready('crocodilian');
-    await page.getByRole('button',{name:'Next model'}).click();
-    await page.getByRole('button',{name:'Next model'}).click();
+    await page.getByRole('button',{name:'Previous model'}).click();
     await ready('dot');
     await page.route('**/white-mech-v1.glb',route=>route.abort());
     await page.goto(bench+'?model=white-mech&v=v1');
@@ -94,6 +94,26 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     await page.getByRole('button',{name:'Next model'}).click();
     await ready('white-mech');
     assert.equal(await page.locator('#retry').isVisible(),false);
+    await page.unroute('**/crocodilian-v1.glb');
+    for (const [index, entry] of catalog.models.entries()) {
+      if (index < 3) continue;
+      await page.locator('#model-picker').selectOption(String(index));
+      await page.waitForFunction(({id,version}) => {
+        const {model,version:loadedVersion} = document.querySelector('#stage').dataset;
+        return model === id && loadedVersion === version;
+      }, entry);
+      assert.equal(await heading.textContent(), entry.name);
+      assert.equal(await stage.locator('canvas').count(), 1);
+      assert.equal(await page.locator('#animation').isVisible(), entry.clips.length > 0);
+      if (entry.clips.length) {
+        assert.equal(await page.locator('#clip option').count(), entry.clips.length);
+        await page.getByRole('button',{name:'Play animation'}).click();
+        await page.waitForFunction(() => Number(document.getElementById('scrub').value) > 0);
+        await page.getByRole('button',{name:'Pause animation'}).click();
+      }
+    }
+    await page.getByRole('button',{name:'Next model'}).click();
+    await ready('dot');
     assert.deepEqual(errors,[]);
     await context.close();
     const phone = await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
@@ -102,8 +122,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     const view = await phone.locator('#stage').boundingBox();
     assert(view.width<391 && view.height>230);
     assert.equal(await phone.evaluate(()=>document.documentElement.scrollWidth),390);
-    const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url)));
-    assert.equal(catalog.models.length,3);
+    assert.equal(await phone.locator('#model-picker option').count(),catalog.models.length);
     if (process.env.BENCH_SCREENSHOT) await phone.screenshot({path:process.env.BENCH_SCREENSHOT,fullPage:true});
   } finally {await browser?.close();server.kill();}
 });

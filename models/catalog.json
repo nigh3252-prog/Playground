@@ -62,6 +62,140 @@
       ],
       "credits": "Original White Mech geometry, baked textures, rig and preview clips authored for the White Mech viewer, extracted unchanged. Supplied reference imagery is not shipped.",
       "license": "No public reuse license specified."
+    },
+    {
+      "id": "lilac-walker",
+      "version": "v1",
+      "name": "Lilac Walker",
+      "asset": "assets/lilac-walker-v1.glb",
+      "sha256": "30a3ac40a5981ed3009bb75b7f4d85c561ec0232efb4532df28ccea113578196",
+      "bytes": 6381952,
+      "triangles": 11180,
+      "meshes": 1,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        }
+      ],
+      "credits": "Original authored Warden Lilac Walker GLB; embedded rig, textures and preview clips preserved unchanged.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "spirecoil",
+      "version": "v4",
+      "name": "Spirecoil",
+      "asset": "assets/spirecoil-v4.glb",
+      "sha256": "9a8899ec4f270f5354772e981fe2b1398d7b23ac1f8c1b5a3c8c6702b612fb6e",
+      "bytes": 7852076,
+      "triangles": 71250,
+      "meshes": 60,
+      "textures": 3,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Animation"
+        }
+      ],
+      "credits": "Original Warden Spirecoil industrial study, with intact painted materials and six-second fold/deploy animation.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "vertical-pods-a-hip-assembly",
+      "version": "v1",
+      "name": "Vertical Pods A \u00b7 Hip Assembly",
+      "asset": "assets/vertical-pods-a-hip-assembly-v1.glb",
+      "sha256": "59e45ae47447b456fcdfc0e1d1c365ee618b02d772e0e0c6282ff4eee388e664",
+      "bytes": 2125092,
+      "triangles": 39540,
+      "meshes": 10,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "vertical-pods-b-hip-assembly",
+      "version": "v1",
+      "name": "Vertical Pods B \u00b7 Hip Assembly",
+      "asset": "assets/vertical-pods-b-hip-assembly-v1.glb",
+      "sha256": "5c488dc3c22e035631fcfc90b43578c5e49645c3c0e0309aa1215b7804aeb7ba",
+      "bytes": 1453928,
+      "triangles": 19016,
+      "meshes": 4,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "vertical-pods-a-pod-module",
+      "version": "v1",
+      "name": "Vertical Pods A \u00b7 Pod Module",
+      "asset": "assets/vertical-pods-a-pod-module-v1.glb",
+      "sha256": "0fe8285ed74997a37e6a37f7538137ec8dbc1c06c92b1a95cde21bf3b70781ab",
+      "bytes": 1648812,
+      "triangles": 33980,
+      "meshes": 8,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "vertical-pods-b-pod-module",
+      "version": "v1",
+      "name": "Vertical Pods B \u00b7 Pod Module",
+      "asset": "assets/vertical-pods-b-pod-module-v1.glb",
+      "sha256": "2511fdbbbd8b292e5972791489880bba06fb15909d923cf20cbc422d942b0e59",
+      "bytes": 967776,
+      "triangles": 13280,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "vertical-pods-a-hip-mount",
+      "version": "v1",
+      "name": "Vertical Pods A \u00b7 Hip Mount",
+      "asset": "assets/vertical-pods-a-hip-mount-v1.glb",
+      "sha256": "f94ac1f9bdd6d405d7c834d45b7b923a3e03f9e1a6e06449d97b5718a21a221f",
+      "bytes": 478500,
+      "triangles": 5560,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "vertical-pods-b-hip-mount",
+      "version": "v1",
+      "name": "Vertical Pods B \u00b7 Hip Mount",
+      "asset": "assets/vertical-pods-b-hip-mount-v1.glb",
+      "sha256": "e1f086fa54b48ead68da0a36ecd785d217ff86c6a9d8f2ee2e559b9be724f146",
+      "bytes": 487516,
+      "triangles": 5736,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
+      "license": "No public reuse license specified."
     }
   ]
 }
