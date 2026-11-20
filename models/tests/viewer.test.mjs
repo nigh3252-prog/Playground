@@ -44,7 +44,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     const ready = async id => {await page.waitForFunction(id=>document.getElementById('stage').dataset.model === id, id);};
     await ready('dot'); assert.equal(await heading.textContent(),'Dot');
     assert.deepEqual(glbs,['dot-v1.glb']);
-    assert.equal(await page.locator('#metadata').getAttribute('open'),null);
+    assert.equal(await page.locator('#metadata').isVisible(),false);
     assert.equal(await stage.locator('canvas').count(),1);
     await delay(180);
     const framesAtRest = await page.evaluate(() => window.viewerFrameCount());
@@ -53,12 +53,21 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     assert.equal(await page.evaluate(() => window.viewerFrameCount()),framesAtRest,'paused scene does not run a render loop');
     await page.locator('#model-picker').selectOption(String(catalog.models.findIndex(m=>m.id==='white-mech')));
     await ready('white-mech'); assert.match(page.url(),/model=white-mech&v=v1$/);
+    const skeleton = page.locator('#show-skeleton');
+    await skeleton.waitFor({state:'visible'});
+    assert.equal(await skeleton.isChecked(),false,'rig overlay starts off');
     const walk = page.locator('#clip');
     await walk.selectOption({label:'Walk Preview'});
     assert.equal(await walk.locator('option').count(),4);
     const scrub = page.locator('#scrub');
     const canvas = stage.locator('canvas');
+    const withoutSkeleton = await canvas.screenshot();
+    const framesBeforeOverlay = await page.evaluate(() => window.viewerFrameCount());
+    await skeleton.check();
+    await page.waitForFunction(frames => Number(document.querySelector('#stage').dataset.skeleton) === 41
+      && window.viewerFrameCount() > frames,framesBeforeOverlay);
     const restPose = await canvas.screenshot();
+    assert.notDeepEqual(restPose,withoutSkeleton,'actual skin overlay is rendered');
     await scrub.evaluate(element=>{element.value=String(Number(element.max)/2);element.dispatchEvent(new Event('input',{bubbles:true}));});
     const time = await scrub.inputValue();
     await delay(250);
@@ -68,6 +77,8 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     await page.getByRole('button',{name:'Play animation'}).click();
     await page.waitForFunction(time=>Number(document.getElementById('scrub').value)>Number(time),time);
     await page.getByRole('button',{name:'Pause animation'}).click();
+    await skeleton.uncheck();
+    await page.waitForFunction(() => !document.querySelector('#stage').dataset.skeleton);
     const copy = page.getByRole('button',{name:'Copy link'});
     await copy.click();
     await page.getByRole('button',{name:'Copied'}).waitFor();
@@ -75,6 +86,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     await page.getByRole('button',{name:'Previous model'}).click();
     await ready('crocodilian');
     assert.equal(await page.locator('#animation').isVisible(),false);
+    assert.equal(await skeleton.isVisible(),false,'non-skins do not expose a skeleton control');
     assert.equal(await page.locator('#static-label').isVisible(),true);
     await page.goBack();await ready('white-mech');
     await page.goForward();await ready('crocodilian');
@@ -105,6 +117,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
       assert.equal(await heading.textContent(), entry.name);
       assert.equal(await stage.locator('canvas').count(), 1);
       assert.equal(await page.locator('#animation').isVisible(), entry.clips.length > 0);
+      assert.equal(await skeleton.isVisible(), entry.rig === 'skinned');
       if (entry.clips.length) {
         assert.equal(await page.locator('#clip option').count(), entry.clips.length);
         await page.getByRole('button',{name:'Play animation'}).click();
@@ -123,6 +136,45 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     assert(view.width<391 && view.height>230);
     assert.equal(await phone.evaluate(()=>document.documentElement.scrollWidth),390);
     assert.equal(await phone.locator('#model-picker option').count(),catalog.models.length);
+    const actions = await phone.locator('#bench-actions').boundingBox();
+    const models = await phone.locator('.model-nav').boundingBox();
+    assert(actions && models && actions.y < models.y && models.y + models.height > 810,
+      'portrait actions sit above the bottom selection row at rest');
+    assert(view.y + view.height <= actions.y + 3,'dock does not hide the viewport');
+    assert(await phone.locator('.model-nav').evaluate(x => x.scrollWidth > x.clientWidth));
+    await phone.locator('#filter-toggle').click();
+    const filters = phone.locator('#filter-panel');
+    await filters.waitFor({state:'visible'});
+    const sheet = await filters.boundingBox();
+    assert(sheet && sheet.y < actions.y,'filter sheet rises above actions');
+    await filters.getByLabel('Type').selectOption('humanoid');
+    await filters.getByLabel('Has walk clip').check();
+    await filters.getByLabel('Has skin joints').check();
+    await phone.waitForFunction(() => document.querySelector('#stage').dataset.model === 'white-mech');
+    assert.equal(await phone.locator('#model-picker option').count(),2);
+    await filters.getByRole('button',{name:'Close filters'}).click();
+    await phone.locator('#show-skeleton').check();
+    await phone.waitForFunction(() => document.querySelector('#stage').dataset.skeleton === '41');
+    await phone.locator('#animation-toggle').click();
+    await phone.getByRole('button',{name:'Play animation'}).click();
+    await phone.waitForFunction(() => Number(document.querySelector('#scrub').value) > 0);
+    await phone.getByRole('button',{name:'Pause animation'}).click();
+    await phone.locator('#filter-toggle').click();
+    await filters.getByLabel('Type').selectOption('gear');
+    assert.match(await filters.locator('#filter-count').textContent(),/0/);
+    await filters.locator('#clear-filters').click();
+    assert.equal(await phone.locator('#model-picker option').count(),catalog.models.length);
+    await filters.getByLabel('Latest versions only').check();
+    assert(!await phone.locator('#model-picker option').allTextContents().then(options => options.some(label => /Spirecoil Organic/.test(label))));
+    await phone.keyboard.press('Escape');
+    await filters.waitFor({state:'hidden'});
+    await phone.goto(bench+'?model=spirecoil&v=v3');
+    await phone.waitForFunction(() => document.querySelector('#stage').dataset.version === 'v3');
+    assert.equal(await phone.locator('#show-skeleton').isVisible(),false);
+    await phone.setViewportSize({width:844,height:390});
+    assert.equal(await phone.evaluate(()=>document.documentElement.scrollWidth),844);
+    assert((await phone.locator('#stage').boundingBox()).width > 350);
+    await phone.setViewportSize({width:390,height:844});
     if (process.env.BENCH_SCREENSHOT) await phone.screenshot({path:process.env.BENCH_SCREENSHOT,fullPage:true});
   } finally {await browser?.close();server.kill();}
 });

@@ -3,6 +3,8 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createSelection, modelURL, resolveModel, stepModel} from './navigation.mjs';
+import {defaultFilters, filterModels} from './filters.mjs';
+import {createSkeletonOverlay} from './skeleton-overlay.mjs';
 
 const el = id => document.getElementById(id);
 const stage = el('stage');
@@ -13,6 +15,17 @@ const scrub = el('scrub');
 const loop = el('loop');
 const controls = ['fit','turn-left','turn-right'].map(el);
 const meshGroup = new THREE.Group();
+const skeletonOverlay = createSkeletonOverlay(THREE);
+const skeletonCheckbox = el('show-skeleton');
+const rigControl = el('skeleton-control');
+const filterForm = el('model-filters');
+const panelEntries = [
+  [el('filter-toggle'),el('filter-panel')],
+  [el('details-toggle'),el('metadata')],
+  [el('animation-toggle'),el('animation')],
+];
+let openPanel = null;
+let jointCount = 0, matches = [], filters = defaultFilters;
 const loader = new GLTFLoader();
 let catalog, current, renderer, scene, camera, orbit, active, mixer, action, playing;
 let lastFrame = 0, frameRequest = 0, fit = 1;
@@ -21,6 +34,7 @@ function showStatus(message, recoverable = false) {
   el('message').hidden = !message;
   el('status').textContent = message;
   el('retry').hidden = !recoverable;
+  el('reset-empty').hidden = true;
 }
 
 function initStage() {
@@ -47,7 +61,7 @@ function initStage() {
   orbit.enabled = false;
   orbit.addEventListener('change', requestDraw);
   orbit.target.set(0,.15,0);
-  scene.add(meshGroup);
+  scene.add(meshGroup, skeletonOverlay.group);
   scene.add(new THREE.HemisphereLight(0xd4edff, 0x56473d, 1.9));
   const key = new THREE.DirectionalLight(0xfff1dd, 2.3);
   key.position.set(3,5,4);
@@ -86,6 +100,7 @@ function draw(now) {
   }
   // The controls' change event requests the next damping frame only when needed.
   orbit.update(delta);
+  skeletonOverlay.update();
   renderer.render(scene,camera);
   if (playing) requestDraw();
 }
@@ -129,12 +144,19 @@ function dispose(gltf) {
 function clearActive() {
   mixer?.stopAllAction();
   if (active && mixer) mixer.uncacheRoot(active.scene);
+  skeletonOverlay.clear();
+  jointCount = 0;
+  rigControl.hidden = true;
+  skeletonCheckbox.checked = false;
+  delete stage.dataset.skeleton;
   meshGroup.clear();
   if (active) dispose(active);
   active = mixer = action = null;
   playing = false;
-  el('animation').hidden = el('static-label').hidden = true;
+  el('animation').hidden = el('animation-toggle').hidden = el('static-label').hidden = true;
+  if (openPanel === el('animation')) setPanel(null);
   stage.dataset.model = '';
+  delete stage.dataset.version;
   orbit.enabled = false;
   controls.forEach(button => button.disabled = true);
   requestDraw();
@@ -193,8 +215,11 @@ function install(entry, gltf) {
   framing.scale.setScalar(scale);
   framing.add(gltf.scene);
   meshGroup.add(framing);
-  fit = Math.max(.94, size.length()*scale*.56);
   active = gltf;
+  jointCount = skeletonOverlay.setModel(gltf.scene);
+  skeletonCheckbox.checked = false;
+  rigControl.hidden = !jointCount;
+  fit = Math.max(.94, size.length()*scale*.56);
   fitStage();
   const clips = gltf.animations;
   if (clips.length) {
@@ -202,7 +227,7 @@ function install(entry, gltf) {
     mixer.addEventListener('finished', () => setPlaying(false));
     clipPicker.replaceChildren(...clips.map((clip,i) => new Option(clip.name.replaceAll('_',' ') || `Clip ${i+1}`, i)));
     chooseClip(0);
-    el('animation').hidden = false;
+    el('animation').hidden = el('animation-toggle').hidden = false;
   } else el('static-label').hidden = false;
   orbit.enabled = true;
   controls.forEach(button => button.disabled = false);
@@ -212,6 +237,7 @@ function install(entry, gltf) {
 }
 const select = createSelection({
   async load(entry, signal) {
+    if (!entry) return null;
     const url = new URL(entry.asset, document.baseURI);
     if (url.origin !== location.origin || !url.pathname.startsWith(new URL('./assets/',document.baseURI).pathname)) {
       throw Error('Invalid asset location');
@@ -221,6 +247,7 @@ const select = createSelection({
     return loader.parseAsync(await response.arrayBuffer(), new URL('.',url).href);
   },
   install(entry,glTF) {
+    if (!glTF) return;
     try { install(entry,glTF); }
     catch(error) {
       if (active === glTF) clearActive();
@@ -228,7 +255,7 @@ const select = createSelection({
       throw error;
     }
   },
-  discard:dispose,
+  discard:gltf => {if (gltf) dispose(gltf);},
   fail(entry) {showStatus(`Could not open ${entry.name}. You can retry or choose another model.`,true);},
 });
 
@@ -253,28 +280,121 @@ function metadata(entry) {
   download.href = entry.asset;
   download.download = entry.asset.split('/').pop();
 }
-function choose(entry, historyMode = 'none', fallback = false) {
+function setPanel(panel, returnFocus = false) {
+  const previous = openPanel;
+  openPanel = panel;
+  for (const [trigger,entry] of panelEntries) {
+    trigger.setAttribute('aria-expanded', String(entry === panel));
+    entry.classList.toggle('panel-open',entry === panel);
+    if (entry !== el('animation')) entry.hidden = entry !== panel;
+  }
+  el('panel-scrim').hidden = !panel;
+  if (panel) panel.querySelector('[data-close-panel]').focus({preventScroll:true});
+  else if (returnFocus && previous) panelEntries.find(([,entry]) => entry === previous)?.[0].focus({preventScroll:true});
+}
+for (const [trigger,panel] of panelEntries) {
+  trigger.onclick = () => setPanel(openPanel === panel ? null : panel);
+  panel.querySelector('[data-close-panel]').onclick = () => setPanel(null,true);
+}
+el('panel-scrim').onclick = () => setPanel(null,true);
+window.addEventListener('keydown',event=>{
+  if (event.key === 'Escape' && openPanel) { event.preventDefault(); setPanel(null,true); }
+});
+
+function syncSelection() {
+  const index = matches.indexOf(current);
+  picker.value = index < 0 ? '' : String(index);
+  if (index >= 0) {
+    el('ordinal').textContent = `${index+1} of ${matches.length}`;
+  } else el('ordinal').textContent = '0 matches';
+  el('copy').disabled = el('details-toggle').disabled = index < 0;
+  const chips = el('model-chips');
+  [...chips.children].forEach((button,i) => button.setAttribute('aria-pressed',String(i === index)));
+}
+function updateResults() {
+  matches = filterModels(catalog, filters);
+  const count = matches.length;
+  const summary = `${count} of ${catalog.length} models`;
+  el('filter-count').textContent = summary;
+  const filterToggle = el('filter-toggle');
+  const activeFilter = filters.type !== 'all' || filters.complexity !== 'all' || filters.latest || filters.motion.length;
+  filterToggle.textContent = activeFilter ? `Filters · ${count}` : 'Filters';
+  filterToggle.setAttribute('aria-label',activeFilter ? `Filters, ${summary}` : 'Filters');
+  filterToggle.disabled = false;
+  el('prev').disabled = el('next').disabled = count < 2;
+  picker.disabled = !count;
+  picker.replaceChildren(...matches.map((entry,index)=>new Option(`${entry.name} · ${entry.version}`,index)));
+  if (!count) picker.append(new Option('No matching models',''));
+  el('model-chips').replaceChildren(...matches.map((entry,index)=>{
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = `${entry.name} · ${entry.version}`;
+    button.setAttribute('aria-pressed',String(entry === current));
+    button.onclick = () => choose(matches[index],'push');
+    return button;
+  }));
+}
+function choose(entry, historyMode = 'none', fallback = false, force = false) {
+  if (!entry) return;
+  const same = current === entry;
   current = entry;
   const url = modelURL(location.href,entry);
   if (historyMode === 'push' && url.href !== location.href) history.pushState(null,'',url);
   if (historyMode === 'replace') history.replaceState(null,'',url);
-  clearActive();
+  syncSelection();
   el('lookup-note').hidden = !fallback;
   el('lookup-note').textContent = fallback ? 'That model version is not in the catalog. Showing the first model instead.' : '';
+  if (same && !force && !fallback) return;
+  clearActive();
   el('model-name').textContent = entry.name;
   el('model-version').textContent = entry.version;
-  const index = catalog.indexOf(entry);
-  el('ordinal').textContent = `${index+1} of ${catalog.length}`;
-  picker.value = index;
   el('copy').textContent = 'Copy link';
   document.title = `${entry.name} ${entry.version} · Model Review Bench`;
   metadata(entry);
-  el('metadata').hidden = false;
   showStatus(`Loading ${entry.name}…`);
   return select(entry);
 }
+function setEmpty() {
+  select(null);
+  current = null;
+  syncSelection();
+  clearActive();
+  if (openPanel === el('metadata')) setPanel(null);
+  el('model-name').textContent = 'No matching models';
+  el('model-version').textContent = '';
+  el('lookup-note').hidden = true;
+  document.title = 'Model Review Bench · Playground';
+  showStatus('Try removing a filter or clearing all filters.');
+  el('reset-empty').hidden = false;
+}
+function filterFromControls() {
+  const values = new FormData(filterForm);
+  filters = {
+    type:values.get('type'),
+    complexity:values.get('complexity'),
+    motion:values.getAll('motion'),
+    latest:values.has('latest'),
+  };
+  updateResults();
+  if (!matches.length) setEmpty();
+  else if (!matches.includes(current)) choose(matches[0],'push');
+  else syncSelection();
+}
+function resetFilters() {
+  filterForm.reset();
+  filterFromControls();
+}
+filterForm.onchange = filterFromControls;
+filterForm.onsubmit = event => event.preventDefault();
+el('clear-filters').onclick = el('reset-empty').onclick = resetFilters;
 function chooseFromLocation() {
   const {model, fallback} = resolveModel(catalog,location.search);
+  // Respect explicit history/deep links, even after later narrowing the local view.
+  if (!matches.includes(model)) {
+    filterForm.reset();
+    filters = defaultFilters;
+    updateResults();
+  }
   choose(model, fallback || !location.search ? 'replace':'none',fallback);
 }
 async function start() {
@@ -285,9 +405,7 @@ async function start() {
     if (document.schemaVersion !== 1 || !Array.isArray(document.models) || !document.models.length) throw Error('Catalog is empty or unsupported');
     catalog = document.models;
     initStage();
-    picker.replaceChildren(...catalog.map((entry,index)=>new Option(`${entry.name} · ${entry.version}`,index)));
-    picker.disabled = el('copy').disabled = false;
-    el('prev').disabled = el('next').disabled = catalog.length < 2;
+    updateResults();
     chooseFromLocation();
   } catch {
     showStatus('The viewer could not start. Check that WebGL is enabled, or open the model catalog.');
@@ -297,10 +415,17 @@ async function start() {
     el('message').append(catalogLink);
   }
 }
-el('prev').onclick = () => choose(stepModel(catalog,current,-1),'push');
-el('next').onclick = () => choose(stepModel(catalog,current,1),'push');
-picker.onchange = () => choose(catalog[Number(picker.value)],'push');
-el('retry').onclick = () => choose(current);
+el('prev').onclick = () => choose(stepModel(matches,current,-1),'push');
+el('next').onclick = () => choose(stepModel(matches,current,1),'push');
+picker.onchange = () => choose(matches[Number(picker.value)],'push');
+el('retry').onclick = () => choose(current,'none',false,true);
+skeletonCheckbox.onchange = () => {
+  const visible = skeletonCheckbox.checked && jointCount > 0;
+  skeletonOverlay.setVisible(visible);
+  if (visible) stage.dataset.skeleton = String(jointCount);
+  else delete stage.dataset.skeleton;
+  requestDraw();
+};
 el('fit').onclick = fitStage;
 el('turn-left').onclick = () => rotateStage(-Math.PI/8);
 el('turn-right').onclick = () => rotateStage(Math.PI/8);

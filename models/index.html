@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0c1117">
   <title>Model Review Bench · Playground</title>
   <link rel="stylesheet" href="./styles.css">
@@ -36,34 +36,81 @@
         <div id="message" role="status">
           <span id="status">Opening the model catalog…</span>
           <button id="retry" type="button" hidden>Retry</button>
+          <button id="reset-empty" type="button" hidden>Clear filters</button>
         </div>
         <p class="stage-hint">Drag to orbit · Scroll or pinch to zoom</p>
       </div>
-      <nav class="model-nav" aria-label="Model selection">
-        <button type="button" id="prev" aria-label="Previous model" disabled><span aria-hidden="true">←</span> <span>Previous</span></button>
-        <label for="model-picker" class="sr-only">Choose a model</label>
-        <select id="model-picker" disabled></select>
-        <button type="button" id="next" aria-label="Next model" disabled><span>Next</span> <span aria-hidden="true">→</span></button>
-      </nav>
-      <div id="animation" hidden aria-label="Animation controls">
-        <label for="clip" class="sr-only">Animation clip</label>
-        <select id="clip"></select>
-        <button type="button" id="play" aria-label="Play animation">Play</button>
-        <label for="scrub" class="sr-only">Animation time</label>
-        <input type="range" id="scrub" min="0" max="1" step="any" value="0">
-        <output id="time" for="scrub">0.00 s</output>
-        <label class="loop"><input id="loop" type="checkbox" checked> Loop</label>
-      </div>
-      <p id="static-label" hidden>Static model · No animation clips</p>
-      <details id="metadata" hidden>
-        <summary>Model details</summary>
-        <dl id="stats"></dl>
-        <p class="detail-note">Fit view changes only the display. The GLB keeps its original scale.</p>
-        <div class="detail-links">
-          <a id="download" download>Download GLB</a>
-          <a href="./catalog.json">Open model catalog</a>
+      <div id="panel-scrim" hidden aria-hidden="true"></div>
+      <div id="bench-dock">
+        <div id="bench-panels">
+          <section id="filter-panel" class="bench-panel" aria-labelledby="filter-title" hidden>
+            <header class="panel-header"><h2 id="filter-title">Filters</h2><button type="button" data-close-panel aria-label="Close filters">Close</button></header>
+            <form id="model-filters">
+              <div class="filter-columns">
+                <label>Type
+                  <select name="type">
+                    <option value="all">Any type</option>
+                    <option value="humanoid">Humanoid mech</option>
+                    <option value="creature">Creature</option>
+                    <option value="gear">Gear</option>
+                    <option value="environment">Environment</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+                <label>Complexity
+                  <select name="complexity">
+                    <option value="all">Any size</option>
+                    <option value="low">Under 10,000 triangles</option>
+                    <option value="medium">10,000–49,999 triangles</option>
+                    <option value="high">50,000+ triangles</option>
+                  </select>
+                </label>
+              </div>
+              <fieldset>
+                <legend>Motion</legend>
+                <label><input name="motion" value="walk" type="checkbox"> Has walk clip</label>
+                <label><input name="motion" value="skinned" type="checkbox"> Has skin joints</label>
+                <label><input name="motion" value="animated" type="checkbox"> Animated</label>
+              </fieldset>
+              <label class="filter-latest"><input name="latest" type="checkbox"> Latest versions only</label>
+              <div class="filter-summary"><output id="filter-count" aria-live="polite"></output><button id="clear-filters" type="button">Clear filters</button></div>
+            </form>
+          </section>
+          <section id="metadata" class="bench-panel" aria-labelledby="details-title" hidden>
+            <header class="panel-header"><h2 id="details-title">Model details</h2><button type="button" data-close-panel aria-label="Close model details">Close</button></header>
+            <dl id="stats"></dl>
+            <p class="detail-note">Fit view changes only the display. The GLB keeps its original scale.</p>
+            <div class="detail-links">
+              <a id="download" download>Download GLB</a>
+              <a href="./catalog.json">Open model catalog</a>
+            </div>
+          </section>
+          <div id="animation" hidden aria-label="Animation controls">
+            <header class="panel-header animation-header"><h2>Animation</h2><button type="button" data-close-panel aria-label="Close animation">Close</button></header>
+            <label for="clip" class="sr-only">Animation clip</label>
+            <select id="clip"></select>
+            <button type="button" id="play" aria-label="Play animation">Play</button>
+            <label for="scrub" class="sr-only">Animation time</label>
+            <input type="range" id="scrub" min="0" max="1" step="any" value="0">
+            <output id="time" for="scrub">0.00 s</output>
+            <label class="loop"><input id="loop" type="checkbox" checked> Loop</label>
+          </div>
         </div>
-      </details>
+        <div id="bench-actions" aria-label="Viewer actions">
+          <button id="filter-toggle" type="button" aria-controls="filter-panel" aria-expanded="false" disabled>Filters</button>
+          <button id="details-toggle" type="button" aria-controls="metadata" aria-expanded="false" disabled>Details</button>
+          <button id="animation-toggle" type="button" aria-controls="animation" aria-expanded="false" hidden>Animation</button>
+          <label id="skeleton-control" hidden><input id="show-skeleton" type="checkbox"> Show skeleton</label>
+          <span id="static-label" hidden>Static model · No animation clips</span>
+        </div>
+        <nav class="model-nav" aria-label="Model selection">
+          <button type="button" id="prev" aria-label="Previous model" disabled><span aria-hidden="true">←</span> <span>Previous</span></button>
+          <label for="model-picker" class="sr-only">Choose a model</label>
+          <select id="model-picker" disabled></select>
+          <button type="button" id="next" aria-label="Next model" disabled><span>Next</span> <span aria-hidden="true">→</span></button>
+          <div id="model-chips" aria-label="Swipe through matching models"></div>
+        </nav>
+      </div>
     </section>
   </main>
   <noscript>Enable JavaScript to use the model review bench. <a href="./catalog.json">Open the model catalog</a>.</noscript>
