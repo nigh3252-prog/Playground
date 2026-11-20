@@ -977,6 +977,22 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "warden-haunted-ice-kit",
+      "version": "v1",
+      "name": "Haunted Ice Kit",
+      "type": "other",
+      "asset": "assets/warden-haunted-ice-kit-v1.glb",
+      "sha256": "601495675160ade5a5f3196bdf05ed63bd6f89d37a88e7d67fe92db89dc61883",
+      "bytes": 214968,
+      "triangles": 588,
+      "meshes": 4,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original authored Warden Haunted Ice Kit: skull, crystal, block and rime with one painted UV atlas. Exact embedded GLB preserved. The source viewer\u2019s scripted review sequence is not a native animation clip.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
