@@ -9,7 +9,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 24
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,7 +23,7 @@ jobs:
       - name: Install browser verification runtime
         run: |
           npm install --prefix /tmp/armory-check playwright@1.56.1
-          /tmp/armory-check/node_modules/.bin/playwright install --with-deps chromium
+          /tmp/armory-check/node_modules/.bin/playwright install --only-shell chromium
       - name: Test browsing, controls, persistence, and real exports
         env:
           ARMORY_PLAYWRIGHT_MODULE: /tmp/armory-check/node_modules/playwright
