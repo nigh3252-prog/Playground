@@ -4,6 +4,7 @@ import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {setTimeout as delay} from 'node:timers/promises';
 import {readFile} from 'node:fs/promises';
+import {defaultFilters, filterModels} from '../filters.mjs';
 const require = createRequire(import.meta.url);
 const {chromium} = require(process.env.MODEL_BENCH_PLAYWRIGHT_MODULE || 'playwright');
 const root = new URL('../../', import.meta.url);
@@ -151,7 +152,9 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     await filters.getByLabel('Has walk clip').check();
     await filters.getByLabel('Has skin joints').check();
     await phone.waitForFunction(() => document.querySelector('#stage').dataset.model === 'white-mech');
-    assert.equal(await phone.locator('#model-picker option').count(),2);
+    const walkingHumanoids = filterModels(catalog.models,{...defaultFilters,type:'humanoid',motion:['walk','skinned']});
+    assert(walkingHumanoids.some(model=>model.id==='white-mech'));
+    assert.equal(await phone.locator('#model-picker option').count(),walkingHumanoids.length);
     await filters.getByRole('button',{name:'Close filters'}).click();
     await phone.locator('#show-skeleton').check();
     await phone.waitForFunction(() => document.querySelector('#stage').dataset.skeleton === '41');

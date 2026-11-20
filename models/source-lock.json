@@ -30,5 +30,8 @@
   "flying-violet-dart@v1": "f387120ad1a706bf3f662dd4382d6ce078f8ebdc17fd349a138a19d4f0377901",
   "flying-void-reaper@v1": "ba64fc449a88377f4b4c0021b96c6b5aaa0846b628f469dc02f3f41a0a824f8b",
   "bulwark-modular@v1": "37da87d7515963e5ca6cdfa019514ad35ddae55e655c38e75942a42eaae17140",
-  "spirecoil@v3": "4cb1d3b2e68aedeb0024060f4125bcf0d7e47a6224a26a7d7ccffa9150dac2b4"
+  "spirecoil@v3": "4cb1d3b2e68aedeb0024060f4125bcf0d7e47a6224a26a7d7ccffa9150dac2b4",
+  "warden-scout-gunner@v2": "a24133a4405c978f9a98f11d79fa20a770867d41ca47cf945c30fc047e2fd147",
+  "warden-scout-rail@v2": "738c9dbbc28d539e3b48169b299b1b222f3e1dabe8a454e6416e4333c11a21cf",
+  "warden-scout-missile@v2": "15aa8c0d5da8bd1b95d7ac02168ee7d1ea4830775a2af7bc092ea4f279c62ee4"
 }

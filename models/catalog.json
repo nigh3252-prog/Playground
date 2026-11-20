@@ -530,6 +530,84 @@
       ],
       "credits": "Original authored organic Spirecoil study inspired by bobbit worms and fireworms. Original animated GLB preserved.",
       "license": "No public reuse license specified."
+    },
+    {
+      "id": "warden-scout-gunner",
+      "version": "v2",
+      "name": "Scout Gunner",
+      "type": "humanoid",
+      "asset": "assets/warden-scout-gunner-v2.glb",
+      "sha256": "a24133a4405c978f9a98f11d79fa20a770867d41ca47cf945c30fc047e2fd147",
+      "bytes": 7820740,
+      "triangles": 9072,
+      "meshes": 1,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        },
+        {
+          "name": "Aim_Preview"
+        }
+      ],
+      "credits": "Authored Warden Expansion Pack scout, painted second revision. Original animated export preserved; reference images omitted.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "warden-scout-rail",
+      "version": "v2",
+      "name": "Scout Rail",
+      "type": "humanoid",
+      "asset": "assets/warden-scout-rail-v2.glb",
+      "sha256": "738c9dbbc28d539e3b48169b299b1b222f3e1dabe8a454e6416e4333c11a21cf",
+      "bytes": 7772664,
+      "triangles": 8688,
+      "meshes": 1,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        },
+        {
+          "name": "Aim_Preview"
+        }
+      ],
+      "credits": "Authored Warden Expansion Pack scout, painted second revision. Original animated export preserved; reference images omitted.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "warden-scout-missile",
+      "version": "v2",
+      "name": "Scout Missile",
+      "type": "humanoid",
+      "asset": "assets/warden-scout-missile-v2.glb",
+      "sha256": "15aa8c0d5da8bd1b95d7ac02168ee7d1ea4830775a2af7bc092ea4f279c62ee4",
+      "bytes": 7842780,
+      "triangles": 9424,
+      "meshes": 1,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        },
+        {
+          "name": "Aim_Preview"
+        }
+      ],
+      "credits": "Authored Warden Expansion Pack scout, painted second revision. Original animated export preserved; reference images omitted.",
+      "license": "No public reuse license specified."
     }
   ]
 }
