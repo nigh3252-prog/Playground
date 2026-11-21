@@ -4779,6 +4779,170 @@
       "license": "No verified public reuse license."
     },
     {
+      "id": "shelf-buddies-buckethead",
+      "version": "v1",
+      "name": "Shelf Buddies: Buckethead",
+      "type": "creature",
+      "asset": "assets/shelf-buddies-buckethead-v1.glb",
+      "sha256": "2b9a7278b0cad5c78f3ab9bc60731dffcf252a96f074ce9ca823d067e694ddfd",
+      "bytes": 133932,
+      "triangles": 1680,
+      "meshes": 51,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original procedural PS1-style character geometry from the Shelf Buddies viewer, exported in the authored default model pose and scale; Lambert materials translated for glTF. Any texture is procedurally painted, not media from the photo. No viewer, staging backdrop, or original reference images included.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "shelf-buddies-pond-scum",
+      "version": "v1",
+      "name": "Shelf Buddies: Pond Scum",
+      "type": "creature",
+      "asset": "assets/shelf-buddies-pond-scum-v1.glb",
+      "sha256": "78c98a318028c5d02f0426c6eca8e352fe2d38cd37abd6d9f369c24358a228e5",
+      "bytes": 98076,
+      "triangles": 1196,
+      "meshes": 38,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original procedural PS1-style character geometry from the Shelf Buddies viewer, exported in the authored default model pose and scale; Lambert materials translated for glTF. Any texture is procedurally painted, not media from the photo. No viewer, staging backdrop, or original reference images included.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "fusion-toothy-mech",
+      "version": "v1",
+      "name": "Toothy Mech \u00b7 Fusion Lab",
+      "type": "creature",
+      "asset": "assets/fusion-toothy-mech-v1.glb",
+      "sha256": "9d0a44f756bc2e9192de71caa9a824df2ac41136195e1a0d6a4c0dc2c577f1af",
+      "bytes": 92568,
+      "triangles": 588,
+      "meshes": 33,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Procedurally modeled reinterpretation, exported from the Fusion Lab viewer at its neutral pose. No donor geometry, reference media or scripted motion included.",
+      "license": "No public reuse license specified.",
+      "source": "https://github.com/nigh3252-prog/Playground/blob/354021a7d461f341f651a393c18e76580f8ff845/models/assets/fusion-toothy-mech-v1.glb"
+    },
+    {
+      "id": "fusion-stilt-walker",
+      "version": "v1",
+      "name": "Stilt Walker \u00b7 Fusion Lab",
+      "type": "creature",
+      "asset": "assets/fusion-stilt-walker-v1.glb",
+      "sha256": "20eea26fbea31110115e31471fb15670c823acbf3543af7d7018bd96f72df8e4",
+      "bytes": 72032,
+      "triangles": 492,
+      "meshes": 22,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Procedurally modeled reinterpretation, exported from the Fusion Lab viewer at its neutral pose. No donor geometry, reference media or scripted motion included.",
+      "license": "No public reuse license specified.",
+      "source": "https://github.com/nigh3252-prog/Playground/blob/354021a7d461f341f651a393c18e76580f8ff845/models/assets/fusion-stilt-walker-v1.glb"
+    },
+    {
+      "id": "red-cleaver-41",
+      "version": "v2",
+      "name": "Red Cleaver 41",
+      "type": "humanoid",
+      "asset": "assets/red-cleaver-41-v2.glb",
+      "sha256": "45fb5c4d1fb43229c5615f7ccb20c4f83f7cc868a11f33474b95a5e674b1c158",
+      "bytes": 921148,
+      "triangles": 17658,
+      "meshes": 70,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original procedural Blender model from the Red Cleaver 41 R41.02 reference adaptation. The rigid part hierarchy and separately modeled armor plates are preserved; no skin, playback clips, imported artwork, or game code.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "ironmaw-generated",
+      "version": "v1",
+      "name": "Ironmaw \u00b7 Initial",
+      "type": "creature",
+      "asset": null,
+      "parts": [
+        {
+          "asset": "assets/ironmaw-generated-v1.glb.part1",
+          "bytes": 4838441,
+          "sha256": "19b4c03b8905364f02ffb9631458f387c2f771577b7359247bb5f25afc12a502"
+        },
+        {
+          "asset": "assets/ironmaw-generated-v1.glb.part2",
+          "bytes": 4838441,
+          "sha256": "fe671a1b9d9d1fef06f2150a5eeb6cb1b3f9aaca837c7cb1a732a26b3ae40e94"
+        },
+        {
+          "asset": "assets/ironmaw-generated-v1.glb.part3",
+          "bytes": 4838442,
+          "sha256": "7465f503cb78d3615900fc6bb26c097f20546b5644d931890ecab2ca4c3cf303"
+        }
+      ],
+      "originalFile": "Warden_Ironmaw_v01.glb",
+      "bytes": 14515324,
+      "sha256": "49224bd91624c999014c3dfb492055528008b1956baede571dc8ec874e06f4fa",
+      "triangles": 92398,
+      "meshes": 9,
+      "textures": 9,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Ironmaw_Breathe_4s"
+        },
+        {
+          "name": "Ironmaw_SawSpin_1s"
+        }
+      ],
+      "credits": "Exact native, newly constructed interpretation of a user-supplied visual concept; raw reference media is excluded. Original generated mesh and procedural material maps, with two native clips. Initial detailed export before the later donor-assisted revisions.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "ironmaw-generated-lod",
+      "version": "v1",
+      "name": "Ironmaw \u00b7 Initial LOD",
+      "type": "creature",
+      "asset": null,
+      "parts": [
+        {
+          "asset": "assets/ironmaw-generated-lod-v1.glb.part1",
+          "bytes": 4255140,
+          "sha256": "605595a2635ce702400a027b5529c9915f18cac775bc66f0b5563ead7f11bbdb"
+        },
+        {
+          "asset": "assets/ironmaw-generated-lod-v1.glb.part2",
+          "bytes": 4255140,
+          "sha256": "1086bae57ffe95bca749a2ab27fcf4fb678cfceb25aad9c8db751a85b435bad5"
+        },
+        {
+          "asset": "assets/ironmaw-generated-lod-v1.glb.part3",
+          "bytes": 4255140,
+          "sha256": "c9fc747242dabfb36d7708bfa13c2d26ab21b3b86469445791949eee801c67dd"
+        }
+      ],
+      "originalFile": "Warden_Ironmaw_v01_LOD1.glb",
+      "bytes": 12765420,
+      "sha256": "e2a5a09a99ae77cf6197b31c693f915b5b15459f862ea156b2571cd0773dfe3a",
+      "triangles": 41277,
+      "meshes": 9,
+      "textures": 9,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Ironmaw_Breathe_4s"
+        },
+        {
+          "name": "Ironmaw_SawSpin_1s"
+        }
+      ],
+      "credits": "Exact native, newly constructed interpretation of a user-supplied visual concept; raw reference media is excluded. Original generated mesh and procedural material maps, with two native clips. Author-supplied lower-detail export.",
+      "license": "No verified public reuse license."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
