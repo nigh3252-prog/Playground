@@ -3805,6 +3805,22 @@
       "source": "https://drive.google.com/file/d/1MoqD1KBtggZ78_xdJ5G4uRukibEAdJ2Y/view"
     },
     {
+      "id": "stone-wanderer-sun-disc-halo",
+      "name": "Sun Disc Halo",
+      "version": "v1",
+      "bytes": 47440,
+      "sha256": "db57d9791201451f7eb0a83b0442572746e83970de60a9db0445aaab450eccb2",
+      "triangles": 508,
+      "meshes": 17,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "asset": "assets/stone-wanderer-sun-disc-halo-v1.glb",
+      "type": "prop",
+      "credits": "Original standalone Stone Wanderer head variant from the expanded head workshop: static neutral figure headpiece without the body or viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
