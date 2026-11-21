@@ -234,5 +234,11 @@
   "compare-nine-kestrel@v1": "3e1ce96f30561367fa07a617297441c2f7ceb23f4d64b8caccf507a7e925204a",
   "compare-nine-palisade@v1": "a43c3b3ba7d00b604d5e3b90713bd5c1dd24678b31c4957cf5c61f6647237d07",
   "compare-nine-ochre@v1": "6d4502b45ce54e0c8a9825bf46d2d6c4120e30f29bc188f2072de0d221ebb8ed",
-  "compare-nine-cirrus@v1": "8a1c96d2a470474132ce79dd3c16910e51184a6b9d85c481fe4b215cf05165cb"
+  "compare-nine-cirrus@v1": "8a1c96d2a470474132ce79dd3c16910e51184a6b9d85c481fe4b215cf05165cb",
+  "warden-stacked-district@v2": "5fa69ab50953cc668dc0797f1f199618ecab00d1fd2acf0103e95670d7942a24",
+  "warden-limeworks-transit-module@v2": "edced1bd9198b75acacb0ebab46759b220a35aa9638fdcf427dbb61c54b1c91b",
+  "warden-root-cathedral@v2": "da13334487ef278cea9ac0220156680ec9ade87de1a13a063d7155e0ec7dff38",
+  "warden-sulfur-grove@v2": "fd1acdff19934986e1462189490476a9f0d62aa9739df67fc9eee25a663c4585",
+  "warden-verdant-utility-house@v2": "b0eb064e8d8dda1070bfd26f42ca8cefabbfd8ced3d18c3a04b4c410667bc396",
+  "reliquary-24@v5": "a2cf53d7710b22eb8c7471043f91d0bc9281ff0af00a38a05153621710dc127b"
 }

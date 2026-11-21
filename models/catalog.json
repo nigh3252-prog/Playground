@@ -4179,6 +4179,214 @@
       "license": "No verified public reuse license."
     },
     {
+      "id": "warden-stacked-district",
+      "version": "v2",
+      "name": "Stacked District",
+      "sha256": "5fa69ab50953cc668dc0797f1f199618ecab00d1fd2acf0103e95670d7942a24",
+      "type": "environment",
+      "asset": null,
+      "bytes": 16698932,
+      "credits": "Original Warden Environment Collection V2 asset. Exact native geometry and embedded generated painted albedo, normal and roughness maps from the final viewer/archive export. Source reference images, comparison stills, wrappers and guide objects are excluded.",
+      "license": "No public reuse license specified.",
+      "triangles": 119247,
+      "meshes": 93,
+      "textures": 39,
+      "rig": "unrigged",
+      "clips": [],
+      "originalFile": "warden-stacked-district-v2.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-stacked-district-v2.glb.part1",
+          "bytes": 5566311,
+          "sha256": "ae5cdaed9721e6087c501b35815b13ec889c2cb2a687756bc84adbfb0aa60420"
+        },
+        {
+          "asset": "assets/warden-stacked-district-v2.glb.part2",
+          "bytes": 5566311,
+          "sha256": "faa6e1d49ef5cebd2bff6fc8e665980d65d217e6771e86af42542a280f597705"
+        },
+        {
+          "asset": "assets/warden-stacked-district-v2.glb.part3",
+          "bytes": 5566310,
+          "sha256": "0a6224ed58d7c09d2628a06819e9d8e06f2e80d03cbea8727006e4236a3398b7"
+        }
+      ]
+    },
+    {
+      "id": "warden-limeworks-transit-module",
+      "version": "v2",
+      "name": "Limeworks Transit Module",
+      "sha256": "edced1bd9198b75acacb0ebab46759b220a35aa9638fdcf427dbb61c54b1c91b",
+      "type": "environment",
+      "asset": null,
+      "bytes": 8863656,
+      "credits": "Original Warden Environment Collection V2 asset. Exact native geometry and embedded generated painted albedo, normal and roughness maps from the final viewer/archive export. Source reference images, comparison stills, wrappers and guide objects are excluded.",
+      "license": "No public reuse license specified.",
+      "triangles": 45819,
+      "meshes": 55,
+      "textures": 21,
+      "rig": "unrigged",
+      "clips": [],
+      "originalFile": "warden-limeworks-transit-module-v2.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-limeworks-transit-module-v2.glb.part1",
+          "bytes": 2954552,
+          "sha256": "dfe4860deba7d1ef6de98e9aac4e6150196a3ff7d2ef2f22a216182b650bfe95"
+        },
+        {
+          "asset": "assets/warden-limeworks-transit-module-v2.glb.part2",
+          "bytes": 2954552,
+          "sha256": "e972dbb698e279c42bac820f51ee375adcb70058912be5d9fc82f4f12cd93e92"
+        },
+        {
+          "asset": "assets/warden-limeworks-transit-module-v2.glb.part3",
+          "bytes": 2954552,
+          "sha256": "623103d03b1635579dbd8f669356de2d7e408a5ca15aaacb063cf7dd632c66ec"
+        }
+      ]
+    },
+    {
+      "id": "warden-root-cathedral",
+      "version": "v2",
+      "name": "Root Cathedral",
+      "sha256": "da13334487ef278cea9ac0220156680ec9ade87de1a13a063d7155e0ec7dff38",
+      "type": "environment",
+      "asset": null,
+      "bytes": 16945944,
+      "credits": "Original Warden Environment Collection V2 asset. Exact native geometry and embedded generated painted albedo, normal and roughness maps from the final viewer/archive export. Source reference images, comparison stills, wrappers and guide objects are excluded.",
+      "license": "No public reuse license specified.",
+      "triangles": 186650,
+      "meshes": 21,
+      "textures": 27,
+      "rig": "unrigged",
+      "clips": [],
+      "originalFile": "warden-root-cathedral-v2.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-root-cathedral-v2.glb.part1",
+          "bytes": 5648648,
+          "sha256": "4799706abefb4dad40acdfef051b6316fdd751d947bb58b2ec04779ded381ec1"
+        },
+        {
+          "asset": "assets/warden-root-cathedral-v2.glb.part2",
+          "bytes": 5648648,
+          "sha256": "a67c498dac3948b165b9432a91ffaa09087fa56cf3dd45aec58068b6da564569"
+        },
+        {
+          "asset": "assets/warden-root-cathedral-v2.glb.part3",
+          "bytes": 5648648,
+          "sha256": "b552666f619469f43f63bae23e694f79e15169a00709ea7d7a4518ddfe2b16a9"
+        }
+      ]
+    },
+    {
+      "id": "warden-sulfur-grove",
+      "version": "v2",
+      "name": "Sulfur Grove",
+      "sha256": "fd1acdff19934986e1462189490476a9f0d62aa9739df67fc9eee25a663c4585",
+      "type": "environment",
+      "asset": null,
+      "bytes": 16754668,
+      "credits": "Original Warden Environment Collection V2 asset. Exact native geometry and embedded generated painted albedo, normal and roughness maps from the final viewer/archive export. Source reference images, comparison stills, wrappers and guide objects are excluded.",
+      "license": "No public reuse license specified.",
+      "triangles": 198966,
+      "meshes": 444,
+      "textures": 15,
+      "rig": "unrigged",
+      "clips": [],
+      "originalFile": "warden-sulfur-grove-v2.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-sulfur-grove-v2.glb.part1",
+          "bytes": 5584890,
+          "sha256": "cd45b3567b76d50089b9a93c3dabe5bb9cca9114ca833dba63bb4f03d0973c2b"
+        },
+        {
+          "asset": "assets/warden-sulfur-grove-v2.glb.part2",
+          "bytes": 5584890,
+          "sha256": "b75095e0acf2f6b045b0a808e2b492e59b7f8a863370699537da610d8dd4d7de"
+        },
+        {
+          "asset": "assets/warden-sulfur-grove-v2.glb.part3",
+          "bytes": 5584888,
+          "sha256": "5bda551163dcd1234ee9eca3fd8b76fe8bb8cdbda081476aa544116fe85f32ce"
+        }
+      ]
+    },
+    {
+      "id": "warden-verdant-utility-house",
+      "version": "v2",
+      "name": "Verdant Utility House",
+      "sha256": "b0eb064e8d8dda1070bfd26f42ca8cefabbfd8ced3d18c3a04b4c410667bc396",
+      "type": "environment",
+      "asset": null,
+      "bytes": 8522056,
+      "credits": "Original Warden Environment Collection V2 asset. Exact native geometry and embedded generated painted albedo, normal and roughness maps from the final viewer/archive export. Source reference images, comparison stills, wrappers and guide objects are excluded.",
+      "license": "No public reuse license specified.",
+      "triangles": 40668,
+      "meshes": 36,
+      "textures": 27,
+      "rig": "unrigged",
+      "clips": [],
+      "originalFile": "warden-verdant-utility-house-v2.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-verdant-utility-house-v2.glb.part1",
+          "bytes": 2840686,
+          "sha256": "95d43beceaa38bf7ed92655a4e7e97399965a9f3a7a50c08a552eb7ec2b9abda"
+        },
+        {
+          "asset": "assets/warden-verdant-utility-house-v2.glb.part2",
+          "bytes": 2840686,
+          "sha256": "534b34be7af54e53fa7454ac0cbcf15b779555a64134299dbc608c44c874609d"
+        },
+        {
+          "asset": "assets/warden-verdant-utility-house-v2.glb.part3",
+          "bytes": 2840684,
+          "sha256": "8c97d66e0fee4d8cadeee04cba8dab0e938438dedfd2ff815d3e574d253078ec"
+        }
+      ]
+    },
+    {
+      "id": "reliquary-24",
+      "version": "v5",
+      "name": "Reliquary 24",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "a2cf53d7710b22eb8c7471043f91d0bc9281ff0af00a38a05153621710dc127b",
+      "bytes": 16436512,
+      "triangles": 70050,
+      "meshes": 23,
+      "textures": 3,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Grounded knee flex"
+        }
+      ],
+      "credits": "Generated and remodeled for Ryan from the supplied monochrome concept; V5 includes the rebuilt barrel cuirass, UV-painted model textures, and the authored Grounded knee flex clip. No reference sketch or other source files are included.",
+      "license": "No public reuse license specified.",
+      "originalFile": "reliquary-24-v5.glb",
+      "parts": [
+        {
+          "asset": "assets/reliquary-24-v5.glb.part1",
+          "bytes": 5478838,
+          "sha256": "d8d747c22aef89e9b0bb6667f231d02f299e1f2d53af84e44dee489032da81a3"
+        },
+        {
+          "asset": "assets/reliquary-24-v5.glb.part2",
+          "bytes": 5478838,
+          "sha256": "7e22cefde315e23fdd2a97c2ed38aeaa22f7a86130d478e6c4b8b6f322a5041b"
+        },
+        {
+          "asset": "assets/reliquary-24-v5.glb.part3",
+          "bytes": 5478836,
+          "sha256": "ad19680058aaf63c840379612c7c496983d92c5a452fb2cbe4d266687e698408"
+        }
+      ]
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
