@@ -176,5 +176,12 @@
   "armfree-pebble@v1": "cd6d7762c20668aefa26fc9ce16cab40aadefb562ef37f5704a2b3188617f563",
   "armfree-ronin@v1": "83238e1bfcca858c7f8c280f327662481e675dd6e980bdf3bfe75be1cac3ff66",
   "armfree-sentinel@v1": "521fcdb125930e7ae0b2d4690d6824b4115faf016bc10a935e66f71087bc19b6",
-  "armfree-warden@v1": "72abc39df6307a92f5accac16349b36e2fe9c8d569020703934c2ca108125f23"
+  "armfree-warden@v1": "72abc39df6307a92f5accac16349b36e2fe9c8d569020703934c2ca108125f23",
+  "wizard-nos-screenprint-district@v1": "29e62f1eb2c6afbccd12f70999371cc94721818db7f5e7b7bde52ea4daa826f7",
+  "procedural-walk-cycle-dummy@v1": "f47cabe8ec7e9dd034b29f329288f5646dc7a7a0f36626c3f4587c1a02c5a512",
+  "warden-early-crawler-orbital-shell@v1": "cc67fab151be305f5fec78cb2f034cec067287c6460364df82583eecfc12e8d4",
+  "warden-early-crawler-twin-fin@v1": "f3edc628b60ac73e45cb187ee1dab9a2ff79aa6e464d2d8d2afec99a1be5eac5",
+  "warden-early-crawler-sensor-mast@v1": "337b4533a53464e0ac27c79d3d56638b7fb303193a6c6a3ba0a030dc7b79f042",
+  "warden-early-crawler-faceted-kite@v1": "b885df8525f7ff712e3b9ad8306718d975b0966449dbbf6b467155f17400327b",
+  "warden-early-crawler-saucer-deck@v1": "a6b5bcf8a9efab9eb4ddd8874c180a749cbae0352a2601f1b51163f5078b0ef5"
 }
