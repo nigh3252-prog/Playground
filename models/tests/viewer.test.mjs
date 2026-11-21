@@ -225,9 +225,43 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     await phone.goto(bench+'?model=spirecoil&v=v3');
     await phone.waitForFunction(() => document.querySelector('#stage').dataset.version === 'v3');
     assert.equal(await phone.locator('#show-skeleton').isVisible(),false);
+    const sections = phone.getByRole('group',{name:'Browse section'});
+    assert.deepEqual(await sections.getByRole('button').allTextContents(),['All','Entities','Gear','Environments']);
+    await sections.getByRole('button',{name:'Gear',exact:true}).click();
+    const gear = filterModels(catalog.models,{section:'gear'});
+    assert(gear.length > 0);
+    assert.equal(await phone.locator('#model-picker option').count(),gear.length);
+    assert.equal(await sections.getByRole('button',{name:'Gear',exact:true}).getAttribute('aria-pressed'),'true');
+    await phone.locator('#filter-toggle').click();
+    await filters.getByLabel('Type').selectOption('creature');
+    assert.match(await filters.locator('#filter-count').textContent(),/^0 of /);
+    await filters.locator('#clear-filters').click();
+    assert.equal(await phone.locator('#model-picker option').count(),gear.length,'clear keeps active section');
+    await filters.getByRole('button',{name:'Close filters'}).click();
+    // Narrowing pushes a first matching model. Going back still honors the explicit bookmarked model.
+    await phone.goBack();
+    await phone.waitForFunction(()=>document.getElementById('stage').dataset.model==='spirecoil' &&
+      document.getElementById('stage').dataset.version==='v3');
+    assert.equal(await sections.getByRole('button',{name:'All',exact:true}).getAttribute('aria-pressed'),'true');
+    await phone.goForward();
+    await phone.waitForFunction(() => document.querySelector('[data-section="gear"]').getAttribute('aria-pressed') === 'true');
+    assert.equal(await phone.locator('#model-picker option').count(),gear.length,'forward restores the Gear section');
+    await sections.getByRole('button',{name:'All',exact:true}).click();
+    await phone.locator('#filter-toggle').click();
+    await filters.getByLabel('Family').selectOption('Ronin');
+    assert.equal(await phone.locator('#model-picker option').count(),4);
+    await filters.getByLabel('Collection').selectOption('Arm-Free Concepts');
+    assert.equal(await phone.locator('#model-picker option').count(),2);
+    assert.deepEqual(filterModels(catalog.models,{family:'Ronin',collection:'Arm-Free Concepts'}).map(entry=>entry.id).sort(),['armfree-ronin','armfree-ronin-early']);
+    await filters.locator('#clear-filters').click();
+    await filters.getByRole('button',{name:'Close filters'}).click();
     await phone.setViewportSize({width:844,height:390});
     assert.equal(await phone.evaluate(()=>document.documentElement.scrollWidth),844);
     assert((await phone.locator('#stage').boundingBox()).width > 350);
+    await phone.setViewportSize({width:390,height:844});
+    await phone.setViewportSize({width:320,height:710});
+    const filterRect = await phone.locator('#filter-toggle').boundingBox();
+    assert(filterRect && filterRect.x >= 0 && filterRect.x+filterRect.width <= 320,'Filters remain fully visible before horizontal scrolling');
     await phone.setViewportSize({width:390,height:844});
     if (process.env.BENCH_SCREENSHOT) await phone.screenshot({path:process.env.BENCH_SCREENSHOT,fullPage:true});
   } finally {await browser?.close();server.kill();}

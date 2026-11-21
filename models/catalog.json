@@ -18,7 +18,9 @@
         }
       ],
       "credits": "Original Playground workshop droid authored for this bench; Blender generator in this repository.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Model Review Bench",
+      "section": "entities"
     },
     {
       "id": "crocodilian",
@@ -86,7 +88,8 @@
         }
       ],
       "credits": "Original authored Warden Lilac Walker GLB; embedded rig, textures and preview clips preserved unchanged.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Expansion Pack"
     },
     {
       "id": "spirecoil",
@@ -105,7 +108,8 @@
         }
       ],
       "credits": "Original Warden Spirecoil industrial study, with intact painted materials and six-second fold/deploy animation.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Spirecoil"
     },
     {
       "id": "vertical-pods-a-hip-assembly",
@@ -120,7 +124,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Vertical Pod Studies"
     },
     {
       "id": "vertical-pods-b-hip-assembly",
@@ -135,7 +140,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Vertical Pod Studies"
     },
     {
       "id": "vertical-pods-a-pod-module",
@@ -150,7 +156,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Vertical Pod Studies"
     },
     {
       "id": "vertical-pods-b-pod-module",
@@ -165,7 +172,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Vertical Pod Studies"
     },
     {
       "id": "vertical-pods-a-hip-mount",
@@ -180,7 +188,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Vertical Pod Studies"
     },
     {
       "id": "vertical-pods-b-hip-mount",
@@ -195,7 +204,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original geometry from the authored Vertical Pods viewer; supplied reference images are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Vertical Pod Studies"
     },
     {
       "id": "flying-abyss-manta",
@@ -210,7 +220,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-bone-parasite",
@@ -225,7 +236,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-coiled-wyvern",
@@ -240,7 +252,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-crowned-thunderbird",
@@ -255,7 +268,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-ember-wasp",
@@ -270,7 +284,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-furnace-beetle",
@@ -285,7 +300,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-halo-shrike",
@@ -300,7 +316,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-horned-gargoyle",
@@ -315,7 +332,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-hornet-brute",
@@ -330,7 +348,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-ivory-raptor",
@@ -345,7 +364,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-lantern-medusa",
@@ -360,7 +380,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-mantis-glider",
@@ -375,7 +396,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-needle-stalker",
@@ -390,7 +412,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-nightmaw-bat",
@@ -405,7 +428,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-rift-manta",
@@ -420,7 +444,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-ruin-titan",
@@ -435,7 +460,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-thorn-wyvern",
@@ -450,7 +476,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-tusked-glider",
@@ -465,7 +492,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-violet-dart",
@@ -480,7 +508,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "flying-void-reaper",
@@ -495,7 +524,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
     },
     {
       "id": "bulwark-modular",
@@ -510,7 +540,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Authored modular Warden Bulwark construction study with original painted UV materials; original export preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Bulwark Modular"
     },
     {
       "id": "bulwark-modular-bare-frame",
@@ -526,7 +557,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original armor-off companion export from the Warden Bulwark Modular study. Rigid part pivots retained; no skin or animation clips.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Bulwark Modular"
     },
     {
       "id": "spirecoil",
@@ -545,7 +577,8 @@
         }
       ],
       "credits": "Original authored organic Spirecoil study inspired by bobbit worms and fireworms. Original animated GLB preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Spirecoil"
     },
     {
       "id": "spirecoil",
@@ -565,7 +598,8 @@
         }
       ],
       "credits": "Original Warden organic mechanical creature development v2. Authored layered hood, materials and native folding motion preserved unchanged; reference images are not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Spirecoil"
     },
     {
       "id": "spirecoil",
@@ -585,7 +619,8 @@
         }
       ],
       "credits": "Original Warden mechanical prototype blending broad animal features; preserves the original hood and mandible motion.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Spirecoil"
     },
     {
       "id": "warden-scout-gunner",
@@ -611,7 +646,9 @@
         }
       ],
       "credits": "Authored Warden Expansion Pack scout, painted second revision. Original animated export preserved; reference images omitted.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Warden Scouts",
+      "collection": "Warden Expansion Pack"
     },
     {
       "id": "warden-scout-rail",
@@ -637,7 +674,9 @@
         }
       ],
       "credits": "Authored Warden Expansion Pack scout, painted second revision. Original animated export preserved; reference images omitted.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Warden Scouts",
+      "collection": "Warden Expansion Pack"
     },
     {
       "id": "warden-scout-missile",
@@ -663,7 +702,9 @@
         }
       ],
       "credits": "Authored Warden Expansion Pack scout, painted second revision. Original animated export preserved; reference images omitted.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Warden Scouts",
+      "collection": "Warden Expansion Pack"
     },
     {
       "id": "saffron-hover",
@@ -686,7 +727,9 @@
         }
       ],
       "credits": "Authored Warden Expansion Pack hover machine, painted second revision. Original animated export preserved; reference images omitted.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Expansion Pack",
+      "section": "entities"
     },
     {
       "id": "warden-ice-skull",
@@ -723,7 +766,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Breach Engine",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-breach-engine",
@@ -744,7 +789,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Breach Engine",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-dynamo",
@@ -765,7 +812,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Dynamo",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-dynamo",
@@ -786,7 +835,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Dynamo",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-longbow",
@@ -807,7 +858,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Longbow",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-longbow",
@@ -828,7 +881,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Longbow",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-splitline",
@@ -845,7 +900,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Splitline",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-splitline",
@@ -862,7 +919,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Splitline",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-arc-fork",
@@ -883,7 +942,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Arc Fork",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-arc-fork",
@@ -904,7 +965,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Arc Fork",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-redshift",
@@ -925,7 +988,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Redshift",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-redshift",
@@ -946,7 +1011,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Redshift",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-pale-horse",
@@ -967,7 +1034,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Pale Horse",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-pale-horse",
@@ -988,7 +1057,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Pale Horse",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-sunspike",
@@ -1009,7 +1080,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Sunspike",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "railgun-sunspike",
@@ -1030,7 +1103,9 @@
         }
       ],
       "credits": "Original authored Warden Railgun Armory game art, saved as a GLB using the viewer\u2019s Download GLB export. Exact exported geometry, maps and any native clip preserved.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Sunspike",
+      "collection": "Warden Railgun Studies"
     },
     {
       "id": "warden-haunted-ice-kit",
@@ -1218,7 +1293,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral-pose GLB exported from the original procedural Beast Mech Hangar viewer. Geometry, materials and rigid hierarchy preserved; scripted viewer motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Beast Hangar"
     },
     {
       "id": "beast-hangar-solmane",
@@ -1234,7 +1310,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral-pose GLB exported from the original procedural Beast Mech Hangar viewer. Geometry, materials and rigid hierarchy preserved; scripted viewer motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Beast Hangar"
     },
     {
       "id": "beast-hangar-arakhne",
@@ -1250,7 +1327,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral-pose GLB exported from the original procedural Beast Mech Hangar viewer. Geometry, materials and rigid hierarchy preserved; scripted viewer motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Beast Hangar"
     },
     {
       "id": "beast-hangar-oryxus",
@@ -1266,7 +1344,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral-pose GLB exported from the original procedural Beast Mech Hangar viewer. Geometry, materials and rigid hierarchy preserved; scripted viewer motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Beast Hangar"
     },
     {
       "id": "warden-iguana-crab",
@@ -1329,7 +1408,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden machine geometry and generated textures, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-splitter",
@@ -1345,7 +1425,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden machine geometry and generated textures, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-railworm",
@@ -1361,7 +1442,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden machine geometry and generated textures, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-apiary",
@@ -1377,7 +1459,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden machine geometry and generated textures, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-crosscut",
@@ -1393,7 +1476,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden machine geometry and generated textures, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-drop-gate",
@@ -1409,7 +1493,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-vacuum-well",
@@ -1425,7 +1510,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-rim-saw",
@@ -1441,7 +1527,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-baffle",
@@ -1457,7 +1544,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "warden-machine-brood-ferry",
@@ -1473,7 +1561,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-machine-lance-drill",
@@ -1489,7 +1579,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-machine-lane-battery",
@@ -1505,7 +1597,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-machine-split-sled",
@@ -1521,7 +1615,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden field mechanism, exported from the Machine Lab at its neutral pose. Game motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-machine-cloud-strider",
@@ -1537,7 +1633,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden six-legged carrier exported from its Machine Lab neutral pose. Instanced solid geometry and generated materials preserved; the scene-only cloud effect and game motion are not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab"
     },
     {
       "id": "punch-lab-boxer",
@@ -1569,7 +1666,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural design, exported from the Machine Lab viewer at its neutral pose. Scripted motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-machine-rail-sentry",
@@ -1585,7 +1684,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural design, exported from the Machine Lab viewer at its neutral pose. Scripted motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-machine-hornet-well",
@@ -1601,7 +1702,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural design, exported from the Machine Lab viewer at its neutral pose. Scripted motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-machine-seismic-mortar",
@@ -1617,7 +1720,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural design, exported from the Machine Lab viewer at its neutral pose. Scripted motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Warden Machine Lab",
+      "section": "entities"
     },
     {
       "id": "warden-lived-in-street",
@@ -1649,7 +1754,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural mechanical form from the Flying Enemy Shape Playground, exported at its authored scale and neutral pose. Viewer choreography is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-sensor-dart",
@@ -1665,7 +1771,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural mechanical form from the Flying Enemy Shape Playground, exported at its authored scale and neutral pose. Viewer choreography is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-twin-pod-gem",
@@ -1681,7 +1788,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural mechanical form from the Flying Enemy Shape Playground, exported at its authored scale and neutral pose. Viewer choreography is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-grid-block",
@@ -1697,7 +1805,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural mechanical form from the Flying Enemy Shape Playground, exported at its authored scale and neutral pose. Viewer choreography is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-orbit-ring",
@@ -1713,7 +1822,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural mechanical form from the Flying Enemy Shape Playground, exported at its authored scale and neutral pose. Viewer choreography is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-clamp-capsule",
@@ -1729,7 +1839,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural mechanical form from the Flying Enemy Shape Playground, exported at its authored scale and neutral pose. Viewer choreography is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "enemy-playground-bad-form-duelist",
@@ -1745,7 +1856,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-rotor-knight",
@@ -1761,7 +1874,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-ashen-lancer",
@@ -1777,7 +1892,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-mob-captain",
@@ -1793,7 +1910,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-shield-cart",
@@ -1809,7 +1928,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-bellwether-brute",
@@ -1825,7 +1946,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-boar-helm-charger",
@@ -1841,7 +1964,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-candleback-giant",
@@ -1857,7 +1982,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground"
     },
     {
       "id": "enemy-playground-pike-wall-trio",
@@ -1873,7 +1999,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-anvil-monk",
@@ -1889,7 +2017,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-rusted-greatsworder",
@@ -1905,7 +2035,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-mire-leech",
@@ -1921,7 +2053,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground"
     },
     {
       "id": "enemy-playground-twin-hatchet-maniac",
@@ -1937,7 +2070,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-banner-ghoul",
@@ -1953,7 +2088,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-hookblade-auditor",
@@ -1969,7 +2106,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-chorus-witch",
@@ -1985,7 +2124,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "enemy-playground-cinder-mule",
@@ -2001,7 +2142,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground"
     },
     {
       "id": "enemy-playground-war-drum-ogre",
@@ -2017,7 +2159,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral model export from the 3D Enemy Animation Playground prototype. Static geometry; gameplay motion, ground effects and labels not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Enemy Animation Playground",
+      "section": "entities"
     },
     {
       "id": "fantasy-faceted-needle-dagger",
@@ -2033,7 +2177,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-wedge-dagger",
@@ -2049,7 +2194,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-hook-knife",
@@ -2065,7 +2211,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-ring-katar",
@@ -2081,7 +2228,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-scout-shortsword",
@@ -2097,7 +2245,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-razor-hatchet",
@@ -2113,7 +2262,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-bastard-sword",
@@ -2129,7 +2279,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-falchion",
@@ -2145,7 +2296,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-split-saber",
@@ -2161,7 +2313,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-spiked-mace",
@@ -2177,7 +2330,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-hammer-pick",
@@ -2193,7 +2347,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-warden-spear",
@@ -2209,7 +2364,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-bearded-axe",
@@ -2225,7 +2381,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-triangle-greatsword",
@@ -2241,7 +2398,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-slab-claymore",
@@ -2257,7 +2415,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-war-hammer",
@@ -2273,7 +2432,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-hammerist-polemaul",
@@ -2289,7 +2449,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-block-maul",
@@ -2305,7 +2466,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-execution-axe",
@@ -2321,7 +2483,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-faceted-cleaver-glaive",
@@ -2337,7 +2500,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Faceted Fantasy Props prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Faceted Fantasy Props"
     },
     {
       "id": "fantasy-lab-pilgrim-kris",
@@ -2353,7 +2517,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "fantasy-lab-lantern-hatchet",
@@ -2369,7 +2534,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "fantasy-lab-temple-glaive",
@@ -2385,7 +2551,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "fantasy-lab-bell-mace",
@@ -2401,7 +2568,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "fantasy-lab-banner-spear",
@@ -2417,7 +2585,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "fantasy-lab-tomb-door-hammer",
@@ -2433,7 +2602,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "fantasy-lab-eclipse-scythe",
@@ -2449,7 +2619,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "fantasy-lab-relic-rail-sword",
@@ -2465,7 +2636,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static fantasy game-art prop from the Fantasy Props Lab prototype. Display geometry and stylized outlines only.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Fantasy Props Lab"
     },
     {
       "id": "southpoint-colossus",
@@ -2481,7 +2653,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Render materials converted for the viewer; gameplay motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Southpoint"
     },
     {
       "id": "southpoint-pebble",
@@ -2497,7 +2670,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Render materials converted for the viewer; gameplay motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Southpoint"
     },
     {
       "id": "southpoint-photographer",
@@ -2513,7 +2687,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Render materials converted for the viewer; gameplay motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Southpoint"
     },
     {
       "id": "southpoint-red-toll",
@@ -2529,7 +2704,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Render materials converted for the viewer; gameplay motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Southpoint"
     },
     {
       "id": "southpoint-spires",
@@ -2545,7 +2721,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Render materials converted for the viewer; gameplay motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Southpoint"
     },
     {
       "id": "southpoint-wisp",
@@ -2561,7 +2738,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Render materials converted for the viewer; gameplay motion is not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Southpoint",
+      "section": "entities"
     },
     {
       "id": "character-lab-sentinel",
@@ -2577,7 +2756,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of the independently authored Original design in Character Comparison Lab. Original procedural glyph art retained where present. No supplied Stone Cycle or Hybrid designs, display pedestal or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Sentinel",
+      "collection": "Character Comparison Lab"
     },
     {
       "id": "character-lab-ronin",
@@ -2593,7 +2774,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of the independently authored Original design in Character Comparison Lab. Original procedural glyph art retained where present. No supplied Stone Cycle or Hybrid designs, display pedestal or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Ronin",
+      "collection": "Character Comparison Lab"
     },
     {
       "id": "character-lab-bell",
@@ -2609,7 +2792,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of the independently authored Original design in Character Comparison Lab. Original procedural glyph art retained where present. No supplied Stone Cycle or Hybrid designs, display pedestal or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Bell",
+      "collection": "Character Comparison Lab"
     },
     {
       "name": "Manta Slab",
@@ -2625,7 +2810,8 @@
       "asset": "assets/flying-blockout-manta-slab-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Air Whale",
@@ -2641,7 +2827,8 @@
       "asset": "assets/flying-blockout-air-whale-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Hammerhead",
@@ -2657,7 +2844,8 @@
       "asset": "assets/flying-blockout-hammerhead-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Four-wing Moth",
@@ -2673,7 +2861,8 @@
       "asset": "assets/flying-blockout-four-wing-moth-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Vertical Giant",
@@ -2689,7 +2878,8 @@
       "asset": "assets/flying-blockout-vertical-giant-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Living Arch",
@@ -2705,7 +2895,8 @@
       "asset": "assets/flying-blockout-living-arch-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Flying Ring",
@@ -2721,7 +2912,8 @@
       "asset": "assets/flying-blockout-flying-ring-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Boomerang",
@@ -2737,7 +2929,8 @@
       "asset": "assets/flying-blockout-boomerang-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Orb with Sails",
@@ -2753,7 +2946,8 @@
       "asset": "assets/flying-blockout-orb-with-sails-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Hanging Bell",
@@ -2769,7 +2963,8 @@
       "asset": "assets/flying-blockout-hanging-bell-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Flying Block",
@@ -2785,7 +2980,8 @@
       "asset": "assets/flying-blockout-flying-block-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Needle Carrier",
@@ -2801,7 +2997,8 @@
       "asset": "assets/flying-blockout-needle-carrier-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Twin Fans",
@@ -2817,7 +3014,8 @@
       "asset": "assets/flying-blockout-twin-fans-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Asymmetric Sail",
@@ -2833,7 +3031,8 @@
       "asset": "assets/flying-blockout-asymmetric-sail-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Twin-body Glider",
@@ -2849,7 +3048,8 @@
       "asset": "assets/flying-blockout-twin-body-glider-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Spiked Saucer",
@@ -2865,7 +3065,8 @@
       "asset": "assets/flying-blockout-spiked-saucer-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Three-wing Rotor",
@@ -2881,7 +3082,8 @@
       "asset": "assets/flying-blockout-three-wing-rotor-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Bat Brute",
@@ -2897,7 +3099,8 @@
       "asset": "assets/flying-blockout-bat-brute-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Long-legged Flyer",
@@ -2913,7 +3116,8 @@
       "asset": "assets/flying-blockout-long-legged-flyer-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "name": "Flying Shield",
@@ -2929,7 +3133,8 @@
       "asset": "assets/flying-blockout-flying-shield-v1.glb",
       "type": "creature",
       "credits": "Exact original Blender clay blockout from Flying Monsters: 20 Blockouts. This is a standalone silhouette study, not the later polished gallery model; no animation is present.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monster Blockouts"
     },
     {
       "id": "level-blockout-six-room",
@@ -2979,7 +3184,8 @@
           "bytes": 3675076,
           "sha256": "113fe848488a0a76946baa10ea47d241a26c36bd3c535ec5920785394bb208fa"
         }
-      ]
+      ],
+      "collection": "Beforetimes Geology Lab"
     },
     {
       "id": "beforetimes-lost-alpha",
@@ -3013,7 +3219,8 @@
           "bytes": 3250708,
           "sha256": "c18e96b2b9d65e7263a8ab3b93e74d53768a439b2a6156e4e22eab5b1bcca988"
         }
-      ]
+      ],
+      "collection": "Beforetimes Geology Lab"
     },
     {
       "id": "beforetimes-stone-cathedrals",
@@ -3047,7 +3254,8 @@
           "bytes": 3312870,
           "sha256": "3a1ce2d86df47f08c7722f3cb2ee26da95f90dd9574d3166ce782222978478fb"
         }
-      ]
+      ],
+      "collection": "Beforetimes Geology Lab"
     },
     {
       "id": "beforetimes-hanging-gardens",
@@ -3081,7 +3289,8 @@
           "bytes": 3424644,
           "sha256": "84101c4693ad3753fb63f3150ab6a915e7e73e86dc151b7350a84c68ffe7534b"
         }
-      ]
+      ],
+      "collection": "Beforetimes Geology Lab"
     },
     {
       "id": "wizard-nos-screenprint-car",
@@ -3097,7 +3306,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original static vehicle art from the Wizard of NOS screenprint prototype. The display shader is approximated with matte materials; geometry and outlines are retained.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Wizard of NOS Screenprint"
     },
     {
       "id": "hammer-formation-wrecker-hoverbike",
@@ -3129,7 +3339,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of an independently authored early character study from the original Arm-Free Concepts prototype, before visual-reference revisions. Separate from the game and later Character Comparison Lab.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Bell",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "armfree-pebble",
@@ -3145,7 +3357,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of an independently authored early character study from the original Arm-Free Concepts prototype, before visual-reference revisions. Separate from the game and later Character Comparison Lab.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Pebble",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "armfree-ronin",
@@ -3161,7 +3375,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of an independently authored early character study from the original Arm-Free Concepts prototype, before visual-reference revisions. Separate from the game and later Character Comparison Lab.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Ronin",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "armfree-sentinel",
@@ -3177,7 +3393,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of an independently authored early character study from the original Arm-Free Concepts prototype, before visual-reference revisions. Separate from the game and later Character Comparison Lab.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Sentinel",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "armfree-warden",
@@ -3193,7 +3411,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static export of an independently authored early character study from the original Arm-Free Concepts prototype, before visual-reference revisions. Separate from the game and later Character Comparison Lab.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "wizard-nos-screenprint-district",
@@ -3209,7 +3428,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static small-map snapshot of the original Wizard of NOS Three.js style lab, fixed seed 73191. Includes authored geometry and generated paper, road and oil artwork; excludes live rain, game logic and the display camera.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Wizard of NOS Screenprint"
     },
     {
       "id": "procedural-walk-cycle-dummy",
@@ -3245,7 +3465,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden standalone early Crawler Lab hardware geometry in its intact neutral pose; no behavior, markings or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Early Crawler Lab",
+      "section": "entities"
     },
     {
       "id": "warden-early-crawler-twin-fin",
@@ -3261,7 +3483,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden standalone early Crawler Lab hardware geometry in its intact neutral pose; no behavior, markings or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Early Crawler Lab",
+      "section": "entities"
     },
     {
       "id": "warden-early-crawler-sensor-mast",
@@ -3277,7 +3501,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden standalone early Crawler Lab hardware geometry in its intact neutral pose; no behavior, markings or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Early Crawler Lab",
+      "section": "entities"
     },
     {
       "id": "warden-early-crawler-faceted-kite",
@@ -3293,7 +3519,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden standalone early Crawler Lab hardware geometry in its intact neutral pose; no behavior, markings or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Early Crawler Lab",
+      "section": "entities"
     },
     {
       "id": "warden-early-crawler-saucer-deck",
@@ -3309,7 +3537,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original Warden standalone early Crawler Lab hardware geometry in its intact neutral pose; no behavior, markings or motion included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Early Crawler Lab",
+      "section": "entities"
     },
     {
       "id": "tilted-dungeon-lab-room",
@@ -3524,7 +3754,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original earlier Arm-Free Concepts camera-fixed study before the separate refined and visual-reference revisions: flattened cookie-shaped face and broader upper body. Static character geometry and materials only; excludes viewer, pedestal and turntable.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Pebble",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "armfree-ronin-early",
@@ -3540,7 +3772,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original earlier Arm-Free Concepts camera-fixed study before the separate refined and visual-reference revisions: broad, less tapered cloak silhouette, larger hat and feet. Static character geometry and materials only; excludes viewer, pedestal and turntable.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Ronin",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "armfree-bell-early",
@@ -3556,7 +3790,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original earlier Arm-Free Concepts camera-fixed study before the separate refined and visual-reference revisions: original lower, more recessed head tower and broader scarf collar. Static character geometry and materials only; excludes viewer, pedestal and turntable.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "family": "Bell",
+      "collection": "Arm-Free Concepts"
     },
     {
       "id": "flyer-shape-cylinder-chamber-carrier",
@@ -3573,7 +3809,8 @@
       "clips": [],
       "credits": "Original mechanical shape study from Flying Enemy Shape Playground source revision 6. Earlier cylinder hull with an integrated chamber, replaced by the box hull in v7/v8. Static neutral geometry only; no viewer choreography or behavior data.",
       "license": "No public reuse license specified.",
-      "source": "https://drive.google.com/file/d/1M7UlL1Q6Dy6yW4UgBUd-Euf1txM1qkVE/view"
+      "source": "https://drive.google.com/file/d/1M7UlL1Q6Dy6yW4UgBUd-Euf1txM1qkVE/view",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-wedge-sensor-dart",
@@ -3590,7 +3827,8 @@
       "clips": [],
       "credits": "Original mechanical shape study from Flying Enemy Shape Playground source revision 1. Earlier wedge nose and offset sensor box; later coffin footprint is already in the bench. Static neutral geometry only; no viewer choreography or behavior data.",
       "license": "No public reuse license specified.",
-      "source": "https://drive.google.com/file/d/1AqrRsZD_UZrEHv7_XRibX8tF-LnNWbr_/view"
+      "source": "https://drive.google.com/file/d/1AqrRsZD_UZrEHv7_XRibX8tF-LnNWbr_/view",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-six-spoke-capsule",
@@ -3607,7 +3845,8 @@
       "clips": [],
       "credits": "Original mechanical shape study from Flying Enemy Shape Playground source revision 6. Earlier capsule core and radial spokes, before the twin-lobed substitution. Static neutral geometry only; no viewer choreography or behavior data.",
       "license": "No public reuse license specified.",
-      "source": "https://drive.google.com/file/d/1M7UlL1Q6Dy6yW4UgBUd-Euf1txM1qkVE/view"
+      "source": "https://drive.google.com/file/d/1M7UlL1Q6Dy6yW4UgBUd-Euf1txM1qkVE/view",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-clamp-sphere",
@@ -3624,7 +3863,8 @@
       "clips": [],
       "credits": "Original mechanical shape study from Flying Enemy Shape Playground source revision 1. Earlier spherical core and asymmetrical slab, before the v6 capsule. Static neutral geometry only; no viewer choreography or behavior data.",
       "license": "No public reuse license specified.",
-      "source": "https://drive.google.com/file/d/1AqrRsZD_UZrEHv7_XRibX8tF-LnNWbr_/view"
+      "source": "https://drive.google.com/file/d/1AqrRsZD_UZrEHv7_XRibX8tF-LnNWbr_/view",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "flyer-shape-twin-fin-dart",
@@ -3641,7 +3881,8 @@
       "clips": [],
       "credits": "Original mechanical shape study from Flying Enemy Shape Playground source revision 3. Earlier broad faceted body and symmetric rear fins, replaced by the side-tube variant in v7. Static neutral geometry only; no viewer choreography or behavior data.",
       "license": "No public reuse license specified.",
-      "source": "https://drive.google.com/file/d/1-frX330w7kaax9G6jek4Axw8KyU-i_bh/view"
+      "source": "https://drive.google.com/file/d/1-frX330w7kaax9G6jek4Axw8KyU-i_bh/view",
+      "collection": "Flying Shape Lab"
     },
     {
       "id": "caddybot-golf-bag",
@@ -3721,7 +3962,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Static cutaway of the independently authored Clover Market and service frontage from A Small Morning. Includes fictional storefront signage, produce, stocking, checkout, carts and delivery details. Two roof slabs removed solely for inspection; original game, lighting and collision are not included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "A Small Morning"
     },
     {
       "id": "small-morning-clover-hatchback",
@@ -3737,7 +3979,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original hatchback geometry from A Small Morning, in the authored player-car paint. Static model only; no motion, game code, ground shadow or paint duplicates.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "A Small Morning"
     },
     {
       "id": "small-morning-bakery-van",
@@ -3753,7 +3996,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original delivery van geometry and fictional June\u2019s Bakery signage from A Small Morning. Static model only; no motion, game code or ground shadow.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "A Small Morning"
     },
     {
       "id": "small-morning-clover-bus",
@@ -3769,7 +4013,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original distinct town-bus geometry from A Small Morning. Static model only; no motion, game code or ground shadow.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "A Small Morning"
     },
     {
       "id": "relay-zero-breaker-walker",
@@ -3818,7 +4063,8 @@
       "asset": "assets/stone-wanderer-sun-disc-halo-v1.glb",
       "type": "prop",
       "credits": "Original standalone Stone Wanderer head variant from the expanded head workshop: static neutral figure headpiece without the body or viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "stone-wanderer-hooded-reliquary",
@@ -3834,7 +4080,8 @@
       "asset": "assets/stone-wanderer-hooded-reliquary-v1.glb",
       "type": "prop",
       "credits": "Original Stone Wanderer head variant from the expanded head workshop. Includes only the head geometry and embedded stone textures rendered from the original procedural texture functions with a fixed seed; excludes the donor body, reference masks and viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "stone-wanderer-twin-candle-mask",
@@ -3850,7 +4097,8 @@
       "asset": "assets/stone-wanderer-twin-candle-mask-v1.glb",
       "type": "prop",
       "credits": "Original Stone Wanderer head variant from the expanded head workshop. Includes only the head geometry and embedded stone textures rendered from the original procedural texture functions with a fixed seed; excludes the donor body, reference masks and viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "stone-wanderer-chained-visor",
@@ -3866,7 +4114,8 @@
       "asset": "assets/stone-wanderer-chained-visor-v1.glb",
       "type": "prop",
       "credits": "Original Stone Wanderer head variant from the expanded head workshop. Includes only the head geometry and embedded stone textures rendered from the original procedural texture functions with a fixed seed; excludes the donor body, reference masks and viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "stone-wanderer-burial-urn",
@@ -3882,7 +4131,8 @@
       "asset": "assets/stone-wanderer-burial-urn-v1.glb",
       "type": "prop",
       "credits": "Original Stone Wanderer head variant from the expanded head workshop. Includes only the head geometry and embedded stone textures rendered from the original procedural texture functions with a fixed seed; excludes the donor body, reference masks and viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "stone-wanderer-split-shrine-face",
@@ -3898,7 +4148,8 @@
       "asset": "assets/stone-wanderer-split-shrine-face-v1.glb",
       "type": "prop",
       "credits": "Original Stone Wanderer head variant from the expanded head workshop. Includes only the head geometry and embedded stone textures rendered from the original procedural texture functions with a fixed seed; excludes the donor body, reference masks and viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "stone-wanderer-warden-cage",
@@ -3914,7 +4165,8 @@
       "asset": "assets/stone-wanderer-warden-cage-v1.glb",
       "type": "prop",
       "credits": "Original Stone Wanderer head variant from the expanded head workshop. Includes only the head geometry and embedded stone textures rendered from the original procedural texture functions with a fixed seed; excludes the donor body, reference masks and viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "stone-wanderer-ram-helm",
@@ -3930,7 +4182,8 @@
       "asset": "assets/stone-wanderer-ram-helm-v1.glb",
       "type": "prop",
       "credits": "Original Stone Wanderer head variant from the expanded head workshop. Includes only the head geometry and embedded stone textures rendered from the original procedural texture functions with a fixed seed; excludes the donor body, reference masks and viewer mechanics. Source HTML SHA-256: a7ea8c0c45e0f8fe13a58cabb75a6fa11bf937d8137f05be7bf57738c84a8c36.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Stone Wanderer Head Studies"
     },
     {
       "id": "swing-study-crystal-sword",
@@ -3962,7 +4215,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original neutral character from the initial text-brief Three.js Procedural Sword Character Lab. Exact 23 rigid body pieces in the authored idle stance at phase zero; character offset removed. Static showcase: no sword, animations, solver, or gameplay. Source HTML SHA-256: 109c907a9e3075a2e781a4a0899ddc2571c3bd8864bffed0e3f6f0703aa7276d.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Procedural Sword Lab"
     },
     {
       "id": "procedural-sword-lab-training-target",
@@ -3978,7 +4232,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original training target from the initial text-brief Three.js Procedural Sword Character Lab. Exact five authored target parts, centered at the authored pivot. Static showcase without hit effects. Source HTML SHA-256: 109c907a9e3075a2e781a4a0899ddc2571c3bd8864bffed0e3f6f0703aa7276d.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Procedural Sword Lab"
     },
     {
       "id": "watershed-local-terrain-foundation",
@@ -3995,7 +4250,8 @@
       "clips": [],
       "credits": "Original 1.2 km local tile from the archived Playground Watershed Local Terrain Foundation. Exact default synthetic parent seed 431970387, window/site 0, original 257 \u00d7 257 indexed geometry at 4\u00d7 relief, and the generated Natural palette. Viewer focus guides and real-world benchmark data omitted.",
       "license": "No public reuse license specified.",
-      "source": "https://github.com/nigh3252-prog/Playground/blob/1f703b9e6bcdcaeb989f23f8381689125e67b547/local-terrain.html"
+      "source": "https://github.com/nigh3252-prog/Playground/blob/1f703b9e6bcdcaeb989f23f8381689125e67b547/local-terrain.html",
+      "collection": "Watershed"
     },
     {
       "id": "watershed-refined-river-valley",
@@ -4012,7 +4268,8 @@
       "clips": [],
       "credits": "Original stage-three Watershed river valley. Exact first Find a river valley reach from the original branch browser-test fixture: generated seed 431970387, Quick parent, 1.2 km at physical relief. Native refined geometry and generated Natural palette including rendered banks, no diagnostic or benchmark overlays.",
       "license": "No public reuse license specified.",
-      "source": "https://github.com/nigh3252-prog/Playground/blob/3d913cbfb7f8fce33fe41d1e91d8739254f7ac65/regional-world.html"
+      "source": "https://github.com/nigh3252-prog/Playground/blob/3d913cbfb7f8fce33fe41d1e91d8739254f7ac65/regional-world.html",
+      "collection": "Watershed"
     },
     {
       "id": "southpoint-broken-viaduct",
@@ -4028,7 +4285,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Nine curved viaduct bays in original placement, with source faceted lighting converted to portable materials. Other scenery and gameplay are omitted.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Southpoint"
     },
     {
       "id": "compare-nine-baizen-i",
@@ -4045,7 +4303,9 @@
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. A public repost attributes the reference design to MadeByYamatsu.",
       "license": "No verified public reuse license.",
-      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/"
+      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/",
+      "family": "Baizen",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-baizen-ii",
@@ -4062,7 +4322,9 @@
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. A public repost attributes the reference design to MadeByYamatsu.",
       "license": "No verified public reuse license.",
-      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/"
+      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/",
+      "family": "Baizen",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-baizen-iii",
@@ -4079,7 +4341,9 @@
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. A public repost attributes the reference design to MadeByYamatsu.",
       "license": "No verified public reuse license.",
-      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/"
+      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/",
+      "family": "Baizen",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-baz-b",
@@ -4096,7 +4360,9 @@
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. A public repost attributes the reference design to MadeByYamatsu.",
       "license": "No verified public reuse license.",
-      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/"
+      "source": "https://www.reddit.com/r/Mecha/comments/1stljif/baizen_unit_evolution_by_madebyyamatsu/",
+      "family": "Baizen",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-nitro",
@@ -4112,7 +4378,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. The original reference creator could not be verified.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-kestrel",
@@ -4128,7 +4395,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. The original reference creator could not be verified.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-palisade",
@@ -4144,7 +4412,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. The original reference creator could not be verified.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-ochre",
@@ -4160,7 +4429,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. The original reference creator could not be verified.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Compare Nine Models"
     },
     {
       "id": "compare-nine-cirrus",
@@ -4176,7 +4446,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Exact final native GLB from the generated Compare Nine Models painted-UV collection, modeled from supplied reference imagery. The source reference is not included. The original reference creator could not be verified.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Compare Nine Models",
+      "section": "entities"
     },
     {
       "id": "warden-stacked-district",
@@ -4210,7 +4482,8 @@
           "bytes": 5566310,
           "sha256": "0a6224ed58d7c09d2628a06819e9d8e06f2e80d03cbea8727006e4236a3398b7"
         }
-      ]
+      ],
+      "collection": "Warden Environment Collection"
     },
     {
       "id": "warden-limeworks-transit-module",
@@ -4244,7 +4517,8 @@
           "bytes": 2954552,
           "sha256": "623103d03b1635579dbd8f669356de2d7e408a5ca15aaacb063cf7dd632c66ec"
         }
-      ]
+      ],
+      "collection": "Warden Environment Collection"
     },
     {
       "id": "warden-root-cathedral",
@@ -4278,7 +4552,8 @@
           "bytes": 5648648,
           "sha256": "b552666f619469f43f63bae23e694f79e15169a00709ea7d7a4518ddfe2b16a9"
         }
-      ]
+      ],
+      "collection": "Warden Environment Collection"
     },
     {
       "id": "warden-sulfur-grove",
@@ -4312,7 +4587,8 @@
           "bytes": 5584888,
           "sha256": "5bda551163dcd1234ee9eca3fd8b76fe8bb8cdbda081476aa544116fe85f32ce"
         }
-      ]
+      ],
+      "collection": "Warden Environment Collection"
     },
     {
       "id": "warden-verdant-utility-house",
@@ -4346,7 +4622,8 @@
           "bytes": 2840684,
           "sha256": "8c97d66e0fee4d8cadeee04cba8dab0e938438dedfd2ff815d3e574d253078ec"
         }
-      ]
+      ],
+      "collection": "Warden Environment Collection"
     },
     {
       "id": "reliquary-24",
@@ -4400,7 +4677,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Painted revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Simple geometry with newly image-generated surface painting and derived PBR maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Bulwark Heavy",
+      "collection": "Warden Painted Character Set"
     },
     {
       "id": "painted-bulwark-heavy",
@@ -4416,7 +4695,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Refined revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Distinct armor and silhouette geometry with the exact painted edition texture maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Bulwark Heavy",
+      "collection": "Warden Painted Character Set"
     },
     {
       "id": "painted-lime-shield",
@@ -4432,7 +4713,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Painted revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Simple geometry with newly image-generated surface painting and derived PBR maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Lime Shield",
+      "collection": "Warden Painted Character Set"
     },
     {
       "id": "painted-lime-shield",
@@ -4448,7 +4731,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Refined revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Distinct armor and silhouette geometry with the exact painted edition texture maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Lime Shield",
+      "collection": "Warden Painted Character Set"
     },
     {
       "id": "painted-pinstud-gunslinger",
@@ -4464,7 +4749,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Painted revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Simple geometry with newly image-generated surface painting and derived PBR maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Pinstud Gunslinger",
+      "collection": "Warden Painted Character Set"
     },
     {
       "id": "painted-pinstud-gunslinger",
@@ -4480,7 +4767,9 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Refined revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Distinct armor and silhouette geometry with the exact painted edition texture maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Pinstud Gunslinger",
+      "collection": "Warden Painted Character Set"
     },
     {
       "id": "lime-panel-shield-mech",
@@ -4506,7 +4795,8 @@
         }
       ],
       "credits": "Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Initial modular construction and original material maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Lime-and-Blue Panel Mech"
     },
     {
       "id": "lime-panel-shield-mech",
@@ -4532,7 +4822,8 @@
         }
       ],
       "credits": "Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Revised low-poly construction, updated UVs and tangent-space normal maps.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Lime-and-Blue Panel Mech"
     },
     {
       "id": "lime-panel-shield-mech",
@@ -4576,7 +4867,8 @@
           "bytes": 3189786,
           "sha256": "aacd17714d27f15362368ccfa7131b5879bea33be9ca3a372118e39d5043926d"
         }
-      ]
+      ],
+      "family": "Lime-and-Blue Panel Mech"
     },
     {
       "id": "dustpan-sentinel",
@@ -4632,7 +4924,9 @@
           "bytes": 2108426
         }
       ],
-      "originalFile": "dustpan-sentinel.glb"
+      "originalFile": "dustpan-sentinel.glb",
+      "family": "Dustpan Sentinel",
+      "section": "entities"
     },
     {
       "id": "dustpan-sentinel-lod",
@@ -4670,7 +4964,9 @@
         }
       ],
       "credits": "Exact authored Dustpan Sentinel animation study from a supplied photo and design notes. Original vertex-painted geometry and native mechanical animation clips; supplied photo and source material are not included. Author-provided revision-six lower-detail export, keeping the same rig and clips.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Dustpan Sentinel",
+      "section": "entities"
     },
     {
       "id": "canyon-raider-dome-outpost",
@@ -4686,7 +4982,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original generated Three.js scenery from Canyon Raider, extracted at the authored seeded neutral pose. Artwork uses programmatically painted textures only; no original reference media, effects, actors, or gameplay.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Canyon Raider"
     },
     {
       "id": "canyon-raider-lattice-windmill",
@@ -4702,7 +4999,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original generated Three.js scenery from Canyon Raider, extracted at the authored seeded neutral pose. Artwork uses programmatically painted textures only; no original reference media, effects, actors, or gameplay.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Canyon Raider"
     },
     {
       "id": "warden-reclaimed-yard",
@@ -4744,7 +5042,8 @@
         }
       ],
       "credits": "Exact authored pre-kitbash Ironwing model. Concept based on artwork attributed in the source project to Xezeno, inspired by Bazelgeuse (Monster Hunter). No source artwork or donor sculpt included. Initial articulated mechanical wyvern.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Ironwing"
     },
     {
       "id": "ironwing-procedural",
@@ -4776,7 +5075,8 @@
         }
       ],
       "credits": "Exact authored pre-kitbash Ironwing model. Concept based on artwork attributed in the source project to Xezeno, inspired by Bazelgeuse (Monster Hunter). No source artwork or donor sculpt included. Revision D: revised geometry including wing surfaces and armor, plus two native held pose clips.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Ironwing"
     },
     {
       "id": "shelf-buddies-buckethead",
@@ -4792,7 +5092,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural PS1-style character geometry from the Shelf Buddies viewer, exported in the authored default model pose and scale; Lambert materials translated for glTF. Any texture is procedurally painted, not media from the photo. No viewer, staging backdrop, or original reference images included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Shelf Buddies"
     },
     {
       "id": "shelf-buddies-pond-scum",
@@ -4808,7 +5109,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original procedural PS1-style character geometry from the Shelf Buddies viewer, exported in the authored default model pose and scale; Lambert materials translated for glTF. Any texture is procedurally painted, not media from the photo. No viewer, staging backdrop, or original reference images included.",
-      "license": "No public reuse license specified."
+      "license": "No public reuse license specified.",
+      "collection": "Shelf Buddies"
     },
     {
       "id": "fusion-toothy-mech",
@@ -4825,7 +5127,8 @@
       "clips": [],
       "credits": "Procedurally modeled reinterpretation, exported from the Fusion Lab viewer at its neutral pose. No donor geometry, reference media or scripted motion included.",
       "license": "No public reuse license specified.",
-      "source": "https://github.com/nigh3252-prog/Playground/blob/354021a7d461f341f651a393c18e76580f8ff845/models/assets/fusion-toothy-mech-v1.glb"
+      "source": "https://github.com/nigh3252-prog/Playground/blob/354021a7d461f341f651a393c18e76580f8ff845/models/assets/fusion-toothy-mech-v1.glb",
+      "collection": "Fusion Lab"
     },
     {
       "id": "fusion-stilt-walker",
@@ -4842,7 +5145,8 @@
       "clips": [],
       "credits": "Procedurally modeled reinterpretation, exported from the Fusion Lab viewer at its neutral pose. No donor geometry, reference media or scripted motion included.",
       "license": "No public reuse license specified.",
-      "source": "https://github.com/nigh3252-prog/Playground/blob/354021a7d461f341f651a393c18e76580f8ff845/models/assets/fusion-stilt-walker-v1.glb"
+      "source": "https://github.com/nigh3252-prog/Playground/blob/354021a7d461f341f651a393c18e76580f8ff845/models/assets/fusion-stilt-walker-v1.glb",
+      "collection": "Fusion Lab"
     },
     {
       "id": "red-cleaver-41",
@@ -4899,7 +5203,8 @@
         }
       ],
       "credits": "Exact native, newly constructed interpretation of a user-supplied visual concept; raw reference media is excluded. Original generated mesh and procedural material maps, with two native clips. Initial detailed export before the later donor-assisted revisions.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Ironmaw"
     },
     {
       "id": "ironmaw-generated-lod",
@@ -4940,7 +5245,8 @@
         }
       ],
       "credits": "Exact native, newly constructed interpretation of a user-supplied visual concept; raw reference media is excluded. Original generated mesh and procedural material maps, with two native clips. Author-supplied lower-detail export.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Ironmaw"
     },
     {
       "id": "boxguard-01",
@@ -4972,7 +5278,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Faithful neutral geometry export from the standalone Low-Poly Ronin Three.js study. Independently modeled from a supplied character reference; exact faceted cloak, angular hat and mask, scarf and leg pivots interpreted from the source procedural builder. Frozen deterministic panel variation; no reference image, sword, animated runtime, or viewer overlays.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Ronin"
     },
     {
       "id": "warden-cyan-shoulder",
@@ -4988,7 +5295,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original stand-alone procedural fitting study. Rigid hanging panels, hinge shapes and mount anchors are retained. No drawing, attached character, skin or animation.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Warden Ability Models"
     },
     {
       "id": "warden-forearm-feather-wing",
@@ -5004,7 +5312,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original stand-alone procedural fitting study. Modeled feather layers, spots and cuff with attachment anchors. No drawing, attached character, skin or animation.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Warden Ability Models"
     },
     {
       "id": "warden-oversized-tendril-arm",
@@ -5020,7 +5329,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Original stand-alone procedural fitting study. Armored gauntlet, five capped tendrils and rigid fitting anchors. No drawing, attached character, skin or animation.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "collection": "Warden Ability Models"
     },
     {
       "id": "warden-ember-knight",
@@ -5067,7 +5377,8 @@
           "bytes": 4019356,
           "sha256": "b56e3546ebe3ce212d37cdb97f9a8e74def0fa93008604cfc11a31843dd5dee6"
         }
-      ]
+      ],
+      "collection": "Warden Expansion Pack"
     },
     {
       "id": "armory-blasters-blaster-a",

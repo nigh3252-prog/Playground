@@ -58,8 +58,10 @@ dt { color:var(--muted); }
 
 .detail-note { color:var(--muted); margin:.5rem 0; }
 #bench-dock { position:relative; z-index:3; }
-#bench-actions { display:flex; align-items:center; gap:.55rem; margin-top:.7rem; }
+#bench-actions { display:flex; align-items:center; gap:.55rem; margin-top:.7rem; overflow-x:auto; scrollbar-width:none; }
 #bench-actions > * { flex:none; }
+#browse-sections { display:flex; gap:.25rem; }
+#browse-sections button { flex:none; padding-inline:.58rem; white-space:nowrap; }
 #bench-actions #static-label { margin:0; font-size:.86rem; }
 #skeleton-control {
   display:flex; align-items:center; gap:.4rem; min-height:44px; cursor:pointer;
@@ -85,7 +87,7 @@ fieldset label { white-space:nowrap; }
 fieldset label,.filter-latest { display:inline-flex; align-items:center; min-height:36px; gap:.35rem; cursor:pointer; }
 .filter-summary { display:flex; align-items:center; justify-content:space-between; gap:.7rem; margin-top:.35rem; }
 #filter-count { font-weight:650; }
-#bench-actions button[aria-expanded="true"],#model-chips button[aria-pressed="true"] { color:var(--accent); border-color:var(--accent); }
+#bench-actions button[aria-expanded="true"],#model-chips button[aria-pressed="true"],#browse-sections button[aria-pressed="true"] { color:var(--accent); border-color:var(--accent); }
 
 @media (max-width:700px) and (orientation:portrait), (max-height:520px) and (orientation:landscape) {
   main { display:flex; flex-direction:column; width:calc(100% - 1.25rem); height:100dvh; }
@@ -105,7 +107,11 @@ fieldset label,.filter-latest { display:inline-flex; align-items:center; min-hei
     display:flex; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; overscroll-behavior-inline:contain;
     gap:.4rem; align-items:center; margin:0; padding:.46rem 2px;
   }
-  #bench-actions { border-bottom:1px solid var(--edge); }
+  #bench-actions { border-bottom:1px solid var(--edge); padding-inline-end:.8rem; }
+  #bench-actions::after {
+    content:""; position:absolute; right:0; top:0; width:.85rem; height:3.9rem;
+    background:linear-gradient(90deg,transparent,#101922); pointer-events:none;
+  }
   .model-nav > * { flex:none; }
   .model-nav button { min-width:0; padding-inline:.5rem; }
   #model-picker { width:clamp(8.5rem,48vw,16rem); flex:none; }
@@ -131,4 +137,10 @@ fieldset label,.filter-latest { display:inline-flex; align-items:center; min-hei
   .model-bar button { min-height:34px; }
   #stage { min-height:9rem; }
   #bench-actions,.model-nav { padding-block:.23rem; }
+}
+
+@media (max-width:360px) and (orientation:portrait) {
+  #bench-actions { gap:.3rem; }
+  #browse-sections { gap:.2rem; }
+  #browse-sections button { padding-inline:.34rem; font-size:.92rem; }
 }

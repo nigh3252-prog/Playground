@@ -36,3 +36,37 @@ test('active filters combine, empty results recover to unfiltered list', () => {
   assert.deepEqual(filterModels(catalog,{...defaultFilters,type:'gear',motion:['walk']}),[]);
   assert.deepEqual(filterModels(catalog,defaultFilters),catalog);
 });
+
+test('browse sections retain uncategorized entries in All and compose with separate metadata facets', async () => {
+  const {modelFacetOptions}=await import('../filters.mjs');
+  const cloak={id:'cloak',type:'humanoid',family:'Ronin'};
+  const armFree={id:'arm-free',type:'humanoid',family:'Ronin',collection:'Arm-Free Concepts',rig:'skinned',clips:[{name:'Walk'}]};
+  const creature={id:'crocodile',type:'creature'};
+  const gear={id:'prop',type:'gear',collection:'Kit'};
+  const terrain={id:'terrain',type:'environment'};
+  const untagged={id:'other'};
+  const all=[cloak,armFree,creature,gear,terrain,untagged];
+  for(const [section,expected] of [['all',all],['entities',[cloak,armFree,creature]],['gear',[gear]],['environments',[terrain]]]) {
+    assert.deepEqual(filterModels(all,{section}),expected);
+  }
+  assert.deepEqual(filterModels(all,{section:'entities',family:'Ronin'}),[cloak,armFree]);
+  assert.deepEqual(filterModels(all,{section:'entities',family:'Ronin',collection:'Arm-Free Concepts',motion:['walk','skinned']}),[armFree]);
+  assert.deepEqual(filterModels(all,{section:'gear',family:'Ronin'}),[]);
+  assert.deepEqual(modelFacetOptions([gear,armFree,untagged,cloak,...all],'collection'),['Arm-Free Concepts','Kit']);
+  assert.deepEqual(modelFacetOptions([...all,{family:'  '},{family:123}],'family'),['Ronin']);
+});
+
+test('coarse section metadata and legacy aliases do not relabel the Type filter', async () => {
+  const {modelSection}=await import('../filters.mjs');
+  const legacy=[{type:'character'},{type:'prop'},{type:'other',section:'entities'},{type:'other',section:'yes'}];
+  assert.deepEqual(legacy.map(modelSection),['entities','gear','entities','all']);
+  assert.deepEqual(legacy.map(modelType),['unknown','unknown','other','other']);
+});
+
+test('Armory is a collection without mutating its generated catalog rows', async () => {
+  const {modelFacetOptions} = await import('../filters.mjs');
+  const bundled = {id:'armory-source',type:'gear',sourceCollection:'armory',pack:'Sci-fi'};
+  const native = {id:'native-gear',type:'gear'};
+  assert.deepEqual(modelFacetOptions([bundled,native],'collection'),['Armory']);
+  assert.deepEqual(filterModels([bundled,native],{section:'gear',collection:'Armory'}),[bundled]);
+});

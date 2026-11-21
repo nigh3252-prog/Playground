@@ -57,6 +57,12 @@
                     <option value="other">Other</option>
                   </select>
                 </label>
+                <label>Family
+                  <select name="family"><option value="">Any family</option></select>
+                </label>
+                <label>Collection
+                  <select name="collection"><option value="">Any collection</option></select>
+                </label>
                 <label>Complexity
                   <select name="complexity">
                     <option value="all">Any size</option>
@@ -98,6 +104,12 @@
         </div>
         <div id="bench-actions" aria-label="Viewer actions">
           <button id="filter-toggle" type="button" aria-controls="filter-panel" aria-expanded="false" disabled>Filters</button>
+          <div id="browse-sections" role="group" aria-label="Browse section">
+            <button type="button" data-section="all" aria-pressed="true" disabled>All</button>
+            <button type="button" data-section="entities" aria-pressed="false" disabled>Entities</button>
+            <button type="button" data-section="gear" aria-pressed="false" disabled>Gear</button>
+            <button type="button" data-section="environments" aria-pressed="false" disabled>Environments</button>
+          </div>
           <button id="details-toggle" type="button" aria-controls="metadata" aria-expanded="false" disabled>Details</button>
           <button id="animation-toggle" type="button" aria-controls="animation" aria-expanded="false" hidden>Animation</button>
           <label id="skeleton-control" hidden><input id="show-skeleton" type="checkbox"> Show skeleton</label>

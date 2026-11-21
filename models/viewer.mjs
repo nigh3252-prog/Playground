@@ -3,7 +3,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createSelection, modelURL, resolveModel, stepModel} from './navigation.mjs';
-import {defaultFilters, filterModels} from './filters.mjs';
+import {defaultFilters, filterModels, modelFacetOptions} from './filters.mjs';
 import {assetURL, fetchSplitGLB} from './asset-paths.mjs';
 import {parseSelectedGLB} from './parse-selected-glb.mjs';
 import {createSkeletonOverlay} from './skeleton-overlay.mjs';
@@ -21,6 +21,7 @@ const skeletonOverlay = createSkeletonOverlay(THREE);
 const skeletonCheckbox = el('show-skeleton');
 const rigControl = el('skeleton-control');
 const filterForm = el('model-filters');
+const sectionButtons = [...el('browse-sections').querySelectorAll('button')];
 const panelEntries = [
   [el('filter-toggle'),el('filter-panel')],
   [el('details-toggle'),el('metadata')],
@@ -351,11 +352,15 @@ function syncSelection() {
 }
 function updateResults() {
   matches = filterModels(catalog, filters);
+  for (const button of sectionButtons) {
+    button.disabled = false;
+    button.setAttribute('aria-pressed',String(button.dataset.section === filters.section));
+  }
   const count = matches.length;
   const summary = `${count} of ${catalog.length} models`;
   el('filter-count').textContent = summary;
   const filterToggle = el('filter-toggle');
-  const activeFilter = filters.type !== 'all' || filters.complexity !== 'all' || filters.latest || filters.motion.length;
+  const activeFilter = filters.type !== 'all' || filters.complexity !== 'all' || filters.latest || filters.motion.length || filters.family || filters.collection;
   filterToggle.textContent = activeFilter ? `Filters · ${count}` : 'Filters';
   filterToggle.setAttribute('aria-label',activeFilter ? `Filters, ${summary}` : 'Filters');
   filterToggle.disabled = false;
@@ -377,8 +382,8 @@ function choose(entry, historyMode = 'none', fallback = false, force = false) {
   const same = current === entry;
   current = entry;
   const url = modelURL(location.href,entry);
-  if (historyMode === 'push' && url.href !== location.href) history.pushState(null,'',url);
-  if (historyMode === 'replace') history.replaceState(null,'',url);
+  if (historyMode === 'push' && url.href !== location.href) history.pushState({benchFilters:filters},'',url);
+  else if (historyMode !== 'none') rememberBrowse(url);
   syncSelection();
   el('lookup-note').hidden = !fallback;
   el('lookup-note').textContent = fallback ? 'That model version is not in the catalog. Showing the first model instead.' : '';
@@ -408,32 +413,61 @@ function setEmpty() {
 function filterFromControls() {
   const values = new FormData(filterForm);
   filters = {
+    section:filters.section,
+    family:values.get('family'),
+    collection:values.get('collection'),
     type:values.get('type'),
     complexity:values.get('complexity'),
     motion:values.getAll('motion'),
     latest:values.has('latest'),
   };
+  applyBrowse();
+}
+function applyBrowse() {
   updateResults();
   if (!matches.length) setEmpty();
   else if (!matches.includes(current)) choose(matches[0],'push');
-  else syncSelection();
+  else {
+    syncSelection();
+    rememberBrowse();
+  }
+}
+function rememberBrowse(url = location.href) {
+  history.replaceState({...history.state,benchFilters:filters},'',url);
 }
 function resetFilters() {
   filterForm.reset();
   filterFromControls();
+}
+for (const button of sectionButtons) {
+  button.onclick = () => {
+    if (filters.section === button.dataset.section) return;
+    filters = {...filters,section:button.dataset.section};
+    applyBrowse();
+  };
 }
 filterForm.onchange = filterFromControls;
 filterForm.onsubmit = event => event.preventDefault();
 el('clear-filters').onclick = el('reset-empty').onclick = resetFilters;
 function chooseFromLocation() {
   const {model, fallback} = resolveModel(catalog,location.search);
-  // Respect explicit history/deep links, even after later narrowing the local view.
+  // Restore this entry's local browse state, but always honor the explicit model URL.
+  const saved = history.state?.benchFilters;
+  filters = saved ? {...defaultFilters,...saved} : defaultFilters;
+  updateResults();
   if (!matches.includes(model)) {
-    filterForm.reset();
     filters = defaultFilters;
     updateResults();
   }
+  for (const field of ['type','complexity','family','collection']) {
+    filterForm.elements.namedItem(field).value = filters[field];
+  }
+  for (const check of filterForm.querySelectorAll('[name="motion"]')) {
+    check.checked = filters.motion.includes(check.value);
+  }
+  filterForm.elements.namedItem('latest').checked = filters.latest;
   choose(model, fallback || !location.search ? 'replace':'none',fallback);
+  if (!saved) rememberBrowse();
 }
 async function start() {
   try {
@@ -442,6 +476,9 @@ async function start() {
     const document = await response.json();
     if (document.schemaVersion !== 1 || !Array.isArray(document.models) || !document.models.length) throw Error('Catalog is empty or unsupported');
     catalog = document.models;
+    for (const facet of ['family','collection']) {
+      filterForm.elements.namedItem(facet).append(...modelFacetOptions(catalog,facet).map(value=>new Option(value,value)));
+    }
     initStage();
     updateResults();
     chooseFromLocation();
