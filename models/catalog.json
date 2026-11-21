@@ -3442,6 +3442,75 @@
       "source": "https://github.com/nigh3252-prog/Playground/blob/e06438475ac413822655a24044896d8c779da899/regional-world.html"
     },
     {
+      "id": "phone-animation-lab-capsule",
+      "version": "v1",
+      "name": "Phone Animation Lab \u00b7 Capsule Figure",
+      "type": "character",
+      "asset": "assets/phone-animation-lab-capsule-v1.glb",
+      "sha256": "06e1f51b5efde5c9f87a04987078ff946fe68bc4003c0a8b385ca787de092fb7",
+      "bytes": 151860,
+      "triangles": 5372,
+      "meshes": 13,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Static neutral pose of the independently authored Phone Animation Authoring Lab capsule figure. Preserves original solved shoulder, elbow and hand positions and limb finishes. IK handles, pole and reach guides, editor controls and unsaved user motion are not included. No skinned rig or native preset animation in source.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "classic-cruiser-mobile",
+      "version": "v1",
+      "name": "Classic Cruiser \u00b7 Three.js Mobile",
+      "type": "other",
+      "asset": "assets/classic-cruiser-mobile-v1.glb",
+      "sha256": "bc7fbdfa5878c817078ebedefda1a5c01f154299ead096d47475c01fafb2eda1",
+      "bytes": 94460,
+      "triangles": 1084,
+      "meshes": 29,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Static original unbranded classic-cruiser model from the Three.js mobile driving test, exported at its authored neutral pose. Authored car only: no scenery, game code, optional external Kenney model or user imports.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "procedural-walk-cycle-dummy",
+      "version": "v2",
+      "name": "Procedural Walk Cycle Dummy",
+      "type": "humanoid",
+      "asset": "assets/procedural-walk-cycle-dummy-v2.glb",
+      "sha256": "cfb20afe0aff32f2410fec8d030f78cb4952666cb63d59b09b27fe6110ca7136",
+      "bytes": 371000,
+      "triangles": 9140,
+      "meshes": 40,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Rebuilt default IK walk (viewer-derived)"
+        }
+      ],
+      "credits": "Original rebuilt revision of the Procedural Walk Cycle Dummy. Preserves the rebuilt coat, hair and scarf geometry plus the viewer\u2019s revised default two-bone IK walk, sampled in place. Separate scene travel, absolute-clock scarf flutter, trails and studio helpers are not included. Articulated rigid hierarchy, not a skin.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "fluid-study-static-diorama",
+      "version": "v1",
+      "name": "Fluid Study \u00b7 Static Diorama",
+      "type": "environment",
+      "asset": "assets/fluid-study-static-diorama-v1.glb",
+      "sha256": "70e2d3349386b94bc4e8bd8426066600a749b2c34ad6db37a95620f932329e62",
+      "bytes": 66032,
+      "triangles": 852,
+      "meshes": 27,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original blockout diorama from the public Three.js Fluid Study: the actual floor, ruins and three original placeholder figures with companion; includes no fluid simulation, motion, reference art, sky, or debug overlays. Lambert materials adapted for portable GLB.",
+      "license": "No public reuse license specified.",
+      "source": "https://github.com/nigh3252-prog/Playground/blob/e06438475ac413822655a24044896d8c779da899/threejs_midair_lifted_ground_slice_v1.html"
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
