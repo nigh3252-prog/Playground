@@ -201,5 +201,13 @@
   "flyer-shape-wedge-sensor-dart@v1": "9408448134a0aeefef34b7b630274a3c5d3c6578fb13c6c855443af58a894e82",
   "flyer-shape-six-spoke-capsule@v1": "f237f2ff92aaf837c43f3470fa956db7bf0001285027db165b1165c5568af73d",
   "flyer-shape-clamp-sphere@v1": "9457751ded35c61df132c393bf3b8fa5329b9c546e736885b5b14838a8f012b2",
-  "flyer-shape-twin-fin-dart@v1": "3c1f607a4b00376af4c15941e44b82457aa82f40a27b2c641bdd8e11f75b2712"
+  "flyer-shape-twin-fin-dart@v1": "3c1f607a4b00376af4c15941e44b82457aa82f40a27b2c641bdd8e11f75b2712",
+  "caddybot-golf-bag@v1": "47e46b06369e1d70e998e9318f22f237acd6a705e70f69f32be32d025b32ebdd",
+  "caddybot-putting-green@v1": "b4fd521517de39aa5a47d0a12d9be1b7318c0357d1611f756f1a8b22107a55c7",
+  "relay-zero-raised-courtyard@v1": "235b0de51e4219a504bacf7e1fd22728a4746207ded9e8e1f6a9e67a4fc466fb",
+  "mace-goblin-sandbox@v2": "18ed8499c6ab8a1d2cc70858ac3e5533f54219b5e643a86518a15cccb86898e0",
+  "small-morning-clover-market@v1": "3b19c6ea9437829f0c25302abc1b4abd3257b780f35eed014a65444f84943625",
+  "small-morning-clover-hatchback@v1": "53f96221fc6afd9a68ce676c2205b432f2469620cca1ce06e45f11e3dc815df9",
+  "small-morning-bakery-van@v1": "2ce684c24971abba94ea75abbb2226ece36854fed13b1034f237219609a771a4",
+  "small-morning-clover-bus@v1": "cd4f12cf3c8a4bbf01517d7c9de168c399fd33256019811fd614e50212558f1a"
 }
