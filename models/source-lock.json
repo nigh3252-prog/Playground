@@ -76,8 +76,6 @@
   "warden-machine-lane-battery@v1": "48e1074f6180b52d7ffa2040c7c58ae91c1d8155adcae04edf1ca91ba3fb37db",
   "warden-machine-split-sled@v1": "4ea3de3a697ff6f910bc439516e09f91832ea206aaa1969d0cec7e68e3ea2ce2",
   "warden-machine-cloud-strider@v1": "5162faf0d9049722c2644fc9e38845355d02f13999faa0e436242d81325cef72",
-  "fusion-toothy-mech@v1": "9d0a44f756bc2e9192de71caa9a824df2ac41136195e1a0d6a4c0dc2c577f1af",
-  "fusion-stilt-walker@v1": "20eea26fbea31110115e31471fb15670c823acbf3543af7d7018bd96f72df8e4",
   "warden-machine-seeker-battery@v1": "96c3d5f101f5f2436e0dbbc7f513ca20455933cb1418c8f78bd45aba6369f131",
   "warden-machine-rail-sentry@v1": "e8d79c299d806a0a1ac615d9ce5e54ce14997f06ec9881df47eebaa61a0ae339",
   "warden-machine-hornet-well@v1": "7379d28ae466f0efffabd9ec55e3793ea9ac8b39ed30b04d2f8312cfeda9e9bc",
@@ -187,5 +185,9 @@
   "tilted-dungeon-lab-room@v1": "8588d8c8feaab610e90ec64ca7b23f488127068d0fc2bed76e25d35cd1d4caa3",
   "procedural-city-lab-built-city@v1": "60f777b097723fc560ab4e9501bdf7df9ca9a8c401b697607249c9fcf6966a58",
   "landfill-compactor-original@v1": "f620c7474bb5a9df3b8934730182e206b61ed8e956319090180e8542e1a45d2c",
-  "glowing-garage-diorama@v1": "70f9afbf589470d0504aa644ca2a8849f1a74dbc01689c4d21ca331bb7323276"
+  "glowing-garage-diorama@v1": "70f9afbf589470d0504aa644ca2a8849f1a74dbc01689c4d21ca331bb7323276",
+  "bent-horizon-tower-and-pine-ruins@v1": "9ee084857fab01de80a5e71ff111d266c425bb93525ea7a474385a9cd8bd1102",
+  "ranch-house-blueprint-concept@v1": "8d912326de16b9c7a68d9ac448dbef4bea7230ee7f04362930fbbfd07c8356f4",
+  "forest-lighting-lab@v1": "e27bb9598119c7bc9c090b9bfb7267670a2b6873ceb2bb8d696d2924a3f22a90",
+  "regional-world-generated-terrain@v1": "15ba3f957b4cc0672218e85db45cf3361b046d025619760a2d5cdd40c7aa40eb"
 }
