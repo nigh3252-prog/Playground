@@ -3998,6 +3998,23 @@
       "source": "https://github.com/nigh3252-prog/Playground/blob/1f703b9e6bcdcaeb989f23f8381689125e67b547/local-terrain.html"
     },
     {
+      "id": "watershed-refined-river-valley",
+      "version": "v1",
+      "name": "Watershed \u00b7 Refined River Valley",
+      "type": "environment",
+      "asset": "assets/watershed-refined-river-valley-v1.glb",
+      "sha256": "4ee7f7a020ea9ed980e8da24dc219cf4ae6296c207badbeda61bb6f847ad0a87",
+      "bytes": 1781728,
+      "triangles": 73728,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original stage-three Watershed river valley. Exact first Find a river valley reach from the original branch browser-test fixture: generated seed 431970387, Quick parent, 1.2 km at physical relief. Native refined geometry and generated Natural palette including rendered banks, no diagnostic or benchmark overlays.",
+      "license": "No public reuse license specified.",
+      "source": "https://github.com/nigh3252-prog/Playground/blob/3d913cbfb7f8fce33fe41d1e91d8739254f7ac65/regional-world.html"
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
