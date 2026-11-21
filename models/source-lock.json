@@ -265,5 +265,9 @@
   "ironmaw-generated@v1": "49224bd91624c999014c3dfb492055528008b1956baede571dc8ec874e06f4fa",
   "ironmaw-generated-lod@v1": "e2a5a09a99ae77cf6197b31c693f915b5b15459f862ea156b2571cd0773dfe3a",
   "boxguard-01@v3": "b5928e4fb14d5c12689f2ca6d6faf9f3cf401db3d646578c9c974878602fa7a6",
-  "low-poly-ronin-standalone@v1": "f69bb6381895dee075467a373185aca8090c24d5ef31e8ffb204c9d01c895e90"
+  "low-poly-ronin-standalone@v1": "f69bb6381895dee075467a373185aca8090c24d5ef31e8ffb204c9d01c895e90",
+  "warden-cyan-shoulder@v1": "cea7a1e3d09aa145ddcf226c87cb26e9b275ebef5ed5482cf3440d1ad01fa712",
+  "warden-forearm-feather-wing@v1": "820f5310ebe7aeb867d126d581e10e198c80f48d001f7fee21d61aa5492fffae",
+  "warden-oversized-tendril-arm@v1": "be3e20ddb502fef7a060428ddc5ce572c5e51eaf20c2ceaa4e77767f4a6d11d2",
+  "warden-ember-knight@v2": "74d273439f9e54fd849e68e2d85569bd8cd7c70aef827398429ef3b9211fa037"
 }

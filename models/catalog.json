@@ -4975,6 +4975,101 @@
       "license": "No verified public reuse license."
     },
     {
+      "id": "warden-cyan-shoulder",
+      "version": "v1",
+      "name": "Cyan Shoulder Mantle",
+      "type": "gear",
+      "asset": "assets/warden-cyan-shoulder-v1.glb",
+      "sha256": "cea7a1e3d09aa145ddcf226c87cb26e9b275ebef5ed5482cf3440d1ad01fa712",
+      "bytes": 843316,
+      "triangles": 18940,
+      "meshes": 73,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original stand-alone procedural fitting study. Rigid hanging panels, hinge shapes and mount anchors are retained. No drawing, attached character, skin or animation.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "warden-forearm-feather-wing",
+      "version": "v1",
+      "name": "Forearm Feather Wing",
+      "type": "gear",
+      "asset": "assets/warden-forearm-feather-wing-v1.glb",
+      "sha256": "820f5310ebe7aeb867d126d581e10e198c80f48d001f7fee21d61aa5492fffae",
+      "bytes": 2477728,
+      "triangles": 145964,
+      "meshes": 128,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original stand-alone procedural fitting study. Modeled feather layers, spots and cuff with attachment anchors. No drawing, attached character, skin or animation.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "warden-oversized-tendril-arm",
+      "version": "v1",
+      "name": "Oversized Tendril Arm",
+      "type": "gear",
+      "asset": "assets/warden-oversized-tendril-arm-v1.glb",
+      "sha256": "be3e20ddb502fef7a060428ddc5ce572c5e51eaf20c2ceaa4e77767f4a6d11d2",
+      "bytes": 2406992,
+      "triangles": 73052,
+      "meshes": 159,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original stand-alone procedural fitting study. Armored gauntlet, five capped tendrils and rigid fitting anchors. No drawing, attached character, skin or animation.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "warden-ember-knight",
+      "version": "v2",
+      "name": "Ember Knight \u00b7 Painted Volumes",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "74d273439f9e54fd849e68e2d85569bd8cd7c70aef827398429ef3b9211fa037",
+      "bytes": 12058068,
+      "triangles": 23192,
+      "meshes": 5,
+      "textures": 5,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Reference_Pose"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Exact asset-only export of the reauthored painted-volume Ember Knight. Generated color paintings and derived technical maps, 42-joint rig and original preview clips retained. Supplied reference and comparison media excluded.",
+      "license": "No verified public reuse license.",
+      "originalFile": "Warden_Ember_Knight.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-ember-knight-v2.glb.part1",
+          "bytes": 4019356,
+          "sha256": "131776d07e3c590ff4d2f65e8de4ca545ac34ad304560e0823f8b957933f9159"
+        },
+        {
+          "asset": "assets/warden-ember-knight-v2.glb.part2",
+          "bytes": 4019356,
+          "sha256": "ab277267167e5ef83b81ef9817c4512f107c65c902441362bc147f4f6f386697"
+        },
+        {
+          "asset": "assets/warden-ember-knight-v2.glb.part3",
+          "bytes": 4019356,
+          "sha256": "b56e3546ebe3ce212d37cdb97f9a8e74def0fa93008604cfc11a31843dd5dee6"
+        }
+      ]
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
