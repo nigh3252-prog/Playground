@@ -75,5 +75,12 @@
   "warden-machine-lance-drill@v1": "f2e1a9484a2ad4c5cbb809a6d4311c4a6f03c7211dd9c0260c2a5c8a53853942",
   "warden-machine-lane-battery@v1": "48e1074f6180b52d7ffa2040c7c58ae91c1d8155adcae04edf1ca91ba3fb37db",
   "warden-machine-split-sled@v1": "4ea3de3a697ff6f910bc439516e09f91832ea206aaa1969d0cec7e68e3ea2ce2",
-  "warden-machine-cloud-strider@v1": "5162faf0d9049722c2644fc9e38845355d02f13999faa0e436242d81325cef72"
+  "warden-machine-cloud-strider@v1": "5162faf0d9049722c2644fc9e38845355d02f13999faa0e436242d81325cef72",
+  "fusion-toothy-mech@v1": "9d0a44f756bc2e9192de71caa9a824df2ac41136195e1a0d6a4c0dc2c577f1af",
+  "fusion-stilt-walker@v1": "20eea26fbea31110115e31471fb15670c823acbf3543af7d7018bd96f72df8e4",
+  "warden-machine-seeker-battery@v1": "96c3d5f101f5f2436e0dbbc7f513ca20455933cb1418c8f78bd45aba6369f131",
+  "warden-machine-rail-sentry@v1": "e8d79c299d806a0a1ac615d9ce5e54ce14997f06ec9881df47eebaa61a0ae339",
+  "warden-machine-hornet-well@v1": "7379d28ae466f0efffabd9ec55e3793ea9ac8b39ed30b04d2f8312cfeda9e9bc",
+  "warden-machine-seismic-mortar@v1": "15fa2a3c46652fa059c3743d7cabc945a2bc7ace98966cbd5d00cd8f6bf3d90f",
+  "punch-lab-boxer@v1": "f48216b0e546baa5fdd8b03493a3cbee819d059f5c8621b97c1381899b3abe7d"
 }
