@@ -1,0 +1,34 @@
+name: Validate Playground Model Review Bench
+on:
+  pull_request:
+    paths:
+      - models/**
+      - armory/vendor/**
+      - armory/catalog.json
+      - armory/models/**
+      - index.html
+      - .github/workflows/validate-model-review-bench.yml
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify catalog and embedded assets
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 models/tools/sync_armory.py --check
+          python3 models/tools/verify_assets.py
+          node --test models/tests/asset-paths.test.mjs models/tests/navigation.test.mjs models/tests/filter*.test.mjs models/tests/skeleton-overlay.test.mjs
+      - name: Install browser verification runtime
+        run: |
+          npm install --prefix /tmp/model-bench-check playwright@1.56.1
+          /tmp/model-bench-check/node_modules/.bin/playwright install --only-shell chromium
+      - name: Test the shared viewer on desktop and phone
+        env:
+          MODEL_BENCH_PLAYWRIGHT_MODULE: /tmp/model-bench-check/node_modules/playwright
+        run: node --test models/tests/viewer.test.mjs
