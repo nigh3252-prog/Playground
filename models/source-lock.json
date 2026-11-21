@@ -193,5 +193,13 @@
   "phone-animation-lab-capsule@v1": "06e1f51b5efde5c9f87a04987078ff946fe68bc4003c0a8b385ca787de092fb7",
   "classic-cruiser-mobile@v1": "bc7fbdfa5878c817078ebedefda1a5c01f154299ead096d47475c01fafb2eda1",
   "procedural-walk-cycle-dummy@v2": "cfb20afe0aff32f2410fec8d030f78cb4952666cb63d59b09b27fe6110ca7136",
-  "fluid-study-static-diorama@v1": "70e2d3349386b94bc4e8bd8426066600a749b2c34ad6db37a95620f932329e62"
+  "fluid-study-static-diorama@v1": "70e2d3349386b94bc4e8bd8426066600a749b2c34ad6db37a95620f932329e62",
+  "armfree-pebble-early@v1": "a16fac23489c909be029c3e11c56e509195cb2c60708318fa8c47394858bee88",
+  "armfree-ronin-early@v1": "d25fc7131e9f41ac04f004944a9dcd33ce783fa2df027e15b5e27915270a13ea",
+  "armfree-bell-early@v1": "dd046dcbeefde42433bf180b8f29e6bb4f219f91af6443a8ef9a4813dffd8d98",
+  "flyer-shape-cylinder-chamber-carrier@v1": "b8508f5df01d3ad53ba58b2dd045db967dcc39fe2692f3ac362eb1ae73e33398",
+  "flyer-shape-wedge-sensor-dart@v1": "9408448134a0aeefef34b7b630274a3c5d3c6578fb13c6c855443af58a894e82",
+  "flyer-shape-six-spoke-capsule@v1": "f237f2ff92aaf837c43f3470fa956db7bf0001285027db165b1165c5568af73d",
+  "flyer-shape-clamp-sphere@v1": "9457751ded35c61df132c393bf3b8fa5329b9c546e736885b5b14838a8f012b2",
+  "flyer-shape-twin-fin-dart@v1": "3c1f607a4b00376af4c15941e44b82457aa82f40a27b2c641bdd8e11f75b2712"
 }
