@@ -4959,6 +4959,22 @@
       "license": "No verified public reuse license."
     },
     {
+      "id": "low-poly-ronin-standalone",
+      "version": "v1",
+      "name": "Low-Poly Ronin \u00b7 Cloak Study",
+      "type": "humanoid",
+      "asset": "assets/low-poly-ronin-standalone-v1.glb",
+      "sha256": "f69bb6381895dee075467a373185aca8090c24d5ef31e8ffb204c9d01c895e90",
+      "bytes": 69304,
+      "triangles": 220,
+      "meshes": 54,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Faithful neutral geometry export from the standalone Low-Poly Ronin Three.js study. Independently modeled from a supplied character reference; exact faceted cloak, angular hat and mask, scarf and leg pivots interpreted from the source procedural builder. Frozen deterministic panel variation; no reference image, sword, animated runtime, or viewer overlays.",
+      "license": "No verified public reuse license."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
