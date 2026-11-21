@@ -275,5 +275,9 @@
   "mechanical-citizens-red-shoulder-juggernaut@v2": "7f7391cf0898c5786c6f24a4cb8a3e859e66ab0b2c786738241320b1e0564e4f",
   "mechanical-citizens-blue-barrel-heavy@v2": "b4df256e86bc0fff5a98ebbb66bb0c65d3ef3d026a1f0d6b1c0d1b509cdde180",
   "mechanical-citizens-armored-cloak@v1": "bdf00b55b6a45f747aa849cb5621062beafefaf5b47464ea8f72fae6413311f8",
-  "mechanical-citizens-disc-hat-scout@v1": "085a06e56a7a9f30fd885004a4d07b7c785862abc262da41f75e7b5787222541"
+  "mechanical-citizens-disc-hat-scout@v1": "085a06e56a7a9f30fd885004a4d07b7c785862abc262da41f75e7b5787222541",
+  "boxguard-rifle-grunt@v1": "962de37d54e8c9cb4ef6942a5d4080e25c5d22fbd2303272b91d0e48080b4765",
+  "boxguard-rifle-grunt@v2": "da4ab5ed241224fd6828356a0f9e1fd51cc362a5fe470946ec35812491c05427",
+  "warden-winged-greaves@v3": "d2a464d2d6aab4658df3d80d48ad5f800f84b2ce29bcacdf459f3e842690771e",
+  "warden-digitigrade-legs@v1": "6628483e2feb06db9ec51158ff0cd501b04cc864c34dba44b1da361a412614c9"
 }

@@ -5262,7 +5262,8 @@
       "rig": "unrigged",
       "clips": [],
       "credits": "Exact native Boxguard 01 angular reshape from an authored numbered reference study. Newly modeled armor and mechanical parts with named rigid pivots and removable plate metadata; supplied reference image is not included.",
-      "license": "No verified public reuse license."
+      "license": "No verified public reuse license.",
+      "family": "Boxguard 01"
     },
     {
       "id": "low-poly-ronin-standalone",
@@ -5481,6 +5482,92 @@
       "credits": "Exact model-only export of the original authored rigid-part prototype (F.01) for the Mechanical Citizens series. Concept reference only guided the silhouette; no source image, game code, animation or donor geometry is included.",
       "license": "No verified public reuse license.",
       "collection": "Mechanical Citizens"
+    },
+    {
+      "id": "boxguard-rifle-grunt",
+      "version": "v1",
+      "type": "humanoid",
+      "name": "Rifle Grunt \u00b7 Restrained Texture Study",
+      "asset": "assets/boxguard-rifle-grunt-v1.glb",
+      "sha256": "962de37d54e8c9cb4ef6942a5d4080e25c5d22fbd2303272b91d0e48080b4765",
+      "bytes": 1613408,
+      "triangles": 13064,
+      "meshes": 33,
+      "textures": 2,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "First neutral textured study of the authored Boxguard 01 body. Replaces smaller fittings with shared baked and generated color and normal maps; preserves all 18 removable armor groups. No rifle, skin or animation.",
+      "license": "No verified public reuse license.",
+      "family": "Boxguard 01",
+      "collection": "Rifle Grunt Texture Studies"
+    },
+    {
+      "id": "boxguard-rifle-grunt",
+      "version": "v2",
+      "type": "humanoid",
+      "name": "Rifle Grunt \u00b7 Low-Triangle Study",
+      "asset": "assets/boxguard-rifle-grunt-v2.glb",
+      "sha256": "da4ab5ed241224fd6828356a0f9e1fd51cc362a5fe470946ec35812491c05427",
+      "bytes": 669188,
+      "triangles": 3268,
+      "meshes": 33,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Second neutral textured study of the authored Boxguard 01 body. Fewer round segments and modeled fittings, one generated/baked color atlas, and all 18 removable armor groups. No rifle, skin or animation.",
+      "license": "No verified public reuse license.",
+      "family": "Boxguard 01",
+      "collection": "Rifle Grunt Texture Studies"
+    },
+    {
+      "id": "warden-winged-greaves",
+      "version": "v3",
+      "name": "Warden Winged Greaves",
+      "type": "gear",
+      "asset": "assets/warden-winged-greaves-v3.glb",
+      "sha256": "d2a464d2d6aab4658df3d80d48ad5f800f84b2ce29bcacdf459f3e842690771e",
+      "bytes": 5120864,
+      "triangles": 104048,
+      "meshes": 336,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Exact standalone, newly authored winged-greaves concept reconstructed from supplied design images. Paired knee-to-foot outer armor, wing feathers, and engine hardware retain their individual rigid pivots; feet are the study placeholders. No fitted Warden body, source images, or donor geometry.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "warden-digitigrade-legs",
+      "version": "v1",
+      "name": "Warden Digitigrade Legs",
+      "type": "gear",
+      "asset": null,
+      "parts": [
+        {
+          "asset": "assets/warden-digitigrade-legs-v1.glb.part1",
+          "bytes": 2931828,
+          "sha256": "f46b1273ea4cee3e4e3ea10f15b83c5809113b649c97a039d3db4be15309a7f4"
+        },
+        {
+          "asset": "assets/warden-digitigrade-legs-v1.glb.part2",
+          "bytes": 2931828,
+          "sha256": "d98913d62609a3e6317e198169edc041c7335029196fe2907156fdda0b4b75de"
+        },
+        {
+          "asset": "assets/warden-digitigrade-legs-v1.glb.part3",
+          "bytes": 2931828,
+          "sha256": "0fa9ec78b5c208a6a349228738874ab561f0160ef5250b9502599938d87b73c4"
+        }
+      ],
+      "originalFile": "warden_digitigrade_legs.glb",
+      "sha256": "6628483e2feb06db9ec51158ff0cd501b04cc864c34dba44b1da361a412614c9",
+      "bytes": 8795484,
+      "triangles": 150388,
+      "meshes": 342,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Exact standalone, newly authored Warden below-knee component study based on supplied design views. Paired digitigrade geometry, six recessed forms per leg, and rigid toe, hock and knee pivots; distinct from the Winged Greaves design. No host Warden body, reference image, or donor geometry.",
+      "license": "No verified public reuse license."
     },
     {
       "id": "armory-blasters-blaster-a",
