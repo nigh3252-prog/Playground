@@ -3014,6 +3014,108 @@
       ]
     },
     {
+      "id": "beforetimes-lost-alpha",
+      "version": "v1",
+      "name": "Lost Alpha \u00b7 Beforetimes Geology Lab",
+      "type": "environment",
+      "asset": null,
+      "sha256": "33b3f4e2c4cdce305e516cd60ccec464a260d874583367f6b5205f29238d5bb1",
+      "bytes": 9752124,
+      "triangles": 116080,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Native procedural voxel mesh from BEFORETIMES: Impossible Geology Laboratory. Original style, fixed source seed 73191. Static geometry and vertex colors only.",
+      "license": "No public reuse license specified.",
+      "originalFile": "beforetimes-lost-alpha-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/beforetimes-lost-alpha-v1.glb.part1",
+          "bytes": 3250708,
+          "sha256": "a6f2bded5843bd40f36f9dc78372245338b61e6aaa6d92e1756201ec8345d219"
+        },
+        {
+          "asset": "assets/beforetimes-lost-alpha-v1.glb.part2",
+          "bytes": 3250708,
+          "sha256": "8d8ec128a8ee098986ef79959f770feb5938d70467d212a5ba43ae58d12a8df2"
+        },
+        {
+          "asset": "assets/beforetimes-lost-alpha-v1.glb.part3",
+          "bytes": 3250708,
+          "sha256": "c18e96b2b9d65e7263a8ab3b93e74d53768a439b2a6156e4e22eab5b1bcca988"
+        }
+      ]
+    },
+    {
+      "id": "beforetimes-stone-cathedrals",
+      "version": "v1",
+      "name": "Stone Cathedrals \u00b7 Beforetimes Geology Lab",
+      "type": "environment",
+      "asset": null,
+      "sha256": "e82a098c5516082d6c845e5a8f3c98fda4cf84d0fd758b440f8caa5a8b479dd6",
+      "bytes": 9938612,
+      "triangles": 118300,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Native procedural voxel mesh from BEFORETIMES: Impossible Geology Laboratory. Original style, fixed source seed 73191. Static geometry and vertex colors only.",
+      "license": "No public reuse license specified.",
+      "originalFile": "beforetimes-stone-cathedrals-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/beforetimes-stone-cathedrals-v1.glb.part1",
+          "bytes": 3312871,
+          "sha256": "509ec6b855f4f2b8d6b28c0a3a855ea4acd52dd547e7806c6f60170e097fafc8"
+        },
+        {
+          "asset": "assets/beforetimes-stone-cathedrals-v1.glb.part2",
+          "bytes": 3312871,
+          "sha256": "b27a959532c8464e23549a6879b64327c7a107eb721dd4d6b11c8084ff52f48d"
+        },
+        {
+          "asset": "assets/beforetimes-stone-cathedrals-v1.glb.part3",
+          "bytes": 3312870,
+          "sha256": "3a1ce2d86df47f08c7722f3cb2ee26da95f90dd9574d3166ce782222978478fb"
+        }
+      ]
+    },
+    {
+      "id": "beforetimes-hanging-gardens",
+      "version": "v1",
+      "name": "Hanging Gardens \u00b7 Beforetimes Geology Lab",
+      "type": "environment",
+      "asset": null,
+      "sha256": "99c894439632a346e2362e2037882280efbfc44b4013ce6a16b9fdafefed43b6",
+      "bytes": 10273936,
+      "triangles": 122292,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Native procedural voxel mesh from BEFORETIMES: Impossible Geology Laboratory. Original style, fixed source seed 73191. Static geometry and vertex colors only.",
+      "license": "No public reuse license specified.",
+      "originalFile": "beforetimes-hanging-gardens-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/beforetimes-hanging-gardens-v1.glb.part1",
+          "bytes": 3424646,
+          "sha256": "319e4b019f428bc68e2f4a128a3f67287c30c127d1961cbc707600b39b69c320"
+        },
+        {
+          "asset": "assets/beforetimes-hanging-gardens-v1.glb.part2",
+          "bytes": 3424646,
+          "sha256": "afdd479c6fd6575d34497910b201746201d6bb4de813464799a052ba8d2488ff"
+        },
+        {
+          "asset": "assets/beforetimes-hanging-gardens-v1.glb.part3",
+          "bytes": 3424644,
+          "sha256": "84101c4693ad3753fb63f3150ab6a915e7e73e86dc151b7350a84c68ffe7534b"
+        }
+      ]
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
