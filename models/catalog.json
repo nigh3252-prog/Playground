@@ -5658,6 +5658,23 @@
       "collection": "Warden Back Equipment"
     },
     {
+      "id": "skyrift-glider",
+      "version": "v1",
+      "name": "Skyrift Glider",
+      "type": "other",
+      "asset": "assets/skyrift-glider-v1.glb",
+      "sha256": "549a9ef694674b0f0bef4dd20d325536ea8c0046ac8479f53eeced66e2a9e758",
+      "bytes": 28300,
+      "triangles": 402,
+      "meshes": 10,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original procedural static aircraft mesh from the Skyrift game art. Exact authored airframe geometry including its unbeveled custom swept wing, canopy, fins, tip indicators and inert rear nozzle shell. No flame, trails, game code, sound or effects. Original overbright unlit indicator values are recorded in the GLB extras; no bloom.",
+      "license": "No public reuse license specified.",
+      "source": "https://github.com/nigh3252-prog/Playground/blob/c33c0e6224d7181bd2b6794a2c2e576a24eab71a/backbone/skyrift.html"
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
