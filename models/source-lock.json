@@ -82,5 +82,12 @@
   "warden-machine-rail-sentry@v1": "e8d79c299d806a0a1ac615d9ce5e54ce14997f06ec9881df47eebaa61a0ae339",
   "warden-machine-hornet-well@v1": "7379d28ae466f0efffabd9ec55e3793ea9ac8b39ed30b04d2f8312cfeda9e9bc",
   "warden-machine-seismic-mortar@v1": "15fa2a3c46652fa059c3743d7cabc945a2bc7ace98966cbd5d00cd8f6bf3d90f",
-  "punch-lab-boxer@v1": "f48216b0e546baa5fdd8b03493a3cbee819d059f5c8621b97c1381899b3abe7d"
+  "punch-lab-boxer@v1": "f48216b0e546baa5fdd8b03493a3cbee819d059f5c8621b97c1381899b3abe7d",
+  "warden-lived-in-street@v2": "73b83c4bc22f78ad5a08c6ee79beffba0dd2bf6433f9666685e8320944a997cf",
+  "flyer-shape-chamber-carrier@v1": "90c1f01737349017980df95ed202f82ca0816650d1f16bb0ff0581382a687864",
+  "flyer-shape-sensor-dart@v1": "a18d084a2216e0daacaef4d301e8c16458cbeea1b961ea4e21aae29ecb94ebe3",
+  "flyer-shape-twin-pod-gem@v1": "abdb9dae22392d3f949d5bf24c2fd1031de866d939a49b932d7e40610a6b434d",
+  "flyer-shape-grid-block@v1": "8d1f061f77d656375a31f16b59f2f06d646f9f260bd3002f7c347f7ac065a0c9",
+  "flyer-shape-orbit-ring@v1": "26d8cc05b42fa15966a49f207c5e44421734faa2027df4bbf83c5723d2d9338d",
+  "flyer-shape-clamp-capsule@v1": "21372bc6cfa600afd3af454287f8be0f62e14dc6b941436b732b598d8e0bafd7"
 }
