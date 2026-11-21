@@ -4943,6 +4943,22 @@
       "license": "No verified public reuse license."
     },
     {
+      "id": "boxguard-01",
+      "version": "v3",
+      "name": "Boxguard 01 \u00b7 Angular Reshape",
+      "type": "humanoid",
+      "asset": "assets/boxguard-01-v3.glb",
+      "sha256": "b5928e4fb14d5c12689f2ca6d6faf9f3cf401db3d646578c9c974878602fa7a6",
+      "bytes": 892204,
+      "triangles": 16976,
+      "meshes": 33,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Exact native Boxguard 01 angular reshape from an authored numbered reference study. Newly modeled armor and mechanical parts with named rigid pivots and removable plate metadata; supplied reference image is not included.",
+      "license": "No verified public reuse license."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
