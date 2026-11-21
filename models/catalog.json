@@ -4015,6 +4015,22 @@
       "source": "https://github.com/nigh3252-prog/Playground/blob/3d913cbfb7f8fce33fe41d1e91d8739254f7ac65/regional-world.html"
     },
     {
+      "id": "southpoint-broken-viaduct",
+      "version": "v1",
+      "name": "Southpoint Broken Viaduct",
+      "type": "environment",
+      "asset": "assets/southpoint-broken-viaduct-v1.glb",
+      "sha256": "74ff087507aea3a322a01d6f143f21e0ac7176e30df76a2eb6524aa68cf2b45a",
+      "bytes": 19976,
+      "triangles": 1224,
+      "meshes": 3,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Neutral export of original procedural geometry from public Playground Southpoint (source Git blob 86b37e21267170965cd458ed1469a71f9a353064). Nine curved viaduct bays in original placement, with source faceted lighting converted to portable materials. Other scenery and gameplay are omitted.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
