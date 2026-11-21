@@ -4579,6 +4579,100 @@
       ]
     },
     {
+      "id": "dustpan-sentinel",
+      "version": "v6",
+      "name": "Dustpan Sentinel",
+      "type": "other",
+      "asset": null,
+      "sha256": "6f80508f119a3306fc21c36dbb8ba0eb914c3b2991c12e5721c48cb6ae52fa29",
+      "bytes": 6325276,
+      "triangles": 72512,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Cannon_Fire"
+        },
+        {
+          "name": "Deploy"
+        },
+        {
+          "name": "Fold"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Packed_Idle"
+        },
+        {
+          "name": "Throw_Deploy"
+        },
+        {
+          "name": "Walk"
+        }
+      ],
+      "credits": "Exact authored Dustpan Sentinel animation study from a supplied photo and design notes. Original vertex-painted geometry and native mechanical animation clips; supplied photo and source material are not included. Main detailed export.",
+      "license": "No verified public reuse license.",
+      "parts": [
+        {
+          "asset": "assets/dustpan-sentinel-v6.glb.part1",
+          "sha256": "5b26753e7d20210c888f7aff902a3f6ae1939a2479b27e32dfbd4fcdc5e1c040",
+          "bytes": 2108425
+        },
+        {
+          "asset": "assets/dustpan-sentinel-v6.glb.part2",
+          "sha256": "83a7dabe27d6e4573817ebecd46e03a48826fedce1b7e7f6bcf85ea4fd527c43",
+          "bytes": 2108425
+        },
+        {
+          "asset": "assets/dustpan-sentinel-v6.glb.part3",
+          "sha256": "0c335741d872c6385a310f70449e33a6c2f6b66323d23eb44bd52f573a7180d8",
+          "bytes": 2108426
+        }
+      ],
+      "originalFile": "dustpan-sentinel.glb"
+    },
+    {
+      "id": "dustpan-sentinel-lod",
+      "version": "v6",
+      "name": "Dustpan Sentinel \u00b7 LOD",
+      "type": "other",
+      "asset": "assets/dustpan-sentinel-lod-v6.glb",
+      "sha256": "305a14b071b074d9cee62e90379dd4e276cf4198b44632222c1bc43e85f2fe7d",
+      "bytes": 2095500,
+      "triangles": 18457,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Cannon_Fire"
+        },
+        {
+          "name": "Deploy"
+        },
+        {
+          "name": "Fold"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Packed_Idle"
+        },
+        {
+          "name": "Throw_Deploy"
+        },
+        {
+          "name": "Walk"
+        }
+      ],
+      "credits": "Exact authored Dustpan Sentinel animation study from a supplied photo and design notes. Original vertex-painted geometry and native mechanical animation clips; supplied photo and source material are not included. Author-provided revision-six lower-detail export, keeping the same rig and clips.",
+      "license": "No verified public reuse license."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",

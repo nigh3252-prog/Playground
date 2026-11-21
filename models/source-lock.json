@@ -249,5 +249,7 @@
   "painted-pinstud-gunslinger@v2": "95e4a43bad4d467a112b88e3c1678a209afafbf961bc5bf6c2add75829596c5f",
   "lime-panel-shield-mech@v1": "772d4d8cfb791c2247f903440f32aee77cede36b31c7e04d60cc864ff65cc17f",
   "lime-panel-shield-mech@v2": "b6a87eaff5315e09809c13807063a5b8ed060947011a99cf996b019dd2024abd",
-  "lime-panel-shield-mech@v3": "c2fd742046fa8fc3af78f9157b9217cd0516b4b97f5af353db5c950f567be485"
+  "lime-panel-shield-mech@v3": "c2fd742046fa8fc3af78f9157b9217cd0516b4b97f5af353db5c950f567be485",
+  "dustpan-sentinel@v6": "6f80508f119a3306fc21c36dbb8ba0eb914c3b2991c12e5721c48cb6ae52fa29",
+  "dustpan-sentinel-lod@v6": "305a14b071b074d9cee62e90379dd4e276cf4198b44632222c1bc43e85f2fe7d"
 }
