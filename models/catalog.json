@@ -5604,6 +5604,26 @@
       "collection": "Mechanical Citizens"
     },
     {
+      "id": "warden-ice-mortar-attachment",
+      "version": "v1",
+      "name": "Ice Mortar \u00b7 Animated Attachment",
+      "type": "gear",
+      "asset": "assets/warden-ice-mortar-attachment-v1.glb",
+      "sha256": "d545457006e87147b78e4153462fe80cdbecafb1d28b87bec98efa11c094c6d2",
+      "bytes": 1774832,
+      "triangles": 32936,
+      "meshes": 25,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Scene"
+        }
+      ],
+      "credits": "Exact standalone game-art attachment from the original Warden Ice Mortar junction-pivot study. The seven rigid animated pivots retain the 1.5-second deploy, recoil and stow preview. No host body, source artwork, visual effects or gameplay code.",
+      "license": "No verified public reuse license."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
