@@ -4673,6 +4673,112 @@
       "license": "No verified public reuse license."
     },
     {
+      "id": "canyon-raider-dome-outpost",
+      "version": "v1",
+      "name": "Canyon Raider Dome Outpost",
+      "type": "environment",
+      "asset": "assets/canyon-raider-dome-outpost-v1.glb",
+      "sha256": "b45fb5bd2d66d047c374900bd519daa4fbfd4421355d595c53e009b3f51c1287",
+      "bytes": 283252,
+      "triangles": 3108,
+      "meshes": 95,
+      "textures": 2,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original generated Three.js scenery from Canyon Raider, extracted at the authored seeded neutral pose. Artwork uses programmatically painted textures only; no original reference media, effects, actors, or gameplay.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "canyon-raider-lattice-windmill",
+      "version": "v1",
+      "name": "Canyon Raider Lattice Windmill",
+      "type": "environment",
+      "asset": "assets/canyon-raider-lattice-windmill-v1.glb",
+      "sha256": "378ffd2d841eccdfee20f900cc3bb911dcf8bb8b0c56aa2422c481413d25d666",
+      "bytes": 70536,
+      "triangles": 576,
+      "meshes": 31,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original generated Three.js scenery from Canyon Raider, extracted at the authored seeded neutral pose. Artwork uses programmatically painted textures only; no original reference media, effects, actors, or gameplay.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "warden-reclaimed-yard",
+      "version": "v1",
+      "name": "Warden Reclaimed Yard",
+      "type": "environment",
+      "asset": "assets/warden-reclaimed-yard-v1.glb",
+      "sha256": "72d849fa7dfda164f30e5ad5aa490a5b582b989ef65a490552991148b5ed438a",
+      "bytes": 3200368,
+      "triangles": 6882,
+      "meshes": 5,
+      "textures": 4,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original generated Warden Reclaimed Yard courtyard study, rebuilt from a supplied view. Exact high-resolution export with four generated diffuse atlases and static cutout foliage; the reference image and viewer code are not included. Authored in meters.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "ironwing-procedural",
+      "version": "v1",
+      "name": "Ironwing \u00b7 Procedural",
+      "type": "creature",
+      "asset": "assets/ironwing-procedural-v1.glb",
+      "sha256": "61a4b28a6a352563e327329ec3757b6ba4c4369df4383787cc6f87ecd3097590",
+      "bytes": 1966652,
+      "triangles": 21976,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Flight"
+        },
+        {
+          "name": "Threat"
+        }
+      ],
+      "credits": "Exact authored pre-kitbash Ironwing model. Concept based on artwork attributed in the source project to Xezeno, inspired by Bazelgeuse (Monster Hunter). No source artwork or donor sculpt included. Initial articulated mechanical wyvern.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "ironwing-procedural",
+      "version": "v4",
+      "name": "Ironwing \u00b7 Procedural Rev D",
+      "type": "creature",
+      "asset": "assets/ironwing-procedural-v4.glb",
+      "sha256": "53a3b27968c47afcce7cc84a0b7ec05f727ab2bd554e6331f788de6a07ac4454",
+      "bytes": 2917320,
+      "triangles": 50136,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Flight"
+        },
+        {
+          "name": "Threat"
+        },
+        {
+          "name": "Reference_A"
+        },
+        {
+          "name": "Reference_B"
+        }
+      ],
+      "credits": "Exact authored pre-kitbash Ironwing model. Concept based on artwork attributed in the source project to Xezeno, inspired by Bazelgeuse (Monster Hunter). No source artwork or donor sculpt included. Revision D: revised geometry including wing surfaces and armor, plus two native held pose clips.",
+      "license": "No verified public reuse license."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",

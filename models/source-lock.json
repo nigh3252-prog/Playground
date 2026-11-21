@@ -251,5 +251,10 @@
   "lime-panel-shield-mech@v2": "b6a87eaff5315e09809c13807063a5b8ed060947011a99cf996b019dd2024abd",
   "lime-panel-shield-mech@v3": "c2fd742046fa8fc3af78f9157b9217cd0516b4b97f5af353db5c950f567be485",
   "dustpan-sentinel@v6": "6f80508f119a3306fc21c36dbb8ba0eb914c3b2991c12e5721c48cb6ae52fa29",
-  "dustpan-sentinel-lod@v6": "305a14b071b074d9cee62e90379dd4e276cf4198b44632222c1bc43e85f2fe7d"
+  "dustpan-sentinel-lod@v6": "305a14b071b074d9cee62e90379dd4e276cf4198b44632222c1bc43e85f2fe7d",
+  "canyon-raider-dome-outpost@v1": "b45fb5bd2d66d047c374900bd519daa4fbfd4421355d595c53e009b3f51c1287",
+  "canyon-raider-lattice-windmill@v1": "378ffd2d841eccdfee20f900cc3bb911dcf8bb8b0c56aa2422c481413d25d666",
+  "warden-reclaimed-yard@v1": "72d849fa7dfda164f30e5ad5aa490a5b582b989ef65a490552991148b5ed438a",
+  "ironwing-procedural@v1": "61a4b28a6a352563e327329ec3757b6ba4c4369df4383787cc6f87ecd3097590",
+  "ironwing-procedural@v4": "53a3b27968c47afcce7cc84a0b7ec05f727ab2bd554e6331f788de6a07ac4454"
 }
