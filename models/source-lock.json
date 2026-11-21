@@ -240,5 +240,14 @@
   "warden-root-cathedral@v2": "da13334487ef278cea9ac0220156680ec9ade87de1a13a063d7155e0ec7dff38",
   "warden-sulfur-grove@v2": "fd1acdff19934986e1462189490476a9f0d62aa9739df67fc9eee25a663c4585",
   "warden-verdant-utility-house@v2": "b0eb064e8d8dda1070bfd26f42ca8cefabbfd8ced3d18c3a04b4c410667bc396",
-  "reliquary-24@v5": "a2cf53d7710b22eb8c7471043f91d0bc9281ff0af00a38a05153621710dc127b"
+  "reliquary-24@v5": "a2cf53d7710b22eb8c7471043f91d0bc9281ff0af00a38a05153621710dc127b",
+  "painted-bulwark-heavy@v1": "248b26fcbb5c9454b73fdc86a28b23e4eb92357be6263c87764e53bd5aefbdff",
+  "painted-bulwark-heavy@v2": "8e0db6ebdb766b63aa7b1fd7f6dc55cb1aa6f16ef87078b76e5127fe9326cea1",
+  "painted-lime-shield@v1": "b2626911acdd53fec7b9bbcc227bdfdb534a2f847f61560eb7aa0adcaca03428",
+  "painted-lime-shield@v2": "1e056e03433c70d5343ab95ad95f6be3619f2c402cc4809b43cb785145e3ff1b",
+  "painted-pinstud-gunslinger@v1": "9270e0fc6bfb2d1c7414348761f3f5f74d7da4a7106cf70eb7b5f1ec543df63e",
+  "painted-pinstud-gunslinger@v2": "95e4a43bad4d467a112b88e3c1678a209afafbf961bc5bf6c2add75829596c5f",
+  "lime-panel-shield-mech@v1": "772d4d8cfb791c2247f903440f32aee77cede36b31c7e04d60cc864ff65cc17f",
+  "lime-panel-shield-mech@v2": "b6a87eaff5315e09809c13807063a5b8ed060947011a99cf996b019dd2024abd",
+  "lime-panel-shield-mech@v3": "c2fd742046fa8fc3af78f9157b9217cd0516b4b97f5af353db5c950f567be485"
 }

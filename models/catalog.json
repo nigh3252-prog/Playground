@@ -4387,6 +4387,198 @@
       ]
     },
     {
+      "id": "painted-bulwark-heavy",
+      "version": "v1",
+      "name": "Bulwark Heavy Mech \u00b7 Painted",
+      "type": "humanoid",
+      "asset": "assets/painted-bulwark-heavy-v1.glb",
+      "sha256": "248b26fcbb5c9454b73fdc86a28b23e4eb92357be6263c87764e53bd5aefbdff",
+      "bytes": 5289588,
+      "triangles": 1416,
+      "meshes": 15,
+      "textures": 4,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Painted revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Simple geometry with newly image-generated surface painting and derived PBR maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "painted-bulwark-heavy",
+      "version": "v2",
+      "name": "Bulwark Heavy Mech \u00b7 Refined",
+      "type": "humanoid",
+      "asset": "assets/painted-bulwark-heavy-v2.glb",
+      "sha256": "8e0db6ebdb766b63aa7b1fd7f6dc55cb1aa6f16ef87078b76e5127fe9326cea1",
+      "bytes": 5463528,
+      "triangles": 3388,
+      "meshes": 15,
+      "textures": 4,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Refined revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Distinct armor and silhouette geometry with the exact painted edition texture maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "painted-lime-shield",
+      "version": "v1",
+      "name": "Lime Shield Mech \u00b7 Painted",
+      "type": "humanoid",
+      "asset": "assets/painted-lime-shield-v1.glb",
+      "sha256": "b2626911acdd53fec7b9bbcc227bdfdb534a2f847f61560eb7aa0adcaca03428",
+      "bytes": 4608396,
+      "triangles": 1372,
+      "meshes": 15,
+      "textures": 4,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Painted revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Simple geometry with newly image-generated surface painting and derived PBR maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "painted-lime-shield",
+      "version": "v2",
+      "name": "Lime Shield Mech \u00b7 Refined",
+      "type": "humanoid",
+      "asset": "assets/painted-lime-shield-v2.glb",
+      "sha256": "1e056e03433c70d5343ab95ad95f6be3619f2c402cc4809b43cb785145e3ff1b",
+      "bytes": 4772496,
+      "triangles": 2638,
+      "meshes": 15,
+      "textures": 4,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Refined revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Distinct armor and silhouette geometry with the exact painted edition texture maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "painted-pinstud-gunslinger",
+      "version": "v1",
+      "name": "Pinstud Gunslinger \u00b7 Painted",
+      "type": "humanoid",
+      "asset": "assets/painted-pinstud-gunslinger-v1.glb",
+      "sha256": "9270e0fc6bfb2d1c7414348761f3f5f74d7da4a7106cf70eb7b5f1ec543df63e",
+      "bytes": 4822460,
+      "triangles": 1514,
+      "meshes": 15,
+      "textures": 3,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Painted revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Simple geometry with newly image-generated surface painting and derived PBR maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "painted-pinstud-gunslinger",
+      "version": "v2",
+      "name": "Pinstud Gunslinger \u00b7 Refined",
+      "type": "humanoid",
+      "asset": "assets/painted-pinstud-gunslinger-v2.glb",
+      "sha256": "95e4a43bad4d467a112b88e3c1678a209afafbf961bc5bf6c2add75829596c5f",
+      "bytes": 4885600,
+      "triangles": 2734,
+      "meshes": 15,
+      "textures": 3,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Refined revision. Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Distinct armor and silhouette geometry with the exact painted edition texture maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "lime-panel-shield-mech",
+      "version": "v1",
+      "name": "Lime-and-Blue Panel Mech",
+      "type": "humanoid",
+      "asset": "assets/lime-panel-shield-mech-v1.glb",
+      "sha256": "772d4d8cfb791c2247f903440f32aee77cede36b31c7e04d60cc864ff65cc17f",
+      "bytes": 1604284,
+      "triangles": 12280,
+      "meshes": 3,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Initial modular construction and original material maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "lime-panel-shield-mech",
+      "version": "v2",
+      "name": "Lime-and-Blue Panel Mech",
+      "type": "humanoid",
+      "asset": "assets/lime-panel-shield-mech-v2.glb",
+      "sha256": "b6a87eaff5315e09809c13807063a5b8ed060947011a99cf996b019dd2024abd",
+      "bytes": 4094140,
+      "triangles": 9556,
+      "meshes": 3,
+      "textures": 4,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Revised low-poly construction, updated UVs and tangent-space normal maps.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "lime-panel-shield-mech",
+      "version": "v3",
+      "name": "Lime-and-Blue Panel Mech",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "c2fd742046fa8fc3af78f9157b9217cd0516b4b97f5af353db5c950f567be485",
+      "bytes": 9569356,
+      "triangles": 9556,
+      "meshes": 3,
+      "textures": 4,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Exact generated native GLB, based on a supplied concept. The raw reference is not included; original concept creator could not be verified. Retains the V2 mesh and adds more detailed authored paint and normal-map relief.",
+      "license": "No verified public reuse license.",
+      "originalFile": "warden_panel_mech_v3.glb",
+      "parts": [
+        {
+          "asset": "assets/lime-panel-shield-mech-v3.glb.part1",
+          "bytes": 3189785,
+          "sha256": "c56c302f64540674c4a8537d9dae80dc1de35e96f5d2e8276507b27c34e78350"
+        },
+        {
+          "asset": "assets/lime-panel-shield-mech-v3.glb.part2",
+          "bytes": 3189785,
+          "sha256": "7f29bf32965fc1e6f37776362b1b3e5bfece102a791ee542458e3a769bc72661"
+        },
+        {
+          "asset": "assets/lime-panel-shield-mech-v3.glb.part3",
+          "bytes": 3189786,
+          "sha256": "aacd17714d27f15362368ccfa7131b5879bea33be9ca3a372118e39d5043926d"
+        }
+      ]
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
