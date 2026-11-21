@@ -3116,6 +3116,38 @@
       ]
     },
     {
+      "id": "wizard-nos-screenprint-car",
+      "version": "v1",
+      "name": "Wizard of NOS \u00b7 Screenprint Car",
+      "type": "other",
+      "asset": "assets/wizard-nos-screenprint-car-v1.glb",
+      "bytes": 12664,
+      "sha256": "8073c48ecffca86b6e96ee6d90616115ca5ee2053926637b2f570054dca70136",
+      "triangles": 108,
+      "meshes": 8,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original static vehicle art from the Wizard of NOS screenprint prototype. The display shader is approximated with matte materials; geometry and outlines are retained.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "hammer-formation-wrecker-hoverbike",
+      "version": "v1",
+      "name": "Wrecker Hoverbike",
+      "sha256": "816b647a95c57319bc6e61c56b531635363c662d4933202878b10633b27649f5",
+      "bytes": 4724,
+      "triangles": 25,
+      "meshes": 3,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "asset": "assets/hammer-formation-wrecker-hoverbike-v1.glb",
+      "type": "other",
+      "credits": "Original neutral hoverbike art from the Hammer Formation prototype; hull, cockpit and rear fin only. No game code, effects or motion.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
