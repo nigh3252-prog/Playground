@@ -178,6 +178,38 @@
       "sha256": "9a38cb9718cfb12cfd83e9cf9dd1117202a1fc73d5caad54cab0204ffaf9eba7"
     },
     {
+      "id": "saturns-gravity-god-arm-megalith",
+      "title": "Saturn’s Gravity · God Arm + Megalith Fit",
+      "sourceFilename": "saturns_gravity_warden_mech_combo.html",
+      "href": "files/saturns-gravity-god-arm-megalith.html",
+      "bytes": 697596,
+      "sha256": "09624aeb9e1af2e27d2b85eb6847a252746587ff2f629034b6493ad33e9bad9e"
+    },
+    {
+      "id": "saturns-gravity-warden-20m-fit",
+      "title": "Saturn’s Gravity · Warden 20M Fit",
+      "sourceFilename": "saturns_gravity_warden_mech_combo.html",
+      "href": "files/saturns-gravity-warden-20m-fit.html",
+      "bytes": 702447,
+      "sha256": "6fd28d46c00a2a29638acf5a4c3179d08d744571b350ee50c891ce96b35a7041"
+    },
+    {
+      "id": "saturns-gravity-warden-mixer",
+      "title": "Saturn’s Gravity · Warden Mech Mixer",
+      "sourceFilename": "saturns_gravity_warden_mech_combo.html",
+      "href": "files/saturns-gravity-warden-mixer.html",
+      "bytes": 30265,
+      "sha256": "ae277c3f5c619f75f514b3261898f9a18ce1528014f9e8658ed65a69f118099a"
+    },
+    {
+      "id": "saturns-gravity-warden-mixer-pan",
+      "title": "Saturn’s Gravity · Warden Mech Mixer with Pan",
+      "sourceFilename": "saturns_gravity_warden_mech_combo.html",
+      "href": "files/saturns-gravity-warden-mixer-pan.html",
+      "bytes": 32459,
+      "sha256": "decbfc16498014dbbf83c23f06acc36192c6f6ebdb1b23d80dba893f4d90a2b9"
+    },
+    {
       "id": "silver_rescue_mecha_five_threejs",
       "title": "Silver Rescue Mecha Variants",
       "sourceFilename": "silver_rescue_mecha_five_threejs.html",
@@ -192,6 +224,70 @@
       "href": "files/stepforge_v15-14.html",
       "bytes": 111524,
       "sha256": "854402935e81bb1c219dba159d755a624fc2f9f0640b6b65b9a3d24371b5d0b1"
+    },
+    {
+      "id": "stone-wanderer-locked",
+      "title": "Stone Wanderer · Great Helm Reference",
+      "sourceFilename": "stone-wanderer-locked.html",
+      "href": "files/stone-wanderer-locked.html",
+      "bytes": 32904,
+      "sha256": "2fa17ae62eb89d75948819e6d928649d6b8b1ae5f32c2d4136dfc1c7dbaba9ed"
+    },
+    {
+      "id": "stone-wanderer-walk-lab",
+      "title": "Stone Wanderer · Walk Lab",
+      "sourceFilename": "weapon-lab.html",
+      "href": "files/stone-wanderer-walk-lab.html",
+      "bytes": 162037,
+      "sha256": "90b3e30eb294a872afbbba540fcaed9bb1894dd7f3407e787c331d607e893f3f",
+      "dependencies": [
+        {
+          "path": "files/src/weapons.js",
+          "bytes": 30772,
+          "sha256": "1ee18aea614f383a4e30e5f41e2f2f3a772ccb6482b9fe63d7bcb60343743b8c",
+          "source": "https://github.com/nigh3252-prog/Top-Down-Shooter-with-Controller-/blob/8b3e98e23408019771a42bc60ddd2f0ae1bd291e/src/weapons.js"
+        },
+        {
+          "path": "files/src/combat-audio.js",
+          "bytes": 12052,
+          "sha256": "35fbe540cef40b1d8a94b8b2affa971fbee5068a5c13c664ba18740fe050481e",
+          "source": "https://github.com/nigh3252-prog/Top-Down-Shooter-with-Controller-/blob/8b3e98e23408019771a42bc60ddd2f0ae1bd291e/src/combat-audio.js"
+        },
+        {
+          "path": "files/src/lab-modes.js",
+          "bytes": 11472,
+          "sha256": "f6c73390103689a216f887a34bb643191b46356bdc4915355a97846e7f10f729",
+          "source": "https://github.com/nigh3252-prog/Top-Down-Shooter-with-Controller-/blob/8b3e98e23408019771a42bc60ddd2f0ae1bd291e/src/lab-modes.js"
+        },
+        {
+          "path": "files/src/bent-world.js",
+          "bytes": 13884,
+          "sha256": "e3d9755a08c810a7206413b0ae64737aa416192952f9213d903156795924f862",
+          "source": "https://github.com/nigh3252-prog/Top-Down-Shooter-with-Controller-/blob/8b3e98e23408019771a42bc60ddd2f0ae1bd291e/src/bent-world.js"
+        }
+      ]
+    },
+    {
+      "id": "stone-wanderer-direct",
+      "title": "Stone Wanderer · Weapon Lab",
+      "sourceFilename": "stone-wanderer-direct.html",
+      "href": "files/stone-wanderer-direct.html",
+      "bytes": 166533,
+      "sha256": "a31c05636522ac3a04c22eeebc3ba425eb05a23be570beb326e43d7c1e28c4f3",
+      "dependencies": [
+        {
+          "path": "files/src/weapons.js",
+          "bytes": 30772,
+          "sha256": "1ee18aea614f383a4e30e5f41e2f2f3a772ccb6482b9fe63d7bcb60343743b8c",
+          "source": "https://github.com/nigh3252-prog/Top-Down-Shooter-with-Controller-/blob/8b3e98e23408019771a42bc60ddd2f0ae1bd291e/src/weapons.js"
+        },
+        {
+          "path": "files/src/combat-audio.js",
+          "bytes": 12052,
+          "sha256": "35fbe540cef40b1d8a94b8b2affa971fbee5068a5c13c664ba18740fe050481e",
+          "source": "https://github.com/nigh3252-prog/Top-Down-Shooter-with-Controller-/blob/8b3e98e23408019771a42bc60ddd2f0ae1bd291e/src/combat-audio.js"
+        }
+      ]
     },
     {
       "id": "asteroids_touch_android",

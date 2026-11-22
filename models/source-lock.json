@@ -467,5 +467,11 @@
   "warden-reference-rounded-mech-lod1@v1": "ac584bd55b600f2b7697bce4c7616258be5d96e9526db66570f142c62017d495",
   "warden-reference-vesper-twin-drum-pistol@v2": "713fff9ebbd4c8c51def27fdb4657af2765444ea4e5c4bdf859c7dae05a58c80",
   "warden-reference-vesper-twin-drum-pistol@v1": "967e005ecfe37e3f78218f18e57cfd07211e3a33f7121e33ff2e4df3da24a5a3",
-  "drum-walker@v2": "d2f3e036392d62b5261ea0093514f07c5743cf37cef25177fd624397514b76c6"
+  "drum-walker@v2": "d2f3e036392d62b5261ea0093514f07c5743cf37cef25177fd624397514b76c6",
+  "saturn-warden@v1": "ecb60a5416c277b16001a6ff1e5b84eccdbd3ce6db9213457f358ab9c45ee901",
+  "saturn-warden-exact-fit@v1": "d056449745a9d3dccf2ed8226677520c6a689f5852e447152893d40931e870a8",
+  "saturn-warden-mixer@v1": "7ba925847d9fb9cf70292c5ea814caa4d85d68e7e5ea8f0337bb16b30ba4f544",
+  "saturn-warden-stone-wanderer@v1": "58f3e71dcc536b99542b3c29cdffb7ca3f32a08bb070a795a3f85c8054a02c8d",
+  "warden-floating-axe-audition@v1": "5036928289dd2138c09dc7a895686655ba4707a6fb8211c80d2313a185998258",
+  "warden-floating-axe-audition-armor@v1": "aa24a5249d95543bd957e07d85a0c53a7aaa3acf1580c2f939333c5ccec0978d"
 }
