@@ -450,5 +450,22 @@
   "animated-mech-george@v2": "230933433316257a6233481600a5802a41852b6af49e92085d7ae6c88523d5dd",
   "animated-mech-leela@v2": "4cfec379f11b8fdea245fa5bfcf2f4ab7284ddfaeeb77c3cd3a0c82510a4ff02",
   "animated-mech-mike@v2": "66cfba4d406b084ded632eaf6636684eb5389fa911dcd416e86d6e18edd736f4",
-  "animated-mech-stan@v2": "9f5aed9126bf1cb95000e0b6593ee84e2c5eb07ee5d3dfb2c07b010b88ceac4c"
+  "animated-mech-stan@v2": "9f5aed9126bf1cb95000e0b6593ee84e2c5eb07ee5d3dfb2c07b010b88ceac4c",
+  "warden-environment-city@v1": "e1ecd0065ab27c55c5ea5c1a8827a8786758aa5e4be3a3f76e75e9a3a62dfd6f",
+  "warden-environment-industrial@v1": "015b94eb6660dda6d563127045d7a37e29b59c069f2666ee5dc339473f125bd2",
+  "warden-environment-forest@v1": "aa5e5f827b0e96f76f66d16c5a1906964552935398571f564af9d41ee72a0ea5",
+  "warden-environment-cathedral@v1": "a17dfcacc56635c6261fde572139515781e75f5d4a7a68dc1a8a5ec03d25fd1e",
+  "warden-environment-house@v1": "814def5306f086200888307afe0920eb07fe238ca17e90295365a53790d9ec46",
+  "warden-pod-a-mount@v1": "6e7db5a6715253ae47bc01053f41877795fe6513200472e3b1dfb456975907a1",
+  "warden-pod-a-pod@v1": "f12bea939e87022bd9011c26bb12d5d25d03a27773298ca56462b7ab01b182ab",
+  "warden-pod-b-mount@v1": "bb754ac61dbadc4940aad4c7a0c975a28ccab47a5274c9cfc48a359b4a48600f",
+  "warden-pod-b-pod@v1": "833f756a1b51fdae701a18fcea8ff1d3e05f29d40b168c3aaa8bf508e7f0606e",
+  "warden-reference-arc-coil-pistol@v2": "60a1bfdc8a9ce474e47877061442e473d58a0d8e720bdf81f049e24754e6c4b6",
+  "warden-reference-arc-coil-pistol@v1": "e8cc83a529710e1f3818aa43483232fc65abd8ab3c0cf42ecfcce763c677de19",
+  "warden-reference-cinder-twin-thermal-gun@v1": "3fe5aab2dc19ac765dc53911334b040d55af1880384e80b79a48a7ed082ed01d",
+  "warden-reference-cinder-twin-thermal-gun@v2": "bce2cca6f435833e1b6ce5cb8311af7f1aaf6a21d7b254daa48c65cbd24343a3",
+  "warden-reference-rounded-mech-lod1@v1": "ac584bd55b600f2b7697bce4c7616258be5d96e9526db66570f142c62017d495",
+  "warden-reference-vesper-twin-drum-pistol@v2": "713fff9ebbd4c8c51def27fdb4657af2765444ea4e5c4bdf859c7dae05a58c80",
+  "warden-reference-vesper-twin-drum-pistol@v1": "967e005ecfe37e3f78218f18e57cfd07211e3a33f7121e33ff2e4df3da24a5a3",
+  "drum-walker@v2": "d2f3e036392d62b5261ea0093514f07c5743cf37cef25177fd624397514b76c6"
 }
