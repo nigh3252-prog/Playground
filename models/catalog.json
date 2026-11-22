@@ -6894,6 +6894,156 @@
       "collection": "Power Dolls Painted UV Studies"
     },
     {
+      "id": "warden-cannon-reference-mech",
+      "version": "v1",
+      "name": "Warden Cannon \u00b7 Reference Mech",
+      "type": "humanoid",
+      "asset": "assets/warden-cannon-reference-mech-v1.glb",
+      "sha256": "1129e5bce099f39b7cf576c58fa7cded890eaea3a327463b1136fcde070be4e6",
+      "bytes": 4890396,
+      "triangles": 40644,
+      "meshes": 3,
+      "textures": 2,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Authored adaptation of Ryan\u2019s earlier white mech project, with the original embedded reference-derived atlas. Equipment-screen imagery and designs referenced from Power Dolls (Kogado Studio); separate screenshot, portrait and viewer are not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Mech Studies"
+    },
+    {
+      "id": "warden-artillery-reference-mech",
+      "version": "v1",
+      "name": "Warden Artillery \u00b7 Reference Mech",
+      "type": "humanoid",
+      "asset": "assets/warden-artillery-reference-mech-v1.glb",
+      "sha256": "3f6df08133633c49aa52b2b20ecf7b1b4c3d573d67a55b25cc2e2f740d62228c",
+      "bytes": 5252360,
+      "triangles": 36152,
+      "meshes": 3,
+      "textures": 2,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Authored adaptation of Ryan\u2019s earlier white mech project, with the original embedded reference-derived atlas. Equipment-screen imagery and designs referenced from Power Dolls (Kogado Studio); separate screenshot, portrait and viewer are not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Mech Studies"
+    },
+    {
+      "id": "warden-assault-reference-mech",
+      "version": "v1",
+      "name": "Warden Assault \u00b7 Reference Mech",
+      "type": "humanoid",
+      "asset": "assets/warden-assault-reference-mech-v1.glb",
+      "sha256": "3f62932bb20708a0f6891d7529b465c35a0377d5f5c8f83d52d169ed3d09fcea",
+      "bytes": 4628232,
+      "triangles": 30700,
+      "meshes": 1,
+      "textures": 2,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Authored adaptation of Ryan\u2019s earlier white mech project, with the original embedded reference-derived atlas. Equipment-screen imagery and designs referenced from Power Dolls (Kogado Studio); separate screenshot, portrait and viewer are not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Mech Studies"
+    },
+    {
+      "id": "warden-rounded-power-dolls-mech",
+      "version": "v1",
+      "name": "Warden Rounded Mech \u00b7 Full Detail",
+      "type": "humanoid",
+      "asset": "assets/warden-rounded-power-dolls-mech-v1.glb",
+      "sha256": "67268ff8054e4c6c534dc7b43595173cf99a75cf78ebde6e870fde0deda2bf2e",
+      "bytes": 5782148,
+      "triangles": 40428,
+      "meshes": 3,
+      "textures": 2,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Original generated mech geometry adapted from the Power Dolls equipment-screen design (Kogado Studio). Preserves the delivered embedded reference-art UV wrap and authored animation clips; no separate source image or viewer is included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Rounded Mech Studies"
+    },
+    {
+      "id": "warden-rounded-power-dolls-mech-lod",
+      "version": "v1",
+      "name": "Warden Rounded Mech \u00b7 Lightweight",
+      "type": "humanoid",
+      "asset": "assets/warden-rounded-power-dolls-mech-lod-v1.glb",
+      "sha256": "1379066c427be859c1e4b7f785962ad20573b7d2e62a9d3f0e8e9781c8e9bd33",
+      "bytes": 3433624,
+      "triangles": 19234,
+      "meshes": 3,
+      "textures": 2,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "credits": "Original generated mech geometry adapted from the Power Dolls equipment-screen design (Kogado Studio). Preserves the delivered embedded reference-art UV wrap and authored animation clips; no separate source image or viewer is included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Rounded Mech Studies"
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",
