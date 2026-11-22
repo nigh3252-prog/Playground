@@ -5520,6 +5520,23 @@
       "collection": "Rifle Grunt Texture Studies"
     },
     {
+      "id": "wide-brim-colossus",
+      "version": "v1",
+      "name": "Wide Brim Colossus \u00b7 Original Colored Study",
+      "type": "humanoid",
+      "file": "wide-brim-colossus-v1.glb",
+      "asset": "assets/wide-brim-colossus-v1.glb",
+      "sha256": "ec46b0cff9ae4f6abd29d758c2a54175c67c431b358db0d514093ea8e66e6579",
+      "bytes": 449548,
+      "triangles": 4114,
+      "meshes": 198,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Neutral model-only export of the original colored Wide Brim Colossus Three.js study, before the separate Gate 1 gray silhouette rebuild. Preserves authored solid-color geometry and outlines; no concept image, plinth, mounted weapon, viewer or game code.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "warden-winged-greaves",
       "version": "v3",
       "name": "Warden Winged Greaves",
