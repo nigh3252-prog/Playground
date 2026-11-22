@@ -11,7 +11,8 @@ const root = new URL('../../', import.meta.url);
 const port = Number(process.env.PORT || 17861);
 const origin = `http://127.0.0.1:${port}`;
 const bench = `${origin}/models/`;
-test('native review bench switches, animates, recovers and fits phones', {timeout:300000}, async () => {
+// The full catalog sweep can take more than five minutes on hosted runners.
+test('native review bench switches, animates, recovers and fits phones', {timeout:600000}, async () => {
   const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url)));
   const server = spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1'], {cwd:root, stdio:'ignore'});
   let browser;
