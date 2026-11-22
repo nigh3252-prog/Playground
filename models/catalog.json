@@ -7472,6 +7472,147 @@
       "collection": "Recovered Model Studies"
     },
     {
+      "id": "shark-jaw-stalker-standalone",
+      "version": "v2",
+      "name": "Shark-Jaw Stalker \u00b7 Painted",
+      "type": "creature",
+      "asset": "assets/shark-jaw-stalker-standalone-v2.glb",
+      "sha256": "69814730f6fd884ca0520a6cfae35c211abab99a7f2b0b142a1e05be3c54faf5",
+      "bytes": 4743064,
+      "credits": "Neutral static model-only export from the delivered painted Shark-Jaw Stalker standalone. Includes the original jaw and opposing tooth rows, four-leg stance and painted shell materials. Original shell geometry, UVs, edge atlas and authored neutral pose retained. No stage, reference image, runtime or gait playback.",
+      "license": "No public reuse license specified.",
+      "triangles": 79230,
+      "meshes": 44,
+      "textures": 14,
+      "rig": "unrigged",
+      "clips": [],
+      "collection": "Recovered Model Studies"
+    },
+    {
+      "id": "warden-broad-body-walker",
+      "version": "v2",
+      "name": "Warden Broad-Body Walker",
+      "type": "creature",
+      "asset": "assets/warden-broad-body-walker-v2.glb",
+      "sha256": "f0ad4556b1a553736c787bb4a3bda3f470ec06d1978736746c9c285292322527",
+      "bytes": 4361936,
+      "credits": "Neutral static model-only export from the delivered Warden Broad-Body Walker Prototype v2. Includes the exact headless chassis, wide four-leg stance and original painted limb-shell materials. Original shell geometry, UVs, edge atlas and authored neutral pose retained. No stage, reference image, runtime or gait playback.",
+      "license": "No public reuse license specified.",
+      "triangles": 66712,
+      "meshes": 39,
+      "textures": 8,
+      "rig": "unrigged",
+      "clips": [],
+      "collection": "Recovered Model Studies"
+    },
+    {
+      "id": "nightmare-hybrid-portable",
+      "version": "v13",
+      "name": "Nightmare Hybrid",
+      "type": "creature",
+      "asset": null,
+      "bytes": 29588496,
+      "sha256": "75e1fe0e9a75167066252b700c1bb6ba8fb15123617c0a8a427f3af21e76116d",
+      "credits": "Authored Nightmare Hybrid V13 adaptation and animation, preserved as the supplied baked portable GLB; linear skinning approximates editable Blender motion. T. rex model and original animation by Bake3D (https://bake3d.ai/free-3d-models), CC BY 4.0; shark by Quaternius (https://quaternius.itch.io/lowpoly-animated-fish), CC0. Major mesh and material changes plus new clips; no endorsement implied. See models/credits/nightmare-hybrid-v13.credits.txt, models/credits/CC-BY-4.0.txt, and models/credits/nightmare-hybrid-v13.portability.txt. No standalone donor files or reference images published.",
+      "license": "Bake3D donor portions CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); Quaternius donor CC0 (https://creativecommons.org/publicdomain/zero/1.0/); no separate public reuse license specified for newly authored portions.",
+      "triangles": 369362,
+      "meshes": 648,
+      "textures": 10,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "N13_IDLE_Watchful"
+        },
+        {
+          "name": "N13_WALK_InPlace"
+        },
+        {
+          "name": "N13_ALERT_Threat"
+        },
+        {
+          "name": "N13_WALK_RootMotion"
+        }
+      ],
+      "originalFile": "nightmare-hybrid-portable-v13.glb",
+      "parts": [
+        {
+          "asset": "assets/nightmare-hybrid-portable-v13.glb.part1",
+          "bytes": 5917700,
+          "sha256": "f983ffb92bc3759033043a017e05aeb87d5053bb71ba306cf6e7eaa151cba5d9"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v13.glb.part2",
+          "bytes": 5917700,
+          "sha256": "bfb331f36d2dac90a93b46212955a471981c462e319e309d03084f7cf2f168ff"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v13.glb.part3",
+          "bytes": 5917700,
+          "sha256": "1e9a74b639c3722b68ad8d5ede52298dedcdc79b05c74425439b3af3eb909ce2"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v13.glb.part4",
+          "bytes": 5917700,
+          "sha256": "c6584f3b01bdb706c28de42a0896cf171b8fc0a8f4f0db7235e8b937cb5e48eb"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v13.glb.part5",
+          "bytes": 5917696,
+          "sha256": "2df148462744ea33501692d791b9e6a59d57468b39e299e3a4a0ac4be3c390c9"
+        }
+      ],
+      "collection": "Recovered Model Studies"
+    },
+    {
+      "id": "nightmare-hybrid-portable",
+      "version": "v14",
+      "name": "Nightmare Hybrid",
+      "type": "creature",
+      "asset": null,
+      "bytes": 28677292,
+      "sha256": "caa750bca0beb6dae703bd197be913a4976c9393886662d48d51bfbc8663e4a8",
+      "credits": "Authored Nightmare Hybrid V14 adaptation and animation, preserved as the supplied baked portable GLB; linear skinning approximates editable Blender motion. T. rex model and original animation by Bake3D (https://bake3d.ai/free-3d-models), CC BY 4.0; shark by Quaternius (https://quaternius.itch.io/lowpoly-animated-fish), CC0. Major mesh and material changes plus new clips; no endorsement implied. See models/credits/nightmare-hybrid-v14.credits.txt, models/credits/CC-BY-4.0.txt, and models/credits/nightmare-hybrid-v14.portability.txt. No standalone donor files or reference images published.",
+      "license": "Bake3D donor portions CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); Quaternius donor CC0 (https://creativecommons.org/publicdomain/zero/1.0/); no separate public reuse license specified for newly authored portions.",
+      "triangles": 371002,
+      "meshes": 654,
+      "textures": 11,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "N14_ATTACK_Sinuous_160_Turn"
+        }
+      ],
+      "originalFile": "nightmare-hybrid-portable-v14.glb",
+      "parts": [
+        {
+          "asset": "assets/nightmare-hybrid-portable-v14.glb.part1",
+          "bytes": 5735459,
+          "sha256": "42ffe846435051ffbf120262e9c8df7f1f39d6c6b6ce13480bcca43e20333e55"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v14.glb.part2",
+          "bytes": 5735459,
+          "sha256": "d18a4a070e918fec3902c4cd663cd66dd67ebcfde478cd7b28d8fd6d0bbfb0e0"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v14.glb.part3",
+          "bytes": 5735459,
+          "sha256": "723e357fc7328b0c35907529cdd8d31a3d07fa744ffdc12b2020d8bd1e87aa7b"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v14.glb.part4",
+          "bytes": 5735459,
+          "sha256": "af43bca6b629bd351a9c0a158e5f4b76d7b5d3023c414829dff14f2815507f64"
+        },
+        {
+          "asset": "assets/nightmare-hybrid-portable-v14.glb.part5",
+          "bytes": 5735456,
+          "sha256": "d0556d386eb4bad00ae0c358aa07d68a22ae8d7c1a1537edfd3c54823fc4ee23"
+        }
+      ],
+      "collection": "Recovered Model Studies"
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",

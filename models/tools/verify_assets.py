@@ -90,7 +90,7 @@ def canonical_armory_file(source):
 
 def split_asset(model, ident, version):
     parts = model["parts"]
-    assert model["asset"] is None and isinstance(parts, list) and len(parts) == 3
+    assert model["asset"] is None and isinstance(parts, list) and 3 <= len(parts) <= 6
     assert re.fullmatch(r"[A-Za-z0-9_-]+\.glb", model["originalFile"])
     verified = []
     for i, part in enumerate(parts, 1):

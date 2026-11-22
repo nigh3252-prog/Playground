@@ -112,3 +112,29 @@ test('the staged Iguana + Crab parts reconstruct the locked original and its nat
   assert.deepEqual(gltf.nodes.filter(n=>n.skin===0).map(n=>n.name),['Iguana_Body','Iguana_Crab']);
   assert.deepEqual(gltf.animations.map(a=>a.name),['Reference_Pose','Idle_Breathe','Crawl_Preview','Crab_Settle']);
 });
+
+for (const count of [2, 4, 5, 6, 7]) {
+  test(`split GLB ${count < 3 || count > 6 ? 'rejects' : 'reassembles'} ${count} ordered parts`, async () => {
+    const {fetchSplitGLB} = await import('../asset-paths.mjs');
+    const {createHash} = await import('node:crypto');
+    const hash = value => createHash('sha256').update(value).digest('hex');
+    const chunks = Array.from({length:count}, (_,i) => Buffer.from(`part ${i+1}\n`));
+    const contents = Buffer.concat(chunks);
+    const entry = {...output, id:'split-test', asset:null, originalFile:'Original_Test.glb',
+      bytes:contents.length, sha256:hash(contents),
+      parts:chunks.map((chunk,i) => ({asset:`assets/split-test-v1.glb.part${i+1}`,bytes:chunk.length,sha256:hash(chunk)}))};
+    const signal = new AbortController().signal;
+    if (count < 3 || count > 6) {
+      await assert.rejects(fetchSplitGLB(entry,page,signal,()=>assert.fail('out-of-range part count fetched')), /Invalid split asset/);
+      return;
+    }
+    let next = 0;
+    const fetchPart = async (url, options) => {
+      assert.equal(url.pathname, '/models/'+entry.parts[next].asset);
+      assert.equal(options.redirect, 'error');
+      return new Response(chunks[next++]);
+    };
+    assert.deepEqual(Buffer.from(await fetchSplitGLB(entry,page,signal,fetchPart)), contents);
+    assert.equal(next,count);
+  });
+}

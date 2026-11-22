@@ -1,0 +1,24 @@
+NIGHTMARE V13 | OPTIONAL BAKED PORTABLE ANIMATION
+
+The editable Blender project is the authoritative version. This optional glTF 2.0 GLB is a portable playback copy with baked animation, embedded textures and a standard linear skin. It does not contain Blender's editable controls, IK or hydraulic constraints.
+
+Open Nightmare_Hybrid_V13_Animated_Portable.glb in Blender 4.3 or a glTF 2.0 animation viewer. All seven images are embedded; no external textures are needed. No required glTF extensions. KHR_materials_emissive_strength is optional.
+
+CLIPS
+- N13_IDLE_Watchful: 6.0 seconds. Watchful idle loop.
+- N13_WALK_InPlace: 2.5 seconds. In-place walking loop.
+- N13_ALERT_Threat: 4.0 seconds. One-shot alert/display and recovery.
+- N13_WALK_RootMotion: 5.0 seconds. Two walking cycles with forward root travel. Its position intentionally does not return to its starting point. Use root-motion handling when repeating this take.
+The source was sampled at 24 fps. The receiving viewer controls playback, clip selection and looping. glTF uses Y-up; forward is +Z. Source scene scale is retained.
+
+VERIFIED CONTENT
+648 character meshes, including all 14 restored camera-eye components; one skin; 49 materials; seven embedded images; four named clips. Six poses per clip were independently reimported and compared against the final Blender master. Feet/toes, eyes, armor, hydraulics and long tendrils remain attached and follow their animation.
+
+KNOWN PORTABILITY LIMITS
+This is not a numerically identical copy of the Blender deformation. The two flexible inner leg cores use Blender's Preserve Volume skinning, which glTF cannot represent. The maximum sampled walking difference is 0.019024 source scene units, about 0.207% of character height at the tested pose. The strict 0.005-unit geometry test therefore fails for those two inner cores. Every other mesh remains below 0.000985 units. The worst-pose source/import render comparison was visually reviewed and the shape difference is minor. Exact results, including the strict failures, are in PORTABLE_VALIDATION.json.
+
+Important body/conduit procedural color and normal effects were baked to textures. The inner-core dark tint is represented as an exact baseColorFactor multiplier on its original texture. Tiny procedural noise bump on some painted armor is omitted. Viewer lighting and tone mapping may alter appearance. No denoising was used in the included QA images.
+
+QA/Blender_Source_Walk_Frame46.png and QA/Portable_GLB_Walk_Frame46.png are a same-camera, same-lighting comparison at the worst sampled walking pose. The Blender render is the appearance reference.
+
+No engine/game integration, retargeting, physics or collision setup is included. Keep CREDITS.txt and CC-BY-4.0.txt with redistributed derivatives.

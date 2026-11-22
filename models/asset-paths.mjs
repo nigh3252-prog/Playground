@@ -27,7 +27,7 @@ export async function fetchSplitGLB(entry, pageURL, signal, fetchPart = fetch) {
   if (typeof id !== 'string' || !slug.test(id) || id.startsWith('armory-') ||
       typeof revision !== 'string' || !version.test(revision) || asset !== null || sourceCollection != null ||
       typeof originalFile !== 'string' || !originalName.test(originalFile) ||
-      !Array.isArray(parts) || parts.length !== 3 || typeof sha256 !== 'string' || !digest.test(sha256) ||
+      !Array.isArray(parts) || (parts.length < 3 || parts.length > 6) || typeof sha256 !== 'string' || !digest.test(sha256) ||
       !parts.every((p,i) => p && p.asset === `assets/${id}-${revision}.glb.part${i+1}` &&
         validLength(p.bytes) && typeof p.sha256 === 'string' && digest.test(p.sha256)) ||
       bytes !== parts.reduce((total, p) => total + p.bytes, 0)) throw Error('Invalid split asset');
