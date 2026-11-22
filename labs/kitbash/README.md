@@ -36,7 +36,7 @@ Each model recipe records exact donor paths, source hashes, selected part identi
 python labs/kitbash/export_portable.py /absolute/output/warden-kitbash-study.html
 ```
 
-Open that HTML in a modern browser with WebGL. It loads no remote assets and needs no local server. It preserves the same native animation and model/recipe downloads as the hosted lab.
+Open that HTML in a modern browser with WebGL. It loads no remote assets and needs no local server. It preserves the same native animation and model/recipe downloads as the hosted lab. When WebGL is unavailable, the lab shows rendered still previews and keeps the model/recipe downloads working.
 
 ## Credits
 

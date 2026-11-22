@@ -22,6 +22,8 @@
     <section class="workbench">
       <div class="viewport" id="stage" role="region" aria-label="Interactive 3D creature study">
         <canvas id="view" aria-label="Drag to orbit the 3D models"></canvas>
+        <img id="still-preview" alt="" hidden>
+        <p id="still-note" hidden>Rendered preview · WebGL is unavailable in this browser.</p>
         <div class="view-heading"><span class="live-dot"></span><span id="view-label">BELLOWS / STUDY 01</span></div>
         <div class="view-tools" role="group" aria-label="Camera views"><button id="fit">Fit</button><button id="front">Front</button><button id="side">Side</button></div>
         <div id="status" role="status"><span class="spinner"></span><span id="status-text">Opening the model workshop…</span><button id="retry" hidden>Try again</button></div>

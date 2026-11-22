@@ -24,9 +24,12 @@ def export(destination):
     studies = json.loads((HERE / 'studies.json').read_text())
     assets = {}
     recipes = {}
+    images = {}
     for study in studies['models']:
         assets[study['asset']] = encoded((HERE / study['asset']).read_bytes())
         recipes[study['recipe']] = json.loads((HERE / study['recipe']).read_text())
+        images[study['poster']] = encoded((HERE / study['poster']).read_bytes())
+    images[studies['lineupPoster']] = encoded((HERE / studies['lineupPoster']).read_bytes())
     assets['../../models/assets/warden-v1.glb'] = encoded((REPO / 'models/assets/warden-v1.glb').read_bytes())
 
     modules = {
@@ -48,7 +51,7 @@ def export(destination):
     html = (HERE.parent / 'kitbash.html').read_text()
     html = html.replace('<link rel="stylesheet" href="./kitbash/styles.css">', '<style>\n' + (HERE / 'styles.css').read_text() + '\n</style>')
     html = re.sub(r'<script type="importmap">.*?</script>', lambda _: '<script type="importmap">' + json.dumps({'imports': imports}, separators=(',', ':')) + '</script>', html, flags=re.S)
-    payload = json.dumps({'studies': studies, 'assets': assets, 'recipes': recipes}, separators=(',', ':')).replace('</', '<\\/')
+    payload = json.dumps({'studies': studies, 'assets': assets, 'recipes': recipes, 'images': images}, separators=(',', ':')).replace('</', '<\\/')
     code = (HERE / 'viewer.mjs').read_text()
     html = html.replace('<script type="module" src="./kitbash/viewer.mjs"></script>', '<script>window.KITBASH_EMBEDDED=' + payload + ';</script>\n<script type="module">\n' + code + '\n</script>')
     html = html.replace('href="../models/"', 'href="#bellows"')

@@ -26,7 +26,9 @@
           "part": "Pressure body, plates and vents"
         }
       ],
-      "note": "Read it as a machine that compresses, opens its maw and releases pressure. Rear-leg weight keeps the silhouette grounded."
+      "note": "Read it as a machine that compresses, opens its maw and releases pressure. Rear-leg weight keeps the silhouette grounded.",
+      "poster": "preview/bellows.jpg",
+      "triangles": 6684
     },
     {
       "id": "brood-loom",
@@ -51,7 +53,9 @@
           "part": "Carapace housings and brood capsules"
         }
       ],
-      "note": "The abdomen is the main mass. Open space beneath the body keeps its limbs readable and separates it from Bellows."
+      "note": "The abdomen is the main mass. Open space beneath the body keeps its limbs readable and separates it from Bellows.",
+      "poster": "preview/brood-loom.jpg",
+      "triangles": 13352
     },
     {
       "id": "shutter-wraith",
@@ -76,7 +80,10 @@
           "part": "Painted shutter armor and sentry shells"
         }
       ],
-      "note": "The armor should feel suspended around something dangerous. Its opening shutters and detached sentries give it a distinct rhythm."
+      "note": "The armor should feel suspended around something dangerous. Its opening shutters and detached sentries give it a distinct rhythm.",
+      "poster": "preview/shutter-wraith.jpg",
+      "triangles": 13785
     }
-  ]
+  ],
+  "lineupPoster": "preview/lineup.jpg"
 }

@@ -14,7 +14,7 @@ loader.setMeshoptDecoder(MeshoptDecoder);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer, scene, camera, controls, studies, current = null;
 let wanted = location.hash.slice(1) || 'bellows', serial = 0, playing = !reducedMotion;
-let clay = false, referenceVisible = true, lineMode = false;
+let clay = false, referenceVisible = true, lineMode = false, stillMode = false;
 const cache = new Map(), visibleModels = [], labels = [], markers = new THREE.Group();
 const clayMaterial = new THREE.MeshStandardMaterial({ color: 0xb8c8bb, roughness: .78, metalness: .05 });
 const bounds = new THREE.Box3(), point = new THREE.Vector3();
@@ -223,6 +223,11 @@ function downloadURL(path, mime) {
   return sourceURL(path);
 }
 
+function posterURL(path) {
+  if (embedded?.images?.[path]) return 'data:image/jpeg;base64,' + embedded.images[path];
+  return sourceURL(path);
+}
+
 function updateDetails(study, entry) {
   const lineup = !study;
   $('#study-number').textContent = lineup ? 'ALL THREE / SAME GROUND PLANE' : `STUDY ${study.number} / ${study.kind}`;
@@ -278,6 +283,23 @@ async function choose(id) {
   try {
     const chosen = id === 'lineup' ? studies.models : studies.models.filter((s) => s.id === id);
     if (!chosen.length) return choose('bellows');
+    if (stillMode) {
+      visibleModels.splice(0, visibleModels.length, ...chosen.map(study => ({ study, triangles: study.triangles })));
+      current = visibleModels[0]; lineMode = id === 'lineup';
+      updateDetails(lineMode ? null : chosen[0], current);
+      const still = $('#still-preview');
+      still.alt = lineMode ? 'Warden at 4 meters beside Bellows, Brood Loom and Shutter Wraith at 12 meters on one shared scale' : `${chosen[0].title}: rendered neutral view of the 12-meter kitbash`;
+      still.src = posterURL(lineMode ? studies.lineupPoster : chosen[0].poster);
+      await still.decode();
+      if (token !== serial) return;
+      $('#view').hidden = true; still.hidden = false; $('#still-note').hidden = false;
+      stage.classList.add('still-mode'); $('.motion-bar').hidden = true;
+      $('#scale-note').textContent = lineMode ? 'Neutral poses · shared meter scale' : 'Dimensions measured from the exported GLB';
+      for (const button of document.querySelectorAll('[data-study]')) button.setAttribute('aria-pressed', String(button.dataset.study === id));
+      history.replaceState(null, '', `#${id}`); status.hidden = true;
+      window.KITBASH_STATE = { ready: true, mode: 'still-preview', study: id };
+      return;
+    }
     const results = await Promise.all(chosen.map(getModel));
     if (token !== serial) return;
     for (const old of visibleModels) { old.model.visible = false; old.mixer.stopAllAction(); }
@@ -294,7 +316,13 @@ async function choose(id) {
 }
 
 async function start() {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false }); }
+  catch (error) {
+    console.warn('Using rendered previews because WebGL is unavailable.', error.message);
+    stillMode = true;
+    await openRequestedStudy();
+    return;
+  }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -356,7 +384,7 @@ async function openRequestedStudy() {
       }
     }
     $('#trex-note').textContent = studies.scaleNote;
-    if (!warden) warden = await getModel({ id: 'warden', title: 'Warden', height: 4, asset: '../../models/assets/warden-v1.glb' });
+    if (!stillMode && !warden) warden = await getModel({ id: 'warden', title: 'Warden', height: 4, asset: '../../models/assets/warden-v1.glb' });
     await choose(wanted);
   } catch (error) { showError(error); }
 }
@@ -375,6 +403,6 @@ $('#play').onclick = () => {
 $('#reference-toggle').onclick = (event) => { referenceVisible = !referenceVisible; event.currentTarget.setAttribute('aria-pressed', String(referenceVisible)); layoutModels(); };
 $('#neutral-toggle').onclick = (event) => { clay = !clay; event.currentTarget.setAttribute('aria-pressed', String(clay)); applyClay(); };
 $('#spin-toggle').onclick = (event) => { controls.autoRotate = !controls.autoRotate; event.currentTarget.setAttribute('aria-pressed', String(controls.autoRotate)); };
-$('#retry').onclick = () => { if (renderer) openRequestedStudy(); else location.reload(); };
+$('#retry').onclick = () => { if (renderer || stillMode) openRequestedStudy(); else location.reload(); };
 window.addEventListener('hashchange', () => choose(location.hash.slice(1)));
 start().catch(showError);
