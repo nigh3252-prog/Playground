@@ -1,0 +1,52 @@
+[
+  {
+    "id": "flying-furnace-beetle",
+    "version": "v1",
+    "name": "Furnace Beetle",
+    "asset": "assets/flying-furnace-beetle-v1.glb",
+    "sha256": "166ff687c9b3dd9e3fffc00b4f6d6d93f14c11e478f712c9b7b1effd8c8289fd",
+    "bytes": 323892,
+    "triangles": 4380,
+    "meshes": 62,
+    "textures": 0,
+    "rig": "unrigged",
+    "clips": [],
+    "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
+    "license": "No public reuse license specified.",
+    "collection": "Flying Monsters 20"
+  },
+  {
+    "id": "shelf-buddies-pond-scum",
+    "version": "v1",
+    "name": "Shelf Buddies: Pond Scum",
+    "type": "creature",
+    "asset": "assets/shelf-buddies-pond-scum-v1.glb",
+    "sha256": "78c98a318028c5d02f0426c6eca8e352fe2d38cd37abd6d9f369c24358a228e5",
+    "bytes": 98076,
+    "triangles": 1196,
+    "meshes": 38,
+    "textures": 0,
+    "rig": "unrigged",
+    "clips": [],
+    "credits": "Original procedural PS1-style character geometry from the Shelf Buddies viewer, exported in the authored default model pose and scale; Lambert materials translated for glTF. Any texture is procedurally painted, not media from the photo. No viewer, staging backdrop, or original reference images included.",
+    "license": "No public reuse license specified.",
+    "collection": "Shelf Buddies"
+  },
+  {
+    "id": "shark-jaw-stalker-standalone",
+    "version": "v1",
+    "name": "Shark-Jaw Stalker \u00b7 Standalone Study",
+    "type": "creature",
+    "asset": "assets/shark-jaw-stalker-standalone-v1.glb",
+    "sha256": "f88d4c6ba56fae2134254d027a38fb3cab713ee82ad0cb3711892ecd4bf0b157",
+    "bytes": 258408,
+    "credits": "Static model-only export of the explicitly delivered Shark-Jaw Stalker standalone study, using its original authored polygon geometry and solid colors. Portable PBR shading in place of the original custom renderer; excludes source reference image, controls and runtime.",
+    "license": "No public reuse license specified.",
+    "triangles": 2642,
+    "meshes": 81,
+    "textures": 0,
+    "rig": "unrigged",
+    "clips": [],
+    "collection": "Recovered Model Studies"
+  }
+]

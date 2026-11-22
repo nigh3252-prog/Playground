@@ -1,0 +1,157 @@
+{
+  "keyframe_bounds": [
+    {
+      "frame": 1,
+      "jaw_height": [
+        1.225,
+        4.954
+      ],
+      "foot_height": [
+        0.0,
+        0.962
+      ],
+      "whole_height": [
+        0.0,
+        12.0
+      ]
+    },
+    {
+      "frame": 31,
+      "jaw_height": [
+        1.045,
+        4.526
+      ],
+      "foot_height": [
+        0.0,
+        0.962
+      ],
+      "whole_height": [
+        0.0,
+        12.146
+      ]
+    },
+    {
+      "frame": 61,
+      "jaw_height": [
+        0.772,
+        4.738
+      ],
+      "foot_height": [
+        0.0,
+        0.962
+      ],
+      "whole_height": [
+        0.0,
+        12.336
+      ]
+    },
+    {
+      "frame": 86,
+      "jaw_height": [
+        0.241,
+        4.503
+      ],
+      "foot_height": [
+        0.0,
+        0.962
+      ],
+      "whole_height": [
+        0.0,
+        12.059
+      ]
+    },
+    {
+      "frame": 99,
+      "jaw_height": [
+        2.239,
+        5.868
+      ],
+      "foot_height": [
+        1.036,
+        2.611
+      ],
+      "whole_height": [
+        1.036,
+        13.5
+      ]
+    },
+    {
+      "frame": 112,
+      "jaw_height": [
+        4.452,
+        7.975
+      ],
+      "foot_height": [
+        2.628,
+        5.057
+      ],
+      "whole_height": [
+        2.628,
+        15.452
+      ]
+    },
+    {
+      "frame": 132,
+      "jaw_height": [
+        2.676,
+        6.235
+      ],
+      "foot_height": [
+        1.353,
+        3.107
+      ],
+      "whole_height": [
+        1.353,
+        13.871
+      ]
+    },
+    {
+      "frame": 148,
+      "jaw_height": [
+        0.181,
+        4.364
+      ],
+      "foot_height": [
+        0.0,
+        0.962
+      ],
+      "whole_height": [
+        0.0,
+        11.934
+      ]
+    },
+    {
+      "frame": 166,
+      "jaw_height": [
+        1.019,
+        4.511
+      ],
+      "foot_height": [
+        0.0,
+        0.962
+      ],
+      "whole_height": [
+        0.0,
+        12.096
+      ]
+    },
+    {
+      "frame": 190,
+      "jaw_height": [
+        1.225,
+        4.954
+      ],
+      "foot_height": [
+        0.0,
+        0.962
+      ],
+      "whole_height": [
+        0.0,
+        12.0
+      ]
+    }
+  ],
+  "dense_ground_min_m": 9.305192938625424e-17,
+  "dense_ground_min_frame": 1,
+  "dense_ground_min_part": "Front_Palm_L"
+}

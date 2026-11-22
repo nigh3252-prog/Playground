@@ -20,3 +20,7 @@ The supplied reference crops depict Power Dolls equipment screens and remain att
 [Atlas & UV Inspection](crocodilian.html) adapts the standalone viewer from [Warden PR #187](https://github.com/nigh3252-prog/warden-playground/pull/187), commit [0fd4f80a](https://github.com/nigh3252-prog/warden-playground/commit/0fd4f80a1b4d9b76a1e928bc4f995c34d21ca0c0). It loads and downloads the existing [Model Review Bench GLB](../models/assets/crocodilian-v1.glb) from [Playground PR #38](https://github.com/nigh3252-prog/Playground/pull/38). Its SHA-256 is `d2c4ba627e0aab9877bb57c6225e981274984cb44da5886060c6f9410f563de6`. The bench catalog records the original Warden mesh and textures and their reuse status.
 
 Both viewers use Playground's vendored Three.js and its [MIT license](../armory/vendor/THREE-LICENSE.txt).
+
+## Three creature kitbash studies
+
+[Bellows, Brood Loom & Shutter Wraith](kitbash.html) are donor-based visual prototypes at a shared 12-meter neutral height. The interactive lab supports individual inspection, native motion clips, clay view and a lineup beside the original Warden at 4 meters. [Assembly details and source recipes](kitbash/README.md) document the reusable parts and the scope of this visual pass.

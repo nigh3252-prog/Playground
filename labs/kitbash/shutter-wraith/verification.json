@@ -1,0 +1,96 @@
+{
+  "passed": true,
+  "glb_sha256": "ee950881c7cabb290376235422a8aca54018236f4e6fa90d45bc1d84a683928c",
+  "glb_bytes": 7156284,
+  "triangles": 13785,
+  "mesh_nodes": 54,
+  "neutral_bounds_y_up_m": {
+    "min": [
+      -5.649798314403803,
+      2.568754666754103e-07,
+      -2.0070538251988523
+    ],
+    "max": [
+      5.978317677974701,
+      12.00000170533491,
+      1.2996343397919787
+    ],
+    "size": [
+      11.628115992378504,
+      12.000001448459443,
+      3.306688164990831
+    ]
+  },
+  "native_clips": [
+    {
+      "name": "idle",
+      "start_seconds": 0.0,
+      "seconds": 6.0,
+      "channels": 19,
+      "moving_nodes": [
+        "Blade_Arm_L",
+        "Blade_Arm_R",
+        "Deep_Hood",
+        "Exposed_Cyan_Heart",
+        "Sentry_01_Bell",
+        "Sentry_02_Crescent",
+        "Sentry_03_Hood",
+        "Shutter_L_1",
+        "Shutter_L_2",
+        "Shutter_R_1",
+        "Shutter_R_2",
+        "Torn_Mantle_L",
+        "Torn_Mantle_R",
+        "Trailing_Spiral",
+        "Wraith_Suspended_Frame"
+      ],
+      "max_first_last_difference": 1.2246468525851679e-17
+    },
+    {
+      "name": "attack",
+      "start_seconds": 0.0,
+      "seconds": 3.0,
+      "channels": 20,
+      "moving_nodes": [
+        "Blade_Arm_L",
+        "Blade_Arm_R",
+        "Deep_Hood",
+        "Exposed_Cyan_Heart",
+        "Sentry_01_Bell",
+        "Sentry_02_Crescent",
+        "Sentry_03_Hood",
+        "Shutter_L_1",
+        "Shutter_L_2",
+        "Shutter_R_1",
+        "Shutter_R_2",
+        "Wraith_Suspended_Frame"
+      ],
+      "max_first_last_difference": 0.0
+    },
+    {
+      "name": "expose",
+      "start_seconds": 0.0,
+      "seconds": 4.0,
+      "channels": 21,
+      "moving_nodes": [
+        "Blade_Arm_L",
+        "Blade_Arm_R",
+        "Deep_Hood",
+        "Exposed_Cyan_Heart",
+        "Sentry_01_Bell",
+        "Sentry_02_Crescent",
+        "Sentry_03_Hood",
+        "Shutter_L_1",
+        "Shutter_L_2",
+        "Shutter_R_1",
+        "Shutter_R_2",
+        "Torn_Mantle_L",
+        "Torn_Mantle_R",
+        "Wraith_Suspended_Frame"
+      ],
+      "max_first_last_difference": 0.0
+    }
+  ],
+  "donor_nodes_verified": 54,
+  "source_rigs_removed": true
+}

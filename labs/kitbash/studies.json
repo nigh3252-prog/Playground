@@ -1,0 +1,82 @@
+{
+  "title": "Warden · Three Creature Studies",
+  "scaleNote": "12 m = about 60% of Dreadmaw’s 20.15 m neutral body height; about 53% including its 22.50 m launcher-pod height.",
+  "referenceHeightMeters": 4,
+  "models": [
+    {
+      "id": "bellows",
+      "number": "01",
+      "title": "Bellows",
+      "kind": "PRESSURE BEAST",
+      "height": 12,
+      "asset": "bellows/bellows.glb",
+      "recipe": "bellows/recipe.json",
+      "description": "A low, heavy pressure beast. The hinged shark maw is the focal point, braced by powerful haunches and a furnace-backed body.",
+      "donors": [
+        {
+          "name": "Shark-Jaw Stalker",
+          "part": "Hinged maw, teeth and jaw structure"
+        },
+        {
+          "name": "Pond Scum",
+          "part": "Amphibian mass and heavy haunches"
+        },
+        {
+          "name": "Furnace Beetle",
+          "part": "Pressure body, plates and vents"
+        }
+      ],
+      "note": "Read it as a machine that compresses, opens its maw and releases pressure. Rear-leg weight keeps the silhouette grounded."
+    },
+    {
+      "id": "brood-loom",
+      "number": "02",
+      "title": "Brood Loom",
+      "kind": "WIDOW CARRIER",
+      "height": 12,
+      "asset": "brood-loom/brood-loom.glb",
+      "recipe": "brood-loom/recipe.json",
+      "description": "A tall widow machine with a small head, dangerous splayed legs and an oversized abdomen. Hanging capsules make the brood-carrying role visible.",
+      "donors": [
+        {
+          "name": "Arakhne",
+          "part": "Articulated leg segments and joints"
+        },
+        {
+          "name": "Orbital Shell",
+          "part": "Large core used as the abdomen"
+        },
+        {
+          "name": "Brood Ferry",
+          "part": "Carapace housings and brood capsules"
+        }
+      ],
+      "note": "The abdomen is the main mass. Open space beneath the body keeps its limbs readable and separates it from Bellows."
+    },
+    {
+      "id": "shutter-wraith",
+      "number": "03",
+      "title": "Shutter Wraith",
+      "kind": "FLOATING RELIQUARY",
+      "height": 12,
+      "asset": "shutter-wraith/shutter-wraith.glb",
+      "recipe": "shutter-wraith/recipe.json",
+      "description": "Empty floating armor around an exposed inner light. A recessed face, blade-like hanging limbs and three independent sentries form a narrow, open silhouette.",
+      "donors": [
+        {
+          "name": "Hooded Reliquary",
+          "part": "Recessed face and hood geometry"
+        },
+        {
+          "name": "Void Reaper",
+          "part": "Suspended core and blade forms"
+        },
+        {
+          "name": "Shoulder assemblies + Lantern Medusa",
+          "part": "Painted shutter armor and sentry shells"
+        }
+      ],
+      "note": "The armor should feel suspended around something dangerous. Its opening shutters and detached sentries give it a distinct rhythm."
+    }
+  ]
+}

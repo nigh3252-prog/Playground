@@ -1,0 +1,122 @@
+{
+  "checks": [
+    "GLB header",
+    "embedded buffers and textures",
+    "finite vertex coordinates",
+    "actual scene-transformed 12m neutral bounds",
+    "ground baseline",
+    "native zero-start nonconstant animation clips"
+  ],
+  "models": [
+    {
+      "id": "bellows",
+      "bytes": 609112,
+      "sha256": "9fca32200e22cf8b8b78763bcb60e690a6c1c8c2a4f94a7a72e355f4af8f9e87",
+      "triangles": 6684,
+      "meshNodes": 93,
+      "textures": 0,
+      "boundsMin": [
+        -9.957436062354796,
+        -5.843409701846561e-07,
+        -6.504322312942175
+      ],
+      "boundsMax": [
+        9.883275987714502,
+        12.000004404175197,
+        7.53652976658401
+      ],
+      "dimensionsMeters": [
+        19.8407120500693,
+        12.000004988516167,
+        14.040852079526186
+      ],
+      "clips": [
+        {
+          "name": "Charge_Jump_Demo",
+          "durationSeconds": 6.300000190734863,
+          "varyingChannels": 10
+        },
+        {
+          "name": "Idle",
+          "durationSeconds": 4.0,
+          "varyingChannels": 5
+        }
+      ]
+    },
+    {
+      "id": "brood-loom",
+      "bytes": 778580,
+      "sha256": "baf049375097c4cf24e6273d14f5d2603ae5d04b300d73424eb96f3943411dac",
+      "triangles": 13352,
+      "meshNodes": 129,
+      "textures": 0,
+      "boundsMin": [
+        -11.537982794021222,
+        -5.862777486820292e-07,
+        -8.351393357974553
+      ],
+      "boundsMax": [
+        11.537982794021222,
+        12.00000027429003,
+        8.753940751597288
+      ],
+      "dimensionsMeters": [
+        23.075965588042443,
+        12.000000860567779,
+        17.105334109571842
+      ],
+      "clips": [
+        {
+          "name": "idle",
+          "durationSeconds": 2.0,
+          "varyingChannels": 8
+        },
+        {
+          "name": "brood_open",
+          "durationSeconds": 2.6666667461395264,
+          "varyingChannels": 8
+        }
+      ]
+    },
+    {
+      "id": "shutter-wraith",
+      "bytes": 7156284,
+      "sha256": "ee950881c7cabb290376235422a8aca54018236f4e6fa90d45bc1d84a683928c",
+      "triangles": 13785,
+      "meshNodes": 54,
+      "textures": 4,
+      "boundsMin": [
+        -5.649798314403803,
+        2.568754666754103e-07,
+        -2.0070538251988523
+      ],
+      "boundsMax": [
+        5.978317677974701,
+        12.00000170533491,
+        1.2996343397919787
+      ],
+      "dimensionsMeters": [
+        11.628115992378504,
+        12.000001448459443,
+        3.306688164990831
+      ],
+      "clips": [
+        {
+          "name": "idle",
+          "durationSeconds": 6.0,
+          "varyingChannels": 19
+        },
+        {
+          "name": "attack",
+          "durationSeconds": 3.0,
+          "varyingChannels": 20
+        },
+        {
+          "name": "expose",
+          "durationSeconds": 4.0,
+          "varyingChannels": 21
+        }
+      ]
+    }
+  ]
+}

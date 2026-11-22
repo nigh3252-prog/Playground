@@ -1,0 +1,160 @@
+{
+  "title": "Warden boss kitbash prototypes at shared metre scale",
+  "models": [
+    {
+      "name": "Warden",
+      "file": "models/assets/warden-v1.glb",
+      "sha256": "de5bff2eb86519bb1a26dc564960b078974140830d35a72ffd46c22adc005db5",
+      "excluded_importer_helper_meshes": [
+        "Icosphere"
+      ],
+      "pose": "Native Idle_Loop at time 0",
+      "raw_import_dimensions_blender_xyz_m": [
+        1.3592702150344849,
+        1.260512113571167,
+        1.937558650970459
+      ],
+      "uniform_display_scale": 2.0644536984932307,
+      "display_dimensions_m": {
+        "width": 2.806150436401367,
+        "height": 4.000000000001819,
+        "depth": 2.602268695831299
+      },
+      "lineup_bounds_blender_xyz_m": {
+        "min": [
+          -33.550472259521484,
+          -1.3011343479156494,
+          -1.8189894035458565e-12
+        ],
+        "max": [
+          -30.744321823120117,
+          1.3011343479156494,
+          4.0
+        ]
+      },
+      "label_anchor_px": [
+        141,
+        746
+      ]
+    },
+    {
+      "name": "Bellows",
+      "file": "labs/kitbash/bellows/bellows.glb",
+      "sha256": "9fca32200e22cf8b8b78763bcb60e690a6c1c8c2a4f94a7a72e355f4af8f9e87",
+      "excluded_importer_helper_meshes": [],
+      "pose": "Exported default neutral pose",
+      "raw_import_dimensions_blender_xyz_m": [
+        19.840713500976562,
+        14.040851593017578,
+        12.000005722045898
+      ],
+      "uniform_display_scale": 1.0,
+      "display_dimensions_m": {
+        "width": 19.840712547302246,
+        "height": 12.000005722045898,
+        "depth": 14.040851593017578
+      },
+      "lineup_bounds_blender_xyz_m": {
+        "min": [
+          -27.494319915771484,
+          -7.020425796508789,
+          1.231700651802326e-16
+        ],
+        "max": [
+          -7.653608322143555,
+          7.020425796508789,
+          12.000005722045898
+        ]
+      },
+      "label_anchor_px": [
+        667,
+        746
+      ]
+    },
+    {
+      "name": "Brood Loom",
+      "file": "labs/kitbash/brood-loom/brood-loom.glb",
+      "sha256": "baf049375097c4cf24e6273d14f5d2603ae5d04b300d73424eb96f3943411dac",
+      "excluded_importer_helper_meshes": [],
+      "pose": "Exported default neutral pose",
+      "raw_import_dimensions_blender_xyz_m": [
+        23.075965881347656,
+        17.105335235595703,
+        12.000000953674316
+      ],
+      "uniform_display_scale": 1.0,
+      "display_dimensions_m": {
+        "width": 23.075971603393555,
+        "height": 12.000001563690603,
+        "depth": 17.105335235595703
+      },
+      "lineup_bounds_blender_xyz_m": {
+        "min": [
+          -4.403610706329346,
+          -8.552667617797852,
+          -6.100162863731384e-07
+        ],
+        "max": [
+          18.672353744506836,
+          8.552667617797852,
+          12.000000953674316
+        ]
+      },
+      "label_anchor_px": [
+        1557,
+        746
+      ]
+    },
+    {
+      "name": "Shutter Wraith",
+      "file": "labs/kitbash/shutter-wraith/shutter-wraith.glb",
+      "sha256": "ee950881c7cabb290376235422a8aca54018236f4e6fa90d45bc1d84a683928c",
+      "excluded_importer_helper_meshes": [],
+      "pose": "Exported default neutral pose",
+      "raw_import_dimensions_blender_xyz_m": [
+        11.628116607666016,
+        3.3066883087158203,
+        12.000000953674316
+      ],
+      "uniform_display_scale": 1.0,
+      "display_dimensions_m": {
+        "width": 11.628108978271484,
+        "height": 12.00000086426735,
+        "depth": 3.3066881895065308
+      },
+      "lineup_bounds_blender_xyz_m": {
+        "min": [
+          21.922361373901367,
+          -1.6533441543579102,
+          8.940696716308594e-08
+        ],
+        "max": [
+          33.55047607421875,
+          1.6533440351486206,
+          12.000000953674316
+        ]
+      },
+      "label_anchor_px": [
+        2300,
+        746
+      ]
+    }
+  ],
+  "dimensions_px": [
+    2600,
+    1150
+  ],
+  "camera": {
+    "orthographic_horizontal_span_m": 72.13351440429688,
+    "position_blender_xyz_m": [
+      0.0,
+      -100.0,
+      39.0
+    ],
+    "target_blender_xyz_m": [
+      0.0,
+      0.0,
+      5.0
+    ]
+  }
+}

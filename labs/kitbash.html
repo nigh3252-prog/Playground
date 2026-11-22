@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10191d">
+  <title>Warden · Three Creature Studies</title>
+  <link rel="stylesheet" href="./kitbash/styles.css">
+  <script type="importmap">{"imports":{"three":"../armory/vendor/three.module.min.js","three/addons/":"../armory/vendor/addons/","meshopt":"../models/vendor/meshoptimizer/meshopt_decoder.mjs"}}</script>
+  <script type="module" src="./kitbash/viewer.mjs"></script>
+</head>
+<body>
+  <main>
+    <header class="masthead"><a class="wordmark" href="../models/">WARDEN <span>/ CREATURE STUDIES</span></a><span class="edition">KITBASH STUDY · 01</span></header>
+    <section class="intro"><div><p class="eyebrow">Three silhouettes · shared scale</p><h1>Built from the collection.</h1></div><p class="intro-note">Three 12-meter machines assembled from existing model parts. Turn them around, play their motion, and compare them with the 4-meter Warden.</p></section>
+    <nav class="study-tabs" aria-label="Choose a creature study">
+      <button data-study="bellows" aria-pressed="true"><span>01</span> Bellows</button>
+      <button data-study="brood-loom" aria-pressed="false"><span>02</span> Brood Loom</button>
+      <button data-study="shutter-wraith" aria-pressed="false"><span>03</span> Shutter Wraith</button>
+      <button data-study="lineup" aria-pressed="false"><span class="lineup-icon" aria-hidden="true">▥</span> Scale lineup</button>
+    </nav>
+    <section class="workbench">
+      <div class="viewport" id="stage" role="region" aria-label="Interactive 3D creature study">
+        <canvas id="view" aria-label="Drag to orbit the 3D models"></canvas>
+        <div class="view-heading"><span class="live-dot"></span><span id="view-label">BELLOWS / STUDY 01</span></div>
+        <div class="view-tools" role="group" aria-label="Camera views"><button id="fit">Fit</button><button id="front">Front</button><button id="side">Side</button></div>
+        <div id="status" role="status"><span class="spinner"></span><span id="status-text">Opening the model workshop…</span><button id="retry" hidden>Try again</button></div>
+        <div class="scale-key"><span class="scale-line"></span><div><strong>1 unit = 1 meter</strong><small id="scale-note">Neutral pose · shared ground plane</small></div></div>
+        <div class="view-hint">Drag to orbit <span>·</span> Pinch / scroll to zoom</div>
+        <div id="labels" aria-hidden="true"></div>
+      </div>
+      <aside class="details" aria-live="polite">
+        <p class="eyebrow" id="study-number">STUDY 01 / PRESSURE BEAST</p>
+        <h2 id="study-title">Bellows</h2>
+        <p id="study-description" class="description"></p>
+        <dl class="metrics"><div><dt>Neutral height</dt><dd id="height">12.0 <span>m</span></dd></div><div><dt>Beside Warden</dt><dd id="ratio">3.0<span>×</span></dd></div><div><dt>Geometry</dt><dd id="triangles">—</dd></div></dl>
+        <section class="donors"><h3>Parts palette</h3><ul id="donor-list"></ul></section>
+        <p class="study-note" id="design-note"></p>
+        <div class="downloads" id="downloads"><a id="download-model" download>Download GLB <span aria-hidden="true">↗</span></a><a id="download-recipe" download>Assembly recipe <span aria-hidden="true">↗</span></a></div>
+      </aside>
+    </section>
+    <section class="motion-bar" aria-label="Motion and display controls">
+      <div class="motion-group"><span class="control-label">Motion</span><label class="sr-only" for="clip">Animation clip</label><select id="clip"><option>Loading…</option></select><button id="play" aria-label="Pause animation">Pause</button></div>
+      <div class="display-group"><button id="reference-toggle" aria-pressed="true">Warden · 4 m</button><button id="neutral-toggle" aria-pressed="false">Clay view</button><button id="spin-toggle" aria-pressed="false">Turntable</button></div>
+    </section>
+    <footer><p>Visual prototypes · native mesh animation · original donor parts retained in the recipes</p><p id="trex-note">12 m: about 60% of Dreadmaw’s neutral body height, excluding its tall launcher pods.</p></footer>
+  </main>
+  <noscript>This model study needs JavaScript and WebGL. The GLB files can also be opened in Blender or another 3D viewer.</noscript>
+</body>
+</html>
