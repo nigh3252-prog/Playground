@@ -1,0 +1,48 @@
+NIGHTMARE HYBRID | SOURCE CREDIT AND CHANGES
+
+Shark donor: Quaternius, LowPoly Animated Fish
+https://quaternius.itch.io/lowpoly-animated-fish
+CC0 1.0 Universal
+https://creativecommons.org/publicdomain/zero/1.0/
+
+T. rex body and original animation donor: Bake3D
+https://bake3d.ai/free-3d-models
+Original model: https://bake3d.ai/samples/free/bake3d-trex-animated.glb
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Full license text included as CC-BY-4.0.txt.
+
+Changes include donor extraction, pose baking, hybrid anatomy, fusion/remeshing, altered proportions, regional dimension controls in prior Shark Rex studies, materials, armor and custom mechanical head/mouthparts. This separate Nightmare version bakes Ryan's selected body dimensions, removes the shark's old legs and forward face, reshapes the terminal neck, transplants the finished Step07 head and independent mechanical leg assemblies, and adds attachment interfaces.
+
+The custom mechanical head and study-specific details were created for Ryan's creature design. No endorsement by either donor creator is implied. Retain this credit, license and change notice with redistributed derivatives. CC BY 4.0 permits commercial reuse subject to its attribution and other terms; the shark donor is CC0.
+
+No previously considered Sketchfab shark model was used. User reference images are not included.
+
+V2 changes: reduced/tucked/pitched head assembly, fuller continuous neck overlap, smaller and inset leg modules, revised attachment interfaces and atlas-guided silhouette comparison. Materials and colors remain unchanged. The comparison's atlas was previously generated from Ryan's supplied reference illustration. It is a visual design guide, not a licensed source mesh. No raw reference image is embedded in the Blender file or editable package.
+
+V3 changes: locally filled and smoothed the hip-to-tail transition, narrowed the shark body, reseated the leg modules, tucked the moving mandibles inward and added angular upper-jaw/root supports with existing materials and atlas UVs. No color or texture changes were made. The annotated screenshot was used only to identify the problem region and is not included in the deliverables.
+
+V4 changes: filled the neck-to-palate underside, recessed and reduced the upper cutters, lowered the existing lower mandibles, narrowed the shark body and moved independent legs inward. Recolored the shark upper/lower surfaces to muted olive and charcoal. Added a V4 resting action and restrained opening check; the V3 opening action is labeled incompatible. Original reference/annotation images are not included in the editable package.
+
+V5 changes: reused the existing Iron Tyrant Step 07 shoulder pivots and upper-arm casings at the mandible roots, recessed the mouth-roof interior, lowered/flattened the far caudal profile and added fitted body/tail armor panels with mechanical vent details. New donor-part placements and materials are documented in V5-refinement-settings.json. Reference illustration and annotation files are not included in the editable package.
+
+V6 changes: added mirrored jaw-root actuator blocks, pistons, hoses and linkages; reshaped the tail into Ryan's annotated side envelope and rebuilt the terminal fork as a continuous tapered section with fitted armor. V5 source geometry outside these regions remains unchanged. The new actuator motion uses saved Blender constraints; the source body/armor remain a static study. No raw reference or annotation images are included.
+
+V7 changes: replaced the V6 rear-cheek hydraulic bank with relocated proximal-mandible supports and telescoping linkages; added eight small dorsal tail spines and four swept, canted tail-end flanges. The approved V6 body/tail core, armor, existing head shell and leg geometry were retained. New details reuse existing materials. Raw reference and annotation images are not included in the editable package.
+
+V8 changes: replaced selected small neck panels and gill details with a broad partial-domed cowl and exposed rubber cable musculature, including a prominent red cable and procedural braided surface detail. Local neck substrate face materials were changed to dark rubber; source body vertices and all approved head, legs, fins, tail and remaining armor geometry were retained. No raw reference or annotation image is included in the editable package.
+
+V9 changes: removed the fitted torso/tail armor overlays and separate V8 neck cable/boot geometry; removed the integral dorsal shark fin and closed its root; replaced the rounded neck cowl with a manufactured, beveled armor panel with a pointed rear. The exposed shark body uses a newly generated rubber/cable musculature image directly on a new longitudinal UV layer, with shallow luminance bump and an underside edge-overlap blend. Existing head, mandible hydraulics, independent legs, tail spines and end flanges are retained. The new texture was generated for this study with OpenAI image generation from a text prompt; it is not a scanned material or an independently verified PBR map set. It is packed into the Blender file and supplied separately in Textures. V8 and earlier files remain unchanged.
+
+V10 changes: bounded silhouette cleanup on the exposed body; broad reference-inspired hexagonal panel seams on the existing manufactured neck shell; one prominent, mostly embedded red neck cable per side. The approved V9 black generated cable/rubber image, its body UV mapping and its material are retained. Existing head, legs and tail-detail assemblies are retained. The new red cables are editable static geometry; the shell pattern is a material effect rather than separated armor tiles. V9 and all earlier files remain unchanged. Raw reference and annotation images are not included.
+
+V11 changes: rounded the neck shell's cross-section while retaining its broad panel material and pointed rear; refined the red neck tubes into coherent emerging cylinders with a hex-mesh surface material; added custom mirrored small mechanical arm assemblies with editable manual component pivots. The approved black body image, body geometry, head/mandibles, independent legs and tail details are retained. V10 and earlier versions remain unchanged. The new arms interpret the partly obscured concept illustration and are not copied from a separately licensed source mesh. Reference imagery is not included in the editable package.
+
+V12 changes: removed the integral shark pectoral fins and legacy fin-tip foreclaws, closed and locally blended their roots, replaced the one-piece neck shell with a more compact set of overlapping manufactured plates, and strengthened the red tubes' hex surface material. Added custom back equipment, fitted hip/hindleg/ankle/toe shells, broad tail armor, selected belly segments, shaped brow/cheek details, recessed optics, small head finlets, brackets, accents and markings. Original flat leg plaques are hidden behind replacements; obsolete box-sensor/lamp meshes are replaced. Existing head/mandible and leg controls are reused without adding a unified body rig. The approved black body image/material and accepted overall proportions are retained. V11 and earlier files remain unchanged. Hidden reference details are interpreted; no raw reference or annotation images are included in the editable package.
+
+V13 changes: consolidated the evaluated V12 pose into one animation armature; smoothly bound the body and tail, added planted-foot IK, mechanical arm/head controls, rigid armor attachments, hydraulic tracking and skinned tendril motion; authored watchful idle, in-place walk, two-cycle forward walk and alert/display actions. The earlier forward camera-eye clusters are restored within the newer head pods. V12 and earlier files remain unchanged. Motion is authored rather than physically simulated.
+
+V14 CHANGE NOTICE
+Restored the complete original camera housings inside the newer forward pods. Added a nonlooping sinuous 160-degree stepped turn and strike animation. Original V13 files remain unchanged.
+
+V14 portable changes: baked one aggressive-turn action to glTF, retained validated body/conduit material bakes and original dark core texture/tint. Linear skinning approximates the editable Blender master.

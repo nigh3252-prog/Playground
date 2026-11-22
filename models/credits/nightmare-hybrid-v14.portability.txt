@@ -1,0 +1,16 @@
+NIGHTMARE V14 | OPTIONAL PORTABLE AGGRESSIVE TURN
+
+The editable Blender master is authoritative. This glTF 2.0 GLB is a portable playback approximation with baked animation, embedded textures and standard linear skinning. It does not contain Blender's editable rig controls, IK or hydraulic constraints.
+
+CLIP
+N14_ATTACK_Sinuous_160_Turn: frames 1-192 at 24 fps. 8-second shot; keyframe span is 191/24 = 7.95833 seconds. A one-shot notice, countercoil, accelerating 160-degree stepped turn, strike, recoil and recovery. The final direction differs from the start; do not loop without blending/reorientation. Only this new clip is in the GLB; the editable project retains older actions.
+
+CONTENT
+654 character meshes, including 20 complete camera module components; one skin; 50 materials; seven embedded images. No required glTF extensions. KHR_materials_emissive_strength is optional. glTF Y-up; source scale retained. Use a glTF 2.0 animation-capable viewer.
+
+VERIFICATION AND LIMITS
+Fresh Blender import checked against the frozen master at 42 poses, with bounds and up to 64 sampled vertices per mesh. Every-frame sole-contact and leg-height checks are in PORTABLE_VALIDATION.json. Maximum sampled geometry difference: 0.06253731 scene units. Maximum bounds difference: 0.04283345 scene units. The strict 0.005-unit geometry test does not pass; full failures are disclosed. Blender Preserve Volume dual-quaternion skinning cannot be represented by glTF linear blend skinning. See the independent source-only DQ/LBS check and same-camera worst-pose QA images. This approximation is not exact deformation parity.
+
+Body and conduit procedural color/normal effects were baked. The leg core keeps its original texture with the exact dark tint factor. Tiny procedural noise bump on some armor is omitted. Viewer lighting and tone mapping may change appearance.
+
+No engine/game integration, retargeting, physics, collision or combat behavior setup is included. Preserve CREDITS.txt and CC-BY-4.0.txt with redistributed derivatives.

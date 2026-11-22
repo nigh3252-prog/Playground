@@ -365,5 +365,9 @@
   "character-comparison-bell-hybrid@v1": "19bc9859ac6c9a09b912eb04d29c413569b2260d2b729d26c9f2acfeb66ad372",
   "shark-jaw-stalker-standalone@v1": "f88d4c6ba56fae2134254d027a38fb3cab713ee82ad0cb3711892ecd4bf0b157",
   "sudden-impact-dogleg-arm@v1": "2671babd63013fd7840b83d6f6147e8623992c89d3f32307f146b97623c0d606",
-  "iron-marquis-reference-pose@v1": "ddf1d887b99ee31c017f0668dc3c4661c96697d2cbeb103793442a22123219c1"
+  "iron-marquis-reference-pose@v1": "ddf1d887b99ee31c017f0668dc3c4661c96697d2cbeb103793442a22123219c1",
+  "shark-jaw-stalker-standalone@v2": "69814730f6fd884ca0520a6cfae35c211abab99a7f2b0b142a1e05be3c54faf5",
+  "warden-broad-body-walker@v2": "f0ad4556b1a553736c787bb4a3bda3f470ec06d1978736746c9c285292322527",
+  "nightmare-hybrid-portable@v13": "75e1fe0e9a75167066252b700c1bb6ba8fb15123617c0a8a427f3af21e76116d",
+  "nightmare-hybrid-portable@v14": "caa750bca0beb6dae703bd197be913a4976c9393886662d48d51bfbc8663e4a8"
 }
