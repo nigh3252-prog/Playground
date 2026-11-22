@@ -292,5 +292,10 @@
   "texture-first-orc-bookkeeper@v3": "3b12f93d1027e0cbf18db301b24334a0d90a4ce91cf07e7dbc5a59f746b77682",
   "texture-first-gilded-knight@v3": "9774acc65d598a3e835d9493d3e3cec4fa5148d62633261e8fda72ac81a85079",
   "texture-first-crimson-mech@v3": "3bbb245bf8ed015cb28040596f0bfc72ce64b3d2641441d70bb8e2e569a832c0",
-  "courier-mech@v2": "6c39abf92ed90ce55988a26d7dca1da2b173e4d168beded185f16ca4dc66b2be"
+  "courier-mech@v2": "6c39abf92ed90ce55988a26d7dca1da2b173e4d168beded185f16ca4dc66b2be",
+  "texture-first-orc-bookkeeper@v2": "4613163633245d7b11d9cbb990b56d2c2c04467733c5024a68fdba07c3fbeab1",
+  "texture-first-gilded-knight@v2": "a5c5a16683637bfebc921f5d487db89cc1dd58d6f1fba776da5248d0f1695b89",
+  "texture-first-crimson-mech@v2": "8898e32bdfc42b4d7be745fff3d379e5464c85b2b9aa59bf28fc0142aa94b40a",
+  "wide-brim-colossus@v2": "f5e86e6f02403a9828b607d699612fdaea45d149e803905e453ffa02ad92d35b",
+  "bmx-racer-dirt-jump-bike@v1": "37ef2d3115ad2878d609e5f160a2a468b58c9b36e62c9a31621f2e7cc0cdc3ce"
 }
