@@ -26,6 +26,7 @@
         <button id="copy" type="button" disabled>Copy link</button>
       </div>
       <p id="lookup-note" hidden></p>
+      <p id="review-summary" class="review-summary" hidden></p>
       <div id="stage" role="region" aria-label="Interactive 3D model" data-model="">
         <div class="stage-label">MODEL VIEWPORT</div>
         <div class="stage-controls">
@@ -63,12 +64,23 @@
                 <label>Collection
                   <select name="collection"><option value="">Any collection</option></select>
                 </label>
-                <label>Complexity
+                <label>Complexity (triangles)
                   <select name="complexity">
                     <option value="all">Any size</option>
                     <option value="low">Under 10,000 triangles</option>
                     <option value="medium">10,000–49,999 triangles</option>
                     <option value="high">50,000+ triangles</option>
+                  </select>
+                </label>
+                <label>Curator visual quality
+                  <select name="reviewQuality">
+                    <option value="all">Any (including unreviewed)</option>
+                    <option value="exceptional">Exceptional</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                    <option value="not-rated">Reviewed, not rated</option>
+                    <option value="unreviewed">Not yet reviewed</option>
                   </select>
                 </label>
               </div>
@@ -85,10 +97,12 @@
           <section id="metadata" class="bench-panel" aria-labelledby="details-title" hidden>
             <header class="panel-header"><h2 id="details-title">Model details</h2><button type="button" data-close-panel aria-label="Close model details">Close</button></header>
             <dl id="stats"></dl>
-            <p class="detail-note">Fit view changes only the display. The GLB keeps its original scale.</p>
+            <section id="review-detail" aria-label="Human curator review"></section>
+            <p class="detail-note">Fit view changes only the display. Each grid square is one original GLB unit (nominally one meter, if the asset uses meters); source scale has not been verified.</p>
             <div class="detail-links">
               <a id="download" download>Download GLB</a>
               <a href="./catalog.json">Open model catalog</a>
+              <a href="./reviews.json">Open curator reviews</a>
             </div>
           </section>
           <div id="animation" hidden aria-label="Animation controls">
@@ -120,6 +134,8 @@
           <label for="model-picker" class="sr-only">Choose a model</label>
           <select id="model-picker" disabled></select>
           <button type="button" id="next" aria-label="Next model" disabled><span>Next</span> <span aria-hidden="true">→</span></button>
+          <button type="button" id="variant-prev" aria-label="Previous variant in family" title="Previous family variant" hidden>↑</button>
+          <button type="button" id="variant-next" aria-label="Next variant in family" title="Next family variant" hidden>↓</button>
           <div id="model-chips" aria-label="Swipe through matching models"></div>
         </nav>
       </div>
