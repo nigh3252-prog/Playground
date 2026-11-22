@@ -2022,6 +2022,285 @@
       "section": "entities"
     },
     {
+      "id": "warden-gm-hunchback",
+      "version": "v1",
+      "name": "Warden GM / Hunchback",
+      "type": "humanoid",
+      "asset": null,
+      "bytes": 8558344,
+      "sha256": "b78a2910892ef9c8782e8dd5c31ce659063629a34285ff6b58ca4857c2bb7399",
+      "triangles": 15878,
+      "meshes": 2,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        },
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Reference_Pose"
+        }
+      ],
+      "collection": "Warden Creature and Deployment Studies",
+      "credits": "Exact authored native 3D game-art study with custom geometry, rig, original image-generated surface maps and source animation clips. Generated crossover study inspired by the supplied Gundam GM and BattleTech Hunchback concept. No supplied reference image, viewer code, or donor model included.",
+      "license": "No verified public reuse license.",
+      "originalFile": "Warden_GM_Hunchback.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-gm-hunchback-v1.glb.part1",
+          "bytes": 2852781,
+          "sha256": "dd0f87f2b84d9862cfe472ea7b62b83f30359f209a9e656f42cf127fd0a49ddf"
+        },
+        {
+          "asset": "assets/warden-gm-hunchback-v1.glb.part2",
+          "bytes": 2852781,
+          "sha256": "158b6c2000040babec78f02a3c8d2c3d9bb9b540786637b2eddccaf8fb4ebf7f"
+        },
+        {
+          "asset": "assets/warden-gm-hunchback-v1.glb.part3",
+          "bytes": 2852782,
+          "sha256": "aa39d783c025a96ce141262ceb96e8026708f685b874aaf4f3c7910e08591642"
+        }
+      ]
+    },
+    {
+      "id": "warden-linkage-deployment",
+      "version": "v1",
+      "name": "Warden Shoulder Linkage \u00b7 Demonstration",
+      "type": "other",
+      "asset": null,
+      "bytes": 6885272,
+      "sha256": "bdf3a6daaadd05fa8813e60535cfcea09e23c0e9ca39dac2a1a38e14194c728e",
+      "triangles": 7718,
+      "meshes": 5,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Demo_Cycle"
+        },
+        {
+          "name": "Deploy"
+        },
+        {
+          "name": "Stow"
+        },
+        {
+          "name": "Stowed_Hold"
+        },
+        {
+          "name": "Ready_Hold"
+        }
+      ],
+      "collection": "Warden Creature and Deployment Studies",
+      "credits": "Exact authored native 3D game-art study with custom geometry, rig, original image-generated surface maps and source animation clips. Authored torso and arm demonstration. No supplied reference image, viewer code, or donor model included.",
+      "license": "No verified public reuse license.",
+      "originalFile": "Warden_Linkage_Deployment.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-linkage-deployment-v1.glb.part1",
+          "bytes": 2295090,
+          "sha256": "dc2f3ffaa060bb9dfa84c6cbbce1b7133f7f81d32e13235f7cdd3d242003d8ae"
+        },
+        {
+          "asset": "assets/warden-linkage-deployment-v1.glb.part2",
+          "bytes": 2295091,
+          "sha256": "3b1569a6974142bf86f1989124eae6b61dc2cb0916d50798c4f4bc374cd7feb7"
+        },
+        {
+          "asset": "assets/warden-linkage-deployment-v1.glb.part3",
+          "bytes": 2295091,
+          "sha256": "b14150b87458fe028d7f832fe7d9b3089e766f94b603334507baa5468a009768"
+        }
+      ]
+    },
+    {
+      "id": "warden-arc-deployment",
+      "version": "v2",
+      "name": "Warden Shoulder Arc \u00b7 Compact Demonstration",
+      "type": "other",
+      "asset": null,
+      "bytes": 7028036,
+      "sha256": "ff750c6dc418b6a853704d41accd2bce32d8aae89e950935aaa1a862b76b1e6e",
+      "triangles": 12402,
+      "meshes": 5,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Demo_Cycle"
+        },
+        {
+          "name": "Deploy"
+        },
+        {
+          "name": "Stow"
+        },
+        {
+          "name": "Stowed_Hold"
+        },
+        {
+          "name": "Ready_Hold"
+        }
+      ],
+      "collection": "Warden Creature and Deployment Studies",
+      "credits": "Exact authored native 3D game-art study with custom geometry, rig, original image-generated surface maps and source animation clips. Authored torso and arm demonstration. No supplied reference image, viewer code, or donor model included.",
+      "license": "No verified public reuse license.",
+      "originalFile": "Warden_Arc_Deployment.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-arc-deployment-v2.glb.part1",
+          "bytes": 2342678,
+          "sha256": "ce05a0bde775eb654f7ae850b82e3d95d73b245ef7a9fb0f007ecb35aac07e83"
+        },
+        {
+          "asset": "assets/warden-arc-deployment-v2.glb.part2",
+          "bytes": 2342679,
+          "sha256": "7202009c39ecd2b79354012e812f4e63efb66e9f71c34773a244b9b56385e914"
+        },
+        {
+          "asset": "assets/warden-arc-deployment-v2.glb.part3",
+          "bytes": 2342679,
+          "sha256": "18e36e8d24eb6f7090e0d2d4536825574287bd09118828f635f32da2aeb5c810"
+        }
+      ]
+    },
+    {
+      "id": "warden-linkage-module",
+      "version": "v1",
+      "name": "Warden Shoulder Linkage \u00b7 Module",
+      "type": "gear",
+      "asset": null,
+      "bytes": 6383752,
+      "sha256": "b161f4055340f54d615babca9376c9d413255e1975e64b18e49cd1aa55929350",
+      "triangles": 3058,
+      "meshes": 2,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Demo_Cycle"
+        },
+        {
+          "name": "Deploy"
+        },
+        {
+          "name": "Stow"
+        },
+        {
+          "name": "Stowed_Hold"
+        },
+        {
+          "name": "Ready_Hold"
+        }
+      ],
+      "collection": "Warden Creature and Deployment Studies",
+      "credits": "Exact authored native 3D game-art study with custom geometry, rig, original image-generated surface maps and source animation clips. Standalone visual module. No supplied reference image, viewer code, or donor model included.",
+      "license": "No verified public reuse license.",
+      "originalFile": "Warden_Linkage_Module.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-linkage-module-v1.glb.part1",
+          "bytes": 2127917,
+          "sha256": "81fbd2b3fd52b7d721870e32300b12023ea7745d27500b4559a89846a7655048"
+        },
+        {
+          "asset": "assets/warden-linkage-module-v1.glb.part2",
+          "bytes": 2127917,
+          "sha256": "bb5e9ef52ff3c6c88db72e247d6e377f95126b46b3c617da708d25651d1f040e"
+        },
+        {
+          "asset": "assets/warden-linkage-module-v1.glb.part3",
+          "bytes": 2127918,
+          "sha256": "ade282cfa66c853b6d767d001a8468e4c304a3512915efabb2cf41a2663d6bd7"
+        }
+      ]
+    },
+    {
+      "id": "warden-arc-module",
+      "version": "v2",
+      "name": "Warden Shoulder Arc \u00b7 Compact Module",
+      "type": "gear",
+      "asset": null,
+      "bytes": 6526512,
+      "sha256": "77e6c31e745f33f07b244fbbb6a04a4ad26e211ba39e0196daa4076175ab0785",
+      "triangles": 7742,
+      "meshes": 2,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Demo_Cycle"
+        },
+        {
+          "name": "Deploy"
+        },
+        {
+          "name": "Stow"
+        },
+        {
+          "name": "Stowed_Hold"
+        },
+        {
+          "name": "Ready_Hold"
+        }
+      ],
+      "collection": "Warden Creature and Deployment Studies",
+      "credits": "Exact authored native 3D game-art study with custom geometry, rig, original image-generated surface maps and source animation clips. Standalone visual module. No supplied reference image, viewer code, or donor model included.",
+      "license": "No verified public reuse license.",
+      "originalFile": "Warden_Arc_Module.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-arc-module-v2.glb.part1",
+          "bytes": 2175504,
+          "sha256": "c4f0c5eba99f6909dde0f55742ec855d44e2628b004c85de33fc8b9667d99c44"
+        },
+        {
+          "asset": "assets/warden-arc-module-v2.glb.part2",
+          "bytes": 2175504,
+          "sha256": "25901045377cf8fc69715b3a0ddb5f04c2f886f1fcc91a6a2ccde13b63a71372"
+        },
+        {
+          "asset": "assets/warden-arc-module-v2.glb.part3",
+          "bytes": 2175504,
+          "sha256": "e5722d70338e8dcdba007174f32d0078a6074f8f540c73034ed66420e5c51a0a"
+        }
+      ]
+    },
+    {
+      "id": "warden-crimson-reference-mech",
+      "version": "v1",
+      "name": "Warden Crimson",
+      "type": "humanoid",
+      "asset": "assets/warden-crimson-reference-mech-v1.glb",
+      "bytes": 2649316,
+      "sha256": "ff8a6cc59a55ff59ff6a454174715fee5753c7e447c81063f6243abba97a6012",
+      "triangles": 29442,
+      "meshes": 3,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        }
+      ],
+      "collection": "Warden Reference Studies",
+      "credits": "Exact native Warden Crimson volumetric adaptation; all modeled geometry newly authored from the supplied red mech illustration. Uses the prior authored 41-joint rest layout, not its body mesh. No source image, portrait, or donor geometry.",
+      "license": "No verified public reuse license."
+    },
+    {
       "id": "enemy-playground-rusted-greatsworder",
       "version": "v1",
       "name": "Rusted Greatsworder \u00b7 Enemy Animation Playground",
