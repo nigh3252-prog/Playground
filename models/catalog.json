@@ -7083,6 +7083,62 @@
       "collection": "Power Dolls Painted UV Studies"
     },
     {
+      "id": "power-dolls-velares",
+      "version": "v31",
+      "name": "Power Dolls \u00b7 Velares",
+      "type": "humanoid",
+      "family": "Power Dolls",
+      "asset": null,
+      "parts": [
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part1",
+          "bytes": 5158360,
+          "sha256": "53bf896ad6def277812b189a8e8063548473ba4a2587a522e917a0cec1794ee3"
+        },
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part2",
+          "bytes": 5158360,
+          "sha256": "12845212a175a1942a3bc8a5b4f4e25533a1a6b88b7fec05cd2cb23176f9f5a3"
+        },
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part3",
+          "bytes": 5158360,
+          "sha256": "ccf8b64e00b9c2e6e278bc891c7888d41dff7640454da748d7fab84a23262a90"
+        },
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part4",
+          "bytes": 5158360,
+          "sha256": "d3f998ef716fed1825f1397d47e93c25dfadd6fe65e749860994acc64fd24989"
+        }
+      ],
+      "originalFile": "velares-v31.glb",
+      "sha256": "a4cd028166eed5e032dca2556f83cbdfe3df80f724fb7113c67b8b7aca7d70fb",
+      "bytes": 20633440,
+      "triangles": 173164,
+      "meshes": 131,
+      "textures": 14,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        },
+        {
+          "name": "Warden_Walk_BroadArmor_Adapted"
+        }
+      ],
+      "credits": "Exported from the supplied PowerDolls_Velares_v31.blend. Power Dolls design reference: Kogado Studio. Includes the visible rigged mech, embedded materials and all five Blender actions.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "warden-cannon-reference-mech",
       "version": "v1",
       "name": "Warden Cannon \u00b7 Reference Mech",
