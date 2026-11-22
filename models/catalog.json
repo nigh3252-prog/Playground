@@ -4733,6 +4733,28 @@
       "license": "No public reuse license specified."
     },
     {
+      "id": "folding-trench-tool-visual-study",
+      "version": "v1",
+      "name": "Folding Trench Tool \u00b7 Visual Study",
+      "asset": "assets/folding-trench-tool-visual-study-v1.glb",
+      "sha256": "e48e32c18610b25e981cb8ea6cb37e085a0a2da3295f1cd6f5a845c10a54329b",
+      "bytes": 176724,
+      "triangles": 716,
+      "meshes": 11,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Trench Tool Transformation"
+        }
+      ],
+      "credits": "Isolated solid-primitive fantasy prop from the original authored browser visual study, with a baked visual transformation. No operating mechanisms, UI, runtime or source media.",
+      "license": "No public reuse license specified.",
+      "type": "gear",
+      "family": "Folding Tools",
+      "section": "gear"
+    },
+    {
       "id": "mace-goblin-sandbox",
       "version": "v2",
       "name": "Mace Goblin \u00b7 Sandbox",
