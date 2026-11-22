@@ -2953,6 +2953,206 @@
       "collection": "Fantasy Props Lab"
     },
     {
+      "id": "reliquary-24",
+      "version": "v1",
+      "name": "Reliquary 24 \u00b7 V1",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "ce3b6878f2771ffcf80d6df59e43b8e5318b06268f48744331ef990d23de3626",
+      "bytes": 6236624,
+      "triangles": 29698,
+      "meshes": 11,
+      "textures": 3,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored Reliquary 24 V1 model from the original comparison viewer. Uses the authored UV-painted materials; supplied reference artwork is not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Reliquary 24 Studies",
+      "originalFile": "reliquary-24-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/reliquary-24-v1.glb.part1",
+          "bytes": 2078874,
+          "sha256": "a46fa501a5edbe1b4c7a81a2d0ba789509851e45d962ebadf0b186879c627f39"
+        },
+        {
+          "asset": "assets/reliquary-24-v1.glb.part2",
+          "bytes": 2078875,
+          "sha256": "78a2cea6fd2cf0fbbdecd4263cc455c6e0adaa0af25d7c128449a7d350c3acdc"
+        },
+        {
+          "asset": "assets/reliquary-24-v1.glb.part3",
+          "bytes": 2078875,
+          "sha256": "a657afd028ce20f2c8d23a41cd2e1cd08b35d97413ded6662ce2bf3b059978fb"
+        }
+      ]
+    },
+    {
+      "id": "reliquary-24",
+      "version": "v2",
+      "name": "Reliquary 24 \u00b7 V2",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "ab15683e1629f888215dcb529a766f3484fefb8dee66dc36926dcce7e9bb97bb",
+      "bytes": 6504336,
+      "triangles": 39190,
+      "meshes": 11,
+      "textures": 3,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored Reliquary 24 V2 model from the original comparison viewer. Uses the authored UV-painted materials; supplied reference artwork is not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Reliquary 24 Studies",
+      "originalFile": "reliquary-24-v2.glb",
+      "parts": [
+        {
+          "asset": "assets/reliquary-24-v2.glb.part1",
+          "bytes": 2168112,
+          "sha256": "b7bfc5155b7f694313a9b671afe81ae3e5e7e682be23af4f4ad66b3c9a0aebab"
+        },
+        {
+          "asset": "assets/reliquary-24-v2.glb.part2",
+          "bytes": 2168112,
+          "sha256": "b0625dae5d02d07d16001da596d539232a414fd7dcd79fbeffb15682b4afe927"
+        },
+        {
+          "asset": "assets/reliquary-24-v2.glb.part3",
+          "bytes": 2168112,
+          "sha256": "713c882b573ee30c7eff63b293cbac10466c9385be32ee2032fc672c1ea9c7a7"
+        }
+      ]
+    },
+    {
+      "id": "reliquary-24",
+      "version": "v3",
+      "name": "Reliquary 24 \u00b7 V3",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "b2e091052a7881a7ff2fcb3fde1d2a3a1b23d40eaa1b454c65d0318af7c1f244",
+      "bytes": 6849496,
+      "triangles": 45726,
+      "meshes": 11,
+      "textures": 3,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored Reliquary 24 V3 model from the original comparison viewer. Uses the authored UV-painted materials; supplied reference artwork is not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Reliquary 24 Studies",
+      "originalFile": "reliquary-24-v3.glb",
+      "parts": [
+        {
+          "asset": "assets/reliquary-24-v3.glb.part1",
+          "bytes": 2283165,
+          "sha256": "29a1202b2ba7bc40dadd5b2524568b5c839fa355ed126d6835ab39ff9383f612"
+        },
+        {
+          "asset": "assets/reliquary-24-v3.glb.part2",
+          "bytes": 2283165,
+          "sha256": "2a4bef3848b39d7cc06f9950199471ec069ac2cc4a5366307e366013f37d81cd"
+        },
+        {
+          "asset": "assets/reliquary-24-v3.glb.part3",
+          "bytes": 2283166,
+          "sha256": "9ab6d5db764d9aa12527dd51f6b76dcd364382fdef7cf02ad168eb354a1cc580"
+        }
+      ]
+    },
+    {
+      "id": "reliquary-24",
+      "version": "v4",
+      "name": "Reliquary 24 \u00b7 V4",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "f0fdb3c6042681e836129b96f59672f257c0960f9a87f35ab7bf2c628f95cf9f",
+      "bytes": 7443236,
+      "triangles": 57470,
+      "meshes": 23,
+      "textures": 3,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Grounded knee flex"
+        }
+      ],
+      "credits": "Authored Reliquary 24 V4 model from the original comparison viewer. Uses the authored UV-painted materials; supplied reference artwork is not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Reliquary 24 Studies",
+      "originalFile": "reliquary-24-v4.glb",
+      "parts": [
+        {
+          "asset": "assets/reliquary-24-v4.glb.part1",
+          "bytes": 2481078,
+          "sha256": "a3ce691af3e36919caceb08e04811974f2efd49c8f39bc0ad6095983c417f3c3"
+        },
+        {
+          "asset": "assets/reliquary-24-v4.glb.part2",
+          "bytes": 2481079,
+          "sha256": "759dcc8175e7833e238afd08db7aee2665873150c28ecedeeecba75d6f6d57be"
+        },
+        {
+          "asset": "assets/reliquary-24-v4.glb.part3",
+          "bytes": 2481079,
+          "sha256": "6a1628138c168e08a90340c91e7e83a2c920165cc9c8dde3bd3de165c7cc11a5"
+        }
+      ]
+    },
+    {
+      "id": "reliquary-24-mobile",
+      "version": "v5",
+      "name": "Reliquary 24 \u00b7 V5 Mobile",
+      "type": "humanoid",
+      "asset": null,
+      "sha256": "7fba157530339c9388f2b9227805ac77f9e4e43ad2dc8b08da76e21e4b8b6697",
+      "bytes": 8628364,
+      "triangles": 70050,
+      "meshes": 23,
+      "textures": 3,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Grounded knee flex"
+        }
+      ],
+      "credits": "Authored Reliquary 24 V5 model from the original comparison viewer (original lightweight viewer export with reduced texture budget). Uses the authored UV-painted materials; supplied reference artwork is not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Reliquary 24 Studies",
+      "originalFile": "reliquary-24-mobile-v5.glb",
+      "parts": [
+        {
+          "asset": "assets/reliquary-24-mobile-v5.glb.part1",
+          "bytes": 2876121,
+          "sha256": "f54dbac900628f39485dcc36059e50c93f7968486dcad21a87b82f46cc07c5ab"
+        },
+        {
+          "asset": "assets/reliquary-24-mobile-v5.glb.part2",
+          "bytes": 2876121,
+          "sha256": "ed82833a136e75f5dc2ead3376f20ffcba183cb36533435d12854281b1661084"
+        },
+        {
+          "asset": "assets/reliquary-24-mobile-v5.glb.part3",
+          "bytes": 2876122,
+          "sha256": "26cd0b69ea12990d026b9b8a6c080bf1b705546eec7b17f11d9f4d4f245ada21"
+        }
+      ]
+    },
+    {
+      "id": "hammerist",
+      "version": "v2",
+      "name": "Hammerist \u00b7 Tuned",
+      "type": "humanoid",
+      "file": "hammerist-v2.glb",
+      "asset": "assets/hammerist-v2.glb",
+      "sha256": "a8e9373c9ed9628988926927da033775c08a927a9dfcd1582793fe887c13fb71",
+      "bytes": 261652,
+      "triangles": 2686,
+      "meshes": 87,
+      "textures": 6,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored tuned Hammerist procedural character adaptation. Geometry, handheld fantasy hammer and authored canvas decals only; Lambert materials translated for glTF. No reference drawing, second character or viewer runtime.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "fantasy-lab-temple-glaive",
       "version": "v1",
       "name": "Temple Glaive \u00b7 Fantasy Props Lab",
