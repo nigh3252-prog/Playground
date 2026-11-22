@@ -7083,6 +7083,46 @@
       "collection": "Power Dolls Painted UV Studies"
     },
     {
+      "id": "power-dolls-velares",
+      "version": "v31",
+      "name": "Velares · Power Dolls",
+      "asset": null,
+      "originalFile": "velares-v31.glb",
+      "parts": [
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part1",
+          "bytes": 5300000,
+          "sha256": "ca0910012be32b8d2081b5afa86a8423151014a93bdc1f92b0013100071144f2"
+        },
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part2",
+          "bytes": 5300000,
+          "sha256": "9a973718dd8cc0d51ee6647aa1aa547a4e1e0fdcc3e4ccbe171f6c5e599a53f0"
+        },
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part3",
+          "bytes": 5300000,
+          "sha256": "eed73606f6d462a07d2673c4b23cf0d674194b87627dbc1cdac9fa88783be9c8"
+        },
+        {
+          "asset": "assets/power-dolls-velares-v31.glb.part4",
+          "bytes": 4533492,
+          "sha256": "b8b95360ddd9b4d24ce8089e3bfa79c16eaef5b0348c34c38134f8b39f97f52f"
+        }
+      ],
+      "sha256": "047afe1efc5a8ee055a4145626dfe257762f3634b6b2b64b9e3ccd16151b0c03",
+      "bytes": 20433492,
+      "triangles": 173164,
+      "meshes": 131,
+      "textures": 14,
+      "rig": "skinned",
+      "clips": [],
+      "credits": "Original posed GLB from the Warden Power Dolls Velares v31 study. Preserves its skin and packed materials. The separate reference and editable Blender source are not included.",
+      "license": "No public reuse license specified.",
+      "type": "humanoid",
+      "collection": "Power Dolls"
+    },
+    {
       "id": "warden-cannon-reference-mech",
       "version": "v1",
       "name": "Warden Cannon \u00b7 Reference Mech",
