@@ -8,6 +8,8 @@ import struct
 
 ROOT = Path(__file__).resolve().parents[1]
 ARMORY = ROOT.parent / "armory"
+KITBASH = ROOT.parent / "labs" / "kitbash"
+KITBASH_STUDIES = {"bellows", "brood-loom", "shutter-wraith"}
 CLIPS = {
     "dot": ["Idle"],
     "crocodilian": [],
@@ -137,6 +139,13 @@ def verify():
             assert m["creator"] == source["creator"] and m["source"] == source["source"]
             assert m["license"] == source["license"] and m["sha256"] == source["sha256"] and m["bytes"] == source["bytes"]
             data = canonical_armory_file(source).read_bytes()
+        elif collection == "kitbash":
+            source_id = m["sourceId"]
+            assert source_id in KITBASH_STUDIES and ident == f"warden-kitbash-{source_id}" and version == "v1"
+            assert "parts" not in m and m["asset"] == f"../labs/kitbash/{source_id}/{source_id}.glb"
+            path = KITBASH / source_id / f"{source_id}.glb"
+            assert path.resolve() == path and path.is_file(), "invalid kitbash study path"
+            data = path.read_bytes()
         else:
             assert collection is None and not ident.startswith("armory-")
             if "parts" in m:

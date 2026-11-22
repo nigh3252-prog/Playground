@@ -7613,6 +7613,93 @@
       "collection": "Recovered Model Studies"
     },
     {
+      "id": "warden-kitbash-bellows",
+      "version": "v1",
+      "name": "Bellows \u00b7 12 m Kitbash",
+      "type": "creature",
+      "section": "entities",
+      "family": "Bellows",
+      "collection": "Warden 12 m Kitbash Studies",
+      "sourceCollection": "kitbash",
+      "sourceId": "bellows",
+      "asset": "../labs/kitbash/bellows/bellows.glb",
+      "sha256": "9fca32200e22cf8b8b78763bcb60e690a6c1c8c2a4f94a7a72e355f4af8f9e87",
+      "bytes": 609112,
+      "triangles": 6684,
+      "meshes": 93,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Charge_Jump_Demo"
+        },
+        {
+          "name": "Idle"
+        }
+      ],
+      "credits": "Original Warden 12 m donor-mesh study. Donors: Shark-Jaw Stalker, Pond Scum and Furnace Beetle. Full mesh provenance in the kitbash lab recipe.",
+      "license": "No new public reuse license; existing donor terms retained."
+    },
+    {
+      "id": "warden-kitbash-brood-loom",
+      "version": "v1",
+      "name": "Brood Loom \u00b7 12 m Kitbash",
+      "type": "creature",
+      "section": "entities",
+      "family": "Brood Loom",
+      "collection": "Warden 12 m Kitbash Studies",
+      "sourceCollection": "kitbash",
+      "sourceId": "brood-loom",
+      "asset": "../labs/kitbash/brood-loom/brood-loom.glb",
+      "sha256": "baf049375097c4cf24e6273d14f5d2603ae5d04b300d73424eb96f3943411dac",
+      "bytes": 778580,
+      "triangles": 13352,
+      "meshes": 129,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "idle"
+        },
+        {
+          "name": "brood_open"
+        }
+      ],
+      "credits": "Original Warden 12 m donor-mesh study. Donors: Arakhne, Orbital Shell and Brood Ferry. Full mesh provenance in the kitbash lab recipe.",
+      "license": "No new public reuse license; existing donor terms retained."
+    },
+    {
+      "id": "warden-kitbash-shutter-wraith",
+      "version": "v1",
+      "name": "Shutter Wraith \u00b7 12 m Kitbash",
+      "type": "creature",
+      "section": "entities",
+      "family": "Shutter Wraith",
+      "collection": "Warden 12 m Kitbash Studies",
+      "sourceCollection": "kitbash",
+      "sourceId": "shutter-wraith",
+      "asset": "../labs/kitbash/shutter-wraith/shutter-wraith.glb",
+      "sha256": "ee950881c7cabb290376235422a8aca54018236f4e6fa90d45bc1d84a683928c",
+      "bytes": 7156284,
+      "triangles": 13785,
+      "meshes": 54,
+      "textures": 4,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "idle"
+        },
+        {
+          "name": "attack"
+        },
+        {
+          "name": "expose"
+        }
+      ],
+      "credits": "Original Warden 12 m donor-mesh study. Donors: Hooded Reliquary, Twin Candle Mask, Void Reaper, Lantern Medusa and Warden Linkage Module. Full mesh provenance in the kitbash lab recipe.",
+      "license": "No new public reuse license; existing donor terms retained."
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",

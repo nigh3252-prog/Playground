@@ -174,7 +174,12 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     }
     await page.getByRole('button',{name:'Next model'}).click();
     await ready('dot');
-    assert(glbURLs.every(url => url.origin === origin && /^\/(?:models\/assets|armory\/models)\/[a-z0-9-]+\.glb$/.test(url.pathname)));
+    const kitbash = catalog.models.filter(model => model.sourceCollection === 'kitbash');
+    const studyPaths = new Set(kitbash.map(entry => new URL(entry.asset,bench).pathname));
+    assert.deepEqual(studyPaths,new Set(['bellows','brood-loom','shutter-wraith'].map(id=>`/labs/kitbash/${id}/${id}.glb`)));
+    assert(glbURLs.every(url => url.origin === origin &&
+      (studyPaths.has(url.pathname) || /^\/(?:models\/assets|armory\/models)\/[a-z0-9-]+\.glb$/.test(url.pathname))));
+    for (const path of studyPaths) assert(glbURLs.some(url=>url.pathname===path),'bench requested canonical study');
     assert.deepEqual(new Set(armory.map(entry=>new URL(entry.asset,bench).pathname)),new Set(
       glbURLs.filter(url=>url.pathname.startsWith('/armory/')).map(url=>url.pathname)));
     glbURLs.length = 0;
