@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Power Dolls · Playground</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #e9eeef;
+        color: #1a2938;
+        font:
+          14px system-ui,
+          sans-serif;
+      }
+      main {
+        height: 100svh;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+      header,
+      nav,
+      footer {
+        padding: 10px clamp(12px, 4vw, 54px);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      header {
+        justify-content: space-between;
+        border-bottom: 1px solid #bdc6cc;
+      }
+      h1 {
+        font-family: Georgia, serif;
+        font-weight: 500;
+        font-size: clamp(25px, 4vw, 42px);
+        margin: 0;
+        letter-spacing: -0.04em;
+      }
+      a {
+        color: inherit;
+        font-weight: 650;
+        text-underline-offset: 4px;
+      }
+      nav {
+        padding-block: 7px;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      button,
+      select {
+        font: 600 16px system-ui;
+        color: inherit;
+        border: 1px solid #b1bcc3;
+        background: #f7f9fa;
+        border-radius: 5px;
+        min-height: 44px;
+        max-width: 100%;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      button[aria-pressed="true"] {
+        background: #254a69;
+        color: white;
+        border-color: #254a69;
+      }
+      section {
+        position: relative;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        touch-action: none;
+      }
+      #sheet {
+        object-fit: contain;
+        padding: 6px;
+        touch-action: auto;
+      }
+      .status {
+        position: absolute;
+        left: 10%;
+        right: 10%;
+        top: 45%;
+        text-align: center;
+        pointer-events: none;
+      }
+      figure {
+        position: absolute;
+        right: 12px;
+        top: 8px;
+        margin: 0;
+        width: min(35%, 185px);
+        background: #233242;
+        border-radius: 5px;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      figure img {
+        display: block;
+        width: 100%;
+        image-rendering: pixelated;
+      }
+      figcaption {
+        font: 600 10px monospace;
+        color: white;
+        text-align: center;
+        padding: 4px;
+      }
+      footer {
+        border-top: 1px solid #bdc6cc;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      footer small {
+        margin-left: auto;
+        color: #465662;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 650px) {
+        header,
+        nav,
+        footer {
+          padding-inline: 9px;
+        }
+        button,
+        select {
+          padding-inline: 7px;
+        }
+        footer small {
+          display: none;
+        }
+      }
+      @media (max-height: 480px) {
+        header,
+        footer,
+        nav {
+          padding-block: 3px;
+        }
+        h1 {
+          font-size: 22px;
+        }
+      }
+
+      header a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+      }
+      #download {
+        white-space: nowrap;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../armory/vendor/three.module.min.js",
+          "three/addons/": "../armory/vendor/addons/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <a href="../">Playground</a>
+          <h1>Power Dolls</h1>
+        </div>
+        <a id="download" href="./power-dolls/cannon.glb" download="cannon.glb">Download GLB</a>
+      </header>
+
+      <nav aria-label="Select mech">
+        <button data-id="cannon" aria-pressed="true">Cannon + grenade</button>
+        <button data-id="scout" aria-pressed="false">Blue shoulders</button>
+        <button data-id="missile" aria-pressed="false">Twin missile racks</button>
+      </nav>
+
+      <section aria-label="Model inspection">
+        <canvas id="view" aria-label="Orbit the selected mech"></canvas>
+        <canvas hidden id="sheet" aria-label="Texture sheet"></canvas>
+        <figure hidden>
+          <img alt="Matching Power Dolls equipment screen" />
+          <figcaption>Reference</figcaption>
+        </figure>
+        <div class="status" role="status">Loading model…</div>
+      </section>
+
+      <footer>
+        <select id="mode" aria-label="Inspection mode">
+          <option value="model">3D model</option>
+          <option value="color">Painted atlas</option>
+          <option value="uv">UV overlay</option>
+          <option value="normal">Normal map</option>
+        </select>
+        <select id="camera" aria-label="Reset camera to a preset">
+          <option value="reference">45° reference</option>
+          <option value="three">Three-quarter</option>
+          <option value="front">Front</option>
+          <option value="side">Side</option>
+          <option value="rear">Rear</option>
+          <option value="orbit" hidden>Free orbit</option>
+        </select>
+        <select hidden id="page" aria-label="Atlas page">
+          <option value="0">Hull &amp; joints</option>
+          <option value="1">Armor &amp; stations</option>
+        </select>
+        <button id="bump" aria-pressed="true">Bump</button>
+        <button id="ref" aria-pressed="false">Reference</button>
+        <small>Drag to orbit · Pinch to zoom</small>
+      </footer>
+    </main>
+    <script type="module" src="./power-dolls.mjs"></script>
+  </body>
+</html>
