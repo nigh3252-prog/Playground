@@ -3904,6 +3904,28 @@
       "collection": "Beforetimes Geology Lab"
     },
     {
+      "id": "low-poly-ronin-standalone",
+      "version": "v2",
+      "name": "Low-Poly Ronin \u00b7 Animated Walk Study",
+      "type": "humanoid",
+      "asset": "assets/low-poly-ronin-standalone-v2.glb",
+      "sha256": "d4cd174940310e264826d65d488e783ace19a916e1b1fb84a034ddca0018c080",
+      "bytes": 145580,
+      "triangles": 220,
+      "meshes": 54,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Procedural Walk Preview"
+        }
+      ],
+      "credits": "Faithful neutral geometry export from the standalone Low-Poly Ronin Three.js study. Independently modeled from a supplied character reference; exact faceted cloak, angular hat and mask, scarf and leg pivots interpreted from the source procedural builder. Includes a finite in-place walk clip baked from the original leg, cloth, and scarf motion at default settings. Not a seamless loop. No reference image, sword, runtime, or viewer overlays.",
+      "license": "No verified public reuse license.",
+      "section": "entities",
+      "family": "Ronin Walk Study"
+    },
+    {
       "id": "beforetimes-lost-alpha",
       "version": "v1",
       "name": "Lost Alpha \u00b7 Beforetimes Geology Lab",

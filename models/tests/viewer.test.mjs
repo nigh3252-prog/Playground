@@ -44,6 +44,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
       glbs.push(request.url().split('/').pop());
       glbURLs.push(new URL(request.url()));
     });
+    console.log('Viewer smoke: loading desktop shell');
     await page.goto(bench);
     const stage = page.locator('#stage');
     const heading = page.locator('#model-name');
@@ -114,20 +115,27 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     await ready('white-mech');
     assert.equal(await page.locator('#retry').isVisible(),false);
     await page.unroute('**/crocodilian-v1.glb');
+    console.log('Viewer smoke: checking every catalog entry');
     const armory = catalog.models.filter(model => model.sourceCollection === 'armory');
     assert.equal(armory.length,87);
     assert.equal(new Set(armory.map(model => model.pack)).size,7);
     assert.equal(armory.filter(model => model.clips.length).length,6);
     for (const [index, entry] of catalog.models.entries()) {
       if (index < 3) continue;
+      const measure = index % 25 === 0 || entry.id === 'low-poly-ronin-standalone';
+      if (measure) console.log(`Viewer smoke: ${index + 1}/${catalog.models.length} ${entry.id}@${entry.version}`);
       await page.locator('#model-picker').selectOption(String(index));
       await page.waitForFunction(({id,version}) => {
         const {model,version:loadedVersion} = document.querySelector('#stage').dataset;
         return model === id && loadedVersion === version;
-      }, entry);
+      }, entry, {timeout:15000}).catch(async error => {
+        const status = await page.locator('#status').textContent().catch(() => 'unavailable');
+        throw new Error(`Model ${entry.id}@${entry.version} did not load: ${status}`, {cause:error});
+      });
       const installedFrames = await page.evaluate(() => window.viewerFrameCount());
       await page.locator('#fit').click();
-      await page.waitForFunction(frames => window.viewerFrameCount() > frames,installedFrames);
+      await page.waitForFunction(frames => window.viewerFrameCount() > frames,installedFrames, {timeout:15000})
+        .catch(error => { throw new Error(`Model ${entry.id}@${entry.version} did not redraw after Fit`, {cause:error}); });
       assert.equal(await heading.textContent(), entry.name);
       assert.equal(await stage.locator('canvas').count(), 1);
       assert.equal(await page.locator('#animation').isVisible(), entry.clips.length > 0);
@@ -159,7 +167,8 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
           await page.keyboard.press('Escape');
         }
         await page.getByRole('button',{name:'Play animation'}).click();
-        await page.waitForFunction(() => Number(document.getElementById('scrub').value) > 0);
+        await page.waitForFunction(() => Number(document.getElementById('scrub').value) > 0, null, {timeout:15000})
+          .catch(error => { throw new Error(`Model ${entry.id}@${entry.version} did not advance animation`, {cause:error}); });
         await page.getByRole('button',{name:'Pause animation'}).click();
       }
     }
@@ -180,6 +189,7 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     assert.match(await page.locator('#stats').textContent(),/CC0-1.0/);
     assert.equal(await page.locator('#download').getAttribute('href'),canonicalURL.href);
     assert.deepEqual(errors,[]);
+    console.log('Viewer smoke: desktop done, checking phone');
     await context.close();
     const phone = await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
     await phone.goto(bench+'?model=crocodilian&v=v1');
