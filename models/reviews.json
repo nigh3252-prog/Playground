@@ -1,0 +1,1015 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Human-curated, subjective Warden Playground model feedback. Ratings concern visual finish, not polygon count, combat suitability, animation quality, or license.",
+  "reviewedThrough": "2026-11-22",
+  "modelReviews": [
+    {
+      "id": "dot",
+      "version": "v1",
+      "visualQuality": null,
+      "tags": [
+        "special-case",
+        "concept"
+      ],
+      "assessment": "Cute and charming; deliberately different from the high-detail combat-model benchmark."
+    },
+    {
+      "id": "crocodilian",
+      "version": "v1",
+      "visualQuality": null,
+      "tags": [
+        "review-rig"
+      ],
+      "assessment": "Inspect for usable skeleton and walking animation. The viewer currently lists no clips; do not infer that the model is walk-ready."
+    },
+    {
+      "id": "white-mech",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "gold-standard",
+        "review-rig",
+        "refine"
+      ],
+      "assessment": "Excellent visual finish. Existing animations are poor, but animation/retargeting quality should be evaluated separately from the mesh."
+    },
+    {
+      "id": "lilac-walker",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine"
+      ],
+      "assessment": "Plain mech without enough distinguishing design detail."
+    },
+    {
+      "id": "spirecoil",
+      "version": "v4",
+      "visualQuality": null,
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Cool enough to keep considering; purpose/finish not finalized."
+    },
+    {
+      "id": "vertical-pods-a-hip-assembly",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "Strong hip-mounted vertical pod design; attractive for Warden missile launcher hardware.",
+      "reuseCandidates": [
+        {
+          "component": "hip pod assembly",
+          "possibleUse": "Warden missile mount / enemy weapon module",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "vertical-pods-b-hip-assembly",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Promising configuration, but currently reads as graybox; improve UV/painted materials.",
+      "reuseCandidates": [
+        {
+          "component": "hip pod assembly",
+          "possibleUse": "Mechanical or T-Rex-monster missile hardware",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "vertical-pods-a-pod-module",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "Useful compact vertical missile-pod module for swappable equipment.",
+      "reuseCandidates": [
+        {
+          "component": "vertical missile module",
+          "possibleUse": "Warden or enemy launcher",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "vertical-pods-b-pod-module",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Useful modular pod concept; graybox-like treatment needs richer material finish.",
+      "reuseCandidates": [
+        {
+          "component": "pod module",
+          "possibleUse": "Modular Warden/enemy equipment",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "vertical-pods-a-hip-mount",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "Hip mounts and pod hardware are promising reusable assemblies.",
+      "reuseCandidates": [
+        {
+          "component": "hip mount",
+          "possibleUse": "Swappable missile module mount",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "vertical-pods-b-hip-mount",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Good alternate mount; material/texture finish should be raised.",
+      "reuseCandidates": [
+        {
+          "component": "hip mount",
+          "possibleUse": "Swappable equipment mount",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "flying-abyss-manta",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine",
+        "concept"
+      ],
+      "assessment": "Serviceable simple silhouette, not yet visually rich enough for intended combat roster."
+    },
+    {
+      "id": "flying-bone-parasite",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine",
+        "concept"
+      ],
+      "assessment": "Intentionally low-poly creature-study concept; bring up component finish before major reuse."
+    },
+    {
+      "id": "flying-coiled-wyvern",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine",
+        "concept"
+      ],
+      "assessment": "Low-poly creature-study base, needs richer parts and surface finish."
+    },
+    {
+      "id": "flying-crowned-thunderbird",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine",
+        "concept"
+      ],
+      "assessment": "Low-poly creature-study base; not yet production-level finish."
+    },
+    {
+      "id": "flying-ember-wasp",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept"
+      ],
+      "assessment": "Decent conventional wasp; may be usable at very small in-game scale."
+    },
+    {
+      "id": "flying-furnace-beetle",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine",
+        "concept"
+      ],
+      "assessment": "Conceptually useful but visually modest low-poly batch member."
+    },
+    {
+      "id": "flying-halo-shrike",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine",
+        "concept"
+      ],
+      "assessment": "Attractive, cool design despite relatively simple execution."
+    },
+    {
+      "id": "flying-horned-gargoyle",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine"
+      ],
+      "assessment": "Gargoyle in this batch is simple and not especially appealing. User called it Urn Gargoyle; confirm the name association before treating this as exact."
+    },
+    {
+      "id": "flying-hornet-brute",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "parts-donor"
+      ],
+      "assessment": "Fun character with oversized pincers; promising component shapes."
+    },
+    {
+      "id": "flying-ivory-raptor",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine"
+      ],
+      "assessment": "Unremarkable compared with stronger references."
+    },
+    {
+      "id": "flying-lantern-medusa",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Potentially fun idea that needs further design development."
+    },
+    {
+      "id": "flying-mantis-glider",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine"
+      ],
+      "assessment": "Unexciting as currently presented."
+    },
+    {
+      "id": "flying-needle-stalker",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Creepy, acceptable silhouette; still medium-detail."
+    },
+    {
+      "id": "flying-nightmaw-bat",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "The intended vision is visible and could grow on reviewer; current version remains medium-detail, not a hard rejection."
+    },
+    {
+      "id": "flying-rift-manta",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "refine"
+      ],
+      "assessment": "Part of the deliberately low-poly batch, currently medium-detail."
+    },
+    {
+      "id": "flying-ruin-titan",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Contains interesting individual mixed-and-matched parts even though execution needs refinement."
+    },
+    {
+      "id": "flying-thorn-wyvern",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Body shape is okay, despite simplistic construction."
+    },
+    {
+      "id": "flying-tusked-glider",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Interesting enough silhouette for a concept study; detail still limited."
+    },
+    {
+      "id": "flying-violet-dart",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Interesting body shape, low detail."
+    },
+    {
+      "id": "flying-void-reaper",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Simple but fun design; may be developed further."
+    },
+    {
+      "id": "bulwark-modular",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "gold-standard",
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Excellent front view, strong shoulders, chest and painted front details; side textures appear distorted, left/right legs reuse same painted treatment; gun reads a little silly.",
+      "reuseCandidates": [
+        {
+          "component": "shoulder armor",
+          "possibleUse": "High-finish mech kitbash donor",
+          "extractionVerified": false
+        },
+        {
+          "component": "chest and front panels",
+          "possibleUse": "Mech torso donor",
+          "extractionVerified": false
+        },
+        {
+          "component": "gun",
+          "possibleUse": "Potential detachable weapon donor",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "bulwark-modular-bare-frame",
+      "version": "v1",
+      "visualQuality": null,
+      "tags": [
+        "variant-only"
+      ],
+      "assessment": "Useful as an optional view of the Bulwark family, not a primary separate model."
+    },
+    {
+      "id": "spirecoil",
+      "version": "v3",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Spirecoil Organic has relatively high detail and a decent silhouette; neck flaps need better alignment.",
+      "reuseCandidates": [
+        {
+          "component": "organic body elements",
+          "possibleUse": "Creature kitbash candidate after inspection",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "spirecoil",
+      "version": "v2",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Spirecoil Organic Silhouette is physically large and busy, but component-level details remain relatively simple."
+    },
+    {
+      "id": "spirecoil",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "refine"
+      ],
+      "assessment": "Spirecoil Mechanical Prototype has many elements without equivalent small-scale detail; textured UV work improves the result."
+    },
+    {
+      "id": "warden-scout-gunner",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "gold-standard",
+        "parts-donor",
+        "review-rig"
+      ],
+      "assessment": "Exceptional perceived detail with low polygon count due to painted textures. Arm guns and torso excellent donors; thin silhouette could be hard to hit in game. Walk clip looks bad; inspect rig separately.",
+      "reuseCandidates": [
+        {
+          "component": "arm guns",
+          "possibleUse": "Modular enemy weapons",
+          "extractionVerified": false
+        },
+        {
+          "component": "torso",
+          "possibleUse": "Detailed mech body donor",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "warden-scout-rail",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "gold-standard",
+        "parts-donor"
+      ],
+      "assessment": "Cool alternative scout interpretation; gun shapes resemble the other scout models but should not be assumed identical.",
+      "reuseCandidates": [
+        {
+          "component": "rail weapon",
+          "possibleUse": "Mech or enemy armament",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "warden-scout-missile",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "gold-standard",
+        "parts-donor"
+      ],
+      "assessment": "Strong scout body; shoulder rocket launchers are priority exact-mesh donor candidates, including for crawler enemies.",
+      "reuseCandidates": [
+        {
+          "component": "shoulder rocket launchers",
+          "possibleUse": "Attach to crawler or humanoid enemies",
+          "extractionVerified": false
+        },
+        {
+          "component": "body pieces",
+          "possibleUse": "Creature/mech kitbash donor",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "saffron-hover",
+      "version": "v2",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Excellent neck and body idea. Bare six-barrel minigun lacks a convincing body/housing and feels visually weak.",
+      "reuseCandidates": [
+        {
+          "component": "neck and hover body",
+          "possibleUse": "Hover enemy or equipment donor",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "warden-ice-skull",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept-mismatch"
+      ],
+      "assessment": "Competent skull model, but not the intended minimal crystal/skull growth concept."
+    },
+    {
+      "id": "railgun-breach-engine",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "Good elements, but rounds off the design more than preferred V1 squared-off outer shell.",
+      "reuseCandidates": [
+        {
+          "component": "rounded inner mechanical parts",
+          "possibleUse": "Mix selectively with V1 exterior",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "railgun-breach-engine",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Preferred squared external shapes and flared expanding lower structure. Remove unneeded handles rather than recreating the mesh.",
+      "reuseCandidates": [
+        {
+          "component": "square housing",
+          "possibleUse": "Heavy weapon construction",
+          "extractionVerified": false
+        },
+        {
+          "component": "expanding lower body",
+          "possibleUse": "Weapon or machine assembly",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "railgun-dynamo",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "Good model, particularly the fist-like end; possible Shockwave-related use is exploratory.",
+      "reuseCandidates": [
+        {
+          "component": "fist assembly",
+          "possibleUse": "Possible Shockwave visual treatment",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "railgun-dynamo",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "Preferred core design ('has the sauce') versus V2; compare side by side before combining."
+    },
+    {
+      "id": "railgun-longbow",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "High-finish railgun study; V1's barrel length is preferred."
+    },
+    {
+      "id": "railgun-longbow",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor",
+        "refine"
+      ],
+      "assessment": "Excellent long-barrel donor. Lower handle is redundant given upper grip.",
+      "reuseCandidates": [
+        {
+          "component": "extended barrel",
+          "possibleUse": "Long-range gun or mounted weapon",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "railgun-splitline",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "gold-standard",
+        "parts-donor",
+        "use-as-is"
+      ],
+      "assessment": "Outstanding, clearly preferred over V1. Hold off integrating until surrounding gameplay/assets match its finish.",
+      "reuseCandidates": [
+        {
+          "component": "complete Splitline assembly",
+          "possibleUse": "High-quality exact-mesh weapon donor",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "railgun-splitline",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "superseded"
+      ],
+      "assessment": "Technically high-detail, but V2 entirely supersedes V1; no V1 features currently preferred."
+    },
+    {
+      "id": "railgun-arc-fork",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "High-detail railgun family member; specific preferred parts not yet identified."
+    },
+    {
+      "id": "railgun-arc-fork",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor"
+      ],
+      "assessment": "Not disliked, with some salvageable components; specific candidates not yet named."
+    },
+    {
+      "id": "railgun-redshift",
+      "version": "v2",
+      "visualQuality": "low",
+      "tags": [
+        "concept-mismatch",
+        "refine"
+      ],
+      "assessment": "Poor result because AI incorrectly turned the intended Saw Bad Guy sword concept into a railgun/triangular side profile. Do not use this as a target silhouette."
+    },
+    {
+      "id": "railgun-redshift",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "recover",
+        "concept-mismatch"
+      ],
+      "assessment": "More promising than V2, but still mixed up with the incorrect railgun interpretation of the intended sword."
+    },
+    {
+      "id": "railgun-pale-horse",
+      "version": "v2",
+      "visualQuality": "low",
+      "tags": [
+        "recover"
+      ],
+      "assessment": "Goofy short/stubby proportions and conspicuous handles; not a convincing final form."
+    },
+    {
+      "id": "railgun-pale-horse",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "recover",
+        "parts-donor"
+      ],
+      "assessment": "Odd as both a railgun and the intended sword, but thinning/repositioning or repurposing as a shoulder cannon could recover worthwhile parts.",
+      "reuseCandidates": [
+        {
+          "component": "main body",
+          "possibleUse": "Possible shoulder cannon",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "railgun-sunspike",
+      "version": "v2",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor",
+        "use-as-is"
+      ],
+      "assessment": "Strong design; existing Warden implementation already uses a successful combination of V1 and V2.",
+      "reuseCandidates": [
+        {
+          "component": "Sunspike assembly",
+          "possibleUse": "Weapon or energy module",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "railgun-sunspike",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "parts-donor",
+        "use-as-is"
+      ],
+      "assessment": "Strong design; existing Warden implementation already uses a successful combination of V1 and V2.",
+      "reuseCandidates": [
+        {
+          "component": "Sunspike assembly",
+          "possibleUse": "Weapon or energy module",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "warden-haunted-ice-kit",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept-mismatch",
+        "recover"
+      ],
+      "assessment": "Current ice kit is passable but wrong direction: wants clusters of simple elongated four-sided prism/pyramid or D8-like crystals plus various basic skulls growing like slime mold; no snow."
+    },
+    {
+      "id": "warden",
+      "version": "v1",
+      "visualQuality": "exceptional",
+      "tags": [
+        "gold-standard",
+        "use-as-is"
+      ],
+      "assessment": "Flagship quality ceiling and overall design benchmark. Coherent silhouette, proportions, texture and component relationships. Aim to raise the wider library toward this level, acknowledging its prolonged iteration."
+    },
+    {
+      "id": "beast-hangar-volkrex",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Former standout is now middle-tier. Strong head and concept, uneven overall execution."
+    },
+    {
+      "id": "beast-hangar-arakhne",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept-mismatch",
+        "recover"
+      ],
+      "assessment": "Does not convey the intended legs emerging from the head."
+    },
+    {
+      "id": "beast-hangar-oryxus",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Large goat-headed mech could be fun to revisit; goat-head visual identity might signal an enemy trait."
+    },
+    {
+      "id": "warden-iguana-crab",
+      "version": "v1",
+      "visualQuality": "high",
+      "tags": [
+        "reference",
+        "parts-donor"
+      ],
+      "assessment": "Highly successful high-poly iguana with crab necklace. Crab-neck treatment may inspire Monstro, but that is undecided.",
+      "reuseCandidates": [
+        {
+          "component": "crab necklace / neck forms",
+          "possibleUse": "Possible Monstro concept reference or component donor",
+          "extractionVerified": false
+        }
+      ]
+    },
+    {
+      "id": "warden-sump-twins",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Fun, characterful concept that motivated the review; overly cheap/rounded/basic execution compared with Warden crawlers and humanoids."
+    },
+    {
+      "id": "warden-machine-splitter",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Machine Lab concept has heart, but simplistic modeling needs a substantial quality increase."
+    },
+    {
+      "id": "warden-machine-railworm",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Love the train-worm concept. One of the best-looking Machine Lab models, but still needs stronger art; inspect whether it reused crawler-like elements."
+    },
+    {
+      "id": "warden-machine-apiary",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "~12k triangles but comparatively little perceived detail; rounded surface tessellation does not equal visual finish."
+    },
+    {
+      "id": "warden-machine-crosscut",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Unremarkable as presented; part of generally under-detailed Machine Lab batch."
+    },
+    {
+      "id": "warden-machine-drop-gate",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Concept adequate; simple model is not at desired finish."
+    },
+    {
+      "id": "warden-machine-vacuum-well",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Needs much richer detail."
+    },
+    {
+      "id": "warden-machine-rim-saw",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Some potential, but combat behavior hasn't been tried in game."
+    },
+    {
+      "id": "warden-machine-baffle",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Identity/function unclear, though actual shape is not necessarily disliked."
+    },
+    {
+      "id": "warden-machine-brood-ferry",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "The idea of a big hoverboat is appealing; execution is underdeveloped."
+    },
+    {
+      "id": "warden-machine-lance-drill",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Not a strong-looking model yet."
+    },
+    {
+      "id": "warden-machine-lane-battery",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Turret has a goofy, earmuff-like appearance."
+    },
+    {
+      "id": "warden-machine-hotshoe",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "parts-donor",
+        "recover"
+      ],
+      "assessment": "Promising rear swoops and silhouette. Could be excellent if augmented with exact high-detail donor parts."
+    },
+    {
+      "id": "warden-machine-split-sled",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Potential kitbash recovery candidate; model needs richer actual parts."
+    },
+    {
+      "id": "warden-machine-cloud-strider",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Adequate large-model execution; user has a combat vision and is excited to test the fight."
+    },
+    {
+      "id": "punch-lab-boxer",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "placeholder"
+      ],
+      "assessment": "Generic box-assembled humanoid without distinctive identity; also interrupts Machine Lab browsing group."
+    },
+    {
+      "id": "warden-machine-seeker-battery",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Interesting rings but weird overall shape and not loved."
+    },
+    {
+      "id": "warden-machine-rail-sentry",
+      "version": "v1",
+      "visualQuality": "medium",
+      "tags": [
+        "concept",
+        "recover"
+      ],
+      "assessment": "Decent Machine Lab model, still behind preferred visual standard."
+    },
+    {
+      "id": "warden-machine-hornet-well",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "avoid",
+        "redesign"
+      ],
+      "assessment": "Unintentionally anatomical/bulbous look; explicit negative fit for the game."
+    },
+    {
+      "id": "warden-machine-seismic-mortar",
+      "version": "v1",
+      "visualQuality": "low",
+      "tags": [
+        "redesign"
+      ],
+      "assessment": "Possibly the strongest cannon concept in the batch, but looks too goofy and childlike."
+    }
+  ],
+  "unresolvedReferences": [
+    {
+      "label": "Crocodilian #2",
+      "note": "User praised a second Crocodilian model, but catalog currently has only crocodilian@v1; do not transfer that praise to v1 without identifying the asset."
+    },
+    {
+      "label": "Valaris",
+      "note": "User liked some legs but felt it below Warden; no exact current catalog id identified."
+    },
+    {
+      "label": "Goblin",
+      "note": "User said the goblin looked good; catalog has several potential later goblin references and no confirmed match."
+    },
+    {
+      "label": "Urn Gargoyle",
+      "note": "Spoken name may refer to the catalog's Horned Gargoyle; verify before relying on that correspondence."
+    },
+    {
+      "label": "Monstro",
+      "note": "Future concept: Hopper with hugely enlarged frog-like body and slightly enlarged legs; crab-neck variant only a possibility, not a finalized model."
+    }
+  ]
+}

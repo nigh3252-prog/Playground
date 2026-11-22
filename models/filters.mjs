@@ -1,4 +1,4 @@
-export const defaultFilters = Object.freeze({section:'all',family:'',collection:'',type:'all', motion:Object.freeze([]), complexity:'all', latest:false});
+export const defaultFilters = Object.freeze({section:'all',family:'',collection:'',type:'all', motion:Object.freeze([]), complexity:'all', reviewQuality:'all', latest:false});
 
 const types = new Set(['humanoid','creature','gear','environment','other']);
 const legacyTypes = new Map([
@@ -86,6 +86,10 @@ export function filterModels(models, options = defaultFilters) {
     if (filters.family && facetValue(entry,'family') !== filters.family) return false;
     if (filters.collection && facetValue(entry,'collection') !== filters.collection) return false;
     if (filters.complexity !== 'all' && modelComplexity(entry) !== filters.complexity) return false;
+    if (filters.reviewQuality && filters.reviewQuality !== 'all') {
+      const quality = !entry.review ? 'unreviewed' : entry.review.visualQuality ?? 'not-rated';
+      if (quality !== filters.reviewQuality) return false;
+    }
     const motion = modelMotion(entry);
     return filters.motion.every(criterion => Boolean(motion[criterion]));
   });
