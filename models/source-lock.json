@@ -352,5 +352,18 @@
   "texture-first-gilded-knight@v2": "a5c5a16683637bfebc921f5d487db89cc1dd58d6f1fba776da5248d0f1695b89",
   "texture-first-crimson-mech@v2": "8898e32bdfc42b4d7be745fff3d379e5464c85b2b9aa59bf28fc0142aa94b40a",
   "wide-brim-colossus@v2": "f5e86e6f02403a9828b607d699612fdaea45d149e803905e453ffa02ad92d35b",
-  "bmx-racer-dirt-jump-bike@v1": "37ef2d3115ad2878d609e5f160a2a468b58c9b36e62c9a31621f2e7cc0cdc3ce"
+  "bmx-racer-dirt-jump-bike@v1": "37ef2d3115ad2878d609e5f160a2a468b58c9b36e62c9a31621f2e7cc0cdc3ce",
+  "character-comparison-warden-stone@v1": "a8a65db2e07c6b1c5b7672e8b3e19f8873cbc632ebe097fc1af16e3ecd4abbe5",
+  "character-comparison-warden-hybrid@v1": "d3ec0cd31ca9f4cd95f078c3fb8d0aac8410e21c756bdf040d766a086dbd84c6",
+  "character-comparison-pebble-stone@v1": "f2d33b1128b31a2a0597d3fd01eb4b3beaa6021b8734363cba95cf7a4848de3f",
+  "character-comparison-pebble-hybrid@v1": "6e497d6835815ad2bd88e8b644ed33ff50935c960effac58b4695225f75dd5c2",
+  "character-comparison-sentinel-stone@v1": "8dd26f02a312771004ffbc634924578e2f7dee05bfe69d0867ca9a8c48a371d3",
+  "character-comparison-sentinel-hybrid@v1": "cedd669bf57002387d29052b0a2477cfbde173c5320190e2df8959936f861430",
+  "character-comparison-ronin-stone@v1": "18a267b3d31c069d2a3bb3e48c85a8e9f900bb3fb802b675e2d5232e5173ec07",
+  "character-comparison-ronin-hybrid@v1": "67c99fbdeafdd0058d5851701da59e61c2b575b080cec7babad3f714b8b47d51",
+  "character-comparison-bell-stone@v1": "34f8202ed25f0673fae68416883b39af1a043de170add2b6ffe35111fca88506",
+  "character-comparison-bell-hybrid@v1": "19bc9859ac6c9a09b912eb04d29c413569b2260d2b729d26c9f2acfeb66ad372",
+  "shark-jaw-stalker-standalone@v1": "f88d4c6ba56fae2134254d027a38fb3cab713ee82ad0cb3711892ecd4bf0b157",
+  "sudden-impact-dogleg-arm@v1": "2671babd63013fd7840b83d6f6147e8623992c89d3f32307f146b97623c0d606",
+  "iron-marquis-reference-pose@v1": "ddf1d887b99ee31c017f0668dc3c4661c96697d2cbeb103793442a22123219c1"
 }
