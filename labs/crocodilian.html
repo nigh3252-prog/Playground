@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#e9e8de" />
+    <title>Crocodilian · Playground</title>
+    <style>
+      :root {
+        font-family: Inter, system-ui, sans-serif;
+        color: #273226;
+        background: #e9e8de;
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        height: 100svh;
+        min-height: 270px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+      }
+      header,
+      footer {
+        padding: 16px clamp(14px, 4vw, 54px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      header {
+        border-bottom: 1px solid #bec3b5;
+      }
+      h1 {
+        font-family: Georgia, serif;
+        letter-spacing: -0.045em;
+        font-weight: 500;
+        font-size: clamp(24px, 4vw, 43px);
+        margin: 0;
+      }
+      button,
+      select,
+      a {
+        font: 600 13px system-ui;
+        color: inherit;
+      }
+      button,
+      select {
+        background: #f5f5ec;
+        border: 1px solid #abb4a5;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        min-height: 44px;
+        max-width: 100%;
+        font-size: 16px;
+      }
+      button[aria-pressed="true"] {
+        background: #374935;
+        color: white;
+      }
+      a {
+        text-underline-offset: 4px;
+      }
+      .stage {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .stage > canvas {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        display: block;
+      }
+      .stage #sheet {
+        object-fit: contain;
+        padding: 12px;
+        touch-action: auto;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      footer {
+        border-top: 1px solid #bec3b5;
+        flex-wrap: wrap;
+        padding-block: 11px;
+      }
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .hint {
+        font-size: 12px;
+        color: #53644f;
+      }
+      .status {
+        position: absolute;
+        inset: 45% 10% auto;
+        text-align: center;
+        pointer-events: none;
+      }
+      .take {
+        white-space: nowrap;
+      }
+      @media (max-width: 550px) {
+        .hint {
+          display: none;
+        }
+        header {
+          padding-block: 10px;
+        }
+        footer {
+          gap: 6px;
+        }
+        button,
+        select {
+          padding-inline: 8px;
+        }
+        .tools {
+          gap: 4px;
+        }
+      }
+      @media (max-height: 460px) {
+        header {
+          padding-block: 5px;
+        }
+        footer {
+          padding-block: 4px;
+        }
+      }
+
+      header a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../armory/vendor/three.module.min.js",
+          "three/addons/": "../armory/vendor/addons/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <a href="../">Playground</a>
+          <h1>Crocodilian</h1>
+        </div>
+        <a
+          class="take"
+          id="download"
+          download="crocodilian.glb"
+          href="../models/assets/crocodilian-v1.glb"
+        >
+          Download GLB
+        </a>
+      </header>
+      <section class="stage" aria-label="Model inspection">
+        <canvas id="view" aria-label="Interactive crocodilian model"></canvas>
+        <canvas id="sheet" hidden aria-label="Texture atlas and UV islands"></canvas>
+        <div class="status" role="status">Loading model…</div>
+      </section>
+      <footer>
+        <div class="tools">
+          <select id="mode" aria-label="Inspection mode">
+            <option value="model">3D model</option>
+            <option value="albedo">Painted atlas</option>
+            <option value="normal">Normal atlas</option>
+            <option value="uv">UV layout</option>
+          </select>
+          <button id="relief" aria-pressed="true">Bump</button>
+          <button id="reset">Reset view</button>
+        </div>
+        <span class="hint">Drag to orbit · Pinch or scroll to zoom</span>
+        <a href="../models/?model=crocodilian&amp;v=v1">Model Review Bench</a>
+      </footer>
+    </main>
+    <script type="module" src="./crocodilian.mjs"></script>
+  </body>
+</html>
