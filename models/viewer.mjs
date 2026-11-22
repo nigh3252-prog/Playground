@@ -7,6 +7,7 @@ import {defaultFilters, filterModels, modelFacetOptions} from './filters.mjs';
 import {assetURL, fetchSplitGLB} from './asset-paths.mjs';
 import {parseSelectedGLB} from './parse-selected-glb.mjs';
 import {createSkeletonOverlay} from './skeleton-overlay.mjs';
+import {buildReviewIndex, reviewKey, familyVariants} from './review-data.mjs';
 
 const el = id => document.getElementById(id);
 const stage = el('stage');
@@ -30,7 +31,7 @@ const panelEntries = [
 let openPanel = null;
 let jointCount = 0, matches = [], filters = defaultFilters;
 const loader = new GLTFLoader();
-let catalog, current, renderer, scene, camera, orbit, active, mixer, action, playing;
+let catalog, current, renderer, scene, camera, orbit, active, mixer, action, playing, floorGrid;
 let lastFrame = 0, frameRequest = 0, fit = 1;
 
 function showStatus(message, recoverable = false) {
@@ -72,11 +73,13 @@ function initStage() {
   const rim = new THREE.DirectionalLight(0x80b9ff, 1.8);
   rim.position.set(-3,2,-4);
   scene.add(rim);
-  const floor = new THREE.GridHelper(12, 24, 0x83a1b1, 0x566d7e);
-  floor.position.y = -.9;
-  floor.material.transparent = true;
-  floor.material.opacity = .32;
-  scene.add(floor);
+  // One original GLB unit per square (nominally a meter when source assets use meters).
+  // Scaling the grid with the inspection-only model transform preserves that reference.
+  floorGrid = new THREE.GridHelper(40, 40, 0x83a1b1, 0x566d7e);
+  floorGrid.position.y = -.9;
+  floorGrid.material.transparent = true;
+  floorGrid.material.opacity = .32;
+  scene.add(floorGrid);
   const resize = () => {
     const {clientWidth:w,clientHeight:h} = stage;
     if (!w || !h) return;
@@ -232,6 +235,7 @@ function install(entry, gltf) {
   const framing = new THREE.Group();
   framing.position.copy(center).multiplyScalar(-scale);
   framing.scale.setScalar(scale);
+  floorGrid.scale.set(scale, 1, scale);
   framing.add(orientation);
   meshGroup.add(framing);
   active = gltf;
@@ -290,6 +294,40 @@ const select = createSelection({
   fail(entry) {showStatus(`Could not open ${entry.name}. You can retry or choose another model.`,true);},
 });
 
+function updateReviewDetails(entry) {
+  const summary = el('review-summary'), details = el('review-detail');
+  const review = entry.review;
+  summary.hidden = false;
+  if (!review) {
+    summary.textContent = 'Unreviewed · No curator quality judgment yet';
+    const message = document.createElement('p');
+    message.textContent = 'This model has not yet been reviewed; that does not imply poor quality.';
+    details.replaceChildren(message);
+    return;
+  }
+  const quality = review.visualQuality ?? 'Reviewed, not rated';
+  const label = quality.charAt(0).toUpperCase() + quality.slice(1);
+  summary.textContent = `Curator assessment: ${label}`;
+  const heading = document.createElement('h3');
+  heading.textContent = `Curator notes · ${label}`;
+  const notes = document.createElement('p');
+  notes.textContent = review.assessment;
+  const tags = document.createElement('p');
+  tags.textContent = review.tags?.length ? `Tags: ${review.tags.join(' · ')}` : '';
+  details.replaceChildren(heading, notes, tags);
+  if (review.reuseCandidates?.length) {
+    const title = document.createElement('h4');
+    title.textContent = 'Potential exact-mesh donors (not yet verified)';
+    const list = document.createElement('ul');
+    for (const candidate of review.reuseCandidates) {
+      const item = document.createElement('li');
+      item.textContent = `${candidate.component}: ${candidate.possibleUse}`;
+      list.append(item);
+    }
+    details.append(title, list);
+  }
+}
+
 function metadata(entry) {
   const data = {
     Triangles:entry.triangles,
@@ -308,6 +346,7 @@ function metadata(entry) {
     definition.textContent=Array.isArray(value) ? value.join(', ') : (typeof value === 'number' ? value.toLocaleString() : value ?? 'Unknown');
     return [term,definition];
   }));
+  updateReviewDetails(entry);
   const download = el('download');
   try {
     const url = assetURL(entry, location.href);
@@ -347,6 +386,12 @@ function syncSelection() {
     el('ordinal').textContent = `${index+1} of ${matches.length}`;
   } else el('ordinal').textContent = '0 matches';
   el('copy').disabled = el('details-toggle').disabled = index < 0;
+  const variants = familyVariants(matches, current);
+  for (const id of ['variant-prev', 'variant-next']) {
+    const button = el(id);
+    button.hidden = variants.length < 2;
+    button.disabled = variants.length < 2;
+  }
   const chips = el('model-chips');
   [...chips.children].forEach((button,i) => button.setAttribute('aria-pressed',String(i === index)));
 }
@@ -360,7 +405,7 @@ function updateResults() {
   const summary = `${count} of ${catalog.length} models`;
   el('filter-count').textContent = summary;
   const filterToggle = el('filter-toggle');
-  const activeFilter = filters.type !== 'all' || filters.complexity !== 'all' || filters.latest || filters.motion.length || filters.family || filters.collection;
+  const activeFilter = filters.type !== 'all' || filters.complexity !== 'all' || filters.reviewQuality !== 'all' || filters.latest || filters.motion.length || filters.family || filters.collection;
   filterToggle.textContent = activeFilter ? `Filters · ${count}` : 'Filters';
   filterToggle.setAttribute('aria-label',activeFilter ? `Filters, ${summary}` : 'Filters');
   filterToggle.disabled = false;
@@ -405,6 +450,8 @@ function setEmpty() {
   if (openPanel === el('metadata')) setPanel(null);
   el('model-name').textContent = 'No matching models';
   el('model-version').textContent = '';
+  el('review-summary').hidden = true;
+  el('review-detail').replaceChildren();
   el('lookup-note').hidden = true;
   document.title = 'Model Review Bench · Playground';
   showStatus('Try removing a filter or clearing all filters.');
@@ -418,6 +465,7 @@ function filterFromControls() {
     collection:values.get('collection'),
     type:values.get('type'),
     complexity:values.get('complexity'),
+    reviewQuality:values.get('reviewQuality') || 'all',
     motion:values.getAll('motion'),
     latest:values.has('latest'),
   };
@@ -459,7 +507,7 @@ function chooseFromLocation() {
     filters = defaultFilters;
     updateResults();
   }
-  for (const field of ['type','complexity','family','collection']) {
+  for (const field of ['type','complexity','family','collection','reviewQuality']) {
     filterForm.elements.namedItem(field).value = filters[field];
   }
   for (const check of filterForm.querySelectorAll('[name="motion"]')) {
@@ -475,7 +523,18 @@ async function start() {
     if (!response.ok) throw Error('Catalog unavailable');
     const document = await response.json();
     if (document.schemaVersion !== 1 || !Array.isArray(document.models) || !document.models.length) throw Error('Catalog is empty or unsupported');
-    catalog = document.models;
+    // Curator data is optional: a missing review file must not block model inspection.
+    let reviewIndex = new Map(), reviewsAvailable = false;
+    try {
+      const response = await fetch('./reviews.json');
+      if (!response.ok) throw Error('Review file unavailable');
+      reviewIndex = buildReviewIndex(await response.json(),document.models);
+      reviewsAvailable = true;
+    } catch (error) {
+      console.warn('Curator review data unavailable:',error);
+    }
+    catalog = document.models.map(entry => ({...entry,review:reviewIndex.get(reviewKey(entry))}));
+    filterForm.elements.namedItem('reviewQuality').disabled = !reviewsAvailable;
     for (const facet of ['family','collection']) {
       filterForm.elements.namedItem(facet).append(...modelFacetOptions(catalog,facet).map(value=>new Option(value,value)));
     }
@@ -492,6 +551,14 @@ async function start() {
 }
 el('prev').onclick = () => choose(stepModel(matches,current,-1),'push');
 el('next').onclick = () => choose(stepModel(matches,current,1),'push');
+function stepFamilyVariant(delta) {
+  const variants = familyVariants(matches,current);
+  if (variants.length < 2) return;
+  const index = variants.indexOf(current);
+  choose(variants[(index + delta + variants.length) % variants.length],'push');
+}
+el('variant-prev').onclick = () => stepFamilyVariant(-1);
+el('variant-next').onclick = () => stepFamilyVariant(1);
 picker.onchange = () => choose(matches[Number(picker.value)],'push');
 el('retry').onclick = () => choose(current,'none',false,true);
 skeletonCheckbox.onchange = () => {
