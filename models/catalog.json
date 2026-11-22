@@ -1602,6 +1602,23 @@
       "section": "entities"
     },
     {
+      "id": "warden-machine-hotshoe",
+      "version": "v1",
+      "name": "Hotshoe \u00b7 Warden Machine Lab",
+      "type": "other",
+      "file": "warden-machine-hotshoe-v1.glb",
+      "asset": "assets/warden-machine-hotshoe-v1.glb",
+      "sha256": "0173c4b51d5bd9028d6ca08b3e0536e4f75cafefa5d2f1af70d46a4d3601e5fe",
+      "bytes": 58580,
+      "triangles": 6444,
+      "meshes": 9,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original Warden Machine Lab procedural sled with a twin-ski chassis and distinct paired raised rear fins, neutral static study. No gameplay, external donor models, or reference images.",
+      "license": "No public reuse license specified."
+    },
+    {
       "id": "warden-machine-split-sled",
       "version": "v1",
       "name": "Split Sled \u00b7 Machine Lab",
