@@ -13,12 +13,15 @@ function weightedType(r){
 }
 function distance2(a,b){return(a.x-b.x)**2+(a.z-b.z)**2;}
 
-export function planGeology({seed,sizeKm,northAxis,eastAxis,baseAt}){
+export function planGeology({seed,sizeKm,northAxis,eastAxis,baseAt,tectonics=null}){
   const r=random32(seed^0x7249A31D),families=3+Math.floor(r()*3),types=[];
   for(let i=0;i<families;i++)types.push(weightedType(r));
   if(new Set(types).size===1)types[types.length-1]=types[0]===4?1:4;
+  const riftBoundaries=(tectonics?.boundaries||[]).filter(boundary=>boundary.kind==='rift').sort((a,b)=>(b.lengthKm||0)-(a.lengthKm||0));
+  if(riftBoundaries.length&&!types.includes(2))types[types.length-1]=2;
   const features=[];
   const add=f=>features.push({...f,id:features.length,typeName:TYPE_NAMES[f.type],salt:(seed+features.length*104729)>>>0});
+  let riftIndex=0;
 
   function glacialProvince(){
     const count=1+Math.floor(r()*2);
@@ -39,16 +42,16 @@ export function planGeology({seed,sizeKm,northAxis,eastAxis,baseAt}){
     }
   }
   function riftProvince(){
-    const angle=(r()-.5)*1.1+Math.PI/2,center={x:(.35+r()*.34)*sizeKm,z:(.35+r()*.32)*sizeKm};
+    const boundary=riftBoundaries[riftIndex++%Math.max(1,riftBoundaries.length)],first=boundary?.points?.[0],last=boundary?.points?.at(-1),middle=boundary?.points?.[Math.floor(boundary.points.length/2)],angle=first&&last?Math.atan2(last.z-first.z,last.x-first.x):(r()-.5)*1.1+Math.PI/2,center=middle?{x:middle.x,z:middle.z}:{x:(.35+r()*.34)*sizeKm,z:(.35+r()*.32)*sizeKm};
     add({type:2,label:'Meandering rift',...center,angle,lengthKm:(.30+r()*.18)*sizeKm,widthKm:(.018+r()*.017)*sizeKm,
-      depthM:320+r()*430,shoulderM:260+r()*440,wiggleKm:(.012+r()*.020)*sizeKm,wiggles:1.3+r()*1.7,phase:r()*Math.PI*2});
+      depthM:320+r()*430,shoulderM:260+r()*440,wiggleKm:(.012+r()*.020)*sizeKm,wiggles:1.3+r()*1.7,phase:r()*Math.PI*2,sourceBoundaryId:boundary?.id??null});
   }
   function volcanicProvince(){
     const wanted=1+Math.floor(r()*2),candidates=[];
     for(let iz=0;iz<19;iz++)for(let ix=0;ix<19;ix++){
       const x=(.12+ix/18*.75)*sizeKm,z=(.12+iz/18*.70)*sizeKm,b=baseAt(x,z);
       if(b.landBlend<.90||b.height<480)continue;
-      const score=b.height+320*noise(ix*.43,iz*.43,seed+553)+r()*70;
+      const history=tectonics?.history,n=history?.width||0,hi=n?Math.min(history.volcanism.length-1,Math.round(z/sizeKm*(history.height-1))*n+Math.round(x/sizeKm*(n-1))):-1,arc=hi>=0?history.volcanism[hi]:0,score=b.height+arc*1800+320*noise(ix*.43,iz*.43,seed+553)+r()*70;
       candidates.push({x,z,score,height:b.height});
     }
     candidates.sort((a,b)=>b.score-a.score);const chosen=[];
