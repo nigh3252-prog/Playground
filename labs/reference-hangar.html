@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b111b">
+<title>Three.js Mecha, Robot & Creature Reference Hangar</title>
+<script type="importmap">
+{"imports":{
+  "three":"https://unpkg.com/three@0.179.1/build/three.module.js",
+  "three/addons/":"https://unpkg.com/three@0.179.1/examples/jsm/"
+}}
+</script>
+<style>
+:root{
+  color-scheme:dark;--bg:#080c14;--panel:#111927;--panel2:#172234;--ink:#eef5ff;
+  --muted:#9aabc0;--line:#2b3b52;--accent:#82c5ff;--green:#65d89a;--yellow:#eac86f;
+  --gray:#a0a8b3;--blue:#79b9ff;--danger:#ef9191;--shadow:0 18px 46px rgba(0,0,0,.3);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:
+radial-gradient(circle at 12% 0%,rgba(50,112,180,.16),transparent 32rem),
+radial-gradient(circle at 100% 22%,rgba(117,67,164,.13),transparent 30rem),var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit}button,a{touch-action:manipulation}.page{width:min(1600px,100%);margin:auto;padding:16px}
+.hero{overflow:hidden;position:relative;padding:clamp(23px,5vw,54px);border:1px solid var(--line);border-radius:24px;
+background:linear-gradient(125deg,rgba(22,39,61,.97),rgba(9,14,23,.97));box-shadow:var(--shadow)}
+.hero:after{content:"";position:absolute;right:-130px;bottom:-220px;width:390px;height:390px;border:1px solid rgba(130,197,255,.2);
+border-radius:50%;box-shadow:0 0 0 35px rgba(130,197,255,.025),0 0 0 88px rgba(130,197,255,.018)}
+.hero nav{margin-bottom:16px;color:var(--muted);font-size:.82rem}
+.hero nav a{color:var(--accent)}
+h1{max-width:1100px;margin:0;font-size:clamp(2rem,6vw,5rem);line-height:.95;letter-spacing:-.05em}
+.hero p.copy{max-width:900px;margin:20px 0 0;color:#c0cee0;font-size:clamp(.98rem,2vw,1.16rem);line-height:1.65}
+.rule{display:inline-flex;gap:8px;align-items:center;margin-top:17px;padding:9px 13px;border:1px solid rgba(130,197,255,.28);
+border-radius:999px;background:rgba(130,197,255,.08);font-size:.83rem;color:#e1efff}
+.legend,.toolbar,.summarybar{margin-top:13px;border:1px solid var(--line);border-radius:16px;background:rgba(17,25,39,.91);box-shadow:var(--shadow)}
+.legend{display:flex;flex-wrap:wrap;gap:9px 17px;padding:13px 15px;color:var(--muted);font-size:.78rem}
+.legend span{display:inline-flex;gap:7px;align-items:center}.dot{width:9px;height:9px;border-radius:50%}.green{background:var(--green)}.blue{background:var(--blue)}.yellow{background:var(--yellow)}.gray{background:var(--gray)}
+.toolbar{position:sticky;top:5px;z-index:15;display:grid;grid-template-columns:minmax(170px,2fr) repeat(6,minmax(0,1fr));
+gap:8px;padding:10px;backdrop-filter:blur(17px)}
+.field label{display:block;margin:0 0 4px 3px;color:var(--muted);font-size:.65rem;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+.field input,.field select{width:100%;height:43px;padding:0 11px;border:1px solid #31445e;border-radius:10px;background:#0a1320;color:var(--ink);outline:none}
+.field input:focus,.field select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(130,197,255,.12)}
+.summarybar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:11px 14px;color:var(--muted);font-size:.84rem}
+.summarybar strong{color:var(--ink)}.actions{display:flex;flex-wrap:wrap;gap:7px}
+.btn{min-height:40px;padding:8px 12px;border:1px solid #3a4d68;border-radius:10px;background:#121e2e;color:#dce9f8;cursor:pointer}
+.btn:hover{border-color:#6382a8}.btn.primary{border-color:#4f8ec4;background:#173958;color:white}.btn.danger{color:#ffc4c4}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:13px;margin-top:14px}
+.card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#151f2f,#0f1724 62%);box-shadow:var(--shadow);
+content-visibility:auto;contain-intrinsic-size:590px}.card[data-decision=keep]{border-color:rgba(101,216,154,.7)}.card[data-decision=maybe]{border-color:rgba(234,200,111,.62)}.card[data-decision=skip]{opacity:.66}
+.visual{position:relative;display:grid;min-height:205px;place-items:center;overflow:hidden;border-bottom:1px solid var(--line);
+background:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+radial-gradient(circle at 50% 43%,#2b405a,#0d1420 72%);background-size:25px 25px,25px 25px,auto}
+.visual:before,.visual:after{content:"";position:absolute;width:165px;height:165px;border:1px solid rgba(130,197,255,.2);transform:rotate(45deg)}
+.visual:after{width:105px;height:105px;border-color:rgba(234,200,111,.21);transform:rotate(12deg)}
+.glyph{z-index:2;display:grid;width:79px;height:79px;place-items:center;border:1px solid rgba(130,197,255,.55);border-radius:20px;background:rgba(8,16,27,.82);
+font-size:1.25rem;font-weight:950;letter-spacing:.05em;box-shadow:0 0 50px rgba(80,160,235,.18)}
+.visualmeta{position:absolute;z-index:3;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap}.mini{padding:5px 7px;border:1px solid rgba(255,255,255,.12);
+border-radius:999px;background:rgba(6,12,20,.78);font-size:.65rem;font-weight:850;color:#d7e6f8}
+.inspect{position:absolute;z-index:4;right:12px;bottom:12px;left:12px;min-height:43px;border:1px solid rgba(130,197,255,.52);border-radius:11px;background:rgba(19,57,91,.92);
+color:white;font-weight:850;cursor:pointer}.inspect:hover{background:#1d4e78}.inspect:disabled{cursor:not-allowed;opacity:.68;border-color:rgba(255,255,255,.14);background:rgba(45,54,66,.92);color:#c7d0dc}
+.cardbody{display:flex;flex:1;flex-direction:column;padding:14px}.badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}.badge{padding:5px 7px;border:1px solid #33465f;border-radius:999px;background:#101a28;
+color:#bdcadb;font-size:.66rem;font-weight:850}.badge.green{color:#bdf7d3;border-color:rgba(101,216,154,.35);background:rgba(101,216,154,.08)}
+.badge.blue{color:#cce8ff;border-color:rgba(121,185,255,.35);background:rgba(121,185,255,.08)}.badge.yellow{color:#ffebac;border-color:rgba(234,200,111,.35);background:rgba(234,200,111,.08)}
+.badge.gray{color:#d8dde4;border-color:rgba(160,168,179,.34);background:rgba(160,168,179,.08)}
+.card h2{margin:0;font-size:1.17rem;line-height:1.15}.creator{margin-top:5px;color:var(--muted);font-size:.76rem}.desc{margin:11px 0 0;color:#c0ccda;font-size:.86rem;line-height:1.5}
+.warning{margin:10px 0 0;padding:8px 9px;border-left:3px solid var(--yellow);background:rgba(234,200,111,.055);color:#e7d9ad;font-size:.73rem;line-height:1.42}
+.bits{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}.bit{padding:4px 6px;border:1px solid #2b3e56;border-radius:7px;background:#0b1420;color:#a8b9ce;font-size:.64rem}
+.links{display:flex;gap:10px;margin-top:12px}.source{color:#b8ddff;font-size:.78rem;font-weight:800;text-decoration:none}.source:hover{text-decoration:underline}
+.review{margin-top:auto;padding-top:13px}.decisions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.decision{min-height:38px;border:1px solid #34475f;border-radius:9px;background:#101b2a;color:#c7d5e5;cursor:pointer}
+.decision.active.keep{color:#c0f8d5;border-color:rgba(101,216,154,.65);background:rgba(101,216,154,.12)}
+.decision.active.maybe{color:#ffecb2;border-color:rgba(234,200,111,.65);background:rgba(234,200,111,.12)}
+.decision.active.skip{color:#ffcaca;border-color:rgba(239,145,145,.58);background:rgba(239,145,145,.1)}
+textarea{width:100%;min-height:66px;margin-top:7px;padding:9px;border:1px solid #30435c;border-radius:9px;background:#09121e;color:var(--ink);resize:vertical;outline:none;font-size:.78rem;line-height:1.4}
+.empty{grid-column:1/-1;padding:50px 20px;border:1px dashed #344860;border-radius:17px;color:var(--muted);text-align:center}
+footer{padding:28px 8px 14px;color:#8190a3;font-size:.75rem;line-height:1.55;text-align:center}
+
+/* Viewer */
+dialog{width:min(1180px,calc(100% - 18px));max-width:none;height:min(900px,calc(100dvh - 18px));max-height:none;padding:0;border:1px solid #3a506c;border-radius:18px;background:#0c131f;color:var(--ink);box-shadow:0 35px 100px rgba(0,0,0,.65)}
+dialog::backdrop{background:rgba(0,0,0,.78);backdrop-filter:blur(4px)}.viewerlayout{display:grid;grid-template-columns:minmax(0,1fr) 310px;height:100%}
+.stage{position:relative;min-width:0;min-height:0;background:radial-gradient(circle at 50% 42%,#263b55,#070c13 74%)}#canvasHost{position:absolute;inset:0}
+#canvasHost canvas{width:100%;height:100%;display:block}.stageTop{position:absolute;z-index:5;top:10px;right:10px;left:10px;display:flex;gap:7px;align-items:center;justify-content:space-between;pointer-events:none}
+.stageTop>*{pointer-events:auto}.navcluster,.toolcluster{display:flex;gap:6px;flex-wrap:wrap}.vbtn{min-height:39px;padding:7px 10px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:rgba(8,17,28,.82);color:#e6f2ff;cursor:pointer;backdrop-filter:blur(8px)}
+.vbtn:hover,.vbtn.active{border-color:var(--accent);background:rgba(24,65,101,.9)}.closebtn{font-size:1.1rem}.loadstate{position:absolute;z-index:5;right:16px;bottom:14px;left:16px;padding:10px 12px;border:1px solid rgba(130,197,255,.3);border-radius:10px;
+background:rgba(7,14,23,.84);color:#cfe6ff;font-size:.78rem;backdrop-filter:blur(8px)}.loadstate.error{border-color:rgba(239,145,145,.6);color:#ffd0d0;background:rgba(52,13,20,.9)}
+.viewerinfo{overflow:auto;padding:17px;border-left:1px solid var(--line);background:#101925}.viewerinfo h2{margin:0;font-size:1.35rem}.viewerinfo .creator{font-size:.8rem}
+.bigbadges{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.viewerdesc{color:#c0ccda;font-size:.88rem;line-height:1.55}.statsbox{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0}
+.stat{padding:9px;border:1px solid #2d4057;border-radius:9px;background:#0b1420}.stat b{display:block;font-size:1rem}.stat span{color:var(--muted);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em}
+.control{margin-top:12px}.control label{display:block;margin-bottom:5px;color:var(--muted);font-size:.67rem;font-weight:850;text-transform:uppercase}.control select{width:100%;height:41px;padding:0 9px;border:1px solid #334962;border-radius:9px;background:#0a1421;color:var(--ink)}
+.viewerlinks{display:grid;gap:7px;margin-top:15px}.viewerlinks a{display:block;padding:10px;border:1px solid #38506b;border-radius:9px;background:#111f30;color:#cce7ff;text-align:center;text-decoration:none;font-size:.8rem;font-weight:850}
+.localbox{margin-top:14px;padding:11px;border:1px solid #32465f;border-radius:10px;background:#0a1420}.localbox p{margin:0 0 8px;color:#aebed1;font-size:.72rem;line-height:1.45}
+input[type=file]{max-width:100%;font-size:.72rem}
+@media(max-width:1100px){.toolbar{grid-template-columns:repeat(3,1fr)}.field:first-child{grid-column:1/-1}}
+@media(max-width:760px){.page{padding:9px}.hero{padding:24px 18px;border-radius:18px}.toolbar{grid-template-columns:1fr 1fr}.viewerlayout{grid-template-columns:1fr;grid-template-rows:minmax(52dvh,1fr) 42dvh}
+.viewerinfo{border-top:1px solid var(--line);border-left:0}.stageTop{align-items:flex-start}.toolcluster .vbtn span{display:none}dialog{width:100%;height:100dvh;border:0;border-radius:0}}
+</style>
+</head>
+<body>
+<main class="page">
+<section class="hero">
+<nav aria-label="Playground navigation"><a href="../">Playground</a> · <a href="witch-hat-mech.html">Witch Hat Mech</a></nav>
+<h1>Mecha, Robot & Creature Reference Hangar</h1>
+<p class="copy">Inspect public 3D models from their original hosts. Use the license filter to find reusable assets and review the source for attribution terms.</p>
+</section>
+<section class="legend">
+<span><i class="dot green"></i><b>Green</b> clear reusable/open license</span>
+<span><i class="dot blue"></i><b>Blue</b> documented attribution terms</span>
+<span><i class="dot yellow"></i><b>Yellow</b> repo is open but model provenance is unclear</span>
+<span><i class="dot gray"></i><b>Gray</b> fan/unclear-license model — reference only</span>
+</section>
+<section class="toolbar">
+<div class="field"><label for="search">Search model or design bit</label><input id="search" type="search" placeholder="shoulder, endoskeleton, samurai, walker…"></div>
+<div class="field"><label for="typeFilter">Type</label><select id="typeFilter"><option value="all">All types</option></select></div>
+<div class="field"><label for="formatFilter">Format</label><select id="formatFilter"><option value="all">All formats</option></select></div>
+<div class="field"><label for="originFilter">Origin</label><select id="originFilter"><option value="all">All origins</option></select></div>
+<div class="field"><label for="batchFilter">Discovery batch</label><select id="batchFilter"><option value="all">Everything</option><option value="new">New fan/hobby pass</option><option value="original">Original 15</option></select></div>
+<div class="field"><label for="licenseFilter">License</label><select id="licenseFilter">
+<option value="all">All licenses</option>
+<option value="reusable">Reusable with documented terms</option>
+<option value="reference">Reference or unclear terms</option>
+</select></div>
+<div class="field"><label for="decisionFilter">Your call</label><select id="decisionFilter"><option value="all">Everything</option><option value="keep">Keep</option><option value="maybe">Maybe</option><option value="skip">Skip</option><option value="unreviewed">Unreviewed</option></select></div>
+</section>
+<section class="summarybar"><div id="summary"></div><div class="actions">
+<button class="btn primary" id="randomBtn" type="button">Inspect random model</button>
+<button class="btn" id="localBtn" type="button">Open local model</button>
+<button class="btn" id="exportBtn" type="button">Export notes</button>
+<button class="btn danger" id="clearBtn" type="button">Clear notes</button>
+</div></section>
+<section id="grid" class="grid" aria-live="polite"></section>
+<footer>Remote models need internet access and can disappear if their source repository changes. Keep / Maybe / Skip decisions and notes are saved locally in this browser. A model being technically loadable does not grant permission to reuse it.</footer>
+</main>
+
+<input id="localInput" type="file" multiple hidden accept=".glb,.gltf,.vrm,.fbx,.obj,.bin,.png,.jpg,.jpeg,.webp,.ktx2">
+
+<dialog id="viewerDialog">
+<div class="viewerlayout">
+<section class="stage">
+<div id="canvasHost"></div>
+<div class="stageTop">
+<div class="navcluster"><button class="vbtn" id="prevBtn" type="button">← Previous</button><button class="vbtn" id="nextBtn" type="button">Next →</button></div>
+<div class="toolcluster">
+<button class="vbtn active" id="rotateBtn" type="button"><span>Auto </span>Rotate</button>
+<button class="vbtn" id="wireBtn" type="button">Wireframe</button>
+<button class="vbtn" id="bonesBtn" type="button">Bones</button>
+<button class="vbtn" id="resetBtn" type="button">Reset</button>
+<button class="vbtn closebtn" id="closeBtn" type="button" aria-label="Close viewer">×</button>
+</div>
+</div>
+<div id="loadState" class="loadstate">Choose a model.</div>
+</section>
+<aside class="viewerinfo">
+<h2 id="viewerTitle">Model viewer</h2><div id="viewerCreator" class="creator"></div>
+<div id="viewerBadges" class="bigbadges"></div>
+<p id="viewerDesc" class="viewerdesc"></p>
+<div class="statsbox">
+<div class="stat"><b id="meshStat">—</b><span>Meshes</span></div>
+<div class="stat"><b id="triStat">—</b><span>Triangles</span></div>
+<div class="stat"><b id="vertStat">—</b><span>Vertices</span></div>
+<div class="stat"><b id="boneStat">—</b><span>Bones</span></div>
+</div>
+<div class="control"><label for="animationSelect">Animation</label><select id="animationSelect"><option>No animations</option></select></div>
+<div id="viewerBits" class="bits"></div>
+<div id="viewerWarning" class="warning" hidden></div>
+<div class="viewerlinks"><a id="sourceLink" href="#" target="_blank" rel="noopener">Open repository/source ↗</a><a id="fileLink" href="#" target="_blank" rel="noopener">Open direct model file ↗</a></div>
+<div class="localbox"><p>Local test: select a GLB, VRM, FBX, OBJ, or a glTF plus its BIN/textures. Multiple OBJ files will be grouped.</p><button class="btn" id="localInsideBtn" type="button">Choose local file(s)</button></div>
+</aside>
+</div>
+</dialog>
+
+<script type="module">
+import * as THREE from "three";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import {DRACOLoader} from "three/addons/loaders/DRACOLoader.js";
+import {KTX2Loader} from "three/addons/loaders/KTX2Loader.js";
+import {FBXLoader} from "three/addons/loaders/FBXLoader.js";
+import {OBJLoader} from "three/addons/loaders/OBJLoader.js";
+import {MeshoptDecoder} from "three/addons/libs/meshopt_decoder.module.js";
+
+const CATALOG = [
+  {"id": "three-robot-expressive", "title": "RobotExpressive", "creator": "Three.js examples", "type": ["robot", "rig", "humanoid"], "licenseLevel": "green", "license": "CC0", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb", "sourceUrl": "https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf/RobotExpressive", "summary": "Clean animated humanoid robot with expressive face controls. A useful baseline for studying readable mechanical anatomy and animation-ready segmentation.", "bits": ["face panels", "joint spacing", "hands", "humanoid rig", "animation"], "glyph": "RX", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "rusting-big-mech", "title": "Big Mech", "creator": "Rusting Steiners", "type": ["mech", "robot", "humanoid"], "licenseLevel": "gray", "license": "No clear model license", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/Davis401/Rusting-Steiners/main/assets/models/big_mech.glb", "imageUrl": "https://raw.githubusercontent.com/Davis401/Rusting-Steiners/main/assets/imgs/rusting_steiners_cover.png", "sourceUrl": "https://github.com/Davis401/Rusting-Steiners/blob/main/assets/models/big_mech.glb", "summary": "Chunky low-poly combat mech. Useful for seeing how a compact torso, weapon arms, broad feet, and heavy proportions work together.", "bits": ["torso mass", "weapon arms", "feet", "low-poly panels", "silhouette"], "glyph": "BM", "warning": "Reference-only unless the author clarifies the model license.", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "rusting-enemies", "title": "Mech Enemy Set", "creator": "Rusting Steiners", "type": ["mech", "robot", "creature"], "licenseLevel": "gray", "license": "No clear model license", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/Davis401/Rusting-Steiners/main/assets/models/mech_enemies.glb", "imageUrl": "https://raw.githubusercontent.com/Davis401/Rusting-Steiners/main/assets/imgs/rusting_steiners_cover.png", "sourceUrl": "https://github.com/Davis401/Rusting-Steiners/blob/main/assets/models/mech_enemies.glb", "summary": "Multiple enemy machine shapes in one GLB, including walker-like forms. Better for mining enemy silhouettes than for studying a standard humanoid.", "bits": ["walker legs", "enemy silhouettes", "sensor heads", "compact weapons", "shape language"], "glyph": "ME", "warning": "Reference-only unless the author clarifies the model license.", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "jarvis-robot", "title": "Jarvis Exploded Robot", "creator": "JASON-QWeb / JarvisRobotHub", "type": ["robot", "armor", "humanoid"], "licenseLevel": "yellow", "license": "Repo MIT; GLB provenance unclear", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/JASON-QWeb/JarvisRobotHub/main/public/assets/models/robot.glb", "imageUrl": "https://raw.githubusercontent.com/JASON-QWeb/JarvisRobotHub/main/pic1.png", "sourceUrl": "https://github.com/JASON-QWeb/JarvisRobotHub", "summary": "Large, highly segmented hard-surface robot made for exploded-view interaction. Excellent for armor overlap, shell hierarchy, and part separation.", "bits": ["armor layering", "exploded hierarchy", "chest shell", "limb plates", "hard-surface detail"], "glyph": "JR", "warning": "About 41 MB. Load only when you want a close look.", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "pizza-mech-arm", "title": "Pizza Mech Arm", "creator": "ataboo / mj2023", "type": ["mech", "parts", "arm"], "licenseLevel": "yellow", "license": "Repo GPL-3.0; asset provenance unclear", "preview": "live3d", "modelUrl": "https://media.githubusercontent.com/media/ataboo/mj2023/main/models/unrigged/MechArm.glb", "imageUrl": "https://opengraph.githubassets.com/1/ataboo/mj2023", "sourceUrl": "https://github.com/ataboo/mj2023/blob/main/models/unrigged/MechArm.glb", "summary": "A standalone mechanical arm with deliberately chunky proportions. Useful for studying upper-arm and forearm volume without the distraction of a full character.", "bits": ["upper arm", "forearm mass", "elbow", "attachment socket", "chunky proportions"], "glyph": "MA", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "pizza-mech-grabber", "title": "Mech Grabber", "creator": "ataboo / mj2023", "type": ["mech", "parts", "arm"], "licenseLevel": "yellow", "license": "Repo GPL-3.0; asset provenance unclear", "preview": "live3d", "modelUrl": "https://media.githubusercontent.com/media/ataboo/mj2023/main/models/unrigged/MechGrabber.glb", "imageUrl": "https://opengraph.githubassets.com/1/ataboo/mj2023", "sourceUrl": "https://github.com/ataboo/mj2023/blob/main/models/unrigged/MechGrabber.glb", "summary": "Tool-arm ending in a claw/grabber rather than a humanoid hand. A good reference for industrial manipulators and asymmetrical characters.", "bits": ["claw", "tool arm", "wrist replacement", "asymmetry", "industrial design"], "glyph": "MG", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "pizza-sauce-cannon", "title": "Mech Cannon Arm", "creator": "ataboo / mj2023", "type": ["mech", "parts", "weapon"], "licenseLevel": "yellow", "license": "Repo GPL-3.0; asset provenance unclear", "preview": "live3d", "modelUrl": "https://media.githubusercontent.com/media/ataboo/mj2023/main/models/unrigged/MechSauceCannon.glb", "imageUrl": "https://opengraph.githubassets.com/1/ataboo/mj2023", "sourceUrl": "https://github.com/ataboo/mj2023/blob/main/models/unrigged/MechSauceCannon.glb", "summary": "A playful cannon-arm, but the construction is useful: barrel mass integrated into the forearm and a readable support structure behind it.", "bits": ["integrated cannon", "barrel housing", "forearm weapon", "support struts", "visual weight"], "glyph": "CA", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "pizza-mech-sword", "title": "Mech Sword Assembly", "creator": "ataboo / mj2023", "type": ["mech", "parts", "weapon"], "licenseLevel": "yellow", "license": "Repo GPL-3.0; asset provenance unclear", "preview": "live3d", "modelUrl": "https://media.githubusercontent.com/media/ataboo/mj2023/main/models/unrigged/MechSword.glb", "imageUrl": "https://opengraph.githubassets.com/1/ataboo/mj2023", "sourceUrl": "https://github.com/ataboo/mj2023/blob/main/models/unrigged/MechSword.glb", "summary": "Mechanical sword attachment that can inspire integrated blades, oversized guards, arm-mounted weapons, and non-human grips.", "bits": ["integrated blade", "guard", "weapon socket", "mechanical grip", "arm weapon"], "glyph": "MS", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "pizza-mech-leg", "title": "Mech Leg", "creator": "ataboo / mj2023", "type": ["mech", "parts", "leg"], "licenseLevel": "yellow", "license": "Repo GPL-3.0; asset provenance unclear", "preview": "live3d", "modelUrl": "https://media.githubusercontent.com/media/ataboo/mj2023/main/models/entity/mechleg.glb", "imageUrl": "https://opengraph.githubassets.com/1/ataboo/mj2023", "sourceUrl": "https://github.com/ataboo/mj2023/blob/main/models/entity/mechleg.glb", "summary": "Standalone leg with a strong mechanical silhouette. Useful for examining where to place armor breaks around the knee and ankle.", "bits": ["knee armor", "ankle", "foot", "leg taper", "mechanical breaks"], "glyph": "ML", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "pizza-dragon", "title": "Dragon", "creator": "ataboo / mj2023", "type": ["creature", "fantasy", "rig"], "licenseLevel": "yellow", "license": "Repo GPL-3.0; asset provenance unclear", "preview": "live3d", "modelUrl": "https://media.githubusercontent.com/media/ataboo/mj2023/main/models/entity/Dragon.glb", "imageUrl": "https://opengraph.githubassets.com/1/ataboo/mj2023", "sourceUrl": "https://github.com/ataboo/mj2023/blob/main/models/entity/Dragon.glb", "summary": "Not a robot, intentionally: useful for borrowing carapace, jaw, horn, limb, and creature-body ideas for fantastical machines.", "bits": ["carapace", "jaw", "horns", "creature limbs", "non-human silhouette"], "glyph": "DR", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "khronos-scifi-helmet", "title": "Sci-Fi Helmet", "creator": "Khronos glTF Sample Assets", "type": ["armor", "helmet", "parts"], "licenseLevel": "green", "license": "CC0", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SciFiHelmet/glTF/SciFiHelmet.gltf", "sourceUrl": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/SciFiHelmet", "summary": "Detailed helmet shell with layered plates, vents, inset surfaces, and a strong face opening. Useful even when the overall style is too conventional.", "bits": ["helmet shell", "visor opening", "vents", "panel seams", "surface layering"], "glyph": "SH", "format": "gltf", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "khronos-damaged-helmet", "title": "Damaged Helmet", "creator": "Khronos glTF Sample Assets", "type": ["armor", "helmet", "parts"], "licenseLevel": "blue", "license": "CC BY 4.0", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "sourceUrl": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DamagedHelmet", "summary": "A compact study in layered materials, edge wear, hard-surface forms, and how damage can reinforce rather than obscure a silhouette.", "bits": ["battle damage", "material breaks", "helmet silhouette", "edge wear", "layered shell"], "glyph": "DH", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "khronos-rigged-figure", "title": "Rigged Figure", "creator": "Khronos glTF Sample Assets", "type": ["rig", "humanoid", "base"], "licenseLevel": "blue", "license": "CC BY 4.0", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/RiggedFigure/glTF-Binary/RiggedFigure.glb", "sourceUrl": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/RiggedFigure", "summary": "Neutral rigged figure for checking proportion, deformation, and how proposed armor pieces would move over a human skeleton.", "bits": ["skeleton", "deformation", "joint placement", "armor clearance", "proportion"], "glyph": "RF", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "khronos-rigged-simple", "title": "Rigged Simple", "creator": "Khronos glTF Sample Assets", "type": ["rig", "humanoid", "base"], "licenseLevel": "blue", "license": "CC BY 4.0", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/RiggedSimple/glTF-Binary/RiggedSimple.glb", "sourceUrl": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/RiggedSimple", "summary": "Extremely simple humanoid rig. Valuable as a clean diagram of the minimum structure needed under a mechanical or armored body.", "bits": ["minimal rig", "bone hierarchy", "deformation test", "body proxy", "joint clearance"], "glyph": "RS", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "khronos-fox", "title": "Fox Animation Model", "creator": "Khronos glTF Sample Assets", "type": ["creature", "rig", "animation"], "licenseLevel": "blue", "license": "Mixed CC0 / attribution terms", "preview": "live3d", "modelUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Fox/glTF-Binary/Fox.glb", "sourceUrl": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Fox", "summary": "A compact creature rig with locomotion. Useful for quadruped robots, animal-inspired stance, tail balance, and non-humanoid movement.", "bits": ["quadruped gait", "spine", "tail", "animal stance", "animation"], "glyph": "FX", "format": "glb", "language": "International / English", "origin": "Original catalog", "batch": "original", "sizeMB": null, "forceMaterial": false},
+  {"id": "mechjam-player-gundam", "title": "Player Gundam Fan Model", "creator": "shbrown1 / mechjam", "type": ["gundam-inspired", "mech", "fan-project", "humanoid"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/shbrown1/mechjam/839409340471fd5b9e460996ae0fd779d6db6a5f/Player/playergundam.glb", "sourceUrl": "https://github.com/shbrown1/mechjam/blob/839409340471fd5b9e460996ae0fd779d6db6a5f/Player/playergundam.glb", "summary": "A complete fan-game Gundam-style player model. Useful for studying the recognizable head–chest–skirt–leg hierarchy in a relatively compact game asset.", "bits": ["head crest", "chest block", "skirt armor", "hero proportions", "game-ready segmentation"], "glyph": "PG", "warning": "Franchise-inspired fan asset with no clear license. Inspect for reference; do not treat it as reusable production art.", "language": "English-language fan project", "origin": "Fan / game-jam", "sizeMB": 2.45, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "mechjam-mecha-gundam", "title": "Mecha-Gundam Fan Character", "creator": "shbrown1 / mechjam", "type": ["gundam-inspired", "mech", "fan-project", "humanoid"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/shbrown1/mechjam/839409340471fd5b9e460996ae0fd779d6db6a5f/MechaGundam/mecha-gundam.glb", "sourceUrl": "https://github.com/shbrown1/mechjam/blob/839409340471fd5b9e460996ae0fd779d6db6a5f/MechaGundam/mecha-gundam.glb", "summary": "A second full Gundam-style body from the same fan project, useful for comparing how a hobby creator simplified armor, limbs, and weapons for real-time use.", "bits": ["armor simplification", "shoulder mass", "lower legs", "weapon integration", "fan-game silhouette"], "glyph": "MG", "warning": "Franchise-inspired fan asset with no clear license. Reference only.", "language": "English-language fan project", "origin": "Fan / game-jam", "sizeMB": 3.64, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "mechjam-enemy", "title": "Mechjam Enemy Model", "creator": "shbrown1 / mechjam", "type": ["mech", "enemy", "fan-project", "humanoid"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/shbrown1/mechjam/839409340471fd5b9e460996ae0fd779d6db6a5f/Enemy/enemy.glb", "sourceUrl": "https://github.com/shbrown1/mechjam/blob/839409340471fd5b9e460996ae0fd779d6db6a5f/Enemy/enemy.glb", "summary": "The opposing machine from the same small fan game. It is useful as an enemy-shape counterpoint rather than another heroic white-and-blue mobile suit.", "bits": ["enemy silhouette", "face treatment", "weapon read", "bulk distribution", "game scale"], "glyph": "EN", "warning": "No clear license. Reference only.", "language": "English-language fan project", "origin": "Fan / game-jam", "sizeMB": 3.79, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "mechjam-falling", "title": "Mechjam Falling Variant", "creator": "shbrown1 / mechjam", "type": ["mech", "fan-project", "pose-study"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/shbrown1/mechjam/839409340471fd5b9e460996ae0fd779d6db6a5f/MechaGundam/falling.glb", "sourceUrl": "https://github.com/shbrown1/mechjam/blob/839409340471fd5b9e460996ae0fd779d6db6a5f/MechaGundam/falling.glb", "summary": "A posed or variant export that can reveal how the armor silhouette reads when the body is no longer standing neutrally.", "bits": ["pose readability", "armor overlap", "limb clearance", "falling silhouette", "game export"], "glyph": "FV", "warning": "No clear license. Reference only.", "language": "English-language fan project", "origin": "Fan / game-jam", "sizeMB": 3.79, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "claude-combat-mech", "title": "Combat Mech", "creator": "World of ClaudeCraft contributors", "type": ["mech", "robot", "ai-assisted", "humanoid"], "licenseLevel": "yellow", "license": "Open repo; individual asset provenance varies", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/levy-street/world-of-claudecraft/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/Mech/characters/CombatMech.glb", "sourceUrl": "https://github.com/levy-street/world-of-claudecraft/blob/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/Mech/characters/CombatMech.glb", "summary": "A compact combat mech from an AI-assisted browser MMO. Useful for seeing what a rapid modern web-game pipeline produces as a complete character.", "bits": ["compact chassis", "shoulder armor", "weapon arms", "AI-era web asset", "readable silhouette"], "glyph": "CM", "warning": "The repository is open, but several character assets have mixed or AI-assisted provenance. Verify before reuse.", "language": "English / AI-assisted project", "origin": "AI-assisted browser game", "sizeMB": 1.6, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "claude-necromancer", "title": "Necromancer", "creator": "World of ClaudeCraft contributors", "type": ["fantasy", "armored", "ai-assisted", "humanoid"], "licenseLevel": "yellow", "license": "Open repo; individual asset provenance varies", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/levy-street/world-of-claudecraft/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/enemies/necromancer.glb", "sourceUrl": "https://github.com/levy-street/world-of-claudecraft/blob/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/enemies/necromancer.glb", "summary": "A dark fantasy caster that broadens the catalog beyond robots. Mine it for robes, floating layers, head treatment, and magical-mechanical crossover ideas.", "bits": ["robe silhouette", "headpiece", "floating layers", "caster proportions", "dark armor"], "glyph": "NC", "warning": "The repository is open, but several character assets have mixed or AI-assisted provenance. Verify before reuse.", "language": "English / AI-assisted project", "origin": "AI-assisted browser game", "sizeMB": 0.5, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "claude-skeleton-golem", "title": "Skeleton Golem", "creator": "World of ClaudeCraft contributors", "type": ["creature", "golem", "ai-assisted", "fantasy"], "licenseLevel": "yellow", "license": "Open repo; individual asset provenance varies", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/levy-street/world-of-claudecraft/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/enemies/skeleton_golem.glb", "sourceUrl": "https://github.com/levy-street/world-of-claudecraft/blob/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/enemies/skeleton_golem.glb", "summary": "A skeletal construct with large negative spaces and an exposed-frame feeling that can translate directly into mechanical designs.", "bits": ["rib structure", "exposed frame", "golem bulk", "negative space", "bone-to-machine ideas"], "glyph": "SG", "warning": "The repository is open, but several character assets have mixed or AI-assisted provenance. Verify before reuse.", "language": "English / AI-assisted project", "origin": "AI-assisted browser game", "sizeMB": 0.28, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "claude-skeleton-warrior", "title": "Skeleton Warrior", "creator": "World of ClaudeCraft contributors", "type": ["creature", "armored", "ai-assisted", "humanoid"], "licenseLevel": "yellow", "license": "Open repo; individual asset provenance varies", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/levy-street/world-of-claudecraft/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/enemies/skeleton_warrior.glb", "sourceUrl": "https://github.com/levy-street/world-of-claudecraft/blob/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/enemies/skeleton_warrior.glb", "summary": "A lighter armored skeleton useful for thin-limb construction, layered equipment, and readable hostile anatomy.", "bits": ["thin limbs", "armor over frame", "weapon pose", "rib cage", "enemy read"], "glyph": "SW", "warning": "The repository is open, but several character assets have mixed or AI-assisted provenance. Verify before reuse.", "language": "English / AI-assisted project", "origin": "AI-assisted browser game", "sizeMB": 0.5, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "claude-barbarian", "title": "Barbarian", "creator": "World of ClaudeCraft contributors", "type": ["fantasy", "armored", "ai-assisted", "humanoid"], "licenseLevel": "yellow", "license": "Open repo; individual asset provenance varies", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/levy-street/world-of-claudecraft/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/barbarian.glb", "sourceUrl": "https://github.com/levy-street/world-of-claudecraft/blob/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/barbarian.glb", "summary": "A broad heroic fantasy body that can supply proportion and armor-placement ideas for heavy pilots, brutes, or organic mecha.", "bits": ["broad torso", "heavy forearms", "belt mass", "hero proportions", "bare-vs-armored contrast"], "glyph": "BB", "warning": "The repository is open, but several character assets have mixed or AI-assisted provenance. Verify before reuse.", "language": "English / AI-assisted project", "origin": "AI-assisted browser game", "sizeMB": 0.42, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "claude-knight", "title": "Knight", "creator": "World of ClaudeCraft contributors", "type": ["fantasy", "armor", "ai-assisted", "humanoid"], "licenseLevel": "yellow", "license": "Open repo; individual asset provenance varies", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/levy-street/world-of-claudecraft/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/knight.glb", "sourceUrl": "https://github.com/levy-street/world-of-claudecraft/blob/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/knight.glb", "summary": "A compact knight useful for helmet, pauldron, breastplate, and greave relationships in a low-cost browser asset.", "bits": ["helmet", "pauldrons", "breastplate", "greaves", "armor hierarchy"], "glyph": "KN", "warning": "The repository is open, but several character assets have mixed or AI-assisted provenance. Verify before reuse.", "language": "English / AI-assisted project", "origin": "AI-assisted browser game", "sizeMB": 0.44, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "claude-paladin", "title": "Paladin", "creator": "World of ClaudeCraft contributors", "type": ["fantasy", "armor", "ai-assisted", "humanoid"], "licenseLevel": "yellow", "license": "Open repo; individual asset provenance varies", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/levy-street/world-of-claudecraft/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/paladin.glb", "sourceUrl": "https://github.com/levy-street/world-of-claudecraft/blob/dd03adab4e178f00966d136925812ce1737be7ed/public/models/chars/players/paladin.glb", "summary": "A more ceremonial armored character that can inspire crest, mantle, shield, and holy-machine design vocabulary.", "bits": ["ceremonial armor", "crest", "mantle", "shield language", "heroic stance"], "glyph": "PL", "warning": "The repository is open, but several character assets have mixed or AI-assisted provenance. Verify before reuse.", "language": "English / AI-assisted project", "origin": "AI-assisted browser game", "sizeMB": 0.43, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "starcraft-goliath", "title": "Terran Goliath Fan Model", "creator": "Tsarcasm831 / Starcraft fan project", "type": ["mech", "walker", "fan-project", "franchise"], "licenseLevel": "gray", "license": "Franchise fan asset — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/Tsarcasm831/Starcraft/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/goliath.glb", "sourceUrl": "https://github.com/Tsarcasm831/Starcraft/blob/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/goliath.glb", "summary": "A recognizable bipedal combat walker. Useful for cockpit-as-torso construction, reverse-jointed visual cues, and weapon pods replacing arms.", "bits": ["cockpit torso", "weapon pods", "walker legs", "military silhouette", "biped balance"], "glyph": "GO", "warning": "Franchise fan project. The repository also contains fake prompt-text files with .glb names; this card uses a verified binary model.", "language": "English-language fan project", "origin": "Fan / franchise project", "sizeMB": 1.91, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "starcraft-scv", "title": "Terran SCV Fan Model", "creator": "Tsarcasm831 / Starcraft fan project", "type": ["mech", "industrial", "fan-project", "powered-suit"], "licenseLevel": "gray", "license": "Franchise fan asset — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/Tsarcasm831/Starcraft/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/scv.glb", "sourceUrl": "https://github.com/Tsarcasm831/Starcraft/blob/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/scv.glb", "summary": "Industrial construction suit rather than a clean hero robot. Useful for cockpit cages, tool arms, work-machine proportions, and hazard-color blocking.", "bits": ["industrial cockpit", "tool arms", "work-mech bulk", "protective cage", "utility silhouette"], "glyph": "SC", "warning": "Franchise fan project. The repository also contains fake prompt-text files with .glb names; this card uses a verified binary model.", "language": "English-language fan project", "origin": "Fan / franchise project", "sizeMB": 2.06, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "starcraft-vulture", "title": "Terran Vulture Fan Model", "creator": "Tsarcasm831 / Starcraft fan project", "type": ["vehicle", "sci-fi", "fan-project", "mechanical"], "licenseLevel": "gray", "license": "Franchise fan asset — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/Tsarcasm831/Starcraft/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/vulture.glb", "sourceUrl": "https://github.com/Tsarcasm831/Starcraft/blob/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/vulture.glb", "summary": "A low hover-bike form that can donate nose, engine, suspension, and rider-machine integration ideas to non-humanoid designs.", "bits": ["hover chassis", "engine mass", "rider integration", "front fork language", "low silhouette"], "glyph": "VU", "warning": "Franchise fan project. The repository also contains fake prompt-text files with .glb names; this card uses a verified binary model.", "language": "English-language fan project", "origin": "Fan / franchise project", "sizeMB": 1.57, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "starcraft-battlecruiser", "title": "Terran Battlecruiser Fan Model", "creator": "Tsarcasm831 / Starcraft fan project", "type": ["vehicle", "spaceship", "fan-project", "mechanical"], "licenseLevel": "gray", "license": "Franchise fan asset — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/Tsarcasm831/Starcraft/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/battlecruiser.glb", "sourceUrl": "https://github.com/Tsarcasm831/Starcraft/blob/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/battlecruiser.glb", "summary": "A large spacecraft reference for layered hull masses, engine blocks, bridge placement, and turning architecture into a vehicle.", "bits": ["layered hull", "engine blocks", "bridge mass", "ship silhouette", "architectural armor"], "glyph": "BC", "warning": "Franchise fan project. The repository also contains fake prompt-text files with .glb names; this card uses a verified binary model.", "language": "English-language fan project", "origin": "Fan / franchise project", "sizeMB": 1.94, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "starcraft-wraith", "title": "Terran Wraith Fan Model", "creator": "Tsarcasm831 / Starcraft fan project", "type": ["vehicle", "aircraft", "fan-project", "mechanical"], "licenseLevel": "gray", "license": "Franchise fan asset — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/Tsarcasm831/Starcraft/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/wraith.glb", "sourceUrl": "https://github.com/Tsarcasm831/Starcraft/blob/450b2537c115c7ccb4c8fde41bd4497967ff105e/assets/models/wraith.glb", "summary": "A compact angular aircraft useful for wing roots, engine nacelles, nose geometry, and adapting mecha panel language to flight forms.", "bits": ["wing roots", "engine nacelles", "nose shape", "angular panels", "aircraft silhouette"], "glyph": "WR", "warning": "Franchise fan project. The repository also contains fake prompt-text files with .glb names; this card uses a verified binary model.", "language": "English-language fan project", "origin": "Fan / franchise project", "sizeMB": 2.72, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "de-mitsubishi-robot", "title": "Mitsubishi Industrial Robot — Reassembled", "creator": "thomas-v2 / Web-3D-HMI-Demo", "type": ["robot", "industrial", "german", "obj"], "licenseLevel": "yellow", "license": "GPL-3.0 repository", "format": "obj", "sourceUrl": "https://github.com/thomas-v2/Web-3D-HMI-Demo/tree/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot", "summary": "A complete industrial arm rebuilt in the viewer from the repository’s current OBJ component set. It is useful for studying real joint stacks, link proportions, wrist construction, and tool mounting.", "bits": ["six-axis joints", "component assembly", "industrial base", "wrist stack", "tool flange"], "glyph": "IR", "language": "German-language project", "origin": "German hobby / HMI demo", "sizeMB": null, "forceMaterial": true, "preview": "live3d", "batch": "new", "assembly": "mitsubishiRobot", "componentBaseRaw": "https://raw.githubusercontent.com/thomas-v2/Web-3D-HMI-Demo/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot/", "componentBaseSource": "https://github.com/thomas-v2/Web-3D-HMI-Demo/tree/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot", "fileLinkUrl": "https://github.com/thomas-v2/Web-3D-HMI-Demo/tree/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot", "fileLinkText": "Open model component folder ↗", "warning": "The repository lists a license. Check the model's own provenance and notices before reuse."},
+  {"id": "de-gripper-hand", "title": "Industrial Robot End Effector", "creator": "thomas-v2 / Web-3D-HMI-Demo", "type": ["robot", "industrial", "part", "german"], "licenseLevel": "yellow", "license": "GPL-3.0 repository", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/thomas-v2/Web-3D-HMI-Demo/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot/EndEffector.obj", "sourceUrl": "https://github.com/thomas-v2/Web-3D-HMI-Demo/blob/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot/EndEffector.obj", "summary": "The current end-effector component from the German Web-3D HMI robot. Useful for studying non-humanoid tool mounting, jaw/tool spacing, and the final wrist-to-tool transition.", "bits": ["end effector", "tool mounting", "wrist interface", "nonhuman hand", "industrial geometry"], "glyph": "GH", "language": "German-language project", "origin": "German hobby / HMI demo", "sizeMB": 0.1, "forceMaterial": true, "preview": "live3d", "batch": "new", "warning": "The repository lists a license. Check the model's own provenance and notices before reuse."},
+  {"id": "de-gripper-forearm", "title": "Industrial Robot Wrist / Forearm Link", "creator": "thomas-v2 / Web-3D-HMI-Demo", "type": ["robot", "industrial", "part", "german"], "licenseLevel": "yellow", "license": "GPL-3.0 repository", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/thomas-v2/Web-3D-HMI-Demo/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot/Wrist.obj", "sourceUrl": "https://github.com/thomas-v2/Web-3D-HMI-Demo/blob/a03d5cc5d41910821b7a17419e667c02b4595133/public/models/robot/Wrist.obj", "summary": "The current wrist link from the German industrial-robot demo. It is useful for practical transitions between a large arm segment, rotary wrist motors, and a specialized end effector.", "bits": ["wrist housing", "forearm link", "rotary joint", "tool support", "functional design"], "glyph": "GF", "language": "German-language project", "origin": "German hobby / HMI demo", "sizeMB": 1.05, "forceMaterial": true, "preview": "live3d", "batch": "new", "warning": "The repository lists a license. Check the model's own provenance and notices before reuse."},
+  {"id": "godot-red-robot", "title": "Godot TPS Red Robot", "creator": "Godot Engine TPS Demo", "type": ["robot", "enemy", "open-source", "humanoid"], "licenseLevel": "yellow", "license": "MIT repository", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/godotengine/tps-demo/da8f61e6b329628b0c14ae68870cefc1c03ddec1/enemies/red_robot/model/red_robot.glb", "sourceUrl": "https://github.com/godotengine/tps-demo/tree/da8f61e6b329628b0c14ae68870cefc1c03ddec1/enemies/red_robot/model", "summary": "A clean game-enemy robot from an official open demo. Useful for readable head, chest, limb, and emissive-accent decisions at modest file size.", "bits": ["enemy readability", "emissive accents", "simple limbs", "game topology", "clean silhouette"], "glyph": "RR", "language": "International / English", "origin": "Open-source engine demo", "sizeMB": 0.58, "preview": "live3d", "batch": "new", "forceMaterial": false, "warning": "The repository lists a license. Check the model's own provenance and notices before reuse."},
+  {"id": "night-city-robot", "title": "Night City Cyberpunk Robot", "creator": "cyrus2281 / night-city", "type": ["robot", "cyberpunk", "game", "humanoid"], "licenseLevel": "yellow", "license": "MIT repo; model provenance unclear", "format": "glb", "modelUrl": "https://media.githubusercontent.com/media/cyrus2281/night-city/faf8da8113752cbc68859df0e750e4ca7c494df1/public/blob/model/Robot.glb", "sourceUrl": "https://github.com/cyrus2281/night-city/blob/faf8da8113752cbc68859df0e750e4ca7c494df1/public/blob/model/Robot.glb", "summary": "A larger cyberpunk robot used in a Three.js game project. Worth inspecting for dense surface detail, proportions, and how a heavier asset behaves in-browser.", "bits": ["cyberpunk panels", "dense detail", "humanoid robot", "game asset", "surface hierarchy"], "glyph": "NC", "warning": "The code repository is MIT, but the GLB's separate provenance is not documented.", "language": "English-language project", "origin": "Three.js game", "sizeMB": 12.63, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "give-life-endoskeleton", "title": "Helpful Animatronic Endoskeleton", "creator": "The64thGamer / Give-LIFE", "type": ["robot", "endoskeleton", "fan-project", "fbx"], "licenseLevel": "gray", "license": "Unlicensed franchise fan project — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/The64thGamer/Give-LIFE/c52658152eccd2e57637b1e2d6683f34a596eaf0/Mods/True%20FNaF/Custom%20Assets/Models/Animatronics/Helpful%20Endo.glb", "sourceUrl": "https://github.com/The64thGamer/Give-LIFE/blob/c52658152eccd2e57637b1e2d6683f34a596eaf0/Mods/True%20FNaF/Custom%20Assets/Models/Animatronics/Helpful%20Endo.glb", "summary": "A current exposed animatronic endoskeleton export from the Give-LIFE repository. Useful for neck stacks, rib frames, jaw mechanisms, thin mechanical limbs, and unsettling machine anatomy.", "bits": ["exposed frame", "jaw mechanism", "rib structure", "neck stack", "mechanical anatomy"], "glyph": "ES", "warning": "Franchise fan model with no independently documented asset license. Reference only.", "language": "English-language fan project", "origin": "Fan / animatronic project", "sizeMB": 1.35, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "give-life-freddy-mech", "title": "Freddy Animatronic Model", "creator": "The64thGamer / Give-LIFE", "type": ["robot", "animatronic", "fan-project", "fbx"], "licenseLevel": "gray", "license": "Unlicensed franchise fan project — reference only", "format": "glb", "modelUrl": "https://raw.githubusercontent.com/The64thGamer/Give-LIFE/c52658152eccd2e57637b1e2d6683f34a596eaf0/Mods/Faz%20Anim%201/Custom%20Assets/Models/Animatronics/Freddy.glb", "sourceUrl": "https://github.com/The64thGamer/Give-LIFE/blob/c52658152eccd2e57637b1e2d6683f34a596eaf0/Mods/Faz%20Anim%201/Custom%20Assets/Models/Animatronics/Freddy.glb", "summary": "The current Freddy GLB export in the Give-LIFE repository. Useful for studying a rounded mascot shell over mechanical joints, large head construction, and deliberate gaps between rigid body sections.", "bits": ["rounded shell", "mascot proportions", "head construction", "joint gaps", "animatronic body"], "glyph": "FM", "warning": "Large file, roughly 45 MB. Franchise fan model with no independently documented asset license; reference only.", "language": "English-language fan project", "origin": "Fan / animatronic project", "sizeMB": 44.7, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "give-life-foxy-mech", "title": "Foxy Animatronic Model", "creator": "The64thGamer / Give-LIFE", "type": ["robot", "animatronic", "fan-project", "fbx"], "licenseLevel": "gray", "license": "Unlicensed franchise fan project — reference only", "format": "fbx", "modelUrl": "https://raw.githubusercontent.com/The64thGamer/Give-LIFE/c52658152eccd2e57637b1e2d6683f34a596eaf0/Mods/Faz%20Anim%201/Custom%20Assets/Models/Animatronics/Foxy%20FNaF1.fbx", "sourceUrl": "https://github.com/The64thGamer/Give-LIFE/blob/c52658152eccd2e57637b1e2d6683f34a596eaf0/Mods/Faz%20Anim%201/Custom%20Assets/Models/Animatronics/Foxy%20FNaF1.fbx", "summary": "The current Foxy FBX in the Give-LIFE repository. It offers a leaner and more asymmetrical animatronic silhouette with sharp limbs, exposed joints, and damaged-machine cues.", "bits": ["asymmetry", "lean limbs", "exposed joints", "damaged shell", "predatory silhouette"], "glyph": "FX", "warning": "Large franchise fan model with no independently documented asset license. Reference only.", "language": "English-language fan project", "origin": "Fan / animatronic project", "sizeMB": 17.49, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "tw-gundam-body", "title": "Gundam-Style Torso Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "torso", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/yellowmars/2025graphics/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data/body.obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "Standalone torso geometry from a Traditional-Chinese graphics hobby/student project. Useful for chest blockout and color-zone planning.", "bits": ["chest block", "torso taper", "color zones", "central armor", "part-based build"], "glyph": "TB", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": 0.43, "forceMaterial": true, "preview": "live3d", "batch": "new"},
+  {"id": "tw-gundam-head", "title": "Gundam-Style Head Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "head", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/yellowmars/2025graphics/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data/head.obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "A separate head mesh for close study of face plate, helmet shell, eye recesses, and crest attachment areas.", "bits": ["face plate", "helmet shell", "eye recess", "crest socket", "small-scale shape"], "glyph": "TH", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": 0.06, "forceMaterial": true, "preview": "live3d", "batch": "new"},
+  {"id": "tw-gundam-shoulder", "title": "Gundam-Style Shoulder Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "shoulder", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/yellowmars/2025graphics/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data/shoulder1.obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "A single shoulder module that can be inspected without the rest of the body obscuring its shell and attachment geometry.", "bits": ["pauldron shell", "arm socket", "side silhouette", "armor thickness", "modular shoulder"], "glyph": "TS", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": 0.28, "forceMaterial": true, "preview": "live3d", "batch": "new"},
+  {"id": "tw-gundam-forearm", "title": "Gundam-Style Forearm Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "arm", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "A forearm part useful for studying taper, wrist transition, elbow clearance, and the balance between white shell and mechanical core.", "bits": ["forearm taper", "wrist transition", "elbow clearance", "shell/core split", "arm module"], "glyph": "TF", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": null, "forceMaterial": true, "preview": "live3d", "batch": "new", "available": false, "unavailableReason": "The upstream forearm OBJ is unavailable."},
+  {"id": "tw-gundam-leg", "title": "Gundam-Style Leg Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "leg", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/yellowmars/2025graphics/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data/leg1.obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "A current full leg mesh from the Traditional-Chinese graphics project, useful for studying knee-to-ankle rhythm, lower-leg flare, and the relationship between large armor masses.", "bits": ["leg armor", "knee transition", "ankle taper", "large limb mass", "panel rhythm"], "glyph": "TL", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": null, "forceMaterial": true, "preview": "live3d", "batch": "new"},
+  {"id": "tw-gundam-foot", "title": "Gundam-Style Foot Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "foot", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/yellowmars/2025graphics/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data/foot1.obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "A standalone mobile-suit-style foot, useful for toe block, heel, ankle socket, and ground-contact proportions.", "bits": ["toe block", "heel", "ankle socket", "ground contact", "foot proportion"], "glyph": "TT", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": null, "forceMaterial": true, "preview": "live3d", "batch": "new"},
+  {"id": "tw-gundam-hand", "title": "Gundam-Style Hand Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "hand", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/yellowmars/2025graphics/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data/hand1.obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "A current hand mesh from the Traditional-Chinese graphics project. Useful for studying blocky finger construction, palm mass, wrist connection, and how a mechanical hand reads at small scale.", "bits": ["mechanical fingers", "palm block", "wrist socket", "small-scale shape", "hand proportion"], "glyph": "TN", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": null, "forceMaterial": true, "preview": "live3d", "batch": "new"},
+  {"id": "tw-gundam-upper-arm", "title": "Gundam-Style Upper Arm Part", "creator": "黃柏維 / yellowmars graphics project", "type": ["gundam-inspired", "part", "arm", "obj"], "licenseLevel": "gray", "license": "No repository license — reference only", "format": "obj", "modelUrl": "https://raw.githubusercontent.com/yellowmars/2025graphics/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data/uparm1.obj", "sourceUrl": "https://github.com/yellowmars/2025graphics/tree/14b454ff1d80fe72eccf22381bc29cf7dceeac48/12750573%E9%BB%83%E6%9F%8F%E7%B6%AD/data", "summary": "A current upper-arm mesh from the Traditional-Chinese graphics project. Useful for shoulder-to-elbow taper, armor/core separation, and keeping a short limb segment readable beside a large torso and pauldron.", "bits": ["upper arm", "shoulder transition", "elbow connection", "shell/core split", "arm proportion"], "glyph": "TU", "warning": "Traditional-Chinese hobby/student project with no license. These are individual geometry parts, included strictly for visual reference.", "language": "Traditional Chinese", "origin": "Taiwanese hobby / graphics project", "sizeMB": null, "forceMaterial": true, "preview": "live3d", "batch": "new"},
+  {"id": "vrm-snakebot", "title": "SnakeBot VRM", "creator": "100Avatars / open-source-avatars catalog", "type": ["robot", "vrm", "avatar", "humanoid"], "licenseLevel": "green", "license": "CC0 catalog entry", "format": "vrm", "modelUrl": "https://arweave.net/fzLqHKoPkSWHAg5cPUjqDGrg50jzh7b3UVzs83hd6DU", "sourceUrl": "https://github.com/ToxSam/open-source-avatars", "summary": "A CC0 robot avatar from the VRM ecosystem. Useful for compact stylized joints, head-to-body ratio, and avatar-friendly construction.", "bits": ["VRM avatar", "stylized robot", "compact joints", "head ratio", "humanoid rig"], "glyph": "SB", "language": "VRM / Japanese avatar ecosystem", "origin": "Open avatar library", "sizeMB": 1.65, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "vrm-bao-samurai", "title": "BaoSamurai VRM", "creator": "100Avatars / open-source-avatars catalog", "type": ["armor", "samurai", "vrm", "humanoid"], "licenseLevel": "green", "license": "CC0 catalog entry", "format": "vrm", "modelUrl": "https://arweave.net/wmTy-SEXxmlp847i1U1m2GziSGp-4T8qrZ77A32LlY8", "sourceUrl": "https://github.com/ToxSam/open-source-avatars", "summary": "A large CC0 samurai avatar that brings Japanese armor vocabulary into a Three.js-readable format.", "bits": ["kabuto silhouette", "layered plates", "samurai armor", "waist layers", "avatar rig"], "glyph": "BS", "language": "VRM / Japanese avatar ecosystem", "origin": "Open avatar library", "sizeMB": 27.37, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "vrm-coffee-maker", "title": "CoffeeMaker VRM", "creator": "100Avatars / open-source-avatars catalog", "type": ["robot", "object-character", "vrm", "stylized"], "licenseLevel": "green", "license": "CC0 catalog entry", "format": "vrm", "modelUrl": "https://arweave.net/WJOa34mvhIq-Igh3B1XRUSVVtVcBd_r-5VkdzwTK0BU", "sourceUrl": "https://github.com/ToxSam/open-source-avatars", "summary": "A tiny object-character avatar. Useful for seeing how appliance geometry can become a readable personality with minimal humanoid anatomy.", "bits": ["appliance character", "minimal anatomy", "object head", "tiny asset", "stylized silhouette"], "glyph": "CF", "language": "VRM / Japanese avatar ecosystem", "origin": "Open avatar library", "sizeMB": 0.07, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "vrm-captain-lantern", "title": "CaptainLantern VRM", "creator": "100Avatars / open-source-avatars catalog", "type": ["fantasy", "armored", "vrm", "humanoid"], "licenseLevel": "green", "license": "CC0 catalog entry", "format": "vrm", "modelUrl": "https://arweave.net/SpMyvJDbre5L1MwW2zPF5g0b5SdnTUPcmE7bE-uVtNk", "sourceUrl": "https://github.com/ToxSam/open-source-avatars", "summary": "A CC0 lantern-headed fantasy avatar that mixes costume, hard-surface head design, and humanoid equipment.", "bits": ["lantern head", "costume armor", "object-face", "fantasy silhouette", "avatar construction"], "glyph": "CL", "language": "VRM / Japanese avatar ecosystem", "origin": "Open avatar library", "sizeMB": 1.5, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "vrm-devil", "title": "Devil VRM", "creator": "100Avatars / open-source-avatars catalog", "type": ["creature", "demon", "vrm", "humanoid"], "licenseLevel": "green", "license": "CC0 catalog entry", "format": "vrm", "modelUrl": "https://arweave.net/gfVzs1oH_aPaHVxpQK86HT_rqzyrFPOUKUrDJ30yprs", "sourceUrl": "https://github.com/ToxSam/open-source-avatars", "summary": "A CC0 demonic avatar for horns, digitigrade or exaggerated anatomy, tail balance, and organic armor inspiration.", "bits": ["horns", "demon anatomy", "tail", "organic armor", "avatar rig"], "glyph": "DV", "language": "VRM / Japanese avatar ecosystem", "origin": "Open avatar library", "sizeMB": 9.04, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "vrm-bullidan", "title": "Bullidan VRM", "creator": "100Avatars / open-source-avatars catalog", "type": ["creature", "brute", "vrm", "humanoid"], "licenseLevel": "green", "license": "CC0 catalog entry", "format": "vrm", "modelUrl": "https://arweave.net/uMDSdp_ENC77sR802M7hTFtigxLs0dRuzmkKlLEAa9U", "sourceUrl": "https://github.com/ToxSam/open-source-avatars", "summary": "A broad creature avatar useful for brute proportions, neck compression, shoulder width, and heavy organic silhouettes.", "bits": ["brute proportions", "wide shoulders", "compressed neck", "heavy hands", "organic mass"], "glyph": "BU", "language": "VRM / Japanese avatar ecosystem", "origin": "Open avatar library", "sizeMB": 2.41, "preview": "live3d", "batch": "new", "forceMaterial": false},
+  {"id": "pm-exoviid", "title": "Exoviid", "creator": "Polygonal Mind / Decimated", "type": ["creature", "sci-fi", "armored", "animated"], "licenseLevel": "green", "license": "CC0", "format": "glb", "sourceUrl": "https://github.com/ToxSam/cc0-models-Polygonal-Mind", "summary": "A striking CC0 sci-fi creature/character with a much less generic silhouette than most free robot packs.", "bits": ["alien armor", "unusual limbs", "animated character", "nonhuman silhouette", "surface detail"], "glyph": "EX", "language": "International", "origin": "CC0 character library", "sizeMB": null, "preview": "live3d", "batch": "new", "forceMaterial": false, "available": false, "unavailableReason": "The cataloged binary is no longer present in the current upstream repository tree.", "warning": "Source-only entry: the previously cataloged binary has been removed upstream, so this card no longer attempts a known-broken 404 URL."},
+  {"id": "pm-vguy", "title": "Vguy", "creator": "Polygonal Mind / Decimated", "type": ["humanoid", "sci-fi", "armored", "avatar"], "licenseLevel": "green", "license": "CC0", "format": "glb", "sourceUrl": "https://github.com/ToxSam/cc0-models-Polygonal-Mind", "summary": "A CC0 humanoid character with stylized hard-surface and costume elements, useful as a bridge between armor and avatar design.", "bits": ["stylized armor", "avatar proportion", "costume/hard-surface mix", "head design", "humanoid rig"], "glyph": "VG", "language": "International", "origin": "CC0 character library", "sizeMB": null, "preview": "live3d", "batch": "new", "forceMaterial": false, "available": false, "unavailableReason": "The cataloged binary is no longer present in the current upstream repository tree.", "warning": "Source-only entry: the previously cataloged binary has been removed upstream, so this card no longer attempts a known-broken 404 URL."}
+];
+const STORAGE_KEY="robotCreatureReferenceHangarV1";
+const $=id=>document.getElementById(id);
+const els={grid:$("grid"),search:$("search"),type:$("typeFilter"),format:$("formatFilter"),origin:$("originFilter"),batch:$("batchFilter"),license:$("licenseFilter"),decision:$("decisionFilter"),summary:$("summary")};
+let reviewState=loadReview(),visibleItems=[],activeItem=null,activeIndex=-1,loadToken=0;
+let renderer,scene,camera,controls,clock,currentGroup=null,skeletonHelper=null,animationEntries=[],mixers=[],initialCamera=null;
+let ktx2Loader=null,localObjectUrls=[];
+
+function esc(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function attr(v=""){return esc(v).replace(/`/g,"&#096;")}
+function loadReview(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")||{}}catch{return{}}}
+function saveReview(){localStorage.setItem(STORAGE_KEY,JSON.stringify(reviewState))}
+function decision(id){return reviewState[id]?.decision||""}
+function note(id){return reviewState[id]?.note||""}
+function setDecision(id,value){reviewState[id]??={};reviewState[id].decision=decision(id)===value?"":value;saveReview();render()}
+function setNote(id,value){reviewState[id]??={};reviewState[id].note=value;saveReview()}
+window.setDecision=setDecision;window.setNote=setNote;window.inspectModel=inspectModel;
+
+function populate(select,values,label){select.innerHTML=`<option value="all">All ${label}</option>`+[...values].sort().map(v=>`<option value="${attr(v)}">${esc(v)}</option>`).join("")}
+populate(els.type,new Set(CATALOG.flatMap(x=>x.type)),"types");
+populate(els.format,new Set(CATALOG.map(x=>x.format.toUpperCase())),"formats");
+populate(els.origin,new Set(CATALOG.map(x=>x.origin)),"origins");
+
+function filtered(){
+ const q=els.search.value.trim().toLowerCase(),f=els.format.value.toLowerCase(),d=els.decision.value;
+ return CATALOG.filter(x=>{
+  const hay=[x.title,x.creator,x.summary,x.license,x.language,x.origin,...x.type,...x.bits].join(" ").toLowerCase();
+  const dx=decision(x.id);
+  const reusable=x.licenseLevel==="green"||x.licenseLevel==="blue";
+  const license=els.license.value;
+  return(!q||hay.includes(q))&&(els.type.value==="all"||x.type.includes(els.type.value))&&
+   (els.format.value==="all"||x.format===f)&&(els.origin.value==="all"||x.origin===els.origin.value)&&
+   (els.batch.value==="all"||x.batch===els.batch.value)&&
+   (license==="all"||(license==="reusable")===reusable)&&
+   (d==="all"||(d==="unreviewed"?!dx:dx===d));
+ })
+}
+function card(x){
+ const d=decision(x.id),canInspect=x.available!==false;
+ const size=!canInspect?"no current file":x.sizeMB?`${x.sizeMB.toFixed(2)} MB`:"size unknown";
+ const inspectAttrs=canInspect?`onclick="inspectModel('${attr(x.id)}')"`:`disabled title="${attr(x.unavailableReason||"No current model endpoint is available.")}"`;
+ return `<article class="card" data-decision="${attr(d)}">
+ <div class="visual"><div class="visualmeta"><span class="mini">${esc(x.format.toUpperCase())}</span><span class="mini">${esc(size)}</span><span class="mini">${canInspect?(x.batch==="new"?"NEW":"ORIGINAL"):"SOURCE ONLY"}</span></div><div class="glyph">${esc(x.glyph||x.title.slice(0,2).toUpperCase())}</div>
+ <button class="inspect" type="button" ${inspectAttrs}>${canInspect?"Inspect in Three.js":"Source only"}</button></div>
+ <div class="cardbody"><div class="badges"><span class="badge ${attr(x.licenseLevel)}">${esc(x.license)}</span>${x.type.slice(0,3).map(t=>`<span class="badge">${esc(t)}</span>`).join("")}</div>
+ <h2>${esc(x.title)}</h2><div class="creator">${esc(x.creator)} · ${esc(x.language)}</div><p class="desc">${esc(x.summary)}</p>
+ ${x.warning?`<p class="warning">${esc(x.warning)}</p>`:""}<div class="bits">${x.bits.map(b=>`<span class="bit">${esc(b)}</span>`).join("")}</div>
+ <div class="links"><a class="source" href="${attr(x.sourceUrl)}" target="_blank" rel="noopener">Source ↗</a></div>
+ <div class="review"><div class="decisions">
+ <button class="decision keep ${d==="keep"?"active":""}" onclick="setDecision('${attr(x.id)}','keep')">Keep</button>
+ <button class="decision maybe ${d==="maybe"?"active":""}" onclick="setDecision('${attr(x.id)}','maybe')">Maybe</button>
+ <button class="decision skip ${d==="skip"?"active":""}" onclick="setDecision('${attr(x.id)}','skip')">Skip</button></div>
+ <textarea placeholder="What would you use as a design reference?" oninput="setNote('${attr(x.id)}',this.value)">${esc(note(x.id))}</textarea></div></div></article>`
+}
+function render(){
+ visibleItems=filtered();els.grid.innerHTML=visibleItems.length?visibleItems.map(card).join(""):'<div class="empty">No models match those filters.</div>';
+ const counts={keep:0,maybe:0,skip:0};CATALOG.forEach(x=>{if(counts[decision(x.id)]!==undefined)counts[decision(x.id)]++});
+ const newer=CATALOG.filter(x=>x.batch==="new").length,loadable=CATALOG.filter(x=>x.available!==false).length;
+ els.summary.innerHTML=`Showing <strong>${visibleItems.length}</strong> of <strong>${CATALOG.length}</strong> catalog entries · <strong>${loadable}</strong> loadable · <strong>${CATALOG.length-loadable}</strong> source-only · <strong>${newer}</strong> new · Keep <strong>${counts.keep}</strong> · Maybe <strong>${counts.maybe}</strong> · Skip <strong>${counts.skip}</strong>`;
+}
+[els.type,els.format,els.origin,els.batch,els.license,els.decision].forEach(e=>e.addEventListener("change",render));els.search.addEventListener("input",render);
+
+function initViewer(){
+ if(renderer)return;
+ const host=$("canvasHost");renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
+ renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+ ktx2Loader=new KTX2Loader().setTranscoderPath("https://unpkg.com/three@0.179.1/examples/jsm/libs/basis/").detectSupport(renderer);
+ host.appendChild(renderer.domElement);scene=new THREE.Scene();clock=new THREE.Clock();
+ camera=new THREE.PerspectiveCamera(42,1,.01,1000);camera.position.set(4,3,6);
+ controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.autoRotate=true;controls.autoRotateSpeed=1.1;controls.target.set(0,1.5,0);
+ scene.add(new THREE.HemisphereLight(0xcfe4ff,0x1d2632,2.1));
+ const key=new THREE.DirectionalLight(0xffffff,3.2);key.position.set(5,8,5);key.castShadow=true;scene.add(key);
+ const fill=new THREE.DirectionalLight(0x82bfff,1.5);fill.position.set(-5,3,-3);scene.add(fill);
+ const floor=new THREE.Mesh(new THREE.CircleGeometry(7,80),new THREE.MeshStandardMaterial({color:0x111a27,roughness:.9,metalness:.05}));
+ floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.name="__floor";scene.add(floor);
+ const grid=new THREE.GridHelper(12,24,0x35516e,0x223248);grid.name="__grid";scene.add(grid);
+ const resize=()=>{const r=host.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()};
+ new ResizeObserver(resize).observe(host);resize();
+ renderer.setAnimationLoop(()=>{const dt=clock.getDelta();mixers.forEach(m=>m.update(dt));controls.update();renderer.render(scene,camera)});
+}
+function disposeCurrent(){
+ mixers.forEach(m=>m.stopAllAction());mixers=[];animationEntries=[];$("animationSelect").innerHTML="<option>No animations</option>";
+ if(skeletonHelper){scene.remove(skeletonHelper);skeletonHelper.geometry?.dispose();skeletonHelper=null}
+ if(currentGroup){scene.remove(currentGroup);currentGroup.traverse(o=>{if(o.isMesh){o.geometry?.dispose();const mats=Array.isArray(o.material)?o.material:[o.material];mats.filter(Boolean).forEach(m=>m.dispose?.())}});currentGroup=null}
+}
+function managerFor(item){
+ const manager=new THREE.LoadingManager();
+ if(item.localMap)manager.setURLModifier(url=>{const name=decodeURIComponent(url.split("/").pop().split("?")[0]);return item.localMap[name]||url});
+ return manager;
+}
+
+function uniqueUrls(values=[]){return [...new Set(values.filter(Boolean))]}
+function githubMirror(url){
+ try{
+  const parsed=new URL(url);
+  if(parsed.hostname!=="raw.githubusercontent.com")return "";
+  const parts=parsed.pathname.split("/").filter(Boolean);if(parts.length<4)return "";
+  const [owner,repo,ref,...path]=parts;
+  return `https://cdn.jsdelivr.net/gh/${owner}/${repo}@${ref}/${path.join("/")}`;
+ }catch{return ""}
+}
+function candidateUrls(file,item){
+ const configured=Array.isArray(file.urls)?file.urls:file.url?[file.url]:Array.isArray(item.modelUrls)?item.modelUrls:item.modelUrl?[item.modelUrl]:[];
+ return uniqueUrls(configured.flatMap(url=>[url,githubMirror(url)]));
+}
+async function loadWithFallback(file,item,onProgress){
+ const urls=candidateUrls(file,item);if(!urls.length)throw new Error(item.unavailableReason||"No model file is currently available.");
+ let lastError;
+ for(let attempt=0;attempt<urls.length;attempt++){
+  const url=urls[attempt];
+  try{
+   const manager=managerFor(item);
+   const result=await loadOne({...file,url},item,manager,e=>onProgress?.(e,attempt,urls.length,url));
+   return {...result,loadedUrl:url};
+  }catch(error){lastError=error;console.warn(`Model endpoint ${attempt+1}/${urls.length} failed`,url,error)}
+ }
+ throw lastError||new Error("Every model endpoint failed.");
+}
+const MITSUBISHI_PARTS=[
+ {name:"BaseFrame",pos:[0,0,0]},
+ {name:"RotatingColumn",pos:[0,0,-555]},
+ {name:"Motor_RotatingColumn",pos:[0,0,-555]},
+ {name:"LinkArm",pos:[-500,0,-1045]},
+ {name:"Motor_LinkArm",pos:[0,0,-555]},
+ {name:"Arm",pos:[-500,0,-2345]},
+ {name:"Motor_Arm",pos:[-500,0,-2345]},
+ {name:"Wrist",pos:[-1550,0,-2345]},
+ {name:"Motor_Wrist",pos:[-1550,0,-2345]},
+ {name:"EndEffector",pos:[-1850,0,-2145]},
+ {name:"Motor_EndEffector",pos:[-1550,0,-2345]}
+];
+async function loadMitsubishiAssembly(item,onProgress){
+ const group=new THREE.Group(),loaded=[];
+ for(let i=0;i<MITSUBISHI_PARTS.length;i++){
+  const part=MITSUBISHI_PARTS[i],url=`${item.componentBaseRaw}${part.name}.obj`;
+  const result=await loadWithFallback({url,format:"obj"},item,(e,attempt,total)=>onProgress?.(e,i,MITSUBISHI_PARTS.length,part.name,attempt,total));
+  result.root.scale.setScalar(.1);result.root.position.set(part.pos[0]*.1,part.pos[1]*.1,part.pos[2]*.1);
+  group.add(result.root);loaded.push(result);
+ }
+ group.rotation.x=-Math.PI/2;
+ return {root:group,animations:[],loaded,loadedUrl:item.fileLinkUrl||item.componentBaseSource};
+}
+function loadOne(file,item,manager,onProgress){
+ return new Promise((resolve,reject)=>{
+  const format=(file.format||item.format).toLowerCase(),url=file.url;
+  const ok=obj=>resolve(obj),bad=e=>reject(e);
+  if(["glb","gltf","vrm"].includes(format)){
+   const loader=new GLTFLoader(manager),draco=new DRACOLoader(manager);draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+   loader.setDRACOLoader(draco);if(ktx2Loader)loader.setKTX2Loader(ktx2Loader);loader.setMeshoptDecoder(MeshoptDecoder);loader.load(url,g=>ok({root:g.scene,animations:g.animations||[]}),onProgress,bad);
+  }else if(format==="fbx"){new FBXLoader(manager).load(url,o=>ok({root:o,animations:o.animations||[]}),onProgress,bad)}
+  else if(format==="obj"){new OBJLoader(manager).load(url,o=>ok({root:o,animations:[]}),onProgress,bad)}
+  else reject(new Error(`Unsupported format: ${format}`));
+ })
+}
+function filesFor(item){if(item.files)return item.files;if(item.modelUrls)return item.modelUrls.map(u=>({url:u,format:item.format}));return[{url:item.modelUrl,format:item.format}]}
+function neutralize(root,item){
+ root.traverse(o=>{if(!o.isMesh)return;o.castShadow=o.receiveShadow=true;
+  if(item.forceMaterial){const hasVertex=!!o.geometry?.getAttribute("color");o.material=new THREE.MeshStandardMaterial({color:0x9fb7cc,roughness:.62,metalness:.28,vertexColors:hasVertex,side:THREE.DoubleSide})}
+  else{const mats=Array.isArray(o.material)?o.material:[o.material];mats.filter(Boolean).forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true})}
+ })
+}
+function normalize(group){
+ let box=new THREE.Box3().setFromObject(group);if(box.isEmpty())throw new Error("The file loaded, but no visible geometry was found.");
+ const size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z);if(!isFinite(max)||max<=0)throw new Error("The geometry has invalid bounds.");
+ group.scale.setScalar(3.6/max);group.updateMatrixWorld(true);box.setFromObject(group);
+ const center=box.getCenter(new THREE.Vector3());group.position.x-=center.x;group.position.z-=center.z;group.position.y-=box.min.y;group.updateMatrixWorld(true);
+ box.setFromObject(group);return box
+}
+function statsFor(group){
+ let meshes=0,verts=0,tris=0,bones=0;group.traverse(o=>{if(o.isBone)bones++;if(o.isMesh){meshes++;const p=o.geometry?.getAttribute("position");if(p)verts+=p.count;tris+=o.geometry?.index?o.geometry.index.count/3:(p?p.count/3:0)}});
+ return{meshes,verts:Math.round(verts),tris:Math.round(tris),bones}
+}
+function frame(box){
+ const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()),radius=Math.max(size.x,size.y,size.z);
+ controls.target.copy(center);camera.near=Math.max(.001,radius/1000);camera.far=Math.max(100,radius*100);camera.position.set(center.x+radius*.9,center.y+radius*.58,center.z+radius*1.45);
+ camera.updateProjectionMatrix();controls.update();initialCamera={pos:camera.position.clone(),target:controls.target.clone()}
+}
+function setLoad(message,error=false){const e=$("loadState");e.textContent=message;e.classList.toggle("error",error);e.hidden=false}
+function updateViewerInfo(item){
+ $("viewerTitle").textContent=item.title;$("viewerCreator").textContent=`${item.creator} · ${item.language}`;
+ $("viewerBadges").innerHTML=`<span class="badge ${item.licenseLevel}">${esc(item.license)}</span><span class="badge">${item.format.toUpperCase()}</span><span class="badge">${esc(item.origin)}</span>`;
+ $("viewerDesc").textContent=item.summary;$("viewerBits").innerHTML=item.bits.map(b=>`<span class="bit">${esc(b)}</span>`).join("");
+ const w=$("viewerWarning");w.hidden=!item.warning;w.textContent=item.warning||"";
+ $("sourceLink").hidden=!item.sourceUrl;$("sourceLink").href=item.sourceUrl||"#";
+ const direct=item.fileLinkUrl||item.modelUrl||item.modelUrls?.[0]||"";
+ $("fileLink").hidden=!direct;$("fileLink").href=direct||"#";$("fileLink").textContent=item.fileLinkText||"Open direct model file ↗";
+ ["meshStat","triStat","vertStat","boneStat"].forEach(id=>$(id).textContent="—")
+}
+async function loadItem(item){
+ initViewer();disposeCurrent();activeItem=item;updateViewerInfo(item);const token=++loadToken;setLoad(`Loading ${item.title}…`);
+ $("wireBtn").classList.remove("active");$("bonesBtn").classList.remove("active");
+ if(item.available===false){setLoad(item.unavailableReason||"No current model file is available for this entry.",true);return}
+ try{
+  const group=new THREE.Group(),loaded=[];
+  if(item.assembly==="mitsubishiRobot"){
+   const assembled=await loadMitsubishiAssembly(item,(e,index,count,name,attempt,total)=>{
+    if(token!==loadToken)return;const pct=e.total?Math.round(e.loaded/e.total*100):null,endpoint=total>1?` · endpoint ${attempt+1}/${total}`:"";
+    setLoad(`Loading component ${index+1}/${count}: ${name}${pct!==null?` · ${pct}%`:""}${endpoint}…`)
+   });
+   if(token!==loadToken)return;neutralize(assembled.root,item);group.add(assembled.root);loaded.push(assembled);
+  }else{
+   const files=filesFor(item);
+   for(let i=0;i<files.length;i++){
+    const result=await loadWithFallback(files[i],item,(e,attempt,total)=>{
+     if(token!==loadToken)return;const pct=e.total?Math.round(e.loaded/e.total*100):null,endpoint=total>1?` · endpoint ${attempt+1}/${total}`:"";
+     setLoad(`Loading file ${i+1}/${files.length}${pct!==null?` · ${pct}%`:""}${endpoint}…`)
+    });
+    if(token!==loadToken)return;neutralize(result.root,item);group.add(result.root);loaded.push(result);
+   }
+  }
+  const box=normalize(group);scene.add(group);currentGroup=group;
+  loaded.forEach(result=>{if(result.animations?.length){const mixer=new THREE.AnimationMixer(result.root);mixers.push(mixer);result.animations.forEach(clip=>animationEntries.push({clip,mixer}))}});
+  const s=statsFor(group);$("meshStat").textContent=s.meshes.toLocaleString();$("triStat").textContent=s.tris.toLocaleString();$("vertStat").textContent=s.verts.toLocaleString();$("boneStat").textContent=s.bones.toLocaleString();
+  const sel=$("animationSelect");sel.innerHTML=animationEntries.length?'<option value="-1">Rest pose / stop</option>'+animationEntries.map((a,i)=>`<option value="${i}">${esc(a.clip.name||`Animation ${i+1}`)}</option>`).join(""):"<option>No animations</option>";
+  if(animationEntries.length){sel.value="0";playAnimation(0)}
+  if(!item.fileLinkUrl&&loaded.length===1&&loaded[0].loadedUrl){$("fileLink").hidden=false;$("fileLink").href=loaded[0].loadedUrl}
+  frame(box);setLoad(`${item.title} loaded · drag to orbit · pinch or wheel to zoom`);
+  setTimeout(()=>{if(token===loadToken)$("loadState").hidden=true},2600);
+ }catch(err){console.error(err);const detail=err?.message&&err.message!=="[object ProgressEvent]"?err.message:"Every configured endpoint failed or the host blocked the request.";setLoad(`Could not load this remote model: ${detail} The source link is still available.`,true)}
+}
+function playAnimation(index){mixers.forEach(m=>m.stopAllAction());const entry=animationEntries[index];if(entry)entry.mixer.clipAction(entry.clip).reset().play()}
+$("animationSelect").addEventListener("change",e=>playAnimation(Number(e.target.value)));
+function openDialog(){const d=$("viewerDialog");if(typeof d.showModal==="function"&&!d.open)d.showModal();else d.setAttribute("open","")}
+function inspectModel(id){visibleItems=filtered();const item=CATALOG.find(x=>x.id===id);if(!item||item.available===false)return;activeIndex=visibleItems.findIndex(x=>x.id===id);openDialog();loadItem(item)}
+function navigate(delta){
+ visibleItems=filtered();
+ const loadable=visibleItems.filter(x=>x.available!==false);if(!loadable.length)return;
+ let currentPos=loadable.findIndex(x=>x.id===activeItem?.id);
+ if(currentPos<0)currentPos=delta>0?-1:0;
+ const nextPos=(currentPos+delta+loadable.length)%loadable.length,item=loadable[nextPos];
+ activeIndex=visibleItems.findIndex(x=>x.id===item.id);loadItem(item)
+}
+$("prevBtn").addEventListener("click",()=>navigate(-1));
+$("nextBtn").addEventListener("click",()=>navigate(1));
+$("closeBtn").addEventListener("click",()=>{const d=$("viewerDialog");if(typeof d.close==="function"&&d.open)d.close();else d.removeAttribute("open");loadToken++});
+$("resetBtn").addEventListener("click",()=>{if(initialCamera&&camera&&controls){camera.position.copy(initialCamera.pos);controls.target.copy(initialCamera.target);controls.update()}});
+$("rotateBtn").addEventListener("click",e=>{if(!controls)return;controls.autoRotate=!controls.autoRotate;e.currentTarget.classList.toggle("active",controls.autoRotate)});
+$("wireBtn").addEventListener("click",e=>{if(!currentGroup)return;const on=!e.currentTarget.classList.contains("active");e.currentTarget.classList.toggle("active",on);currentGroup.traverse(o=>{if(o.isMesh){(Array.isArray(o.material)?o.material:[o.material]).filter(Boolean).forEach(m=>{if("wireframe" in m){m.wireframe=on;m.needsUpdate=true}})}})});
+$("bonesBtn").addEventListener("click",e=>{if(!currentGroup)return;if(!skeletonHelper){skeletonHelper=new THREE.SkeletonHelper(currentGroup);scene.add(skeletonHelper)}const show=!e.currentTarget.classList.contains("active");skeletonHelper.visible=show;e.currentTarget.classList.toggle("active",show)});
+
+function clearLocalUrls(){localObjectUrls.forEach(URL.revokeObjectURL);localObjectUrls=[]}
+function handleLocal(files){
+ clearLocalUrls();const list=[...files],map={};for(const f of list){const u=URL.createObjectURL(f);localObjectUrls.push(u);map[f.name]=u}
+ const modelFiles=list.filter(f=>/\.(glb|gltf|vrm|fbx|obj)$/i.test(f.name));if(!modelFiles.length){alert("No supported 3D file was selected.");return}
+ const primary=modelFiles[0],format=primary.name.split(".").pop().toLowerCase();
+ const filesToLoad=(format==="obj"&&modelFiles.every(f=>/\.obj$/i.test(f.name)))?modelFiles.map(f=>({url:map[f.name],format:"obj"})):[{url:map[primary.name],format}];
+ const item={id:"__local",title:filesToLoad.length>1?`Local OBJ group (${filesToLoad.length} files)`:primary.name,creator:"Local file",type:["local"],licenseLevel:"blue",license:"Local inspection",format,files:filesToLoad,
+  modelUrl:map[primary.name],sourceUrl:"",summary:"Loaded from your device. Nothing is uploaded by this HTML viewer.",bits:["local model","private browser session"],glyph:"LO",language:"Local",origin:"Your device",localMap:map,forceMaterial:format==="obj"};
+ activeIndex=-1;openDialog();loadItem(item)
+}
+$("localInput").addEventListener("change",e=>{if(e.target.files.length)handleLocal(e.target.files);e.target.value=""});
+["localBtn","localInsideBtn"].forEach(id=>$(id).addEventListener("click",()=>$("localInput").click()));
+$("randomBtn").addEventListener("click",()=>{visibleItems=filtered();const pool=visibleItems.filter(x=>x.available!==false);if(!pool.length)return;const item=pool[Math.floor(Math.random()*pool.length)];inspectModel(item.id)});
+$("exportBtn").addEventListener("click",()=>{const reviewed=CATALOG.filter(x=>decision(x.id)||note(x.id)).map(x=>({id:x.id,title:x.title,decision:decision(x.id)||"unreviewed",note:note(x.id),source:x.sourceUrl,model:x.modelUrl,format:x.format,license:x.license}));
+ const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),catalogCount:CATALOG.length,reviewed},null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="threejs-reference-hangar-notes.json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)});
+$("clearBtn").addEventListener("click",()=>{if(confirm("Clear every decision and note saved by this hangar?")){reviewState={};saveReview();render()}});
+$("viewerDialog").addEventListener("keydown",e=>{if(e.key==="ArrowLeft")navigate(-1);if(e.key==="ArrowRight")navigate(1)});
+els.search.value=new URLSearchParams(location.search).get("q")??"";
+render();
+</script>
+</body>
+</html>
