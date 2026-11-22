@@ -1758,6 +1758,142 @@
       "collection": "Flying Shape Lab"
     },
     {
+      "id": "drum-walker",
+      "version": "v3",
+      "name": "Drum Walker \u00b7 Solid v3",
+      "type": "other",
+      "asset": null,
+      "originalFile": "drum-walker-solid-v3.glb",
+      "parts": [
+        {
+          "asset": "assets/drum-walker-v3.glb.part1",
+          "bytes": 4044160,
+          "sha256": "1b3970d3f595dbbb03bbcadac6a931d11691238f5235b9fb5babeba7d1d4cd88"
+        },
+        {
+          "asset": "assets/drum-walker-v3.glb.part2",
+          "bytes": 4044160,
+          "sha256": "2ff46d322babc07e0f7cfdecc51b28df16bf226bbe5304a31c84122065879df6"
+        },
+        {
+          "asset": "assets/drum-walker-v3.glb.part3",
+          "bytes": 4044160,
+          "sha256": "45f48bb4a014a283d1d80eb122aa3636eea63b05f7338ecccb8e327df212ee26"
+        }
+      ],
+      "sha256": "2b9001dae766f119f2b59028848df46b540048590369ee497363349cd3aef603",
+      "bytes": 12132480,
+      "triangles": 40300,
+      "meshes": 268,
+      "textures": 28,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Stand"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Bore rush"
+        },
+        {
+          "name": "Shield check"
+        },
+        {
+          "name": "Pile driver"
+        },
+        {
+          "name": "Gravel blast"
+        }
+      ],
+      "credits": "Original authored Solid v3 Drum Walker model with generated panel illustrations, solid mechanical geometry and six authored clips. Exact native binary only; no puppet reference imagery, viewer, or source bundle.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "warden-target-pistol-prop",
+      "version": "v2",
+      "name": "Warden Target Pistol \u00b7 Cosmetic Prop",
+      "type": "gear",
+      "asset": null,
+      "originalFile": "Warden_Target_Pistol.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-target-pistol-prop-v2.glb.part1",
+          "bytes": 2847102,
+          "sha256": "f4bf5801aa9120771a6a91c0510ac31dc94819569ea4e722e9dbe2519f8fddda"
+        },
+        {
+          "asset": "assets/warden-target-pistol-prop-v2.glb.part2",
+          "bytes": 2847103,
+          "sha256": "8d755bd77a4573e85d8a960c1a1f1f52b5c2450c2ec734df56283d0d6b5a946a"
+        },
+        {
+          "asset": "assets/warden-target-pistol-prop-v2.glb.part3",
+          "bytes": 2847103,
+          "sha256": "71282f531c7f7d7f846fe5b22060aadbd5f74a174da9100fb5410f03907cc6a6"
+        }
+      ],
+      "bytes": 8541308,
+      "sha256": "01c4fbc62dba9d5d80f24af2151d89d7f330e9ce5898f66e28e8be2af2017dec",
+      "triangles": 2796,
+      "meshes": 1,
+      "textures": 3,
+      "rig": "unrigged",
+      "clips": [],
+      "collection": "Warden Expansion Studies",
+      "credits": "Exact authored cosmetic game-art exterior with image-generated paint and derived surface maps, modeled from a supplied reference. Static prop only; no working components, source imagery, or application code included.",
+      "license": "No verified public reuse license."
+    },
+    {
+      "id": "horizontal-pods-a-assembly",
+      "version": "v1",
+      "name": "Horizontal Pods A \u00b7 Detailed Assembly",
+      "asset": "assets/horizontal-pods-a-assembly-v1.glb",
+      "sha256": "cdeaf8b1a70baa6665ed8e1dc144cdc8b82970b1c42834f3152a02cb727d4cf4",
+      "bytes": 2108396,
+      "triangles": 47468,
+      "meshes": 16,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored for Warden using supplied concept art as a visual guide. Earlier horizontal assembly, before the vertical hip-mounted studies. Original model geometry and materials only; no reference imagery included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Horizontal Pod Studies"
+    },
+    {
+      "id": "horizontal-pods-a-assembly-lod",
+      "version": "v1",
+      "name": "Horizontal Pods A \u00b7 Lightweight Assembly",
+      "asset": "assets/horizontal-pods-a-assembly-lod-v1.glb",
+      "sha256": "9bc9d15fd77018893ac16bf8b6895a9ff9da733e217fa9cc6e9d7585683efaa4",
+      "bytes": 1143584,
+      "triangles": 21880,
+      "meshes": 16,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored for Warden using supplied concept art as a visual guide. Earlier horizontal assembly, before the vertical hip-mounted studies. Original model geometry and materials only; no reference imagery included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Horizontal Pod Studies"
+    },
+    {
+      "id": "horizontal-pods-b-assembly",
+      "version": "v1",
+      "name": "Horizontal Pods B \u00b7 Twin Assembly",
+      "asset": "assets/horizontal-pods-b-assembly-v1.glb",
+      "sha256": "c29833a95981e95542e04a78e4b4775c0a9df8a2abef353acedaac01b35b0044",
+      "bytes": 1329656,
+      "triangles": 18640,
+      "meshes": 4,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored for Warden using supplied concept art as a visual guide. Earlier horizontal assembly, before the vertical hip-mounted studies. Original model geometry and materials only; no reference imagery included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Horizontal Pod Studies"
+    },
+    {
       "id": "flyer-shape-sensor-dart",
       "version": "v1",
       "name": "Sensor Dart \u00b7 Flying Shape Lab",
