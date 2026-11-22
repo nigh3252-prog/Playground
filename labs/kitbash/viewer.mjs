@@ -320,6 +320,8 @@ async function start() {
   catch (error) {
     console.warn('Using rendered previews because WebGL is unavailable.', error.message);
     stillMode = true;
+    stage.classList.add('still-mode'); $('.motion-bar').hidden = true;
+    $('#view').hidden = true; $('#still-note').hidden = false;
     await openRequestedStudy();
     return;
   }
