@@ -1,0 +1,3567 @@
+{
+  "schema_version": 1,
+  "name": "Bellows",
+  "status": "throwaway 3D kitbash spike; no game integration",
+  "coordinate_system": "glTF 2.0: +X right, +Y up, +Z forward; metres",
+  "dimensions_m": {
+    "width": 19.840707778930664,
+    "height": 12.0,
+    "depth": 14.040849208831787
+  },
+  "neutral_bounds_gltf": {
+    "min": [
+      -9.957433700561523,
+      9.305192938625424e-17,
+      -6.504321098327637
+    ],
+    "max": [
+      9.88327407836914,
+      12.0,
+      7.53652811050415
+    ]
+  },
+  "target_height_m": 12,
+  "warden_reference_height_m": 4,
+  "height_multiplier_vs_warden": 3,
+  "neutral_frame": 1,
+  "rest_pose_export": "Captured neutral local TRS restored after Blender 4.3 NLA export; animation buffers are unchanged.",
+  "global_scale": 0.942655179223354,
+  "global_translation_gltf": [
+    0,
+    -9.305192938625424e-17,
+    0
+  ],
+  "triangles": 6684,
+  "mesh_parts": 93,
+  "rig": "named rigid-part pivots with NLA-exported glTF animation",
+  "clips": [
+    {
+      "name": "Idle",
+      "seconds": 4.0,
+      "purpose": "slow body inflation and jaw breathing"
+    },
+    {
+      "name": "Charge_Jump_Demo",
+      "seconds": 6.3,
+      "purpose": "inhale, mouth open, crouch, hop, heavy landing"
+    }
+  ],
+  "source_mesh_policy": "Every exported model triangle is copied from a selected donor mesh. No primitive mesh is added to the model; donor topology is retained and affine-transformed. Render floor/lights/camera are excluded.",
+  "source_files": [
+    {
+      "path": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "sha256": "f88d4c6ba56fae2134254d027a38fb3cab713ee82ad0cb3711892ecd4bf0b157"
+    },
+    {
+      "path": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "sha256": "78c98a318028c5d02f0426c6eca8e352fe2d38cd37abd6d9f369c24358a228e5"
+    },
+    {
+      "path": "models/assets/flying-furnace-beetle-v1.glb",
+      "sha256": "166ff687c9b3dd9e3fffc00b4f6d6d93f14c11e478f712c9b7b1effd8c8289fd"
+    }
+  ],
+  "donor_credits": [
+    {
+      "id": "flying-furnace-beetle",
+      "version": "v1",
+      "name": "Furnace Beetle",
+      "asset": "assets/flying-furnace-beetle-v1.glb",
+      "sha256": "166ff687c9b3dd9e3fffc00b4f6d6d93f14c11e478f712c9b7b1effd8c8289fd",
+      "bytes": 323892,
+      "triangles": 4380,
+      "meshes": 62,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original authored low-poly concept model from the Flying Monsters 3D Gallery. Supplied reference sheets are not shipped.",
+      "license": "No public reuse license specified.",
+      "collection": "Flying Monsters 20"
+    },
+    {
+      "id": "shelf-buddies-pond-scum",
+      "version": "v1",
+      "name": "Shelf Buddies: Pond Scum",
+      "type": "creature",
+      "asset": "assets/shelf-buddies-pond-scum-v1.glb",
+      "sha256": "78c98a318028c5d02f0426c6eca8e352fe2d38cd37abd6d9f369c24358a228e5",
+      "bytes": 98076,
+      "triangles": 1196,
+      "meshes": 38,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Original procedural PS1-style character geometry from the Shelf Buddies viewer, exported in the authored default model pose and scale; Lambert materials translated for glTF. Any texture is procedurally painted, not media from the photo. No viewer, staging backdrop, or original reference images included.",
+      "license": "No public reuse license specified.",
+      "collection": "Shelf Buddies"
+    },
+    {
+      "id": "shark-jaw-stalker-standalone",
+      "version": "v1",
+      "name": "Shark-Jaw Stalker \u00b7 Standalone Study",
+      "type": "creature",
+      "asset": "assets/shark-jaw-stalker-standalone-v1.glb",
+      "sha256": "f88d4c6ba56fae2134254d027a38fb3cab713ee82ad0cb3711892ecd4bf0b157",
+      "bytes": 258408,
+      "credits": "Static model-only export of the explicitly delivered Shark-Jaw Stalker standalone study, using its original authored polygon geometry and solid colors. Portable PBR shading in place of the original custom renderer; excludes source reference image, controls and runtime.",
+      "license": "No public reuse license specified.",
+      "triangles": 2642,
+      "meshes": 81,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "collection": "Recovered Model Studies"
+    }
+  ],
+  "license": "Derivative study inherits donor provenance. No public reuse license specified for the donors; no CC0 claim.",
+  "composition": "Shark side-profile upper and lower arches become a broad frontal amphibian maw. Pond Scum head/shoulder/arm/foot meshes become back armor and asymmetric-sized limbs. Furnace Beetle abdomen, mouth, carapace and ports become pressure vessels, throat, knees and ribs.",
+  "limitations": [
+    "Visual study only: rigid part animation, no skinning, foot IK, colliders, gameplay, VFX or damage states.",
+    "A deliberate warm oxide/ivory/cyan material replacement unifies the low-poly donor parts; painted v2 texture donor is not used.",
+    "Donor intersections are intentional assembly joints and armor overlaps.",
+    "Jump demo is an expressive in-place preview, not an authored production locomotion or root-motion system."
+  ],
+  "parts": [
+    {
+      "name": "Pressure_Belly",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 1,
+      "node_name": "body",
+      "mesh_id": 0,
+      "source_world_to_design_matrix_row_major": [
+        [
+          8.378378270402106,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          6.000000220078697,
+          0.0,
+          6.1
+        ],
+        [
+          0.0,
+          0.0,
+          4.636363535873163,
+          -0.736363535873163
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 320,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Frog_Back_Carapace",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 32,
+      "node_name": null,
+      "mesh_id": 27,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.75932339591336,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.473758788375109,
+          0.0,
+          -11.973745818780774
+        ],
+        [
+          0.0,
+          0.0,
+          8.995523659433577,
+          -1.65
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 140,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Belly_Forward_Armour",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 2,
+      "node_name": "furnace_abdomen",
+      "mesh_id": 1,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.915254678030342,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.090909118494712,
+          0.0,
+          5.563636322257932
+        ],
+        [
+          0.0,
+          0.0,
+          4.928571263328201,
+          4.096428566838482
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | aged orange",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 320,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Maw_Ceramic_Arch",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 3,
+      "node_name": null,
+      "mesh_id": 0,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.2947103243589178,
+          0.0,
+          0.0,
+          -0.6061339800251336
+        ],
+        [
+          0.0,
+          2.474744558852997,
+          0.0,
+          1.4339619628984677
+        ],
+        [
+          0.0,
+          0.0,
+          2.7049179693538328,
+          4.65
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 164,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Maw_Orange_Armour",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 4,
+      "node_name": null,
+      "mesh_id": 1,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.2947103243589178,
+          0.0,
+          0.0,
+          -0.6061339800251336
+        ],
+        [
+          0.0,
+          2.474744558852997,
+          0.0,
+          1.4339619628984677
+        ],
+        [
+          0.0,
+          0.0,
+          2.7049179693538328,
+          4.65
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 116,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Lower_Maw_Ceramic_Arch",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 55,
+      "node_name": null,
+      "mesh_id": 26,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.808958008497309,
+          0.0,
+          0.0,
+          1.9421089618097347
+        ],
+        [
+          0.0,
+          2.1700771432142862,
+          0.0,
+          0.5618038915488603
+        ],
+        [
+          0.0,
+          0.0,
+          3.7962961454450403,
+          4.7
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 164,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Lower_Maw_Inner_Trim",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 56,
+      "node_name": null,
+      "mesh_id": 27,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.808958008497309,
+          0.0,
+          0.0,
+          1.9421089618097347
+        ],
+        [
+          0.0,
+          2.1700771432142862,
+          0.0,
+          0.5618038915488603
+        ],
+        [
+          0.0,
+          0.0,
+          3.7962961454450403,
+          4.7
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 76,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Mouth_Dark_Cavity",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 38,
+      "node_name": "open_mouth",
+      "mesh_id": 37,
+      "source_world_to_design_matrix_row_major": [
+        [
+          20.554812945602993,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          10.477940894052665,
+          0.0,
+          6.690882389219253
+        ],
+        [
+          0.0,
+          0.0,
+          7.785467808848506,
+          -5.5635993577547405
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | mouth recess",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 320,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Throat_Pressure_Casing",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          18.82352921377004,
+          0.0,
+          0.0,
+          9.788235112622537
+        ],
+        [
+          0.0,
+          4.0624999394640335,
+          0.0,
+          5.3718750030267985
+        ],
+        [
+          0.0,
+          0.0,
+          3.095238082060198,
+          5.923333333333334
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Throat_Cyan_Diaphragm",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          30.624994980172147,
+          0.0,
+          0.0,
+          18.681246463303104
+        ],
+        [
+          0.0,
+          5.131579011761251,
+          0.0,
+          5.773157870589531
+        ],
+        [
+          0.0,
+          0.0,
+          3.500000208616269,
+          6.595000062584881
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Tongue_Pressure_Ramp",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 40,
+      "node_name": "lower_jaw",
+      "mesh_id": 39,
+      "source_world_to_design_matrix_row_major": [
+        [
+          11.029411165307994,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          4.364013801964499,
+          0.0,
+          4.8417359298061795
+        ],
+        [
+          0.0,
+          0.0,
+          7.391224759797861,
+          -4.035750807903356
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | cooled throat",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 48,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Tooth_00",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 93,
+      "node_name": null,
+      "mesh_id": 45,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.249999921768905,
+          0.0,
+          0.0,
+          -5.887499988265335
+        ],
+        [
+          0.0,
+          4.470588188270384,
+          0.0,
+          -2.6982746127753607
+        ],
+        [
+          0.0,
+          0.0,
+          5.111110908013811,
+          5.053333382076685
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Tooth_01",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 93,
+      "node_name": null,
+      "mesh_id": 45,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.249999921768905,
+          0.0,
+          0.0,
+          -4.187499988265336
+        ],
+        [
+          0.0,
+          4.470588188270384,
+          0.0,
+          -1.9613246127753605
+        ],
+        [
+          0.0,
+          0.0,
+          5.111110908013811,
+          5.053333382076685
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Tooth_02",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 93,
+      "node_name": null,
+      "mesh_id": 45,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.249999921768905,
+          0.0,
+          0.0,
+          -2.487499988265336
+        ],
+        [
+          0.0,
+          4.470588188270384,
+          0.0,
+          -1.5191546127753606
+        ],
+        [
+          0.0,
+          0.0,
+          5.111110908013811,
+          5.053333382076685
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Tooth_03",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 93,
+      "node_name": null,
+      "mesh_id": 45,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.249999921768905,
+          0.0,
+          0.0,
+          -0.7874999882653358
+        ],
+        [
+          0.0,
+          4.470588188270384,
+          0.0,
+          -1.3717646127753609
+        ],
+        [
+          0.0,
+          0.0,
+          5.111110908013811,
+          5.053333382076685
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Tooth_04",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 93,
+      "node_name": null,
+      "mesh_id": 45,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.249999921768905,
+          0.0,
+          0.0,
+          0.9125000117346641
+        ],
+        [
+          0.0,
+          4.470588188270384,
+          0.0,
+          -1.5191546127753606
+        ],
+        [
+          0.0,
+          0.0,
+          5.111110908013811,
+          5.053333382076685
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Tooth_05",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 93,
+      "node_name": null,
+      "mesh_id": 45,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.249999921768905,
+          0.0,
+          0.0,
+          2.612500011734664
+        ],
+        [
+          0.0,
+          4.470588188270384,
+          0.0,
+          -1.9613246127753605
+        ],
+        [
+          0.0,
+          0.0,
+          5.111110908013811,
+          5.053333382076685
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Upper_Tooth_06",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 93,
+      "node_name": null,
+      "mesh_id": 45,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.249999921768905,
+          0.0,
+          0.0,
+          4.312500011734664
+        ],
+        [
+          0.0,
+          4.470588188270384,
+          0.0,
+          -2.6982746127753607
+        ],
+        [
+          0.0,
+          0.0,
+          5.111110908013811,
+          5.053333382076685
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Lower_Tooth_00",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 74,
+      "node_name": null,
+      "mesh_id": 36,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.555555334797621,
+          0.0,
+          0.0,
+          -0.16666683885785538
+        ],
+        [
+          0.0,
+          4.166666501098216,
+          0.0,
+          -1.6194997764825905
+        ],
+        [
+          0.0,
+          0.0,
+          4.99999980131786,
+          5.360000043710071
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Lower_Tooth_01",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 74,
+      "node_name": null,
+      "mesh_id": 36,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.555555334797621,
+          0.0,
+          0.0,
+          2.0833331611421446
+        ],
+        [
+          0.0,
+          4.166666501098216,
+          0.0,
+          -2.25737477648259
+        ],
+        [
+          0.0,
+          0.0,
+          4.99999980131786,
+          5.360000043710071
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Lower_Tooth_02",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 74,
+      "node_name": null,
+      "mesh_id": 36,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.555555334797621,
+          0.0,
+          0.0,
+          4.333333161142145
+        ],
+        [
+          0.0,
+          4.166666501098216,
+          0.0,
+          -2.4699997764825903
+        ],
+        [
+          0.0,
+          0.0,
+          4.99999980131786,
+          5.360000043710071
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Lower_Tooth_03",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 74,
+      "node_name": null,
+      "mesh_id": 36,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.555555334797621,
+          0.0,
+          0.0,
+          6.583333161142145
+        ],
+        [
+          0.0,
+          4.166666501098216,
+          0.0,
+          -2.25737477648259
+        ],
+        [
+          0.0,
+          0.0,
+          4.99999980131786,
+          5.360000043710071
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Lower_Tooth_04",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 74,
+      "node_name": null,
+      "mesh_id": 36,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.555555334797621,
+          0.0,
+          0.0,
+          8.833333161142145
+        ],
+        [
+          0.0,
+          4.166666501098216,
+          0.0,
+          -1.6194997764825905
+        ],
+        [
+          0.0,
+          0.0,
+          4.99999980131786,
+          5.360000043710071
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | tooth ceramic",
+      "parent": "Bellows_Jaw_Hinge",
+      "triangles": 6,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Jaw_Bearing_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 47,
+      "node_name": null,
+      "mesh_id": 22,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.4677419088137387,
+          0.0,
+          0.0,
+          -1.1056452031624309
+        ],
+        [
+          0.0,
+          3.556921459131017,
+          0.0,
+          -0.7457509826619004
+        ],
+        [
+          0.0,
+          0.0,
+          11.2500002514571,
+          11.075000145845117
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 52,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Jaw_Bearing_Bronze_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 49,
+      "node_name": null,
+      "mesh_id": 23,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.531250101281332,
+          0.0,
+          0.0,
+          0.5640626590116904
+        ],
+        [
+          0.0,
+          4.531250101281332,
+          0.0,
+          -2.470312679267958
+        ],
+        [
+          0.0,
+          0.0,
+          10.368421182738118,
+          10.663684285988108
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 44,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Jaw_Bearing_Cyan_Cap_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.874999200925362,
+          0.0,
+          0.0,
+          -3.5762505629844035
+        ],
+        [
+          0.0,
+          2.0526316047045006,
+          0.0,
+          5.755263148235812
+        ],
+        [
+          0.0,
+          0.0,
+          0.7333333770434087,
+          5.962000013113022
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Turret_L",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 18,
+      "node_name": null,
+      "mesh_id": 15,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.338384963195612,
+          0.0,
+          0.0,
+          -0.3089029797065388
+        ],
+        [
+          0.0,
+          3.284777186419536,
+          0.0,
+          -0.5966622543104698
+        ],
+        [
+          0.0,
+          0.0,
+          4.2682926829268295,
+          3.2
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Socket_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 43,
+      "node_name": "eye_socket",
+      "mesh_id": 42,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.271099593728993,
+          0.0,
+          0.0,
+          -1.8021739640989685
+        ],
+        [
+          0.0,
+          6.504524971961289,
+          0.0,
+          7.997126680605321
+        ],
+        [
+          0.0,
+          0.0,
+          5.252100719325366,
+          -1.9236970593999088
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Cyan_Slit_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 44,
+      "node_name": "eye",
+      "mesh_id": 43,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.19117634873483,
+          0.0,
+          0.0,
+          -1.762500081319525
+        ],
+        [
+          0.0,
+          4.524887318385758,
+          0.0,
+          8.425158300411148
+        ],
+        [
+          0.0,
+          0.0,
+          5.656108194559256,
+          -2.262442805841255
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Heavy_Brow_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 45,
+      "node_name": "angry_brow",
+      "mesh_id": 44,
+      "source_world_to_design_matrix_row_major": [
+        [
+          10.157147700999307,
+          0.6920105369917106,
+          0.0,
+          -2.033176169641518
+        ],
+        [
+          -1.22474213774383,
+          5.739047443750825,
+          0.0,
+          7.880285192990142
+        ],
+        [
+          0.0,
+          0.0,
+          4.978579236525726,
+          -1.6499172913318692
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 36,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Haunch_Underbody_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 1,
+      "node_name": "body",
+      "mesh_id": 0,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.121621568504262,
+          0.0,
+          0.0,
+          -7.1
+        ],
+        [
+          0.0,
+          4.769230944165118,
+          0.0,
+          4.25
+        ],
+        [
+          0.0,
+          0.0,
+          3.272727201792821,
+          -1.8727272017928212
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 320,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Haunch_Armour_L",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 18,
+      "node_name": null,
+      "mesh_id": 15,
+      "source_world_to_design_matrix_row_major": [
+        [
+          7.2153396647809975,
+          0.7177347436883551,
+          -1.0617792135544923,
+          -2.9146876594795446
+        ],
+        [
+          -0.723948739250946,
+          7.153406980560943,
+          0.10653326921913756,
+          -16.999541067729545
+        ],
+        [
+          0.9480504596692667,
+          0.0,
+          8.16224729582295,
+          -1.2559884165318815
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Haunch_Secondary_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.176470523268295,
+          0.0,
+          0.0,
+          -6.088235353670731
+        ],
+        [
+          0.0,
+          4.87499992735684,
+          0.0,
+          4.796250003632158
+        ],
+        [
+          0.0,
+          0.0,
+          12.142857091159236,
+          2.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Knee_Bearing_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 47,
+      "node_name": null,
+      "mesh_id": 22,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.617188703855669e-16,
+          0.0,
+          7.187500160653147,
+          -4.931249906821175
+        ],
+        [
+          0.0,
+          4.384112496138231,
+          0.0,
+          -5.059879118164669
+        ],
+        [
+          -4.274193515514608,
+          0.0,
+          4.4010745328074814e-16,
+          -9.210483819357934
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 52,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Knee_Hub_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 49,
+      "node_name": null,
+      "mesh_id": 23,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.157292599622759e-16,
+          0.0,
+          7.105263247054041,
+          -5.278947316708656
+        ],
+        [
+          0.0,
+          5.156250115251171,
+          0.0,
+          -6.4265627039945725
+        ],
+        [
+          -5.156250115251171,
+          0.0,
+          4.3507189463020305e-16,
+          -10.595312680944337
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 44,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Folded_Shin_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 107,
+      "node_name": null,
+      "mesh_id": 51,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.21860777153204,
+          0.0,
+          0.0,
+          -2.313417932016761
+        ],
+        [
+          0.0,
+          3.2816379372352236,
+          0.0,
+          -1.646381122137629
+        ],
+        [
+          0.0,
+          0.0,
+          5.0,
+          -7.600000000000001
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Foot_L",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 6,
+      "node_name": null,
+      "mesh_id": 4,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.312638379085262,
+          0.0,
+          0.0,
+          -4.081818264575043
+        ],
+        [
+          0.0,
+          4.442508691887526,
+          0.0,
+          2.1713121300948046e-09
+        ],
+        [
+          0.0,
+          0.0,
+          6.6752247307463435,
+          -4.23526317025816
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 12,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Toe_L_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.148173583166014,
+          0.0,
+          0.0,
+          -2.8756298434520806
+        ],
+        [
+          0.0,
+          4.0726011036848835,
+          0.0,
+          3.715621267781141
+        ],
+        [
+          0.0,
+          0.0,
+          7.028319677300886,
+          -8.317144330679083
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Toe_L_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.148173583166014,
+          0.0,
+          0.0,
+          -1.57562984345208
+        ],
+        [
+          0.0,
+          4.0726011036848835,
+          0.0,
+          3.715621267781141
+        ],
+        [
+          0.0,
+          0.0,
+          7.028319677300886,
+          -8.317144330679083
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Toe_L_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.148173583166014,
+          0.0,
+          0.0,
+          -0.2756298434520801
+        ],
+        [
+          0.0,
+          4.0726011036848835,
+          0.0,
+          3.715621267781141
+        ],
+        [
+          0.0,
+          0.0,
+          7.028319677300886,
+          -8.317144330679083
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Rear_Haunch_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Shoulder_L",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 25,
+      "node_name": null,
+      "mesh_id": 21,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.338384963195612,
+          0.0,
+          0.0,
+          -9.991097020293463
+        ],
+        [
+          0.0,
+          4.21443110710431,
+          0.0,
+          -7.441000628171922
+        ],
+        [
+          0.0,
+          0.0,
+          4.085365853658537,
+          2.65
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Arm_L",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 19,
+      "node_name": null,
+      "mesh_id": 16,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.8403359742245327,
+          1.6865408637721382,
+          0.0,
+          -8.604482446680723
+        ],
+        [
+          -0.8786188778979124,
+          5.45212811592732,
+          0.0,
+          -10.86162797627412
+        ],
+        [
+          0.0,
+          0.0,
+          3.980352145358052,
+          3.4
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 32,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Arm_Shield_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 143,
+      "node_name": null,
+      "mesh_id": 65,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.3728996901045765,
+          1.1479122590302713,
+          0.0,
+          -9.70592514997912
+        ],
+        [
+          -1.1165846081781767,
+          4.495588713130199,
+          0.0,
+          -0.7176688908718862
+        ],
+        [
+          0.0,
+          0.0,
+          2.4074074074074074,
+          1.9148148148148145
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Wrist_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 115,
+      "node_name": null,
+      "mesh_id": 54,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.808192990894797,
+          0.0,
+          0.0,
+          -0.6789582257843305
+        ],
+        [
+          0.0,
+          3.7414246627911782,
+          0.0,
+          0.6256166370008379
+        ],
+        [
+          0.0,
+          0.0,
+          2.2115384615384612,
+          3.5403846153846152
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Palm_L",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 6,
+      "node_name": null,
+      "mesh_id": 4,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.984478784313947,
+          0.0,
+          0.0,
+          -4.636363698431282
+        ],
+        [
+          0.0,
+          4.355400678321104,
+          0.0,
+          2.1287373530576303e-09
+        ],
+        [
+          0.0,
+          0.0,
+          4.236200309896717,
+          4.874736834259244
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 12,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Claw_L_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.42668497987953,
+          0.0,
+          0.0,
+          -3.866453487285497
+        ],
+        [
+          0.0,
+          3.3938342530707364,
+          0.0,
+          3.0846843898176175
+        ],
+        [
+          0.0,
+          0.0,
+          6.052164166564652,
+          0.29912571524856535
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Claw_L_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.42668497987953,
+          0.0,
+          0.0,
+          -2.9464534872854973
+        ],
+        [
+          0.0,
+          3.3938342530707364,
+          0.0,
+          3.0846843898176175
+        ],
+        [
+          0.0,
+          0.0,
+          6.052164166564652,
+          0.29912571524856535
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Claw_L_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.42668497987953,
+          0.0,
+          0.0,
+          -2.0264534872854973
+        ],
+        [
+          0.0,
+          3.3938342530707364,
+          0.0,
+          3.0846843898176175
+        ],
+        [
+          0.0,
+          0.0,
+          6.052164166564652,
+          0.29912571524856535
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Front_Limb_L",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Vessel_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 2,
+      "node_name": "furnace_abdomen",
+      "mesh_id": 1,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.0932204764795515,
+          0.0,
+          0.0,
+          -4.3
+        ],
+        [
+          0.0,
+          4.727272752887947,
+          0.0,
+          9.95909087066808
+        ],
+        [
+          0.0,
+          0.0,
+          3.1785713220015204,
+          -0.7660714315317039
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Pressure_Tank_L",
+      "triangles": 320,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Vessel_Crown_L",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          10.147058716797913,
+          0.0,
+          0.0,
+          0.9764704903980865
+        ],
+        [
+          0.0,
+          1.3749999795109038,
+          0.0,
+          11.661250001024454
+        ],
+        [
+          0.0,
+          0.0,
+          9.166666627639817,
+          0.05833333333333357
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Pressure_Tank_L",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Valve_Stem_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 102,
+      "node_name": null,
+      "mesh_id": 49,
+      "source_world_to_design_matrix_row_major": [
+        [
+          1.7,
+          0.0,
+          0.0,
+          -2.311
+        ],
+        [
+          0.0,
+          6.666666401757144,
+          0.0,
+          3.3200003496805692
+        ],
+        [
+          0.0,
+          0.0,
+          1.7,
+          -4.272
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Pressure_Tank_L",
+      "triangles": 44,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Valve_Handle_L",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 47,
+      "node_name": null,
+      "mesh_id": 22,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.9032257841231304,
+          0.0,
+          0.0,
+          0.2580644810733146
+        ],
+        [
+          0.0,
+          1.8234303403576744e-16,
+          -2.6250000586733235,
+          10.997499965969471
+        ],
+        [
+          0.0,
+          2.977887733225968,
+          1.60734895980795e-16,
+          -8.420861287809963
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Pressure_Tank_L",
+      "triangles": 52,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Rib_L_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.676470549564461,
+          0.0,
+          0.0,
+          -3.948235329565911
+        ],
+        [
+          0.0,
+          3.249999951571227,
+          0.0,
+          7.197500002421438
+        ],
+        [
+          0.0,
+          0.0,
+          4.404761886008743,
+          -2.258333333333333
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Port_L_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.812499538995401,
+          0.0,
+          0.0,
+          -4.684375324798695
+        ],
+        [
+          0.0,
+          3.947368470585578,
+          0.0,
+          7.494736823530408
+        ],
+        [
+          0.0,
+          0.0,
+          3.6666668852170443,
+          -2.5099999344348864
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Rib_L_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.676470549564461,
+          0.0,
+          0.0,
+          -3.948235329565911
+        ],
+        [
+          0.0,
+          3.249999951571227,
+          0.0,
+          7.197500002421438
+        ],
+        [
+          0.0,
+          0.0,
+          4.404761886008743,
+          -0.008333333333333082
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Port_L_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.812499538995401,
+          0.0,
+          0.0,
+          -4.684375324798695
+        ],
+        [
+          0.0,
+          3.947368470585578,
+          0.0,
+          7.494736823530408
+        ],
+        [
+          0.0,
+          0.0,
+          3.6666668852170443,
+          -0.25999993443488667
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Rib_L_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.676470549564461,
+          0.0,
+          0.0,
+          -3.948235329565911
+        ],
+        [
+          0.0,
+          3.249999951571227,
+          0.0,
+          7.197500002421438
+        ],
+        [
+          0.0,
+          0.0,
+          4.404761886008743,
+          2.241666666666667
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Port_L_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.812499538995401,
+          0.0,
+          0.0,
+          -4.684375324798695
+        ],
+        [
+          0.0,
+          3.947368470585578,
+          0.0,
+          7.494736823530408
+        ],
+        [
+          0.0,
+          0.0,
+          3.6666668852170443,
+          1.990000065565113
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Jaw_Bearing_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 47,
+      "node_name": null,
+      "mesh_id": 22,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.4677419088137387,
+          0.0,
+          0.0,
+          11.99435479683757
+        ],
+        [
+          0.0,
+          3.556921459131017,
+          0.0,
+          -0.7457509826619004
+        ],
+        [
+          0.0,
+          0.0,
+          11.2500002514571,
+          11.075000145845117
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 52,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Jaw_Bearing_Bronze_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 49,
+      "node_name": null,
+      "mesh_id": 23,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.531250101281332,
+          0.0,
+          0.0,
+          13.664062659011691
+        ],
+        [
+          0.0,
+          4.531250101281332,
+          0.0,
+          -2.470312679267958
+        ],
+        [
+          0.0,
+          0.0,
+          10.368421182738118,
+          10.663684285988108
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 44,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Jaw_Bearing_Cyan_Cap_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.874999200925362,
+          0.0,
+          0.0,
+          9.523749437015596
+        ],
+        [
+          0.0,
+          2.0526316047045006,
+          0.0,
+          5.755263148235812
+        ],
+        [
+          0.0,
+          0.0,
+          0.7333333770434087,
+          5.962000013113022
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Turret_R",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 18,
+      "node_name": null,
+      "mesh_id": 15,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.338384963195612,
+          0.0,
+          0.0,
+          8.491097020293463
+        ],
+        [
+          0.0,
+          3.284777186419536,
+          0.0,
+          -0.5966622543104698
+        ],
+        [
+          0.0,
+          0.0,
+          4.2682926829268295,
+          3.2
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Socket_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 43,
+      "node_name": "eye_socket",
+      "mesh_id": 42,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.271099593728993,
+          0.0,
+          0.0,
+          7.097826035901032
+        ],
+        [
+          0.0,
+          6.504524971961289,
+          0.0,
+          7.997126680605321
+        ],
+        [
+          0.0,
+          0.0,
+          5.252100719325366,
+          -1.9236970593999088
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Cyan_Slit_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 44,
+      "node_name": "eye",
+      "mesh_id": 43,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.19117634873483,
+          0.0,
+          0.0,
+          7.137499918680476
+        ],
+        [
+          0.0,
+          4.524887318385758,
+          0.0,
+          8.425158300411148
+        ],
+        [
+          0.0,
+          0.0,
+          5.656108194559256,
+          -2.262442805841255
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Eye_Heavy_Brow_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 45,
+      "node_name": "angry_brow",
+      "mesh_id": 44,
+      "source_world_to_design_matrix_row_major": [
+        [
+          10.157147700999307,
+          -0.6920105369917106,
+          0.0,
+          7.325184804499977
+        ],
+        [
+          1.22474213774383,
+          5.739047443750825,
+          0.0,
+          8.51839208669788
+        ],
+        [
+          0.0,
+          0.0,
+          4.978579236525726,
+          -1.6499172913318692
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 36,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Haunch_Underbody_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 1,
+      "node_name": "body",
+      "mesh_id": 0,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.121621568504262,
+          0.0,
+          0.0,
+          7.1
+        ],
+        [
+          0.0,
+          4.769230944165118,
+          0.0,
+          4.25
+        ],
+        [
+          0.0,
+          0.0,
+          3.272727201792821,
+          -1.8727272017928212
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 320,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Haunch_Armour_R",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 18,
+      "node_name": null,
+      "mesh_id": 15,
+      "source_world_to_design_matrix_row_major": [
+        [
+          7.2153396647809975,
+          -0.7177347436883551,
+          1.0617792135544923,
+          16.522818267256504
+        ],
+        [
+          0.723948739250946,
+          7.153406980560943,
+          0.10653326921913756,
+          -15.63417374550226
+        ],
+        [
+          -0.9480504596692667,
+          0.0,
+          8.16224729582295,
+          -3.0440115834681185
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Haunch_Secondary_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.176470523268295,
+          0.0,
+          0.0,
+          12.51176464632927
+        ],
+        [
+          0.0,
+          4.87499992735684,
+          0.0,
+          4.796250003632158
+        ],
+        [
+          0.0,
+          0.0,
+          12.142857091159236,
+          2.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Knee_Bearing_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 47,
+      "node_name": null,
+      "mesh_id": 22,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.617188703855669e-16,
+          0.0,
+          7.187500160653147,
+          13.268750093178824
+        ],
+        [
+          0.0,
+          4.384112496138231,
+          0.0,
+          -5.059879118164669
+        ],
+        [
+          -4.274193515514608,
+          0.0,
+          4.4010745328074814e-16,
+          -9.210483819357934
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 52,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Knee_Hub_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 49,
+      "node_name": null,
+      "mesh_id": 23,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.157292599622759e-16,
+          0.0,
+          7.105263247054041,
+          13.521052683291344
+        ],
+        [
+          0.0,
+          5.156250115251171,
+          0.0,
+          -6.4265627039945725
+        ],
+        [
+          -5.156250115251171,
+          0.0,
+          4.3507189463020305e-16,
+          -10.595312680944337
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 44,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Folded_Shin_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 107,
+      "node_name": null,
+      "mesh_id": 51,
+      "source_world_to_design_matrix_row_major": [
+        [
+          5.21860777153204,
+          0.0,
+          0.0,
+          13.486582067983239
+        ],
+        [
+          0.0,
+          3.2816379372352236,
+          0.0,
+          -1.646381122137629
+        ],
+        [
+          0.0,
+          0.0,
+          5.0,
+          -7.600000000000001
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Foot_R",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 6,
+      "node_name": null,
+      "mesh_id": 4,
+      "source_world_to_design_matrix_row_major": [
+        [
+          9.312638379085262,
+          0.0,
+          0.0,
+          11.718181735424958
+        ],
+        [
+          0.0,
+          4.442508691887526,
+          0.0,
+          2.1713121300948046e-09
+        ],
+        [
+          0.0,
+          0.0,
+          6.6752247307463435,
+          -4.23526317025816
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 12,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Toe_R_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.148173583166014,
+          0.0,
+          0.0,
+          12.924370156547921
+        ],
+        [
+          0.0,
+          4.0726011036848835,
+          0.0,
+          3.715621267781141
+        ],
+        [
+          0.0,
+          0.0,
+          7.028319677300886,
+          -8.317144330679083
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Toe_R_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.148173583166014,
+          0.0,
+          0.0,
+          14.22437015654792
+        ],
+        [
+          0.0,
+          4.0726011036848835,
+          0.0,
+          3.715621267781141
+        ],
+        [
+          0.0,
+          0.0,
+          7.028319677300886,
+          -8.317144330679083
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Rear_Toe_R_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.148173583166014,
+          0.0,
+          0.0,
+          15.52437015654792
+        ],
+        [
+          0.0,
+          4.0726011036848835,
+          0.0,
+          3.715621267781141
+        ],
+        [
+          0.0,
+          0.0,
+          7.028319677300886,
+          -8.317144330679083
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Rear_Haunch_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Shoulder_R",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 25,
+      "node_name": null,
+      "mesh_id": 21,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.338384963195612,
+          0.0,
+          0.0,
+          1.8089029797065388
+        ],
+        [
+          0.0,
+          4.21443110710431,
+          0.0,
+          -7.441000628171922
+        ],
+        [
+          0.0,
+          0.0,
+          4.085365853658537,
+          2.65
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Arm_R",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 19,
+      "node_name": null,
+      "mesh_id": 16,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.8403359742245327,
+          -1.6865408637721382,
+          0.0,
+          13.415159073046127
+        ],
+        [
+          0.8786188778979124,
+          5.45212811592732,
+          0.0,
+          -9.373511310589572
+        ],
+        [
+          0.0,
+          0.0,
+          3.980352145358052,
+          3.4
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 32,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Arm_Shield_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 143,
+      "node_name": null,
+      "mesh_id": 65,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.3728996901045765,
+          -1.1479122590302713,
+          0.0,
+          6.6453794746318575
+        ],
+        [
+          1.1165846081781767,
+          4.495588713130199,
+          0.0,
+          -1.4991545035997902
+        ],
+        [
+          0.0,
+          0.0,
+          2.4074074074074074,
+          1.9148148148148145
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Wrist_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 115,
+      "node_name": null,
+      "mesh_id": 54,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.808192990894797,
+          0.0,
+          0.0,
+          14.321041774215669
+        ],
+        [
+          0.0,
+          3.7414246627911782,
+          0.0,
+          0.6256166370008379
+        ],
+        [
+          0.0,
+          0.0,
+          2.2115384615384612,
+          3.5403846153846152
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | fired oxide",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Palm_R",
+      "source": "models/assets/shelf-buddies-pond-scum-v1.glb",
+      "node_id": 6,
+      "node_name": null,
+      "mesh_id": 4,
+      "source_world_to_design_matrix_row_major": [
+        [
+          6.984478784313947,
+          0.0,
+          0.0,
+          10.363636301568718
+        ],
+        [
+          0.0,
+          4.355400678321104,
+          0.0,
+          2.1287373530576303e-09
+        ],
+        [
+          0.0,
+          0.0,
+          4.236200309896717,
+          4.874736834259244
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 12,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Claw_R_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.42668497987953,
+          0.0,
+          0.0,
+          11.133546512714503
+        ],
+        [
+          0.0,
+          3.3938342530707364,
+          0.0,
+          3.0846843898176175
+        ],
+        [
+          0.0,
+          0.0,
+          6.052164166564652,
+          0.29912571524856535
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Claw_R_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.42668497987953,
+          0.0,
+          0.0,
+          12.053546512714503
+        ],
+        [
+          0.0,
+          3.3938342530707364,
+          0.0,
+          3.0846843898176175
+        ],
+        [
+          0.0,
+          0.0,
+          6.052164166564652,
+          0.29912571524856535
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Front_Claw_R_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 15,
+      "node_name": "claw",
+      "mesh_id": 14,
+      "source_world_to_design_matrix_row_major": [
+        [
+          4.42668497987953,
+          0.0,
+          0.0,
+          12.973546512714503
+        ],
+        [
+          0.0,
+          3.3938342530707364,
+          0.0,
+          3.0846843898176175
+        ],
+        [
+          0.0,
+          0.0,
+          6.052164166564652,
+          0.29912571524856535
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | ceramic ivory",
+      "parent": "Bellows_Front_Limb_R",
+      "triangles": 28,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Vessel_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 2,
+      "node_name": "furnace_abdomen",
+      "mesh_id": 1,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.0932204764795515,
+          0.0,
+          0.0,
+          4.3
+        ],
+        [
+          0.0,
+          4.727272752887947,
+          0.0,
+          9.95909087066808
+        ],
+        [
+          0.0,
+          0.0,
+          3.1785713220015204,
+          -0.7660714315317039
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | heat orange",
+      "parent": "Bellows_Pressure_Tank_R",
+      "triangles": 320,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Vessel_Crown_R",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          10.147058716797913,
+          0.0,
+          0.0,
+          9.576470490398087
+        ],
+        [
+          0.0,
+          1.3749999795109038,
+          0.0,
+          11.661250001024454
+        ],
+        [
+          0.0,
+          0.0,
+          9.166666627639817,
+          0.05833333333333357
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Pressure_Tank_R",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Valve_Stem_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 102,
+      "node_name": null,
+      "mesh_id": 49,
+      "source_world_to_design_matrix_row_major": [
+        [
+          1.7,
+          0.0,
+          0.0,
+          6.289
+        ],
+        [
+          0.0,
+          6.666666401757144,
+          0.0,
+          3.3200003496805692
+        ],
+        [
+          0.0,
+          0.0,
+          1.7,
+          -4.272
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Pressure_Tank_R",
+      "triangles": 44,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Valve_Handle_R",
+      "source": "models/assets/shark-jaw-stalker-standalone-v1.glb",
+      "node_id": 47,
+      "node_name": null,
+      "mesh_id": 22,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.9032257841231304,
+          0.0,
+          0.0,
+          8.858064481073313
+        ],
+        [
+          0.0,
+          1.8234303403576744e-16,
+          -2.6250000586733235,
+          10.997499965969471
+        ],
+        [
+          0.0,
+          2.977887733225968,
+          1.60734895980795e-16,
+          -8.420861287809963
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | valve bronze",
+      "parent": "Bellows_Pressure_Tank_R",
+      "triangles": 52,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Rib_R_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.676470549564461,
+          0.0,
+          0.0,
+          7.77176467043409
+        ],
+        [
+          0.0,
+          3.249999951571227,
+          0.0,
+          7.197500002421438
+        ],
+        [
+          0.0,
+          0.0,
+          4.404761886008743,
+          -2.258333333333333
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Port_R_0",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.812499538995401,
+          0.0,
+          0.0,
+          8.115624675201305
+        ],
+        [
+          0.0,
+          3.947368470585578,
+          0.0,
+          7.494736823530408
+        ],
+        [
+          0.0,
+          0.0,
+          3.6666668852170443,
+          -2.5099999344348864
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Rib_R_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.676470549564461,
+          0.0,
+          0.0,
+          7.77176467043409
+        ],
+        [
+          0.0,
+          3.249999951571227,
+          0.0,
+          7.197500002421438
+        ],
+        [
+          0.0,
+          0.0,
+          4.404761886008743,
+          -0.008333333333333082
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Port_R_1",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.812499538995401,
+          0.0,
+          0.0,
+          8.115624675201305
+        ],
+        [
+          0.0,
+          3.947368470585578,
+          0.0,
+          7.494736823530408
+        ],
+        [
+          0.0,
+          0.0,
+          3.6666668852170443,
+          -0.25999993443488667
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Rib_R_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 3,
+      "node_name": "abdomen_carapace",
+      "mesh_id": 2,
+      "source_world_to_design_matrix_row_major": [
+        [
+          3.676470549564461,
+          0.0,
+          0.0,
+          7.77176467043409
+        ],
+        [
+          0.0,
+          3.249999951571227,
+          0.0,
+          7.197500002421438
+        ],
+        [
+          0.0,
+          0.0,
+          4.404761886008743,
+          2.241666666666667
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | sooted iron",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    },
+    {
+      "name": "Pressure_Port_R_2",
+      "source": "models/assets/flying-furnace-beetle-v1.glb",
+      "node_id": 4,
+      "node_name": "furnace_port",
+      "mesh_id": 3,
+      "source_world_to_design_matrix_row_major": [
+        [
+          2.812499538995401,
+          0.0,
+          0.0,
+          8.115624675201305
+        ],
+        [
+          0.0,
+          3.947368470585578,
+          0.0,
+          7.494736823530408
+        ],
+        [
+          0.0,
+          0.0,
+          3.6666668852170443,
+          1.990000065565113
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "material": "Bellows | pressure cyan",
+      "parent": "Bellows_Breathing_Body",
+      "triangles": 80,
+      "topology": "original donor triangles; affine transform only"
+    }
+  ]
+}

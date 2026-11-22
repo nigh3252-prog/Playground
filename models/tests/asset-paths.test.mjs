@@ -138,3 +138,18 @@ for (const count of [2, 4, 5, 6, 7]) {
     assert.equal(next,count);
   });
 }
+
+test('kitbash studies resolve only the three canonical lab GLBs', () => {
+  for (const sourceId of ['bellows','brood-loom','shutter-wraith']) {
+    const asset = `../labs/kitbash/${sourceId}/${sourceId}.glb`;
+    const study = {id:`warden-kitbash-${sourceId}`,version:'v1',sourceCollection:'kitbash',sourceId,asset};
+    assert.equal(assetURL(study,page).pathname,asset.slice(2));
+    for (const invalid of [
+      {...study,asset:asset+'?x=1'},
+      {...study,asset:asset.replace('kitbash/','kitbash/../kitbash/')},
+      {...study,sourceId:'other-study',id:'warden-kitbash-other-study',asset:'../labs/kitbash/other-study/other-study.glb'},
+      {...study,sourceCollection:null},
+      {...study,version:'v2'},
+    ]) assert.throws(()=>assetURL(invalid,page), /Invalid asset location/);
+  }
+});

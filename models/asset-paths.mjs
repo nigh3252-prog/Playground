@@ -1,6 +1,8 @@
 const slug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const version = /^v[1-9][0-9]*[a-z]?$/;
 
+const kitbashStudies = new Set(['bellows','brood-loom','shutter-wraith']);
+
 export function assetURL(entry, pageURL) {
   const {id, version:revision, asset, sourceCollection, sourceId} = entry;
   if (typeof id !== "string" || typeof revision !== "string" || !slug.test(id) || !version.test(revision)) throw Error('Invalid asset location');
@@ -10,6 +12,11 @@ export function assetURL(entry, pageURL) {
       throw Error('Invalid asset location');
     }
     expected = `../armory/models/${sourceId}.glb`;
+  } else if (sourceCollection === 'kitbash') {
+    if (entry.parts != null || !kitbashStudies.has(sourceId) || id !== `warden-kitbash-${sourceId}` || revision !== 'v1') {
+      throw Error('Invalid asset location');
+    }
+    expected = `../labs/kitbash/${sourceId}/${sourceId}.glb`;
   } else {
     if (sourceCollection != null || id.startsWith('armory-')) throw Error('Invalid asset location');
     expected = `assets/${id}-${revision}.glb`;

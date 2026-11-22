@@ -1,0 +1,111 @@
+{
+  "file": "bellows.glb",
+  "sha256": "9fca32200e22cf8b8b78763bcb60e690a6c1c8c2a4f94a7a72e355f4af8f9e87",
+  "bytes": 609112,
+  "gltf_version": "2.0",
+  "self_contained": true,
+  "bounds_gltf_m": {
+    "min": [
+      -9.957436062354796,
+      -5.843409701846561e-07,
+      -6.504322312942175
+    ],
+    "max": [
+      9.883275987714502,
+      12.000004404175197,
+      7.53652976658401
+    ]
+  },
+  "dimensions_m": {
+    "width": 19.8407120500693,
+    "height": 12.000004988516167,
+    "depth": 14.040852079526186
+  },
+  "triangles": 6684,
+  "mesh_nodes": 93,
+  "donor_attributed_mesh_nodes": 93,
+  "clips": [
+    {
+      "name": "Charge_Jump_Demo",
+      "start_s": 0.0,
+      "end_s": 6.300000190734863,
+      "duration_s": 6.300000190734863,
+      "varying_channels": [
+        {
+          "node": "Bellows_Root",
+          "property": "translation"
+        },
+        {
+          "node": "Bellows_Breathing_Body",
+          "property": "translation"
+        },
+        {
+          "node": "Bellows_Breathing_Body",
+          "property": "scale"
+        },
+        {
+          "node": "Bellows_Jaw_Hinge",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Pressure_Tank_L",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Pressure_Tank_R",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Front_Limb_L",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Front_Limb_R",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Rear_Haunch_L",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Rear_Haunch_R",
+          "property": "rotation"
+        }
+      ],
+      "neutral_start_bounds_match": true,
+      "sampled_ground_min_m": -5.843409701846561e-07,
+      "sampled_highest_point_m": 15.452210897841375
+    },
+    {
+      "name": "Idle",
+      "start_s": 0.0,
+      "end_s": 4.0,
+      "duration_s": 4.0,
+      "varying_channels": [
+        {
+          "node": "Bellows_Breathing_Body",
+          "property": "translation"
+        },
+        {
+          "node": "Bellows_Breathing_Body",
+          "property": "scale"
+        },
+        {
+          "node": "Bellows_Jaw_Hinge",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Pressure_Tank_L",
+          "property": "rotation"
+        },
+        {
+          "node": "Bellows_Pressure_Tank_R",
+          "property": "rotation"
+        }
+      ],
+      "neutral_start_bounds_match": true,
+      "sampled_ground_min_m": -5.843409701846561e-07,
+      "sampled_highest_point_m": 12.237962391310008
+    }
+  ]
+}

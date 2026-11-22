@@ -1,0 +1,51 @@
+{
+  "validation": "Independent Blender import of exported GLB",
+  "neutral_dimensions_m": {
+    "width": 23.075965881347656,
+    "height": 12.000000550411642,
+    "depth": 17.105335235595703
+  },
+  "ground_min_blender_z_m": -5.504116415977478e-07,
+  "mesh_count": 129,
+  "triangles": 13352,
+  "native_animation_tracks": {
+    "Brood_Capsule_2L_Suspension": [
+      "brood_open",
+      "idle"
+    ],
+    "Brood_Capsule_1R_Suspension": [
+      "brood_open",
+      "idle"
+    ],
+    "Brood_Capsule_3R_Suspension": [
+      "brood_open",
+      "idle"
+    ],
+    "Brood_Capsule_2R_Suspension": [
+      "brood_open",
+      "idle"
+    ],
+    "Brood_Capsule_3L_Suspension": [
+      "brood_open",
+      "idle"
+    ],
+    "Carapace_L_Hinge": [
+      "brood_open"
+    ],
+    "Carapace_R_Hinge": [
+      "brood_open"
+    ],
+    "Head_Six_Eye_Gimbal": [
+      "idle"
+    ],
+    "Abdomen_Breath": [
+      "idle"
+    ],
+    "Brood_Capsule_1L_Suspension": [
+      "brood_open",
+      "idle"
+    ]
+  },
+  "peak_frame": 40,
+  "fps": 30
+}

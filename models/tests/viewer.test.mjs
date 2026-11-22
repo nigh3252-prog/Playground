@@ -11,7 +11,8 @@ const root = new URL('../../', import.meta.url);
 const port = Number(process.env.PORT || 17861);
 const origin = `http://127.0.0.1:${port}`;
 const bench = `${origin}/models/`;
-test('native review bench switches, animates, recovers and fits phones', {timeout:300000}, async () => {
+// The full catalog sweep can take more than five minutes on hosted runners.
+test('native review bench switches, animates, recovers and fits phones', {timeout:600000}, async () => {
   const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url)));
   const server = spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1'], {cwd:root, stdio:'ignore'});
   let browser;
@@ -174,7 +175,12 @@ test('native review bench switches, animates, recovers and fits phones', {timeou
     }
     await page.getByRole('button',{name:'Next model'}).click();
     await ready('dot');
-    assert(glbURLs.every(url => url.origin === origin && /^\/(?:models\/assets|armory\/models)\/[a-z0-9-]+\.glb$/.test(url.pathname)));
+    const kitbash = catalog.models.filter(model => model.sourceCollection === 'kitbash');
+    const studyPaths = new Set(kitbash.map(entry => new URL(entry.asset,bench).pathname));
+    assert.deepEqual(studyPaths,new Set(['bellows','brood-loom','shutter-wraith'].map(id=>`/labs/kitbash/${id}/${id}.glb`)));
+    assert(glbURLs.every(url => url.origin === origin &&
+      (studyPaths.has(url.pathname) || /^\/(?:models\/assets|armory\/models)\/[a-z0-9-]+\.glb$/.test(url.pathname))));
+    for (const path of studyPaths) assert(glbURLs.some(url=>url.pathname===path),'bench requested canonical study');
     assert.deepEqual(new Set(armory.map(entry=>new URL(entry.asset,bench).pathname)),new Set(
       glbURLs.filter(url=>url.pathname.startsWith('/armory/')).map(url=>url.pathname)));
     glbURLs.length = 0;

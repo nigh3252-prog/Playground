@@ -1,0 +1,175 @@
+{
+  "source": "Vercel runtime public/models/machines/nightmare.glb",
+  "method": "Three GLTFLoader + MeshoptDecoder, source bind/neutral skin pose, precise per-vertex Box3, runtime scale0.22, world unit10m; materials replaced for geometry-only measurement",
+  "animations": [],
+  "raw_size": [
+    7.706762929198412,
+    10.228283641440832,
+    25.12961526046084
+  ],
+  "bounds_m": {
+    "min": [
+      -8.483236489730707,
+      -0.026505247589314603,
+      -27.596884196891395
+    ],
+    "max": [
+      8.471641954505799,
+      22.47571876358052,
+      27.68826937612245
+    ],
+    "size": [
+      16.954878444236506,
+      22.502224011169837,
+      55.285153573013844
+    ]
+  },
+  "bones": [
+    {
+      "name": "CTRL_root",
+      "position_m": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "CTRL_pelvis",
+      "position_m": [
+        0,
+        10.031999518685815,
+        0.3520003890295743
+      ]
+    },
+    {
+      "name": "CTRL_chest",
+      "position_m": [
+        0,
+        13.969998946800397,
+        10.66999990314584
+      ]
+    },
+    {
+      "name": "CTRL_head",
+      "position_m": [
+        0,
+        13.73082022382016,
+        21.17986939682438
+      ]
+    }
+  ],
+  "ratio_12m_to_neutral_height": 0.5332806212418534,
+  "highest_meshes": [
+    {
+      "name": "Cube005",
+      "parent": "part_launcherR",
+      "visible": true,
+      "top_m": 22.47571876358052,
+      "base_m": 15.284917650398413,
+      "size_m": [
+        2.301268636843078,
+        7.190801113182108,
+        5.900527986327836
+      ]
+    },
+    {
+      "name": "Cube003",
+      "parent": "part_launcherL",
+      "visible": true,
+      "top_m": 22.47571876358038,
+      "base_m": 15.284948435116316,
+      "size_m": [
+        2.301258784824503,
+        7.190770328464067,
+        5.9005027254302655
+      ]
+    },
+    {
+      "name": "Cube003_1",
+      "parent": "part_launcherL",
+      "visible": true,
+      "top_m": 22.44742130550329,
+      "base_m": 14.408852657229739,
+      "size_m": [
+        4.381926005841334,
+        8.038568648273554,
+        6.577873171275684
+      ]
+    },
+    {
+      "name": "Cube005_1",
+      "parent": "part_launcherR",
+      "visible": true,
+      "top_m": 22.447421184357967,
+      "base_m": 14.408818121820286,
+      "size_m": [
+        4.383231019186472,
+        8.038603062537682,
+        6.577901332093184
+      ]
+    },
+    {
+      "name": "Cube003_2",
+      "parent": "part_launcherL",
+      "visible": true,
+      "top_m": 22.34966645304955,
+      "base_m": 14.358045855642814,
+      "size_m": [
+        3.1450375944911717,
+        7.9916205974067385,
+        6.449891487894309
+      ]
+    },
+    {
+      "name": "Cube005_2",
+      "parent": "part_launcherR",
+      "visible": true,
+      "top_m": 22.349665913401687,
+      "base_m": 14.358011102722166,
+      "size_m": [
+        3.1450510588477205,
+        7.991654810679522,
+        6.449919100803887
+      ]
+    },
+    {
+      "name": "Shark_|_continuous_neck_and_tapering_trunk001_33",
+      "parent": "Nightmare",
+      "visible": true,
+      "top_m": 20.12059232810141,
+      "base_m": 0.7293661987615196,
+      "size_m": [
+        14.01911499347516,
+        19.391226129339888,
+        8.776923550781792
+      ]
+    },
+    {
+      "name": "Shark_|_continuous_neck_and_tapering_trunk001_34",
+      "parent": "Nightmare",
+      "visible": true,
+      "top_m": 19.840513737651406,
+      "base_m": 5.106860599937312,
+      "size_m": [
+        11.830790362327301,
+        14.733653137714096,
+        7.167315121731278
+      ]
+    }
+  ],
+  "excluding_launcher_pods": {
+    "excluded_parent_nodes": [
+      "part_launcherL",
+      "part_launcherR"
+    ],
+    "highest_remaining_mesh": "Shark_|_continuous_neck_and_tapering_trunk001_33",
+    "top_m": 20.12059232810141,
+    "base_m": -0.026505247589314603,
+    "neutral_height_m": 20.147097575690722,
+    "ratio_12m_to_neutral_height": 0.5956192923033775
+  },
+  "runtime_source_ref": "nigh3252-prog/warden-playground@48fdcb7bb1adb6183c15e8b9d46d1610d413c223",
+  "runtime_scale_source": "src/bosses/dreadmawModel.mjs: NIGHTMARE_SCALE=.22; src/scale/units.mjs: METERS_PER_UNIT=10",
+  "qualification": "The source GLB has no clips. This is the authored neutral/bind pose at confirmed runtime scale, including skinning. Live procedural pose, generated tendrils, and attack motion were not evaluated.",
+  "source_asset_sha256": "8d3724c9b5cd42bcb488a08acb6bdec0d9eeb677f5e60e29b45e39a5b02ae80e"
+}

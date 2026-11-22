@@ -1,0 +1,4758 @@
+{
+  "format": "playground-kitbash-recipe",
+  "version": 1,
+  "name": "Shutter Wraith",
+  "status": "approved visual spike; gameplay integration not included",
+  "coordinate_system": "GLB: meters, +Y up, +Z forward. Build coordinates: Blender +Z up, -Y forward.",
+  "height_m": 12,
+  "ground_baseline_m": 0,
+  "hover_note": "Neutral exported vertex bounds are Y=0..12m. The lowest trailing tip defines Y=0; the main body and all three sentries are suspended above it. Display stage is 0.45m below this datum.",
+  "native_clips": [
+    {
+      "name": "idle",
+      "seconds": 6,
+      "loop": true
+    },
+    {
+      "name": "attack",
+      "seconds": 3,
+      "loop": false
+    },
+    {
+      "name": "expose",
+      "seconds": 4,
+      "loop": false
+    }
+  ],
+  "source_files": [
+    {
+      "path": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "sha256": "76dfdb3f95cf086aa1e52d950477b723e14f9653d84caba13498af2c8bcb4e74",
+      "bytes": 124364,
+      "parts": []
+    },
+    {
+      "path": "models/assets/stone-wanderer-twin-candle-mask-v1.glb",
+      "sha256": "4da07775648dc76f1a499b6a446f2b2acd28ccdaa48f91747bd89233e560033f",
+      "bytes": 77864,
+      "parts": []
+    },
+    {
+      "path": "models/assets/flying-void-reaper-v1.glb",
+      "sha256": "ba64fc449a88377f4b4c0021b96c6b5aaa0846b628f469dc02f3f41a0a824f8b",
+      "bytes": 220236,
+      "parts": []
+    },
+    {
+      "path": "models/assets/flying-lantern-medusa-v1.glb",
+      "sha256": "d82798afd97b450973e1f5f05cbea7f54c15849d08ec622164225f17ddc0ae08",
+      "bytes": 331828,
+      "parts": []
+    },
+    {
+      "path": "models/assets/warden-linkage-module-v1.glb",
+      "sha256": "b161f4055340f54d615babca9376c9d413255e1975e64b18e49cd1aa55929350",
+      "bytes": 6383752,
+      "parts": [
+        {
+          "path": "models/assets/warden-linkage-module-v1.glb.part1",
+          "sha256": "81fbd2b3fd52b7d721870e32300b12023ea7745d27500b4559a89846a7655048"
+        },
+        {
+          "path": "models/assets/warden-linkage-module-v1.glb.part2",
+          "sha256": "bb5e9ef52ff3c6c88db72e247d6e377f95126b46b3c617da708d25651d1f040e"
+        },
+        {
+          "path": "models/assets/warden-linkage-module-v1.glb.part3",
+          "sha256": "ade282cfa66c853b6d767d001a8468e4c304a3512915efabb2cf41a2663d6bd7"
+        }
+      ]
+    }
+  ],
+  "normalization": {
+    "uniform_scale": 1.039707382668123,
+    "translation_blender": [
+      0.0,
+      0.0,
+      -0.1767503321170807
+    ],
+    "pre_normalization_bounds_blender": {
+      "min": [
+        -5.434027194976807,
+        -1.25,
+        0.1700000762939453
+      ],
+      "max": [
+        5.75,
+        1.9304025173187256,
+        11.711709022521973
+      ]
+    }
+  },
+  "bounds_m_y_up": {
+    "min": [
+      -5.649798393249512,
+      3.2782554626464844e-07,
+      -2.007053852081299
+    ],
+    "max": [
+      5.978317737579346,
+      12.000000953674316,
+      1.299634337425232
+    ]
+  },
+  "triangles": 13785,
+  "mesh_count": 54,
+  "pieces": [
+    {
+      "name": "Cowl \u00b7 cut donor hood",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_0",
+      "source_node_index": 1,
+      "source_mesh_index": 0,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.899999976,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.079999998
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          5.230118752,
+          0.0,
+          0.0,
+          -8.0039e-05
+        ],
+        [
+          0.0,
+          4.54129076,
+          0.0,
+          0.089008637
+        ],
+        [
+          0.0,
+          0.0,
+          4.458332539,
+          -0.333014846
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        0,
+        0,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        4.35,
+        3.3,
+        4.1
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [
+        0,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "solidify_m": 0.065,
+      "material_override": null,
+      "triangles": 40,
+      "export_node_index": 27
+    },
+    {
+      "name": "Cowl \u00b7 dark inside",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_0",
+      "source_node_index": 1,
+      "source_mesh_index": 0,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.899999976,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.079999998
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          4.953583717,
+          0.0,
+          0.0,
+          -7.5807e-05
+        ],
+        [
+          0.0,
+          4.266061306,
+          0.0,
+          0.083614185
+        ],
+        [
+          0.0,
+          0.0,
+          4.306096554,
+          -0.321643591
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        0,
+        0.035,
+        -0.025
+      ],
+      "target_dimensions_blender_before_rotation": [
+        4.12,
+        3.1,
+        3.96
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [
+        0,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 hood shadow",
+      "triangles": 5,
+      "export_node_index": 28
+    },
+    {
+      "name": "Mask \u00b7 suspended reliquary face",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_1",
+      "source_node_index": 2,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          0.699999988,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.649999976,
+          0.0,
+          -0.039999999
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -0.029999999
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          3.311429739,
+          0.0,
+          0.0,
+          0.000294634
+        ],
+        [
+          0.0,
+          1.589435101,
+          0.0,
+          0.063688397
+        ],
+        [
+          0.0,
+          0.0,
+          3.107121944,
+          0.095312849
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        0,
+        -0.91,
+        -0.15
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.22,
+        0.54,
+        1.6
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 pale ceramic",
+      "triangles": 80,
+      "export_node_index": 35
+    },
+    {
+      "name": "Mask \u00b7 left amber optic",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_2",
+      "source_node_index": 3,
+      "source_mesh_index": 2,
+      "source_world_matrix_blender": [
+        [
+          1.399999976,
+          0.0,
+          0.0,
+          -0.079999998
+        ],
+        [
+          0.0,
+          0.600000024,
+          0.0,
+          -0.200000003
+        ],
+        [
+          0.0,
+          0.0,
+          0.800000012,
+          0.039999999
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          2.351140976,
+          0.0,
+          0.0,
+          0.188091278
+        ],
+        [
+          0.0,
+          2.351141453,
+          0.0,
+          0.470228285
+        ],
+        [
+          0.0,
+          0.0,
+          1.763355613,
+          -0.070534222
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        -0.29,
+        -1.2,
+        -0.13
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.28,
+        0.12,
+        0.12
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 20,
+      "export_node_index": 32
+    },
+    {
+      "name": "Mask \u00b7 right amber optic",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_3",
+      "source_node_index": 4,
+      "source_mesh_index": 3,
+      "source_world_matrix_blender": [
+        [
+          1.399999976,
+          0.0,
+          0.0,
+          0.079999998
+        ],
+        [
+          0.0,
+          0.600000024,
+          0.0,
+          -0.200000003
+        ],
+        [
+          0.0,
+          0.0,
+          0.800000012,
+          0.039999999
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          2.351140976,
+          0.0,
+          0.0,
+          -0.188091278
+        ],
+        [
+          0.0,
+          2.351141453,
+          0.0,
+          0.470228285
+        ],
+        [
+          0.0,
+          0.0,
+          1.763355613,
+          -0.070534222
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        0.29,
+        -1.2,
+        -0.13
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.28,
+        0.12,
+        0.12
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 20,
+      "export_node_index": 34
+    },
+    {
+      "name": "Mask \u00b7 narrow silent mouth",
+      "source": "models/assets/stone-wanderer-twin-candle-mask-v1.glb",
+      "source_node_name": "Part_7",
+      "source_node_index": 8,
+      "source_mesh_index": 7,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.219999999
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -0.119999997
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          2.125,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          2.666666508,
+          0.0,
+          0.586666644
+        ],
+        [
+          0.0,
+          0.0,
+          2.642857075,
+          0.317142844
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        0,
+        -1.205,
+        -0.55
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.085,
+        0.08,
+        0.37
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 hood shadow",
+      "triangles": 12,
+      "export_node_index": 33
+    },
+    {
+      "name": "Cowl \u00b7 split bronze crest",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "skeletal_spear_head",
+      "source_node_index": 14,
+      "source_mesh_index": 13,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.788954616,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.050774328,
+          -1.775883198,
+          0.369424194
+        ],
+        [
+          0.0,
+          0.287955433,
+          0.31313622,
+          0.277789652
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        0,
+        0.1,
+        2.02
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.4,
+        0.5,
+        1.1
+      ],
+      "rotation_degrees_baked_xyz": [
+        80,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 24,
+      "export_node_index": 31
+    },
+    {
+      "name": "Cowl \u00b7 inner rim -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "skeletal_spear_head",
+      "source_node_index": 14,
+      "source_mesh_index": 13,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.252261043,
+          0.0,
+          -2.0670228,
+          0.361729324
+        ],
+        [
+          0.0,
+          0.111111097,
+          0.0,
+          0.12833333
+        ],
+        [
+          0.112313859,
+          0.0,
+          4.642609119,
+          -0.812457323
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        -1.34,
+        -0.92,
+        -0.12
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.14,
+        0.19,
+        3.1
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -24,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 24,
+      "export_node_index": 29
+    },
+    {
+      "name": "Cowl \u00b7 inner rim 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "skeletal_spear_head",
+      "source_node_index": 14,
+      "source_mesh_index": 13,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.252261043,
+          0.0,
+          2.0670228,
+          -0.361729324
+        ],
+        [
+          0.0,
+          0.111111097,
+          0.0,
+          0.12833333
+        ],
+        [
+          -0.112313859,
+          0.0,
+          4.642609119,
+          -0.812457323
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Deep_Hood",
+      "translation_blender": [
+        1.34,
+        -0.92,
+        -0.12
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.14,
+        0.19,
+        3.1
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        24,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 24,
+      "export_node_index": 30
+    },
+    {
+      "name": "Frame \u00b7 painted linkage -1",
+      "source": "models/assets/warden-linkage-module-v1.glb",
+      "source_node_name": "Deployment_Mechanism",
+      "source_node_index": 27,
+      "source_mesh_index": 0,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.550000012
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.449999988
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -3.049999952
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.517339587,
+          0.132112637,
+          0.0,
+          0.036489028
+        ],
+        [
+          -0.07270734,
+          0.940030158,
+          0.0,
+          -0.327908337
+        ],
+        [
+          0.0,
+          0.0,
+          2.88521719,
+          0.160907641
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Wraith_Suspended_Frame",
+      "translation_blender": [
+        -1.18,
+        0.55,
+        6.35
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.78,
+        1.0,
+        3.7
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        -8
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": null,
+      "triangles": 1832,
+      "export_node_index": 43
+    },
+    {
+      "name": "Shoulder \u00b7 angular flange -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_crescent_blade",
+      "source_node_index": 7,
+      "source_mesh_index": 6,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.603750229,
+          0.058547355,
+          -0.35927701,
+          4.317798615
+        ],
+        [
+          -0.14030996,
+          0.669199407,
+          0.031432662,
+          -1.183573008
+        ],
+        [
+          0.431365073,
+          0.0,
+          1.34596169,
+          -0.017167091
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Wraith_Suspended_Frame",
+      "translation_blender": [
+        -2.18,
+        0.04,
+        7.93
+      ],
+      "target_dimensions_blender_before_rotation": [
+        2.5,
+        0.88,
+        0.85
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -15,
+        -5
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 24,
+      "export_node_index": 45
+    },
+    {
+      "name": "Frame \u00b7 painted linkage 1",
+      "source": "models/assets/warden-linkage-module-v1.glb",
+      "source_node_name": "Deployment_Mechanism",
+      "source_node_index": 27,
+      "source_mesh_index": 0,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.550000012
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.449999988
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -3.049999952
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.517339587,
+          -0.132112637,
+          0.0,
+          0.125459313
+        ],
+        [
+          0.07270734,
+          0.940030158,
+          0.0,
+          -0.305148005
+        ],
+        [
+          0.0,
+          0.0,
+          2.88521719,
+          0.160907641
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Wraith_Suspended_Frame",
+      "translation_blender": [
+        1.18,
+        0.55,
+        6.35
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.78,
+        1.0,
+        3.7
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        8
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": null,
+      "triangles": 1832,
+      "export_node_index": 44
+    },
+    {
+      "name": "Shoulder \u00b7 angular flange 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_crescent_blade",
+      "source_node_index": 7,
+      "source_mesh_index": 6,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.603750229,
+          -0.058547355,
+          0.35927701,
+          3.861327171
+        ],
+        [
+          0.14030996,
+          0.669199407,
+          0.031432662,
+          -0.467992187
+        ],
+        [
+          -0.431365073,
+          0.0,
+          1.34596169,
+          -2.217128992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Wraith_Suspended_Frame",
+      "translation_blender": [
+        2.18,
+        0.04,
+        7.93
+      ],
+      "target_dimensions_blender_before_rotation": [
+        2.5,
+        0.88,
+        0.85
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        15,
+        5
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 24,
+      "export_node_index": 46
+    },
+    {
+      "name": "Core \u00b7 vertical luminous seed",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "core",
+      "source_node_index": 11,
+      "source_mesh_index": 10,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.649999976,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.579999924,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          3.254716635,
+          -0.390565962
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Exposed_Cyan_Heart",
+      "translation_blender": [
+        0,
+        -0.1,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.65,
+        0.58,
+        3.45
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 cold cyan core",
+      "triangles": 320,
+      "export_node_index": 41
+    },
+    {
+      "name": "Core \u00b7 bronze containment hoop",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "core_corona",
+      "source_node_index": 2,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.651539326,
+          0.0,
+          0.0,
+          -0.002127571
+        ],
+        [
+          0.0,
+          1.285712481,
+          0.0,
+          0.257142514
+        ],
+        [
+          0.0,
+          0.0,
+          2.57173562,
+          -0.437195241
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Exposed_Cyan_Heart",
+      "translation_blender": [
+        0,
+        0.18,
+        0.1
+      ],
+      "target_dimensions_blender_before_rotation": [
+        2.34,
+        0.18,
+        3.6
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 432,
+      "export_node_index": 37
+    },
+    {
+      "name": "Core \u00b7 lower amber lens",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "void_core",
+      "source_node_index": 1,
+      "source_mesh_index": 0,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.38596493,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.384615362,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.298245579,
+          -0.044736844
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Exposed_Cyan_Heart",
+      "translation_blender": [
+        0,
+        -0.1,
+        -1.64
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.44,
+        0.4,
+        0.34
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 320,
+      "export_node_index": 40
+    },
+    {
+      "name": "Core \u00b7 hanging conductor -1",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "tendril",
+      "source_node_index": 17,
+      "source_mesh_index": 16,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.26427266,
+          0.0,
+          -0.288076639,
+          -0.57624644
+        ],
+        [
+          0.0,
+          0.366542816,
+          0.0,
+          -0.109670781
+        ],
+        [
+          0.056172885,
+          0.0,
+          1.355293989,
+          1.592823744
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Exposed_Cyan_Heart",
+      "translation_blender": [
+        -0.47,
+        0.36,
+        -0.45
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.3,
+        0.35,
+        3.35
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -12,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 graphite metal",
+      "triangles": 224,
+      "export_node_index": 38
+    },
+    {
+      "name": "Core \u00b7 hanging conductor 1",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "tendril",
+      "source_node_index": 17,
+      "source_mesh_index": 16,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.26427266,
+          0.0,
+          0.288076639,
+          0.121432468
+        ],
+        [
+          0.0,
+          0.366542816,
+          0.0,
+          -0.109670781
+        ],
+        [
+          -0.056172885,
+          0.0,
+          1.355293989,
+          1.689497471
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Exposed_Cyan_Heart",
+      "translation_blender": [
+        0.47,
+        0.36,
+        -0.45
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.3,
+        0.35,
+        3.35
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        12,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 graphite metal",
+      "triangles": 224,
+      "export_node_index": 39
+    },
+    {
+      "name": "Shutter \u00b7 painted module -1 0",
+      "source": "models/assets/warden-linkage-module-v1.glb",
+      "source_node_name": "Weapon_Assembly",
+      "source_node_index": 28,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.550000012
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.449999988
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -3.049999952
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          3.784064531,
+          -0.024711441,
+          -0.074712284,
+          2.095122576
+        ],
+        [
+          0.132142454,
+          0.707643092,
+          -0.00260901,
+          -0.272233397
+        ],
+        [
+          0.397963643,
+          0.0,
+          0.711273193,
+          0.110312581
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_L_1",
+      "translation_blender": [
+        0.73,
+        -0.29,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.58,
+        0.57,
+        1.4
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -6,
+        2
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": null,
+      "triangles": 1226,
+      "export_node_index": 48
+    },
+    {
+      "name": "Shutter \u00b7 amber index -1 0",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_4",
+      "source_node_index": 5,
+      "source_mesh_index": 4,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.200000003
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -0.079999998
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.25,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.5,
+          0.0,
+          0.300000012
+        ],
+        [
+          0.0,
+          0.0,
+          3.5,
+          0.280000001
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_L_1",
+      "translation_blender": [
+        1.39,
+        -0.61,
+        0.18
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.075,
+        0.045,
+        0.56
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 12,
+      "export_node_index": 47
+    },
+    {
+      "name": "Shutter \u00b7 painted module -1 1",
+      "source": "models/assets/warden-linkage-module-v1.glb",
+      "source_node_name": "Weapon_Assembly",
+      "source_node_index": 28,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.550000012
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.449999988
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -3.049999952
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          3.784064531,
+          -0.024711441,
+          -0.074712284,
+          2.095122576
+        ],
+        [
+          0.132142454,
+          0.707643092,
+          -0.00260901,
+          -0.272233397
+        ],
+        [
+          0.397963643,
+          0.0,
+          0.711273193,
+          0.110312581
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_L_2",
+      "translation_blender": [
+        0.73,
+        -0.29,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.58,
+        0.57,
+        1.4
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -6,
+        2
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": null,
+      "triangles": 1226,
+      "export_node_index": 51
+    },
+    {
+      "name": "Shutter \u00b7 amber index -1 1",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_4",
+      "source_node_index": 5,
+      "source_mesh_index": 4,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.200000003
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -0.079999998
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.25,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.5,
+          0.0,
+          0.300000012
+        ],
+        [
+          0.0,
+          0.0,
+          3.5,
+          0.280000001
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_L_2",
+      "translation_blender": [
+        1.39,
+        -0.61,
+        0.18
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.075,
+        0.045,
+        0.56
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 12,
+      "export_node_index": 50
+    },
+    {
+      "name": "Shutter \u00b7 painted module 1 0",
+      "source": "models/assets/warden-linkage-module-v1.glb",
+      "source_node_name": "Weapon_Assembly",
+      "source_node_index": 28,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.550000012
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.449999988
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -3.049999952
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          3.784064531,
+          0.024711441,
+          0.074712284,
+          2.048430204
+        ],
+        [
+          -0.132142454,
+          0.707643092,
+          -0.00260901,
+          -0.416929454
+        ],
+        [
+          -0.397963643,
+          0.0,
+          0.711273193,
+          -0.325457811
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_R_1",
+      "translation_blender": [
+        -0.73,
+        -0.29,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.58,
+        0.57,
+        1.4
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        6,
+        -2
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": null,
+      "triangles": 1226,
+      "export_node_index": 54
+    },
+    {
+      "name": "Shutter \u00b7 amber index 1 0",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_4",
+      "source_node_index": 5,
+      "source_mesh_index": 4,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.200000003
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -0.079999998
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.25,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.5,
+          0.0,
+          0.300000012
+        ],
+        [
+          0.0,
+          0.0,
+          3.5,
+          0.280000001
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_R_1",
+      "translation_blender": [
+        -1.39,
+        -0.61,
+        0.18
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.075,
+        0.045,
+        0.56
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 12,
+      "export_node_index": 53
+    },
+    {
+      "name": "Shutter \u00b7 painted module 1 1",
+      "source": "models/assets/warden-linkage-module-v1.glb",
+      "source_node_name": "Weapon_Assembly",
+      "source_node_index": 28,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.550000012
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.449999988
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -3.049999952
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          3.784064531,
+          0.024711441,
+          0.074712284,
+          2.048430204
+        ],
+        [
+          -0.132142454,
+          0.707643092,
+          -0.00260901,
+          -0.416929454
+        ],
+        [
+          -0.397963643,
+          0.0,
+          0.711273193,
+          -0.325457811
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_R_2",
+      "translation_blender": [
+        -0.73,
+        -0.29,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.58,
+        0.57,
+        1.4
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        6,
+        -2
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": null,
+      "triangles": 1226,
+      "export_node_index": 57
+    },
+    {
+      "name": "Shutter \u00b7 amber index 1 1",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_4",
+      "source_node_index": 5,
+      "source_mesh_index": 4,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.200000003
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -0.079999998
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.25,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.5,
+          0.0,
+          0.300000012
+        ],
+        [
+          0.0,
+          0.0,
+          3.5,
+          0.280000001
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Shutter_R_2",
+      "translation_blender": [
+        -1.39,
+        -0.61,
+        0.18
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.075,
+        0.045,
+        0.56
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 12,
+      "export_node_index": 56
+    },
+    {
+      "name": "Blade arm \u00b7 shoulder sweep -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "scythe_wing",
+      "source_node_index": 6,
+      "source_mesh_index": 5,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.58084619,
+          0.073228471,
+          -0.435299575,
+          1.612294793
+        ],
+        [
+          -0.091996998,
+          0.462346315,
+          0.068944685,
+          -0.565977871
+        ],
+        [
+          0.157577306,
+          0.0,
+          1.644810557,
+          -1.431489706
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_L",
+      "translation_blender": [
+        -0.75,
+        0,
+        -1.16
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.82,
+        0.7,
+        2.9
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -15,
+        -9
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 60,
+      "export_node_index": 20
+    },
+    {
+      "name": "Blade arm \u00b7 hooked forearm -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "lower_scythe",
+      "source_node_index": 9,
+      "source_mesh_index": 8,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.221324086,
+          0.0,
+          0.371423125,
+          1.512299418
+        ],
+        [
+          0.0,
+          0.747697711,
+          0.0,
+          0.239346132
+        ],
+        [
+          -0.259600461,
+          0.0,
+          1.74740839,
+          0.709360957
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_L",
+      "translation_blender": [
+        -1.43,
+        -0.34,
+        -3.0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.35,
+        1.02,
+        2.28
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        12,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 graphite metal",
+      "triangles": 56,
+      "export_node_index": 18
+    },
+    {
+      "name": "Blade arm \u00b7 polished cutting face -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_crescent_blade",
+      "source_node_index": 7,
+      "source_mesh_index": 6,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.862138152,
+          0.043465786,
+          -0.592596531,
+          2.638365746
+        ],
+        [
+          -0.231009245,
+          0.162216514,
+          0.158785775,
+          -0.914714515
+        ],
+        [
+          0.272880256,
+          0.0,
+          2.006671667,
+          -0.969692707
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_L",
+      "translation_blender": [
+        -1.54,
+        -0.51,
+        -3.72
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.4,
+        0.22,
+        1.28
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -17,
+        -15
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 pale ceramic",
+      "triangles": 24,
+      "export_node_index": 19
+    },
+    {
+      "name": "Blade arm \u00b7 cyan edge -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_energy_edge",
+      "source_node_index": 8,
+      "source_mesh_index": 7,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.750981987,
+          0.013837123,
+          -0.671837687,
+          2.789095402
+        ],
+        [
+          -0.118943863,
+          0.087364152,
+          0.106408641,
+          -0.51137042
+        ],
+        [
+          0.20373331,
+          0.0,
+          2.538586617,
+          -3.153419018
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_L",
+      "translation_blender": [
+        -0.79,
+        -0.42,
+        -1.04
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.75,
+        0.1,
+        2.8
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -15,
+        -9
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 cold cyan core",
+      "triangles": 40,
+      "export_node_index": 17
+    },
+    {
+      "name": "Blade arm \u00b7 shoulder sweep 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "scythe_wing_02",
+      "source_node_index": 10,
+      "source_mesh_index": 9,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.58084619,
+          -0.073228471,
+          0.435299575,
+          -1.612294793
+        ],
+        [
+          0.091996998,
+          0.462346315,
+          0.068944685,
+          -0.565977871
+        ],
+        [
+          -0.157577306,
+          0.0,
+          1.644810557,
+          -1.431489706
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_R",
+      "translation_blender": [
+        0.75,
+        0,
+        -1.16
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.82,
+        0.7,
+        2.9
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        15,
+        9
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 60,
+      "export_node_index": 25
+    },
+    {
+      "name": "Blade arm \u00b7 hooked forearm 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "lower_scythe_02",
+      "source_node_index": 13,
+      "source_mesh_index": 12,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.220942974,
+          0.0,
+          -0.371423125,
+          -1.510254502
+        ],
+        [
+          0.0,
+          0.748016834,
+          0.0,
+          0.239827648
+        ],
+        [
+          0.259519428,
+          0.0,
+          1.74740839,
+          0.709795713
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_R",
+      "translation_blender": [
+        1.43,
+        -0.34,
+        -3.0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.35,
+        1.02,
+        2.28
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -12,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 graphite metal",
+      "triangles": 56,
+      "export_node_index": 23
+    },
+    {
+      "name": "Blade arm \u00b7 polished cutting face 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_crescent_blade_02",
+      "source_node_index": 11,
+      "source_mesh_index": 10,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.862138152,
+          -0.043465786,
+          0.592596531,
+          -2.638365746
+        ],
+        [
+          0.231009245,
+          0.162216514,
+          0.158785775,
+          -0.914714515
+        ],
+        [
+          -0.272880256,
+          0.0,
+          2.006671667,
+          -0.969692707
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_R",
+      "translation_blender": [
+        1.54,
+        -0.51,
+        -3.72
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.4,
+        0.22,
+        1.28
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        17,
+        15
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 pale ceramic",
+      "triangles": 24,
+      "export_node_index": 24
+    },
+    {
+      "name": "Blade arm \u00b7 cyan edge 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_energy_edge_02",
+      "source_node_index": 12,
+      "source_mesh_index": 11,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.751946986,
+          -0.013794287,
+          0.671837687,
+          -2.792365789
+        ],
+        [
+          0.119096704,
+          0.087093696,
+          0.106408641,
+          -0.511554599
+        ],
+        [
+          -0.203995094,
+          0.0,
+          2.538586617,
+          -3.152545691
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Blade_Arm_R",
+      "translation_blender": [
+        0.79,
+        -0.42,
+        -1.04
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.75,
+        0.1,
+        2.8
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        15,
+        9
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 cold cyan core",
+      "triangles": 40,
+      "export_node_index": 22
+    },
+    {
+      "name": "Mantle \u00b7 long broken blade -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "scythe_wing",
+      "source_node_index": 6,
+      "source_mesh_index": 5,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.62239635,
+          0.022391088,
+          0.363242865,
+          0.8786906
+        ],
+        [
+          -0.043522194,
+          0.320207506,
+          -0.025400415,
+          -0.272328913
+        ],
+        [
+          -0.121277019,
+          0.0,
+          1.87328577,
+          -2.249376774
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Torn_Mantle_L",
+      "translation_blender": [
+        -0.36,
+        0,
+        -1.25
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.9,
+        0.48,
+        3.25
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        11,
+        -4
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 60,
+      "export_node_index": 59
+    },
+    {
+      "name": "Mantle \u00b7 outer fragment -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "lower_scythe",
+      "source_node_index": 9,
+      "source_mesh_index": 8,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.817941427,
+          0.0,
+          -0.388745815,
+          0.653005779
+        ],
+        [
+          0.0,
+          0.454482913,
+          0.0,
+          0.145484895
+        ],
+        [
+          0.234540924,
+          0.0,
+          1.355717778,
+          1.015339375
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Torn_Mantle_L",
+      "translation_blender": [
+        -1.07,
+        0.18,
+        -1.64
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.92,
+        0.62,
+        1.8
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -16,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 graphite metal",
+      "triangles": 56,
+      "export_node_index": 60
+    },
+    {
+      "name": "Mantle \u00b7 long broken blade 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "scythe_wing_02",
+      "source_node_index": 10,
+      "source_mesh_index": 9,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.62239635,
+          -0.022391088,
+          -0.363242865,
+          -0.8786906
+        ],
+        [
+          0.043522194,
+          0.320207506,
+          -0.025400415,
+          -0.272328913
+        ],
+        [
+          0.121277019,
+          0.0,
+          1.87328577,
+          -2.249376774
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Torn_Mantle_R",
+      "translation_blender": [
+        0.36,
+        0,
+        -1.25
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.9,
+        0.48,
+        3.25
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -11,
+        4
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 60,
+      "export_node_index": 62
+    },
+    {
+      "name": "Mantle \u00b7 outer fragment 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "lower_scythe_02",
+      "source_node_index": 13,
+      "source_mesh_index": 12,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.817686141,
+          0.0,
+          0.388745815,
+          -0.651636183
+        ],
+        [
+          0.0,
+          0.454676896,
+          0.0,
+          0.145777583
+        ],
+        [
+          -0.23446773,
+          0.0,
+          1.355717778,
+          1.01494658
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Torn_Mantle_R",
+      "translation_blender": [
+        1.07,
+        0.18,
+        -1.64
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.92,
+        0.62,
+        1.8
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        16,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 graphite metal",
+      "triangles": 56,
+      "export_node_index": 63
+    },
+    {
+      "name": "Trailing spiral \u00b7 donor cable",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "spiral_tail",
+      "source_node_index": 17,
+      "source_mesh_index": 16,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.679145992,
+          0.0,
+          0.0,
+          -0.083798423
+        ],
+        [
+          0.0,
+          0.676493645,
+          0.0,
+          -0.4444879
+        ],
+        [
+          0.0,
+          0.0,
+          1.200154781,
+          2.169099331
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Trailing_Spiral",
+      "translation_blender": [
+        0,
+        0,
+        -1.89
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.97,
+        0.8,
+        3.78
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 graphite metal",
+      "triangles": 420,
+      "export_node_index": 66
+    },
+    {
+      "name": "Trailing spiral \u00b7 bronze point",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "tail_arrow",
+      "source_node_index": 18,
+      "source_mesh_index": 17,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.114351869,
+          0.0,
+          0.0,
+          0.083626077
+        ],
+        [
+          0.0,
+          0.966226637,
+          0.0,
+          -0.561169803
+        ],
+        [
+          0.0,
+          0.0,
+          1.069746375,
+          3.760904074
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Trailing_Spiral",
+      "translation_blender": [
+        0.08,
+        0,
+        -3.74
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.35,
+        0.3,
+        0.78
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 42,
+      "export_node_index": 65
+    },
+    {
+      "name": "Sentry 01 \u00b7 bell shell",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "bell",
+      "source_node_index": 2,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.609375,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.53124994,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.991098344,
+          -0.743041456
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_01_Bell",
+      "translation_blender": [
+        0,
+        0,
+        0.08
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.95,
+        1.7,
+        1.05
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 380,
+      "export_node_index": 0
+    },
+    {
+      "name": "Sentry 01 \u00b7 cyan eye",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "core",
+      "source_node_index": 11,
+      "source_mesh_index": 10,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.50999999,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.47999993,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.566037714,
+          -0.067924522
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_01_Bell",
+      "translation_blender": [
+        0,
+        -0.38,
+        -0.34
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.51,
+        0.48,
+        0.6
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 cold cyan core",
+      "triangles": 320,
+      "export_node_index": 2
+    },
+    {
+      "name": "Sentry 01 \u00b7 jaw 0",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "beak_mandible",
+      "source_node_index": 12,
+      "source_mesh_index": 11,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.996513546,
+          0.0,
+          -0.356066823,
+          -0.488141596
+        ],
+        [
+          0.0,
+          0.980087221,
+          0.0,
+          0.00989804
+        ],
+        [
+          0.422994882,
+          0.0,
+          0.838840902,
+          0.014972299
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_01_Bell",
+      "translation_blender": [
+        -0.63,
+        -0.25,
+        -0.55
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.52,
+        0.38,
+        0.96
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -23,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 42,
+      "export_node_index": 3
+    },
+    {
+      "name": "Sentry 01 \u00b7 jaw 1",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "beak_mandible_02",
+      "source_node_index": 13,
+      "source_mesh_index": 12,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.325876236,
+          0.0,
+          0.0,
+          -0.136493653
+        ],
+        [
+          0.0,
+          0.814755976,
+          0.0,
+          -0.315486729
+        ],
+        [
+          0.0,
+          0.0,
+          0.911338866,
+          0.204497486
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_01_Bell",
+      "translation_blender": [
+        0.63,
+        -0.25,
+        -0.55
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.52,
+        0.38,
+        0.96
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 42,
+      "export_node_index": 4
+    },
+    {
+      "name": "Sentry 01 \u00b7 jaw 2",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "beak_mandible_03",
+      "source_node_index": 14,
+      "source_mesh_index": 13,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.074995399,
+          0.0,
+          0.356070727,
+          0.415663123
+        ],
+        [
+          0.0,
+          0.917683959,
+          0.0,
+          -0.196036443
+        ],
+        [
+          -0.456308454,
+          0.0,
+          0.838850081,
+          0.045734301
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_01_Bell",
+      "translation_blender": [
+        0,
+        0.5,
+        -0.55
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.52,
+        0.38,
+        0.96
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        23,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 42,
+      "export_node_index": 5
+    },
+    {
+      "name": "Sentry 01 \u00b7 crown",
+      "source": "models/assets/stone-wanderer-twin-candle-mask-v1.glb",
+      "source_node_name": "Part_1",
+      "source_node_index": 2,
+      "source_mesh_index": 1,
+      "source_world_matrix_blender": [
+        [
+          0.975897431,
+          0.0,
+          -0.218229622,
+          -0.119999997
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -0.029999999
+        ],
+        [
+          0.218229622,
+          0.0,
+          0.975897431,
+          0.219999999
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.960268021,
+          0.0,
+          0.0,
+          0.099877335
+        ],
+        [
+          0.0,
+          1.470037699,
+          0.0,
+          0.055564143
+        ],
+        [
+          0.0,
+          0.0,
+          2.03900075,
+          -0.440222949
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_01_Bell",
+      "translation_blender": [
+        0,
+        0.05,
+        0.75
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.24,
+        0.3,
+        0.68
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 pale ceramic",
+      "triangles": 32,
+      "export_node_index": 1
+    },
+    {
+      "name": "Sentry 02 \u00b7 armored crescent",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "orbital_blade",
+      "source_node_index": 3,
+      "source_mesh_index": 2,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.054008007,
+          0.0,
+          0.0,
+          -0.061256353
+        ],
+        [
+          0.0,
+          0.788138032,
+          0.0,
+          -0.076366678
+        ],
+        [
+          0.0,
+          0.0,
+          1.179446816,
+          -0.324993104
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_02_Crescent",
+      "translation_blender": [
+        0,
+        0.08,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        2.2,
+        0.72,
+        1.54
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 pale ceramic",
+      "triangles": 264,
+      "export_node_index": 8
+    },
+    {
+      "name": "Sentry 02 \u00b7 amber eye",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "void_core",
+      "source_node_index": 1,
+      "source_mesh_index": 0,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.543859661,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.538461506,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.543859601,
+          -0.081578955
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_02_Crescent",
+      "translation_blender": [
+        0,
+        -0.29,
+        0
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.62,
+        0.56,
+        0.62
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 amber lens",
+      "triangles": 320,
+      "export_node_index": 7
+    },
+    {
+      "name": "Sentry 02 \u00b7 floating fang -1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_crescent_blade",
+      "source_node_index": 7,
+      "source_mesh_index": 6,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.31669575,
+          0.0,
+          -0.733459294,
+          1.416345358
+        ],
+        [
+          0.0,
+          0.229007602,
+          0.0,
+          -0.273664147
+        ],
+        [
+          0.141002029,
+          0.0,
+          1.647376418,
+          -1.0077672
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_02_Crescent",
+      "translation_blender": [
+        -0.81,
+        -0.1,
+        -0.72
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.52,
+        0.3,
+        1.1
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -24,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 24,
+      "export_node_index": 9
+    },
+    {
+      "name": "Sentry 02 \u00b7 floating fang 1",
+      "source": "models/assets/flying-void-reaper-v1.glb",
+      "source_node_name": "wing_crescent_blade_02",
+      "source_node_index": 11,
+      "source_mesh_index": 10,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.31669575,
+          0.0,
+          0.733459294,
+          -1.416345358
+        ],
+        [
+          0.0,
+          0.229007602,
+          0.0,
+          -0.273664147
+        ],
+        [
+          -0.141002029,
+          0.0,
+          1.647376418,
+          -1.0077672
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_02_Crescent",
+      "translation_blender": [
+        0.81,
+        -0.1,
+        -0.72
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.52,
+        0.3,
+        1.1
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        24,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 worn blue slate",
+      "triangles": 24,
+      "export_node_index": 10
+    },
+    {
+      "name": "Sentry 03 \u00b7 miniature open cowl",
+      "source": "models/assets/stone-wanderer-hooded-reliquary-v1.glb",
+      "source_node_name": "Part_0",
+      "source_node_index": 1,
+      "source_mesh_index": 0,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.899999976,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.079999998
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          1.743372917,
+          0.0,
+          0.0,
+          -2.668e-05
+        ],
+        [
+          0.0,
+          1.788993359,
+          0.0,
+          0.035064012
+        ],
+        [
+          0.0,
+          0.0,
+          1.957316637,
+          -0.146201625
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_03_Hood",
+      "translation_blender": [
+        0,
+        0,
+        0.3
+      ],
+      "target_dimensions_blender_before_rotation": [
+        1.45,
+        1.3,
+        1.8
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [
+        0,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "solidify_m": 0.05,
+      "material_override": null,
+      "triangles": 40,
+      "export_node_index": 15
+    },
+    {
+      "name": "Sentry 03 \u00b7 cyan lens",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "core",
+      "source_node_index": 11,
+      "source_mesh_index": 10,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.419999987,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.399999946,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.396226376,
+          -0.047547162
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_03_Hood",
+      "translation_blender": [
+        0,
+        -0.3,
+        0.17
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.42,
+        0.4,
+        0.42
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        0,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 cold cyan core",
+      "triangles": 320,
+      "export_node_index": 12
+    },
+    {
+      "name": "Sentry 03 \u00b7 hanging fragment -1",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "tendril",
+      "source_node_index": 17,
+      "source_mesh_index": 16,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.292254001,
+          0.0,
+          -0.216914088,
+          -0.514151871
+        ],
+        [
+          0.0,
+          0.33512485,
+          0.0,
+          -0.10027042
+        ],
+        [
+          0.118078269,
+          0.0,
+          0.536881208,
+          0.54851687
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_03_Hood",
+      "translation_blender": [
+        -0.35,
+        0.12,
+        -0.75
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.35,
+        0.32,
+        1.4
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        -22,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 224,
+      "export_node_index": 13
+    },
+    {
+      "name": "Sentry 03 \u00b7 hanging fragment 1",
+      "source": "models/assets/flying-lantern-medusa-v1.glb",
+      "source_node_name": "tendril_04",
+      "source_node_index": 32,
+      "source_mesh_index": 31,
+      "source_world_matrix_blender": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.34e-07,
+          1.000000119,
+          0.0
+        ],
+        [
+          0.0,
+          -1.000000119,
+          -1.34e-07,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "mesh_affine_from_baked_source_blender": [
+        [
+          0.291566759,
+          0.0,
+          0.157265574,
+          0.513881803
+        ],
+        [
+          0.0,
+          0.333613247,
+          0.0,
+          0.100522995
+        ],
+        [
+          -0.117800608,
+          0.0,
+          0.389245987,
+          0.548583567
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "parent": "Sentry_03_Hood",
+      "translation_blender": [
+        0.35,
+        0.12,
+        -0.75
+      ],
+      "target_dimensions_blender_before_rotation": [
+        0.35,
+        0.32,
+        1.4
+      ],
+      "rotation_degrees_baked_xyz": [
+        0,
+        22,
+        0
+      ],
+      "removed_source_face_indices": [],
+      "solidify_m": 0,
+      "material_override": "Wraith \u00b7 tarnished bronze",
+      "triangles": 224,
+      "export_node_index": 14
+    }
+  ],
+  "groups": {
+    "Shutter_Wraith_ROOT": {
+      "parent": null,
+      "rest_translation_blender": [
+        0.0,
+        0.0,
+        -0.1767503321170807
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0397074222564697,
+        1.0397074222564697,
+        1.0397074222564697
+      ]
+    },
+    "Wraith_Suspended_Frame": {
+      "parent": "Shutter_Wraith_ROOT",
+      "rest_translation_blender": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Deep_Hood": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        0.0,
+        0.25,
+        9.350000381469727
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Exposed_Cyan_Heart": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        0.0,
+        0.10000000149011612,
+        6.25
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Shutter_L_1": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        -1.850000023841858,
+        -0.14000000059604645,
+        7.130000114440918
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Shutter_L_2": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        -1.850000023841858,
+        -0.14000000059604645,
+        5.519999980926514
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Shutter_R_1": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        1.850000023841858,
+        -0.14000000059604645,
+        7.130000114440918
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Shutter_R_2": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        1.850000023841858,
+        -0.14000000059604645,
+        5.519999980926514
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Blade_Arm_L": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        -2.1500000953674316,
+        0.12999999523162842,
+        7.599999904632568
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Blade_Arm_R": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        2.1500000953674316,
+        0.12999999523162842,
+        7.599999904632568
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Torn_Mantle_L": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        -0.9599999785423279,
+        0.6499999761581421,
+        4.650000095367432
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Torn_Mantle_R": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        0.9599999785423279,
+        0.6499999761581421,
+        4.650000095367432
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Trailing_Spiral": {
+      "parent": "Wraith_Suspended_Frame",
+      "rest_translation_blender": [
+        0.0,
+        0.699999988079071,
+        4.300000190734863
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Sentry_01_Bell": {
+      "parent": "Shutter_Wraith_ROOT",
+      "rest_translation_blender": [
+        -4.449999809265137,
+        -0.4000000059604645,
+        8.25
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Sentry_02_Crescent": {
+      "parent": "Shutter_Wraith_ROOT",
+      "rest_translation_blender": [
+        4.650000095367432,
+        0.15000000596046448,
+        6.550000190734863
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Sentry_03_Hood": {
+      "parent": "Shutter_Wraith_ROOT",
+      "rest_translation_blender": [
+        -3.319999933242798,
+        0.6499999761581421,
+        3.049999952316284
+      ],
+      "rest_rotation_euler_xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "design": "Open, cut donor cowl; separate painted Warden shutter panels around a visible suspended cyan heart; reaper blades recast as limbs and a torn mantle; distinct bell, crescent, and hood sentries.",
+  "verification": {
+    "neutral_height_exact": true,
+    "exported_glb_height_m": 12.000001448459443,
+    "exported_clip_names": [
+      "idle",
+      "attack",
+      "expose"
+    ]
+  }
+}
