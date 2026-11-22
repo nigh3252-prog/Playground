@@ -5207,6 +5207,49 @@
       "family": "Ironmaw"
     },
     {
+      "id": "isometric-rust-maze-terrace",
+      "version": "v1",
+      "name": "Rust Maze Terrace \u00b7 Isometric Study",
+      "type": "environment",
+      "file": "isometric-rust-maze-terrace-v1.glb",
+      "asset": "assets/isometric-rust-maze-terrace-v1.glb",
+      "sha256": "d24ea6cdc3284be2c7edaa2eab655f710a87bc3b12c2f3bbcbd1ae013f748259",
+      "bytes": 176880,
+      "triangles": 432,
+      "meshes": 36,
+      "textures": 2,
+      "rig": "unrigged",
+      "clips": [],
+      "credits": "Authored central terrace assembly from the isometric level study: modeled rust and cream walls, bridges, trench and stairs; procedurally drawn plaster textures with seeded noise. Does not include source image, full game level, navigation or viewer.",
+      "license": "No public reuse license specified."
+    },
+    {
+      "id": "keraunos-energy-cannon",
+      "version": "v1",
+      "name": "Keraunos \u00b7 Energy Cannon",
+      "asset": "assets/keraunos-energy-cannon-v1.glb",
+      "sha256": "cd6ef28375635443933a20e754c4a56327e857bcb394eb88eb257d18a47fcf25",
+      "bytes": 5745432,
+      "triangles": 17864,
+      "meshes": 10,
+      "textures": 6,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Charge_Preview"
+        },
+        {
+          "name": "Deployment"
+        },
+        {
+          "name": "Recoil"
+        }
+      ],
+      "credits": "Assistant-authored fictional oversized game prop from the Warden reference-model collection. Original geometry, generated painted material atlas, and three visual preview clips; supplied artwork, scale figure, source and viewer are not included.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Model Studies"
+    },
+    {
       "id": "ironmaw-generated-lod",
       "version": "v1",
       "name": "Ironmaw \u00b7 Initial LOD",
