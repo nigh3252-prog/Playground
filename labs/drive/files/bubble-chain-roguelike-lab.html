@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="theme-color" content="#071821" />
+<title>Bubble Chain — Swarm Lab</title>
+<style>
+  :root{color-scheme:dark;--bg:#050910;--panel:#0b1620;--ink:#f7f8ff;--muted:#9eacc0;--line:rgba(255,255,255,.11);--accent:#28d7c0;--pink:#ff4d7d;--gold:#ffd166;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  body{overscroll-behavior:none;touch-action:none}
+  button{font:inherit;color:inherit}
+  .app{height:100dvh;display:flex;flex-direction:column;background:radial-gradient(circle at 50% 0%,rgba(40,215,192,.10),transparent 34%),linear-gradient(#071821,#050910)}
+  .top{padding:calc(8px + var(--safe-top)) 10px 8px;border-bottom:1px solid var(--line);background:rgba(5,9,16,.94);z-index:2}
+  .head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+  .title{font-size:15px;font-weight:950;letter-spacing:-.02em}.sub{font-size:10px;color:var(--muted);margin-top:2px}
+  .stats{display:flex;gap:12px}.stat{text-align:right;min-width:50px}.label{display:block;font-size:8px;color:var(--muted);font-weight:850;letter-spacing:.08em;text-transform:uppercase}.value{font-size:17px;font-weight:950;line-height:1}
+  .modes{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px;padding-bottom:1px}.modes::-webkit-scrollbar{display:none}
+  .mode{flex:0 0 auto;min-height:38px;padding:0 11px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.055);font-size:11px;font-weight:900;white-space:nowrap}.mode.active{background:#f7f8ff;color:#101424;border-color:#f7f8ff}
+  .stage{position:relative;flex:1;min-height:0}.stage canvas{display:block;width:100%;height:100%;touch-action:none}
+  .hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:11px;font-weight:900;color:rgba(220,255,251,.72);pointer-events:none;white-space:nowrap;text-shadow:0 2px 12px #000}
+  .overlay{position:absolute;inset:0;display:none;place-items:center;padding:24px;background:rgba(3,6,11,.62);backdrop-filter:blur(2px)}.overlay.show{display:grid}
+  .result{text-align:center;max-width:300px}.result .big{font-size:32px;font-weight:1000;letter-spacing:-.055em}.result p{margin:8px 0 14px;color:#c3cedc;font-size:13px;line-height:1.35}.result button{min-height:46px;padding:0 18px;border:0;border-radius:14px;background:var(--accent);color:#071312;font-weight:950}
+  .bottom{padding:8px 10px calc(8px + var(--safe-bottom));display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;border-top:1px solid var(--line);background:rgba(5,9,16,.96)}
+  .bottom button{min-height:44px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.055);font-size:12px;font-weight:900}.bottom .main{background:linear-gradient(135deg,#1bb8a7,#28d7c0);color:#061311;border:0}.bottom button.active{background:#f7f8ff;color:#101424}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="head">
+      <div><div class="title">Bubble Chain · Swarm Lab</div><div id="modeCopy" class="sub">Original one-tap chain reaction.</div></div>
+      <div class="stats">
+        <div class="stat"><span id="statLabelA" class="label">Clicks</span><span id="clicks" class="value">0</span></div>
+        <div class="stat"><span id="statLabelB" class="label">Left</span><span id="left" class="value">12</span></div>
+      </div>
+    </div>
+    <div class="modes" id="modes">
+      <button class="mode active" data-mode="classic">Original</button>
+      <button class="mode" data-mode="ten">10× · 120</button>
+      <button class="mode" data-mode="hundred">100× · 1,200</button>
+      <button class="mode" data-mode="tight">100× Tight</button>
+      <button class="mode" data-mode="grow">100× Growing</button>
+      <button class="mode" data-mode="paint">Color Fields</button>
+      <button class="mode" data-mode="foam">Long Foam</button>
+      <button class="mode" data-mode="implode">Implosion</button>
+      <button class="mode" data-mode="vortex">Vortex</button>
+      <button class="mode" data-mode="breed">Breeders</button>
+      <button class="mode" data-mode="harvest">Harvest</button>
+      <button class="mode" data-mode="split">Splitters</button>
+      <button class="mode" data-mode="anchor">Anchors</button>
+      <button class="mode" data-mode="chem">Chemistry</button>
+      <button class="mode" data-mode="firefly">Fireflies</button>
+    </div>
+  </header>
+  <main class="stage" id="stage">
+    <canvas id="canvas" aria-label="Bubble Chain play field"></canvas>
+    <div id="hint" class="hint">TAP ONCE TO START THE CHAIN</div>
+    <div id="overlay" class="overlay">
+      <div class="result"><div id="resultBig" class="big">CLEARED!</div><p id="resultCopy"></p><button id="again">New swarm</button></div>
+    </div>
+  </main>
+  <footer class="bottom">
+    <button id="sound" class="active">Sound · On</button>
+    <button id="new" class="main">New swarm</button>
+    <button id="motion">Motion · On</button>
+  </footer>
+</div>
+<script>
+(()=>{
+'use strict';
+const TAU=Math.PI*2, clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t, rand=(a=1,b)=>b===undefined?Math.random()*a:a+Math.random()*(b-a), pick=a=>a[(Math.random()*a.length)|0];
+const palette=['#7c5cff','#28d7c0','#ffd166','#ff4d7d','#53a7ff','#ff8c42'];
+const paintPalette=['#ff4d7d','#ffd166','#28d7c0','#7c5cff'];
+const defs={
+  classic:{n:12,label:'Original',copy:'Original rule: one starter bubble. Reach the target to advance.',oneTap:true,bubble:[7,12],speed:55,starter:58,burst:[30,47]},
+  ten:{n:120,label:'10×',copy:'120 bubbles. Keep tapping until every bubble is gone; fewer clicks is better.',bubble:[4.5,8],speed:45,starter:52,burst:[26,41]},
+  hundred:{n:1200,label:'100×',copy:'1,200 bubbles with generous chain radii. The ridiculous raw-density experiment.',bubble:[2.1,4.8],speed:30,starter:48,burst:[24,38]},
+  tight:{n:1200,label:'100× Tight',copy:'Same 1,200 bubbles, but tiny explosions break the swarm into clusters so click count matters.',bubble:[2.1,4.8],speed:30,starter:11,burst:[4.5,8.5]},
+  grow:{n:1200,label:'100× Growing',copy:'Every click powers up the entire chain reaction, not just the starter.',bubble:[2.1,4.8],speed:30,starter:8,starterGrow:3,starterCap:44,burst:[4.5,8.5],burstGrow:1.6,burstCap:36},
+  paint:{n:420,label:'Color Fields',copy:'Four colored territories repaint the swarm. A chain can only jump into bubbles matching its color.',bubble:[2.6,5.4],speed:25,starter:20,burst:[8,14],paint:true},
+  foam:{n:600,label:'Long Foam',copy:'Small explosions hang around much longer, catching late-arriving bubbles and bridging gaps through time.',bubble:[2.3,4.8],speed:35,starter:12,burst:[5,9],burstTiming:[.30,1.55,.55]},
+  implode:{n:600,label:'Implosion',copy:'Your click does not pop immediately. It sucks nearby bubbles inward first, then detonates the compressed cluster.',bubble:[2.3,4.9],speed:26,starter:18,burst:[6,10],implosion:true},
+  vortex:{n:520,label:'Vortex',copy:'Clicks create temporary whirlpools. They spin and gather the swarm before bursting at the center.',bubble:[2.4,5.1],speed:24,starter:18,burst:[6,10],vortex:true},
+  breed:{n:260,label:'Breeders',copy:'Green ringed breeders periodically make babies. Waiting makes the board richer—and harder to clear.',bubble:[3,6],speed:24,starter:16,burst:[7,12],breeder:true,breedCap:560},
+  harvest:{n:420,label:'Harvest',copy:'Bubbles slowly ripen: older ones grow larger, chain farther, and are worth more. Decide when to harvest.',bubble:[1.8,3.2],speed:17,starter:9,burst:[5,8],harvest:true},
+  split:{n:320,label:'Splitters',copy:'Ringed splitter bubbles hatch three tiny bubbles when popped. A clean chain can suddenly create another crop.',bubble:[2.8,5.8],speed:27,starter:14,burst:[6,11],splitters:true},
+  anchor:{n:450,label:'Anchors',copy:'Crosshair bubbles become permanent relay nodes when popped. Build a network that keeps catching passersby.',bubble:[2.5,5.1],speed:29,starter:13,burst:[6,10],anchors:true},
+  chem:{n:500,label:'Chemistry',copy:'Colors have behaviors: purple grows huge, cyan lingers, gold throws satellites, blue pulls, orange flashes fast.',bubble:[2.4,5.1],speed:28,starter:14,burst:[6,10],chemistry:true},
+  firefly:{n:500,label:'Fireflies',copy:'Same chain-reaction skeleton, but now it is a glowing firefly swarm. Different colors add notes to the pop chord.',bubble:[1.8,3.5],speed:30,starter:13,burst:[7,12],fireflies:true}
+};
+let mode='classic',cfg=defs[mode],W=360,H=620,dpr=1,bubbles=[],bursts=[],wells=[],spawnQueue=[],clickCount=0,round=0,target=5,settle=0,finished=false,anim=0,last=performance.now(),soundOn=true,motionOn=true,audioCtx=null,popsThisFrame=0,popEnergy=0,lastSoundAt=0,noteMask=0,harvestValue=0,nextBurstId=1;
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),stage=document.getElementById('stage'),clicksEl=document.getElementById('clicks'),leftEl=document.getElementById('left'),statLabelA=document.getElementById('statLabelA'),statLabelB=document.getElementById('statLabelB'),hint=document.getElementById('hint'),modeCopy=document.getElementById('modeCopy'),overlay=document.getElementById('overlay'),resultBig=document.getElementById('resultBig'),resultCopy=document.getElementById('resultCopy');
+function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(2,devicePixelRatio||1);W=Math.max(280,r.width);H=Math.max(320,r.height);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+function unlockAudio(){if(!soundOn)return;try{audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}}
+function tone(freq,dur=.055,type='sine',vol=.025,delay=0){if(!soundOn)return;try{unlockAudio();const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(Math.max(.0001,vol),t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+dur+.02)}catch(e){}}
+function starterSound(size=0){const lift=Math.min(240,Math.max(0,size-8)*7);tone(180+lift,.08,'triangle',.04);tone(270+lift*1.15,.07,'sine',.025,.025);try{navigator.vibrate?.(10)}catch(e){}}
+function flushPopSound(now){if(!popsThisFrame||!soundOn)return;if(now-lastSoundAt<28)return;lastSoundAt=now;const n=popsThisFrame,p=Math.min(1,popEnergy/Math.max(1,n)),base=390+Math.min(310,Math.log2(n+1)*70)+p*70;tone(base,.035,'sine',.016);if(n>8)tone(base*1.5,.045,'triangle',.012,.012);if(n>60)tone(base*.75,.07,'sine',.016,.02);if(n>250)tone(105,.10,'sine',.022,.005);if(mode==='firefly'||mode==='chem'){let played=0;for(let i=0;i<6&&played<3;i++)if(noteMask&(1<<i)){tone([330,392,440,494,587,659][i],.075,'sine',.011,played*.018);played++;}}popsThisFrame=0;popEnergy=0;noteMask=0}
+function bg(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#071821');g.addColorStop(1,'#050910');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+function circle(x,y,r,fill,stroke,line=1){ctx.beginPath();ctx.arc(x,y,r,0,TAU);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke()}}
+function line(x1,y1,x2,y2,color='#fff',width=1){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.stroke()}
+function liveCount(){let n=0;for(const b of bubbles)if(!b.dead)n++;return n}
+function paintColorAt(x){return paintPalette[Math.min(3,Math.max(0,Math.floor(x/(W/4))))]}
+function setStats(){if(cfg.harvest){statLabelA.textContent='Value';clicksEl.textContent=harvestValue;statLabelB.textContent='Left';leftEl.textContent=liveCount()}else{statLabelA.textContent='Clicks';clicksEl.textContent=clickCount;statLabelB.textContent='Left';leftEl.textContent=liveCount()}}
+function makeBubble(x=null,y=null,small=false){let r=small?rand(1.4,2.6):rand(cfg.bubble[0],cfg.bubble[1]),s=cfg.speed,b={x:x==null?rand(r,W-r):clamp(x,r,W-r),y:y==null?rand(r,H-r):clamp(y,r,H-r),r,baseR:r,maxR:r,vx:rand(-s,s),vy:rand(-s,s),c:pick(palette),dead:false,immune:small?.42:0,age:0,phase:rand(TAU)};if(cfg.paint)b.c=paintColorAt(b.x);if(cfg.breeder&&Math.random()<.13){b.breeder=true;b.c='#28d7c0';b.breedT=rand(1.1,2.7)}if(cfg.splitters&&Math.random()<.15)b.splitter=true;if(cfg.anchors&&Math.random()<.10)b.anchor=true;if(cfg.harvest){b.age=rand(0,3.5);b.baseR=r;b.maxR=rand(6,10);b.r=lerp(b.baseR,b.maxR,clamp(b.age/8,0,1))}return b}
+function nextStarterSize(){return cfg.starterGrow?Math.min(cfg.starterCap,cfg.starter+clickCount*cfg.starterGrow):cfg.starter}
+function currentBurstSize(){if(!cfg.burstGrow)return null;const base=(cfg.burst[0]+cfg.burst[1])/2;return Math.min(cfg.burstCap,base+Math.max(0,clickCount)*cfg.burstGrow)}
+function updateHint(){if(cfg.oneTap)hint.textContent=`ROUND ${round+1} · POP ${target} · ONE TAP`;else if(cfg.paint)hint.textContent='TAP A COLOR BAND · CHAINS ONLY MATCH COLOR';else if(cfg.implosion)hint.textContent='TAP · PULL IN · THEN POP';else if(cfg.vortex)hint.textContent='TAP · SPIN A CLUSTER · THEN POP';else if(cfg.breeder)hint.textContent='GREEN RINGED BUBBLES MAKE BABIES';else if(cfg.harvest)hint.textContent=`VALUE ${harvestValue} · WAIT TO RIPEN OR HARVEST NOW`;else if(cfg.splitters)hint.textContent='RINGED BUBBLES SPLIT INTO THREE';else if(cfg.anchors)hint.textContent='CROSSHAIRS BECOME PERMANENT RELAYS';else if(cfg.chemistry)hint.textContent='PURPLE BIG · CYAN LONG · GOLD SATELLITES · BLUE PULL';else if(cfg.fireflies)hint.textContent='LIGHT THE SWARM · HEAR THE CHAIN';else if(cfg.burstGrow)hint.textContent=`NEXT STARTER ${Math.round(nextStarterSize())} px · CHAIN ~${Math.round(currentBurstSize())} px`;else if(cfg.burstTiming)hint.textContent='LONG-LIVED RINGS CATCH LATE ARRIVALS';else hint.textContent='TAP ANYWHERE · CLEAR THEM ALL'}
+function newBoard(advance=false){if(advance&&mode==='classic')round++;cfg=defs[mode];const n=mode==='classic'?cfg.n+round*2:cfg.n;bubbles=Array.from({length:n},()=>makeBubble());bursts=[];wells=[];spawnQueue=[];clickCount=0;harvestValue=0;settle=0;finished=false;noteMask=0;overlay.classList.remove('show');if(mode==='classic')target=Math.min(n,5+round*2);modeCopy.textContent=cfg.copy;updateHint();setStats()}
+function addBurst(x,y,max,c='#fff',starter=false,opts={}){const timing=opts.timing||cfg.burstTiming||[.24,.44,.30];bursts.push({id:nextBurstId++,x,y,r:opts.delay?0:2,max,t:0,c,starter,permanent:!!opts.permanent,delay:opts.delay||0,expand:timing[0],hold:timing[1],shrink:timing[2]})}
+function addWell(x,y,type='implode',opts={}){wells.push({x,y,type,t:0,dur:opts.dur||(type==='vortex'?1.35:.78),radius:opts.radius||(type==='vortex'?115:100),strength:opts.strength||(type==='vortex'?510:720),detonate:opts.detonate!==false,max:opts.max||cfg.starter,c:opts.c||'#fff',done:false})}
+function explodeBubble(b,source){if(b.dead||b.immune>0)return;b.dead=true;let burstMax=rand(cfg.burst[0],cfg.burst[1]),timing=null;if(cfg.burstGrow)burstMax=Math.min(cfg.burstCap,burstMax+Math.max(0,clickCount-1)*cfg.burstGrow);if(cfg.harvest){const value=Math.min(8,1+Math.floor(b.age/1.7));harvestValue+=value;burstMax+=Math.min(11,b.age*.85)}if(cfg.chemistry){if(b.c===palette[0])burstMax*=1.75;else if(b.c===palette[1])timing=[.25,1.12,.42];else if(b.c===palette[2]){for(let i=0;i<3;i++){const a=i*TAU/3+rand(-.2,.2);addBurst(b.x+Math.cos(a)*10,b.y+Math.sin(a)*10,4.8,b.c,false,{delay:.08+i*.035,timing:[.15,.18,.18]})}}else if(b.c===palette[4])addWell(b.x,b.y,'implode',{dur:.38,radius:58,strength:430,detonate:false,c:b.c});else if(b.c===palette[5])timing=[.12,.22,.20]}
+  addBurst(b.x,b.y,burstMax,b.c,false,{timing});
+  if(b.anchor)addBurst(b.x,b.y,13,b.c,false,{permanent:true,timing:[.24,999,0]});
+  if(b.splitter)spawnQueue.push({t:.34,x:b.x,y:b.y,count:3});
+  popsThisFrame++;popEnergy+=b.r/Math.max(.1,cfg.bubble[1]);const idx=palette.indexOf(b.c);if(idx>=0)noteMask|=(1<<idx);updateHint()}
+function clickField(x,y){if(finished){newBoard(false);return}if(cfg.oneTap&&clickCount>0)return;unlockAudio();const starterSize=nextStarterSize();clickCount++;if(cfg.implosion)addWell(x,y,'implode',{max:starterSize});else if(cfg.vortex)addWell(x,y,'vortex',{max:starterSize});else{const c=cfg.paint?paintColorAt(x):'#fff';addBurst(x,y,starterSize,c,true)}starterSound(starterSize);settle=0;updateHint();setStats()}
+function buildGrid(cell=28){const grid=new Map();for(let i=0;i<bubbles.length;i++){const b=bubbles[i];if(b.dead||b.immune>0)continue;const gx=Math.floor(b.x/cell),gy=Math.floor(b.y/cell),k=gx+','+gy;let a=grid.get(k);if(!a)grid.set(k,a=[]);a.push(i)}return{grid,cell}}
+function collide(gridData){const {grid,cell}=gridData;for(let qi=0;qi<bursts.length;qi++){const q=bursts[qi];if(q.r<=0||q.delay>0)continue;const reach=q.r+cfg.bubble[1]+10,minX=Math.floor((q.x-reach)/cell),maxX=Math.floor((q.x+reach)/cell),minY=Math.floor((q.y-reach)/cell),maxY=Math.floor((q.y+reach)/cell);for(let gx=minX;gx<=maxX;gx++)for(let gy=minY;gy<=maxY;gy++){const a=grid.get(gx+','+gy);if(!a)continue;for(const i of a){const b=bubbles[i];if(b.dead||b.immune>0)continue;if(cfg.paint&&q.c!=='#fff'&&b.c!==q.c)continue;const dx=b.x-q.x,dy=b.y-q.y,rr=b.r+q.r;if(dx*dx+dy*dy<rr*rr)explodeBubble(b,q)}}}}
+function updateWells(dt){for(const w of wells){w.t+=dt;const active=w.t<w.dur;for(const b of bubbles){if(b.dead||!active)continue;const dx=w.x-b.x,dy=w.y-b.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1;if(d>w.radius)continue;const fall=1-d/w.radius,fx=dx/d,fy=dy/d;if(w.type==='vortex'){const tx=-fy,ty=fx;b.vx+=(fx*w.strength*.55+tx*w.strength*.75)*fall*dt;b.vy+=(fy*w.strength*.55+ty*w.strength*.75)*fall*dt}else{b.vx+=fx*w.strength*fall*dt;b.vy+=fy*w.strength*fall*dt}const sp=Math.hypot(b.vx,b.vy),cap=w.type==='vortex'?125:115;if(sp>cap){b.vx=b.vx/sp*cap;b.vy=b.vy/sp*cap}}if(!active&&!w.done){w.done=true;if(w.detonate)addBurst(w.x,w.y,w.max,w.c,true)}}wells=wells.filter(w=>w.t<w.dur+.12)}
+function updateSpawns(dt){for(const q of spawnQueue)q.t-=dt;const ready=spawnQueue.filter(q=>q.t<=0);spawnQueue=spawnQueue.filter(q=>q.t>0);for(const q of ready)for(let i=0;i<q.count;i++){const a=rand(TAU),d=rand(4,12),b=makeBubble(q.x+Math.cos(a)*d,q.y+Math.sin(a)*d,true);b.vx+=Math.cos(a)*35;b.vy+=Math.sin(a)*35;bubbles.push(b)}}
+function endCheck(dt){if(clickCount===0)return;const transient=bursts.some(q=>!q.permanent)||wells.length||spawnQueue.length;if(transient)settle=0;else settle+=dt;if(settle<.32)return;const popped=bubbles.reduce((n,b)=>n+b.dead,0),left=liveCount();if(mode==='classic'){if(popped>=target){tone(880,.10,'sine',.035);setTimeout(()=>newBoard(true),240)}else{finished=true;resultBig.textContent=`${popped} / ${target}`;resultCopy.textContent=`That chain popped ${popped}. The original Bubble Chain only gives you one starter click.`;overlay.classList.add('show')}}else if(left===0){finished=true;if(cfg.harvest){resultBig.textContent=`${harvestValue} VALUE`;resultCopy.textContent=`You harvested the whole field in ${clickCount} click${clickCount===1?'':'s'}. Waiting longer makes each bubble more valuable, but also changes the chain geometry.`}else{resultBig.textContent=`${clickCount} CLICK${clickCount===1?'':'S'}`;resultCopy.textContent=`All ${bubbles.length.toLocaleString()} bubbles cleared in ${cfg.label}. Try another swarm—or another experiment.`}overlay.classList.add('show');tone(760,.09,'sine',.03);tone(960,.12,'triangle',.025,.08);try{navigator.vibrate?.([18,25,35])}catch(e){}}}
+function update(dt,now){if(finished)return;const speedScale=motionOn?1:0,newborn=[];for(const b of bubbles){if(b.dead)continue;b.phase+=dt*3;b.immune=Math.max(0,b.immune-dt);if(cfg.paint)b.c=paintColorAt(b.x);if(cfg.harvest){b.age+=dt;b.r=lerp(b.baseR,b.maxR,clamp(b.age/8,0,1))}if(b.breeder){b.breedT-=dt;if(b.breedT<=0&&liveCount()+newborn.length<cfg.breedCap){b.breedT=rand(1.7,3.1);const a=rand(TAU),baby=makeBubble(b.x+Math.cos(a)*8,b.y+Math.sin(a)*8,true);baby.c=Math.random()<.28?'#28d7c0':pick(palette);if(baby.c==='#28d7c0'&&Math.random()<.35){baby.breeder=true;baby.breedT=rand(2,3.5)}newborn.push(baby)}}b.x+=b.vx*dt*speedScale;b.y+=b.vy*dt*speedScale;if(b.x<b.r||b.x>W-b.r)b.vx*=-1;if(b.y<b.r||b.y>H-b.r)b.vy*=-1;b.x=clamp(b.x,b.r,W-b.r);b.y=clamp(b.y,b.r,H-b.r)}if(newborn.length)bubbles.push(...newborn);updateWells(dt);updateSpawns(dt);for(const q of bursts){if(q.delay>0){q.delay-=dt;q.r=0;continue}if(q.permanent){q.t+=dt;q.r=Math.min(q.max,lerp(2,q.max,clamp(q.t/q.expand,0,1)));continue}q.t+=dt;const e=q.expand,h=q.hold,s=q.shrink;q.r=q.t<e?lerp(2,q.max,q.t/e):q.t<e+h?q.max:lerp(q.max,0,(q.t-e-h)/s)}const cell=(mode==='tight'||mode==='grow'||cfg.paint||cfg.anchors)?16:28;collide(buildGrid(cell));bursts=bursts.filter(q=>q.permanent||q.delay>0||q.t<q.expand+q.hold+q.shrink);flushPopSound(now);endCheck(dt);setStats();updateHint()}
+function drawPaintFields(){if(!cfg.paint)return;for(let i=0;i<4;i++){ctx.fillStyle=paintPalette[i]+'18';ctx.fillRect(i*W/4,0,W/4,H);ctx.fillStyle=paintPalette[i]+'55';ctx.fillRect(i*W/4,0,W/4,3)}}
+function drawWell(w){const t=clamp(w.t/w.dur,0,1),r=w.radius*(.18+.82*(1-t*.35));circle(w.x,w.y,r,null,w.type==='vortex'?'rgba(124,92,255,.35)':'rgba(255,255,255,.25)',2);circle(w.x,w.y,6,w.type==='vortex'?'#7c5cff':'#fff');if(w.type==='vortex')for(let i=0;i<3;i++){const a=w.t*4+i*TAU/3;circle(w.x+Math.cos(a)*r*.45,w.y+Math.sin(a)*r*.45,3,'rgba(124,92,255,.65)')}}
+function drawBubble(b,many){if(cfg.fireflies){const flick=.65+.35*Math.sin(b.phase);ctx.save();ctx.globalAlpha=.35*flick;circle(b.x,b.y,b.r*3.2,b.c);ctx.globalAlpha=.45;ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.ellipse(b.x-b.r*1.3,b.y,b.r*1.3,b.r*.65,-.55,0,TAU);ctx.ellipse(b.x+b.r*1.3,b.y,b.r*1.3,b.r*.65,.55,0,TAU);ctx.fill();ctx.globalAlpha=1;circle(b.x,b.y,b.r,b.c);ctx.restore();return}circle(b.x,b.y,b.r,b.c);if(!many&&b.r>4)circle(b.x-b.r*.28,b.y-b.r*.28,b.r*.24,'rgba(255,255,255,.52)');if(b.breeder)circle(b.x,b.y,b.r+3,null,'rgba(40,215,192,.8)',1.2);if(b.splitter){circle(b.x,b.y,b.r+3,null,'rgba(255,209,102,.75)',1);for(let i=0;i<3;i++)circle(b.x+Math.cos(i*TAU/3)*b.r*.55,b.y+Math.sin(i*TAU/3)*b.r*.55,1,'#fff')}if(b.anchor){circle(b.x,b.y,b.r+3,null,'rgba(83,167,255,.8)',1);line(b.x-b.r-4,b.y,b.x+b.r+4,b.y,'rgba(83,167,255,.7)',1);line(b.x,b.y-b.r-4,b.x,b.y+b.r+4,'rgba(83,167,255,.7)',1)}if(cfg.harvest&&b.age>5)circle(b.x,b.y,b.r+2.5,null,`rgba(255,209,102,${clamp((b.age-5)/5,.18,.75)})`,1)}
+function draw(){bg();drawPaintFields();for(const w of wells)drawWell(w);const many=bubbles.length>300;for(const b of bubbles)if(!b.dead)drawBubble(b,many);for(const q of bursts){const alpha=q.permanent?.10:q.starter?.14:(mode==='grow'?.075:.055);circle(q.x,q.y,q.r,`rgba(255,255,255,${alpha})`,q.c,q.permanent?2.2:q.starter?3:1.7);if(q.permanent){circle(q.x,q.y,3,q.c);line(q.x-5,q.y,q.x+5,q.y,q.c,1);line(q.x,q.y-5,q.x,q.y+5,q.c,1)}if(mode==='grow'&&q.r>9)circle(q.x,q.y,Math.max(2,q.r-5),null,q.starter?'rgba(255,255,255,.16)':'rgba(255,255,255,.10)',1)}if(mode==='classic'){ctx.fillStyle='rgba(255,255,255,.72)';ctx.font='800 11px system-ui';ctx.textAlign='center';ctx.fillText(`ROUND ${round+1} · TARGET ${target}`,W/2,22)}if(cfg.chemistry){ctx.fillStyle='rgba(255,255,255,.58)';ctx.font='700 9px system-ui';ctx.textAlign='center';ctx.fillText('PURPLE = BIG   CYAN = LONG   GOLD = SATELLITES   BLUE = PULL',W/2,18)}}
+function loop(now){const dt=Math.min(.033,(now-last)/1000||0);last=now;update(dt,now);draw();anim=requestAnimationFrame(loop)}
+canvas.addEventListener('pointerdown',e=>{e.preventDefault();const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;clickField(x,y)});
+document.getElementById('modes').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(!b)return;mode=b.dataset.mode;round=0;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));newBoard(false)});
+document.getElementById('new').addEventListener('click',()=>newBoard(false));document.getElementById('again').addEventListener('click',()=>newBoard(false));
+document.getElementById('sound').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.textContent=`Sound · ${soundOn?'On':'Off'}`;e.currentTarget.classList.toggle('active',soundOn);if(soundOn)unlockAudio()});
+document.getElementById('motion').addEventListener('click',e=>{motionOn=!motionOn;e.currentTarget.textContent=`Motion · ${motionOn?'On':'Off'}`;e.currentTarget.classList.toggle('active',motionOn)});
+window.addEventListener('resize',()=>{resize();for(const b of bubbles){b.x=clamp(b.x,b.r,W-b.r);b.y=clamp(b.y,b.r,H-b.r)}});
+resize();newBoard(false);anim=requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

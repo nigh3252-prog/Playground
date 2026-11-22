@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Silver Rescue Mecha Character Variants - Three.js Prototype</title>
+  <style>
+    :root{
+      --panel: rgba(8, 13, 20, 0.82);
+      --panel2: rgba(15, 24, 35, 0.92);
+      --text: #eef7ff;
+      --muted: #a9c1d3;
+      --line: rgba(168,218,255,.22);
+      --accent: #79e7ff;
+      --warn: #ffcc66;
+    }
+    *{box-sizing:border-box;}
+    html, body { margin:0; height:100%; overflow:hidden; background:#10151b; color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    #stage { position:fixed; inset:0; touch-action:none; }
+    #hud {
+      position: fixed;
+      left: max(10px, env(safe-area-inset-left));
+      top: max(10px, env(safe-area-inset-top));
+      width: min(390px, calc(100vw - 20px));
+      max-height: calc(100vh - 20px);
+      overflow:auto;
+      background: var(--panel);
+      border:1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.4);
+      backdrop-filter: blur(10px);
+      z-index:3;
+    }
+    #hud.collapsed { width: auto; overflow: visible; }
+    #hud.collapsed .body { display:none; }
+    .topbar { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid var(--line); background: rgba(255,255,255,.03); }
+    .title { font-weight:700; font-size: 14px; letter-spacing:.02em; }
+    .sub { color:var(--muted); font-size:12px; margin-top:2px; }
+    button, select {
+      background: #172232;
+      color: var(--text);
+      border:1px solid rgba(121,231,255,.28);
+      border-radius: 10px;
+      padding:9px 10px;
+      font:inherit;
+      cursor:pointer;
+    }
+    button:hover, select:hover { border-color: rgba(121,231,255,.75); }
+    .body { padding: 10px 12px 12px; }
+    .row { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+    .row > button { flex:1 1 auto; min-width:88px; }
+    .small { color: var(--muted); font-size: 12px; line-height:1.35; }
+    .card { border:1px solid var(--line); background: rgba(255,255,255,.045); border-radius:14px; padding:10px; margin:9px 0; }
+    .card h3 { margin:0 0 5px; font-size:14px; color:#fff; }
+    .pill { display:inline-block; padding:3px 7px; border:1px solid rgba(255,255,255,.2); border-radius:999px; color:#cfefff; font-size:11px; margin:2px 4px 2px 0; background: rgba(121,231,255,.06); }
+    #legend { position:fixed; right:max(10px, env(safe-area-inset-right)); bottom:max(10px, env(safe-area-inset-bottom)); max-width:min(430px, calc(100vw - 20px)); background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 12px; color:var(--muted); font-size:12px; line-height:1.35; z-index:2; backdrop-filter: blur(8px); }
+    #loading { position:fixed; inset:0; display:grid; place-items:center; color:#dff6ff; background:linear-gradient(#111922,#0c1117); z-index:5; font-weight:700; }
+    @media (orientation: landscape) and (max-height: 560px) {
+      #hud { width: 330px; max-height: calc(100vh - 16px); top:8px; left:8px; }
+      .body { padding:8px 10px; }
+      .card { padding:8px; margin:7px 0; }
+      #legend { display:none; }
+    }
+    @media (max-width: 650px) {
+      #legend { font-size:11px; }
+      .row > button { min-width: 72px; padding:8px 7px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+  <div id="loading">Loading Three.js prototype…</div>
+
+  <section id="hud">
+    <div class="topbar">
+      <div>
+        <div class="title">Silver Rescue Mecha — 5 Arm-Free Variants</div>
+        <div class="sub">Low-poly, Mega Man Legends-ish proportions; original homage shapes.</div>
+      </div>
+      <button id="collapseBtn" title="Collapse panel">▾</button>
+    </div>
+    <div class="body">
+      <div class="row">
+        <button data-view="lineup">Lineup</button>
+        <button data-view="focus">Focus</button>
+        <button data-view="top">Top-down</button>
+        <button data-view="iso">Iso</button>
+      </div>
+      <div class="row">
+        <button id="prevBtn">◀ Prev</button>
+        <select id="modelSelect" aria-label="Select variant"></select>
+        <button id="nextBtn">Next ▶</button>
+      </div>
+      <div class="row">
+        <button id="spinBtn">Turntable: On</button>
+        <button id="walkBtn">Walk Cycle: On</button>
+        <button id="ringsBtn">Footprints: On</button>
+      </div>
+      <div id="info" class="card"></div>
+      <div class="small">
+        Controls: drag to orbit, pinch to zoom, two-finger drag to pan. These are intentionally shoulderless/arm-free so a separate weapon, summon arm, or pile-bunker effect can be attached later without fighting the character silhouette.
+      </div>
+    </div>
+  </section>
+
+  <div id="legend">
+    Design notes: all five borrow the <b>silver rescue / sixth-ranger / crash-tender mecha</b> language without copying exact helmet, suit, or zord forms. Big head, chunky boots, bright visor, and clean color blocking are tuned for top-down readability.
+  </div>
+
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const canvas = document.getElementById('stage');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x101820);
+    scene.fog = new THREE.Fog(0x101820, 18, 60);
+
+    const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 120);
+    camera.position.set(7, 5.5, 11);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = .08;
+    controls.target.set(0, 1.5, 0);
+    controls.minDistance = 4;
+    controls.maxDistance = 35;
+    controls.maxPolarAngle = Math.PI * .49;
+    controls.screenSpacePanning = true;
+    controls.touches.ONE = THREE.TOUCH.ROTATE;
+    controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+
+    const hemi = new THREE.HemisphereLight(0xcdeeff, 0x1a2030, 1.4);
+    scene.add(hemi);
+    const sun = new THREE.DirectionalLight(0xffffff, 2.4);
+    sun.position.set(6, 10, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 40;
+    sun.shadow.camera.left = -18;
+    sun.shadow.camera.right = 18;
+    sun.shadow.camera.top = 18;
+    sun.shadow.camera.bottom = -18;
+    scene.add(sun);
+    const rim = new THREE.DirectionalLight(0x7eefff, 1.05);
+    rim.position.set(-8, 4, -10);
+    scene.add(rim);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(90, 90, 1, 1),
+      new THREE.MeshStandardMaterial({ color:0x1a242e, roughness:.82, metalness:.05 })
+    );
+    ground.rotation.x = -Math.PI/2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const grid = new THREE.GridHelper(90, 90, 0x29465a, 0x1d313f);
+    grid.position.y = .012;
+    scene.add(grid);
+
+    const palette = {
+      silver: new THREE.MeshStandardMaterial({ color:0xbcc9d1, metalness:.42, roughness:.36, flatShading:true }),
+      darkSilver: new THREE.MeshStandardMaterial({ color:0x6f7f89, metalness:.42, roughness:.44, flatShading:true }),
+      white: new THREE.MeshStandardMaterial({ color:0xe8f2f4, metalness:.18, roughness:.42, flatShading:true }),
+      charcoal: new THREE.MeshStandardMaterial({ color:0x17222b, metalness:.2, roughness:.54, flatShading:true }),
+      black: new THREE.MeshStandardMaterial({ color:0x050b10, metalness:.15, roughness:.55, flatShading:true }),
+      cyan: new THREE.MeshStandardMaterial({ color:0x63e6ff, emissive:0x0c6f86, emissiveIntensity:.65, metalness:.1, roughness:.28, flatShading:true }),
+      tealGlass: new THREE.MeshStandardMaterial({ color:0x8af8ff, emissive:0x167a83, emissiveIntensity:.55, metalness:.2, roughness:.15, transparent:true, opacity:.86, flatShading:true }),
+      orange: new THREE.MeshStandardMaterial({ color:0xff9e35, emissive:0x522100, emissiveIntensity:.18, metalness:.15, roughness:.42, flatShading:true }),
+      red: new THREE.MeshStandardMaterial({ color:0xd33c3c, emissive:0x330000, emissiveIntensity:.15, metalness:.12, roughness:.47, flatShading:true }),
+      navy: new THREE.MeshStandardMaterial({ color:0x20384a, metalness:.24, roughness:.5, flatShading:true }),
+      yellow: new THREE.MeshStandardMaterial({ color:0xffd564, emissive:0x4a3100, emissiveIntensity:.18, metalness:.12, roughness:.48, flatShading:true }),
+      blue: new THREE.MeshStandardMaterial({ color:0x356bb3, emissive:0x061932, emissiveIntensity:.12, metalness:.16, roughness:.45, flatShading:true }),
+      rubber: new THREE.MeshStandardMaterial({ color:0x0b0d10, metalness:.1, roughness:.84, flatShading:true })
+    };
+
+    function roundedBox(w,h,d,r=0.05, s=1){
+      // Low-poly rounded-ish box from BoxGeometry plus bevel-like scale normals is overkill;
+      // use bevelled extrude for front-facing hero chunks where needed.
+      const shape = new THREE.Shape();
+      const x=w/2-r, y=h/2-r;
+      shape.moveTo(-x-r, -y);
+      shape.lineTo(-x-r, y);
+      shape.quadraticCurveTo(-x-r, y+r, -x, y+r);
+      shape.lineTo(x, y+r);
+      shape.quadraticCurveTo(x+r, y+r, x+r, y);
+      shape.lineTo(x+r, -y);
+      shape.quadraticCurveTo(x+r, -y-r, x, -y-r);
+      shape.lineTo(-x, -y-r);
+      shape.quadraticCurveTo(-x-r, -y-r, -x-r, -y);
+      const geo = new THREE.ExtrudeGeometry(shape, { depth:d, bevelEnabled:false, curveSegments:s, steps:1 });
+      geo.center();
+      return geo;
+    }
+
+    const G = {
+      box: (w,h,d) => new THREE.BoxGeometry(w,h,d),
+      cyl: (r,h,seg=8) => new THREE.CylinderGeometry(r,r,h,seg,1),
+      cone: (r,h,seg=8) => new THREE.ConeGeometry(r,h,seg,1),
+      sphere: (r,w=10,h=6) => new THREE.SphereGeometry(r,w,h),
+      wedge: (w,h,d) => {
+        const geo = new THREE.BufferGeometry();
+        const x=w/2,y=h/2,z=d/2;
+        const verts = new Float32Array([
+          -x,-y,-z,  x,-y,-z,  x,-y, z, -x,-y, z,
+          -x, y,-z,  x, y,-z,  0, y, z,
+          -x,-y,-z, -x,-y, z, -x, y,-z,
+           x,-y,-z,  x, y,-z,  x,-y, z,
+          -x,-y, z,  x,-y, z,  0, y, z,
+          -x, y,-z,  0, y, z,  x, y,-z
+        ]);
+        geo.setAttribute('position', new THREE.BufferAttribute(verts,3));
+        geo.computeVertexNormals();
+        return geo;
+      }
+    };
+
+    function mesh(geo, mat, pos=[0,0,0], rot=[0,0,0], scale=[1,1,1], name=''){
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(...pos); m.rotation.set(...rot); m.scale.set(...scale);
+      m.castShadow = true; m.receiveShadow = true; m.name = name;
+      return m;
+    }
+    function group(name){ const g = new THREE.Group(); g.name=name; return g; }
+    function addSym(parent, make, x=0){
+      const a = make(-Math.abs(x));
+      const b = make(Math.abs(x));
+      parent.add(a,b);
+      return [a,b];
+    }
+    function panel(parent, w,h,d, mat, pos, rot=[0,0,0], scale=[1,1,1]){
+      const m = mesh(roundedBox(w,h,d,.04,1), mat, pos, rot, scale);
+      parent.add(m); return m;
+    }
+    function stripe(parent, w,h,d, mat, pos, rot=[0,0,0]){
+      const m = mesh(G.box(w,h,d), mat, pos, rot);
+      parent.add(m); return m;
+    }
+    function visor(parent, type='wrap', colorMat=palette.tealGlass){
+      if(type==='wrap'){
+        panel(parent, .88, .23, .08, colorMat, [0, 2.96, .49]);
+        addSym(parent, (x)=> panel(group(), .18, .22, .07, colorMat, [x,2.94,.44], [0, x<0?-.55:.55,0]), .49).forEach(p=>parent.add(p));
+      } else if(type==='slash'){
+        panel(parent, .74, .16, .09, colorMat, [0,2.96,.52], [0,0,.08]);
+        panel(parent, .28, .13, .08, palette.cyan, [.28,2.88,.535], [0,0,-.35]);
+      } else if(type==='single'){
+        panel(parent, .47,.34,.09, colorMat, [0,2.98,.52]);
+      } else if(type==='V'){
+        panel(parent, .42,.13,.09, colorMat, [-.18,2.96,.53], [0,0,.38]);
+        panel(parent, .42,.13,.09, colorMat, [.18,2.96,.53], [0,0,-.38]);
+      }
+    }
+    function makeLeg(x, opts={}){
+      const leg = group('leg');
+      const mat = opts.mat || palette.darkSilver;
+      leg.position.x = x;
+      leg.add(mesh(G.box(.37,.92,.38), mat, [0,.98,0]));
+      leg.add(mesh(G.box(.44,.28,.46), opts.kneeMat || palette.silver, [0,.55,.03]));
+      leg.add(mesh(G.box(.41,.74,.36), mat, [0,.16,0]));
+      leg.add(mesh(G.wedge(.63,.3,.88), opts.bootMat || palette.rubber, [0,-.31,.18], [0,0,0]));
+      leg.add(mesh(G.box(.53,.16,.72), opts.soleMat || palette.black, [0,-.49,.2]));
+      return leg;
+    }
+    function baseBody({head='wrap', chestMat=palette.silver, hipMat=palette.darkSilver, legMat=palette.darkSilver, bootMat=palette.rubber, tall=false}={}){
+      const rig = group('body');
+      const pelvis = group('pelvis');
+      pelvis.position.y = tall ? 1.11 : 1.02;
+      pelvis.add(mesh(G.box(1.02,.54,.72), hipMat, [0,0,0]));
+      pelvis.add(mesh(G.box(.62,.22,.8), palette.charcoal, [0,.28,0]));
+      rig.add(pelvis);
+
+      const torso = group('torso');
+      torso.position.y = tall ? 1.78 : 1.65;
+      torso.add(mesh(G.wedge(1.42,1.1,.78), chestMat, [0,0,0], [0,Math.PI,0]));
+      torso.add(mesh(G.box(.88,.2,.84), palette.white, [0,.25,.02]));
+      torso.add(mesh(G.box(.72,.5,.08), palette.charcoal, [0,.05,.43]));
+      torso.add(mesh(G.box(.5,.12,.09), palette.cyan, [0,.28,.49]));
+      // Stub-free shoulder caps: present as armor mounted to torso, not arms.
+      addSym(torso, x=> mesh(G.box(.25,.72,.7), palette.darkSilver, [x,.1,0], [0,0,x<0?.1:-.1]), .82);
+      rig.add(torso);
+
+      const neck = mesh(G.cyl(.18,.16,8), palette.charcoal, [0, tall?2.38:2.25, 0], [Math.PI/2,0,0]);
+      rig.add(neck);
+      const helmet = group('helmet');
+      helmet.position.y = tall ? 2.78 : 2.64;
+      helmet.add(mesh(roundedBox(1.03,.78,.86,.11,2), palette.silver, [0,0,0]));
+      helmet.add(mesh(G.box(.8,.22,.18), palette.charcoal, [0,.13,.43]));
+      visor(helmet, head);
+      helmet.add(mesh(G.box(.34,.14,.34), palette.darkSilver, [0,.47,.02]));
+      rig.add(helmet);
+
+      const l = makeLeg(-.34, {mat:legMat, bootMat});
+      const r = makeLeg(.34, {mat:legMat, bootMat});
+      rig.add(l,r);
+      rig.userData.legs = [l,r];
+      rig.userData.torso = torso;
+      rig.userData.helmet = helmet;
+      return rig;
+    }
+
+    function addRangerDetails(model){
+      const rig = baseBody({head:'wrap', chestMat:palette.silver, legMat:palette.darkSilver, bootMat:palette.rubber});
+      model.add(rig);
+      const torso = rig.userData.torso;
+      // Chevron/sash marks instead of exact suit graphics.
+      torso.add(mesh(G.box(.16,.62,.095), palette.orange, [-.23,.08,.49], [0,0,-.55]));
+      torso.add(mesh(G.box(.16,.62,.095), palette.orange, [.23,.08,.49], [0,0,.55]));
+      torso.add(mesh(G.box(.62,.12,.1), palette.red, [0,-.22,.5]));
+      const helmet = rig.userData.helmet;
+      helmet.add(mesh(G.cone(.12,.42,8), palette.darkSilver, [-.39,.35,0], [0,0,.2]));
+      helmet.add(mesh(G.cone(.12,.42,8), palette.darkSilver, [.39,.35,0], [0,0,-.2]));
+      // Backpack antenna and no-arm profile fins.
+      const pack = mesh(G.box(.6,.72,.28), palette.navy, [0,1.8,-.52]);
+      model.add(pack);
+      addSym(model, x=> mesh(G.box(.13,.92,.22), palette.cyan, [x,1.8,-.72], [0,0,x<0?-.06:.06]), .42);
+    }
+
+    function addCrashTender(model){
+      const rig = baseBody({head:'slash', chestMat:palette.white, legMat:palette.silver, bootMat:palette.black, tall:true});
+      model.add(rig);
+      const torso = rig.userData.torso;
+      torso.add(mesh(G.box(1.0,.16,.1), palette.red, [0,.36,.5]));
+      torso.add(mesh(G.box(.22,.56,.1), palette.red, [-.34,.06,.5], [0,0,-.22]));
+      torso.add(mesh(G.box(.22,.56,.1), palette.red, [.34,.06,.5], [0,0,.22]));
+      // Fire-truck inspired top tank and roof light, but integrated into torso silhouette.
+      model.add(mesh(G.cyl(.28,.86,8), palette.red, [0,2.16,-.58], [Math.PI/2,0,0]));
+      model.add(mesh(G.box(.48,.18,.22), palette.yellow, [0,2.66,.52]));
+      addSym(model, x=> mesh(G.cyl(.16,.12,8), palette.rubber, [x,.52,.48], [Math.PI/2,0,0]), .52);
+      addSym(model, x=> mesh(G.cyl(.13,.14,8), palette.rubber, [x,.52,-.38], [Math.PI/2,0,0]), .52);
+      // Side pods read as folded rescue gear, not arms.
+      addSym(model, x=> mesh(G.box(.32,.98,.52), palette.white, [x,1.55,.02], [0,0,x<0?.06:-.06]), .93);
+    }
+
+    function addFlashpointChibi(model){
+      const rig = baseBody({head:'single', chestMat:palette.darkSilver, hipMat:palette.charcoal, legMat:palette.darkSilver, bootMat:palette.rubber});
+      rig.scale.set(1.08, .95, 1.08);
+      model.add(rig);
+      const torso = rig.userData.torso;
+      torso.add(mesh(G.box(1.04,.18,.1), palette.cyan, [0,.27,.5]));
+      torso.add(mesh(G.box(.18,.74,.1), palette.orange, [-.39,.04,.5]));
+      torso.add(mesh(G.box(.18,.74,.1), palette.orange, [.39,.04,.5]));
+      // Big zord head crest and truck bumper jaw.
+      const helmet = rig.userData.helmet;
+      helmet.add(mesh(G.box(.82,.16,.42), palette.white, [0,.42,.03]));
+      helmet.add(mesh(G.box(.44,.18,.18), palette.red, [0,-.42,.38]));
+      // No arms: huge shoulder blocks become silhouette armor/vehicle fenders.
+      addSym(model, x=> mesh(G.wedge(.58,.94,.9), palette.silver, [x,1.7,.02], [0,0,x<0?.13:-.13]), 1.05);
+      addSym(model, x=> mesh(G.cyl(.18,.18,8), palette.rubber, [x,1.33,.48], [Math.PI/2,0,0]), 1.14);
+      addSym(model, x=> mesh(G.cyl(.18,.18,8), palette.rubber, [x,1.33,-.43], [Math.PI/2,0,0]), 1.14);
+    }
+
+    function addMercurySentinel(model){
+      const rig = baseBody({head:'V', chestMat:palette.silver, legMat:palette.navy, bootMat:palette.rubber, tall:true});
+      model.add(rig);
+      const torso = rig.userData.torso;
+      torso.add(mesh(G.box(.92,.42,.11), palette.charcoal, [0,.02,.5]));
+      torso.add(mesh(G.box(.72,.11,.12), palette.cyan, [0,.08,.56]));
+      torso.add(mesh(G.box(.26,.56,.12), palette.yellow, [0,-.05,.57]));
+      // Tall mohawk/crest, less exact Ranger helmet and more MML bot silhouette.
+      const helmet = rig.userData.helmet;
+      helmet.add(mesh(G.wedge(.28,.68,.42), palette.orange, [0,.53,0], [0,0,0]));
+      helmet.add(mesh(G.box(.3,.16,.4), palette.charcoal, [0,-.47,.08]));
+      // Arm-free narrow waist with big shoulder pylons attached high.
+      addSym(model, x=> mesh(G.box(.28,1.18,.42), palette.darkSilver, [x,1.85,-.08], [0,0,x<0?-.16:.16]), 1.0);
+      addSym(model, x=> mesh(G.cone(.16,.55,8), palette.cyan, [x,2.48,-.16], [0,0,x<0?.18:-.18]), .95);
+      model.add(mesh(G.box(.74,.28,.5), palette.rubber, [0,.23,-.38]));
+    }
+
+    function addRunnerDrone(model){
+      // Most zord-like: compact hovering rescue-runner armor on legs, no humanoid arms.
+      const rig = baseBody({head:'slash', chestMat:palette.navy, hipMat:palette.darkSilver, legMat:palette.silver, bootMat:palette.rubber});
+      rig.scale.set(.96,.9,.96);
+      model.add(rig);
+      const torso = rig.userData.torso;
+      torso.add(mesh(G.box(.96,.38,.13), palette.white, [0,.11,.51]));
+      torso.add(mesh(G.box(.62,.12,.14), palette.red, [0,.21,.59]));
+      torso.add(mesh(G.box(.34,.14,.14), palette.cyan, [0,-.02,.6]));
+      // Hover van pods as side armor blocks; intentionally no arms/hands.
+      addSym(model, x=> mesh(G.box(.54,.62,1.05), palette.white, [x,1.58,0], [0,x<0?.1:-.1,0]), .97);
+      addSym(model, x=> mesh(G.box(.44,.22,.8), palette.red, [x,1.55,.08]), .99);
+      addSym(model, x=> mesh(G.cyl(.16,.16,8), palette.rubber, [x,.88,.48], [Math.PI/2,0,0]), 1.04);
+      addSym(model, x=> mesh(G.cyl(.16,.16,8), palette.rubber, [x,.88,-.48], [Math.PI/2,0,0]), 1.04);
+      addSym(model, x=> mesh(G.box(.32,.12,.58), palette.cyan, [x,1.92,-.62]), .98);
+      model.add(mesh(G.box(.6,.16,.22), palette.yellow, [0,2.55,.5]));
+    }
+
+    const variants = [
+      {
+        name:'01 Mercury Scout',
+        build:addRangerDetails,
+        tags:['ranger-first','bright visor','slim boots','backpack fins'],
+        note:'Most character-like. Good if the player avatar should still read as a ranger/suit rather than a vehicle mecha.'
+      },
+      {
+        name:'02 Crash-Tender Knight',
+        build:addCrashTender,
+        tags:['fire-rescue torso','red-white panels','truck wheels','taller silhouette'],
+        note:'Most rescue-zord flavored. The wheel dots and roof light make it readable from top-down without needing arms.'
+      },
+      {
+        name:'03 Flashpoint Chibi Bot',
+        build:addFlashpointChibi,
+        tags:['big zord head','chunky fenders','toyetic','wide shoulders'],
+        note:'Most Mega Man Legends toy-bot proportion: oversized head, chunky boots, simple blocks, strong top-down footprint.'
+      },
+      {
+        name:'04 Mercury Sentinel',
+        build:addMercurySentinel,
+        tags:['sleek crest','narrow body','energy pylon shoulders','hero boss shape'],
+        note:'Best for a faster elite/miniboss version. The high crest and pylon silhouette replace arm readability.'
+      },
+      {
+        name:'05 Rescue Runner Drone',
+        build:addRunnerDrone,
+        tags:['hover van pods','side blocks','compact','vehicle hybrid'],
+        note:'Most non-human/vehicle hybrid. It can be used as a tiny zord pilot, drone, or enemy variant.'
+      }
+    ];
+
+    const root = new THREE.Group(); scene.add(root);
+    const models = [];
+    const rings = [];
+    variants.forEach((v,i)=>{
+      const holder = group(v.name);
+      holder.position.x = (i-2)*3.2;
+      holder.userData.baseX = holder.position.x;
+      holder.userData.phase = i * .85;
+      v.build(holder);
+      // footprint / no-arm clearance ring
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(.72, .78, 32),
+        new THREE.MeshBasicMaterial({ color:0x80eaff, transparent:true, opacity:.42, side:THREE.DoubleSide })
+      );
+      ring.rotation.x = -Math.PI/2;
+      ring.position.y = .025;
+      holder.add(ring); rings.push(ring);
+      // top-down forward arrow
+      const arrow = mesh(G.wedge(.3,.09,.56), new THREE.MeshBasicMaterial({color:0xffcc66, transparent:true, opacity:.88}), [0,.04,.94], [-Math.PI/2,0,0]);
+      holder.add(arrow);
+      models.push(holder);
+      root.add(holder);
+    });
+
+    // soft labels as CSS-free canvas sprites
+    function makeLabel(text){
+      const c = document.createElement('canvas'); c.width=512; c.height=96;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0,0,c.width,c.height);
+      ctx.fillStyle='rgba(8,13,20,.72)'; ctx.strokeStyle='rgba(121,231,255,.38)'; ctx.lineWidth=3;
+      roundRect(ctx, 12, 12, 488, 72, 22); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#eaf7ff'; ctx.font='700 34px system-ui, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(text, 256, 50);
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+      const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true}));
+      spr.scale.set(2.55,.48,1); return spr;
+    }
+    function roundRect(ctx,x,y,w,h,r){
+      ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+    }
+    variants.forEach((v,i)=>{ const s=makeLabel(v.name.replace(/^\d\d /,'')); s.position.set(0,-.85,0); models[i].add(s); });
+
+    const select = document.getElementById('modelSelect');
+    variants.forEach((v,i)=>{ const opt = document.createElement('option'); opt.value=i; opt.textContent=v.name; select.appendChild(opt); });
+    const info = document.getElementById('info');
+    let selected=0, viewMode='lineup', spin=true, walk=true, showRings=true;
+
+    function setInfo(){
+      const v = variants[selected];
+      info.innerHTML = `<h3>${v.name}</h3><div>${v.tags.map(t=>`<span class="pill">${t}</span>`).join('')}</div><p class="small" style="margin:7px 0 0">${v.note}</p>`;
+      select.value = String(selected);
+    }
+    setInfo();
+
+    function setView(mode){
+      viewMode = mode;
+      if(mode==='lineup'){
+        controls.target.set(0,1.4,0);
+        camera.position.set(7,5.5,11);
+        controls.minDistance=4; controls.maxDistance=35;
+        models.forEach((m,i)=>{ m.visible=true; m.position.x=m.userData.baseX; m.rotation.y=0; });
+      } else if(mode==='focus'){
+        controls.target.set(0,1.55,0);
+        camera.position.set(4.2,3.7,7.4);
+        controls.minDistance=3; controls.maxDistance=16;
+        models.forEach((m,i)=>{ m.visible = i===selected; m.position.x=0; m.rotation.y=0; });
+      } else if(mode==='top'){
+        controls.target.set(0,1.0,0);
+        camera.position.set(0,14,0.02);
+        controls.minDistance=5; controls.maxDistance=30;
+        models.forEach((m,i)=>{ m.visible = i===selected; m.position.x=0; m.rotation.y=0; });
+      } else if(mode==='iso'){
+        controls.target.set(0,1.35,0);
+        camera.position.set(5.8,7.4,5.8);
+        controls.minDistance=4; controls.maxDistance=24;
+        models.forEach((m,i)=>{ m.visible = i===selected; m.position.x=0; m.rotation.y=0; });
+      }
+      controls.update();
+    }
+    function choose(n){ selected = (n+variants.length)%variants.length; setInfo(); setView(viewMode); }
+    document.querySelectorAll('button[data-view]').forEach(btn=> btn.addEventListener('click',()=>setView(btn.dataset.view)));
+    document.getElementById('prevBtn').addEventListener('click',()=>choose(selected-1));
+    document.getElementById('nextBtn').addEventListener('click',()=>choose(selected+1));
+    select.addEventListener('change',()=>choose(Number(select.value)));
+    document.getElementById('spinBtn').addEventListener('click',(e)=>{ spin=!spin; e.currentTarget.textContent=`Turntable: ${spin?'On':'Off'}`; });
+    document.getElementById('walkBtn').addEventListener('click',(e)=>{ walk=!walk; e.currentTarget.textContent=`Walk Cycle: ${walk?'On':'Off'}`; });
+    document.getElementById('ringsBtn').addEventListener('click',(e)=>{ showRings=!showRings; rings.forEach(r=>r.visible=showRings); e.currentTarget.textContent=`Footprints: ${showRings?'On':'Off'}`; });
+    const hud = document.getElementById('hud');
+    document.getElementById('collapseBtn').addEventListener('click',(e)=>{ hud.classList.toggle('collapsed'); e.currentTarget.textContent = hud.classList.contains('collapsed') ? '▸' : '▾'; });
+
+    function resize(){
+      renderer.setSize(innerWidth, innerHeight);
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+    }
+    addEventListener('resize', resize); resize();
+
+    const clock = new THREE.Clock();
+    function animate(){
+      const t = clock.getElapsedTime();
+      models.forEach((m,i)=>{
+        const active = viewMode==='lineup' || i===selected;
+        if(!active) return;
+        const phase = t*4.2 + m.userData.phase;
+        const bob = walk ? Math.abs(Math.sin(phase))*0.045 : 0;
+        m.position.y = bob;
+        if(spin && viewMode !== 'top') m.rotation.y += 0.0065;
+        else if(viewMode === 'top') m.rotation.y = Math.sin(t*.7)*.22;
+        const rig = m.children.find(c=>c.name==='body');
+        if(rig && rig.userData.legs){
+          rig.userData.legs[0].rotation.x = walk ? Math.sin(phase) * .18 : 0;
+          rig.userData.legs[1].rotation.x = walk ? -Math.sin(phase) * .18 : 0;
+          rig.userData.torso.rotation.z = walk ? Math.sin(phase*.5) * .025 : 0;
+          rig.userData.helmet.rotation.z = walk ? -Math.sin(phase*.5) * .018 : 0;
+        }
+      });
+      controls.update();
+      renderer.render(scene,camera);
+      requestAnimationFrame(animate);
+    }
+    setView('lineup');
+    document.getElementById('loading').style.display='none';
+    animate();
+  </script>
+</body>
+</html>

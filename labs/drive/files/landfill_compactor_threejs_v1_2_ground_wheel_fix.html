@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Three.js Landfill Compactor Lighting Test</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #07100c;
+    touch-action: none;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #f3f3df;
+  }
+  #app { position: fixed; inset: 0; overflow: hidden; }
+  canvas { display: block; position: absolute; inset: 0; }
+  #hud {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    background: rgba(4,7,5,.55);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 14px;
+    padding: 9px 11px;
+    font-size: 12px;
+    line-height: 1.35;
+    user-select: none;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+    z-index: 5;
+    box-shadow: 0 12px 34px rgba(0,0,0,.32);
+  }
+  #hud b { font-size: 13px; color: #fff6bd; }
+  #speed {
+    position: fixed;
+    right: 10px;
+    top: 68px;
+    background: rgba(4,7,5,.55);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 14px;
+    padding: 9px 11px;
+    min-width: 96px;
+    text-align: right;
+    font-size: 13px;
+    pointer-events: none;
+    user-select: none;
+    z-index: 5;
+    backdrop-filter: blur(4px);
+  }
+  #stickZone {
+    position: fixed;
+    inset: 0;
+    touch-action: none;
+    z-index: 2;
+  }
+  #stickBase, #stickKnob {
+    position: fixed;
+    border-radius: 999px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+  }
+  #stickBase {
+    width: 116px;
+    height: 116px;
+    display: block;
+    border: 2px solid rgba(255,255,255,.32);
+    background: rgba(255,255,255,.065);
+  }
+  #stickKnob {
+    width: 48px;
+    height: 48px;
+    display: block;
+    border: 2px solid rgba(255,255,255,.58);
+    background: rgba(255,244,176,.28);
+    box-shadow: 0 0 18px rgba(255,244,176,.18);
+  }
+  #menuWrap {
+    position: fixed;
+    right: 10px;
+    top: 10px;
+    z-index: 10;
+  }
+  #menuBtn {
+    width: 52px;
+    height: 48px;
+    min-width: 0;
+    padding: 0;
+    font-size: 28px;
+    line-height: 1;
+    border-radius: 14px;
+  }
+  #menuPanel {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 58px;
+    width: min(335px, calc(100vw - 22px));
+    max-height: calc(100vh - 86px);
+    overflow: auto;
+    background: rgba(3,7,5,.72);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.35), inset 0 0 24px rgba(255,210,110,.035);
+    backdrop-filter: blur(5px);
+  }
+  #menuPanel.open { display: block; }
+  .menuTitle {
+    font-weight: 700;
+    color: #fff6bd;
+    margin: 2px 2px 10px;
+    font-size: 14px;
+  }
+  .menuRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    margin: 9px 0;
+  }
+  .menuRow label {
+    font-size: 12px;
+    opacity: .9;
+  }
+  .menuHint {
+    font-size: 11px;
+    opacity: .76;
+    line-height: 1.25;
+    margin-top: -2px;
+  }
+  button, select {
+    color: #f8f3d4;
+    background: rgba(0,0,0,.48);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 14px;
+    padding: 11px 12px;
+    font-size: 14px;
+    backdrop-filter: blur(3px);
+  }
+  select { width: 100%; color-scheme: dark; }
+  button:active { transform: translateY(1px); background: rgba(70,70,40,.7); }
+  #msg {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-size: 13px;
+    opacity: .9;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+    z-index: 3;
+  }
+  #status {
+    position: fixed;
+    left: 10px;
+    bottom: 12px;
+    max-width: calc(100vw - 20px);
+    background: rgba(0,0,0,.5);
+    color: rgba(245,250,255,.85);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    padding: 8px 10px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 9;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="hud">
+  <b>Three.js Landfill Compactor</b><br>
+  Drag anywhere to drive/steer<br>
+  WASD / arrows also work<br>
+  Space = brake · R = reset
+</div>
+<div id="speed">0 mph<br><small>packed: 0</small></div>
+<div id="stickZone"></div>
+<div id="stickBase"></div>
+<div id="stickKnob"></div>
+<div id="menuWrap">
+  <button id="menuBtn" aria-label="Open menu">☰</button>
+  <div id="menuPanel">
+    <div class="menuTitle">Options</div>
+    <div class="menuRow">
+      <label for="cameraSelect">Camera</label>
+      <select id="cameraSelect">
+        <option value="0" selected>Chase</option>
+        <option value="1">Top</option>
+        <option value="2">Side</option>
+      </select>
+    </div>
+    <div class="menuRow">
+      <label for="zoomSelect">Zoom out</label>
+      <select id="zoomSelect">
+        <option value="1">1x close</option>
+        <option value="2">2x</option>
+        <option value="3" selected>3x default</option>
+        <option value="4">4x</option>
+        <option value="5">5x huge area</option>
+      </select>
+      <div class="menuHint">Three.js version: same play idea, rebuilt with PBR-ish materials, shadows, fog, headlights, and cinematic lighting.</div>
+    </div>
+    <div class="menuRow">
+      <label for="themeSelect">Trash / world theme</label>
+      <select id="themeSelect">
+        <option value="garbage" selected>Classic garbage dusk</option>
+        <option value="toxic">Toxic neon dump</option>
+        <option value="scrap">Rusty scrap yard</option>
+        <option value="office">Office paper avalanche</option>
+        <option value="wizard">Wizard junk dimension</option>
+        <option value="candy">Candy landfill</option>
+      </select>
+    </div>
+    <div class="menuRow">
+      <button id="lightingBtn">Lighting: cinematic</button>
+      <button id="headlightsBtn">Headlights: on</button>
+      <button id="shadowsBtn">Shadows: on</button>
+      <button id="wheelDirBtn">Wheel rotation: flipped</button>
+      <button id="joyModeBtn">Joystick: fixed home</button>
+      <button id="regenBtn">Regenerate trash grid</button>
+      <button id="resetBtn">Reset vehicle</button>
+    </div>
+  </div>
+</div>
+<div id="msg">Flatten trash · Three.js lighting/materials rebuild</div>
+<div id="status">Loading Three.js...</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+
+(() => {
+  "use strict";
+
+  const app = document.getElementById("app");
+  const hudSpeed = document.getElementById("speed");
+  const statusEl = document.getElementById("status");
+  const menuBtn = document.getElementById("menuBtn");
+  const menuPanel = document.getElementById("menuPanel");
+  const cameraSelect = document.getElementById("cameraSelect");
+  const zoomSelect = document.getElementById("zoomSelect");
+  const themeSelect = document.getElementById("themeSelect");
+  const lightingBtn = document.getElementById("lightingBtn");
+  const headlightsBtn = document.getElementById("headlightsBtn");
+  const shadowsBtn = document.getElementById("shadowsBtn");
+  const wheelDirBtn = document.getElementById("wheelDirBtn");
+  const joyModeBtn = document.getElementById("joyModeBtn");
+  const regenBtn = document.getElementById("regenBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const stickZone = document.getElementById("stickZone");
+  const stickBase = document.getElementById("stickBase");
+  const stickKnob = document.getElementById("stickKnob");
+
+  window.addEventListener("error", e => {
+    statusEl.textContent = "Scene error: " + (e.message || "unknown");
+  });
+  window.addEventListener("unhandledrejection", e => {
+    statusEl.textContent = "Scene error: " + ((e.reason && e.reason.message) || e.reason || "module failed");
+  });
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x08110c);
+  scene.fog = new THREE.FogExp2(0x1d271c, 0.0095);
+
+  const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.08, 680);
+  camera.position.set(0, 16, 28);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.98;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  app.appendChild(renderer.domElement);
+
+  const world = new THREE.Group();
+  scene.add(world);
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function smooth(t) { return t * t * (3 - 2 * t); }
+  function normAngle(a) {
+    while (a > Math.PI) a -= Math.PI * 2;
+    while (a < -Math.PI) a += Math.PI * 2;
+    return a;
+  }
+
+  function terrainH(x, z) {
+    return Math.sin(x * .19) * .13 + Math.sin(z * .13 + 1.7) * .11 + Math.sin((x + z) * .08) * .08;
+  }
+
+  function makeNoiseTexture(size = 512, base = "#2f3927", fleck = "#706d52", alpha = 0.32) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d");
+
+    // Dull landfill mat: mud, pulp, paper fibers, and compacted trash stains.
+    const grd = ctx.createLinearGradient(0, 0, size, size);
+    grd.addColorStop(0, base);
+    grd.addColorStop(0.45, "#252c20");
+    grd.addColorStop(1, "#171c14");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, size, size);
+
+    // Broad matted patches.
+    for (let i = 0; i < 140; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      const r = 18 + Math.random() * 110;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      const v = 25 + Math.random() * 55;
+      g.addColorStop(0, `rgba(${v},${v+8},${Math.max(12,v-8)},${0.10 + Math.random()*0.18})`);
+      g.addColorStop(1, "rgba(20,25,16,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Paper/cardboard scraps and small dirty flecks.
+    for (let i = 0; i < 1300; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      const w = 2 + Math.random() * 12;
+      const h = 1 + Math.random() * 6;
+      const a = Math.random() * Math.PI;
+      const palette = [
+        [120,112,82], [92,88,65], [64,75,60], [105,85,63], [50,58,48]
+      ][Math.floor(Math.random()*5)];
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(a);
+      ctx.fillStyle = `rgba(${palette[0]},${palette[1]},${palette[2]},${0.08 + Math.random()*0.18})`;
+      ctx.fillRect(-w/2, -h/2, w, h);
+      ctx.restore();
+    }
+
+    // Compactor-like streaks and flattened seams.
+    ctx.globalAlpha = 0.12;
+    ctx.strokeStyle = "#11160f";
+    for (let i = 0; i < 58; i++) {
+      const y = Math.random() * size;
+      ctx.lineWidth = 1 + Math.random() * 4;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= size; x += 40) {
+        ctx.lineTo(x, y + Math.sin(x * 0.025 + i) * (2 + Math.random()*8));
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(16, 16);
+    tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+    return tex;
+  }
+
+  function makeRoughnessTexture(size = 512) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d");
+
+    // Light roughness-map values are interpreted by Three.js as rough/satin here.
+    // Keep most of the surface rough and use only tiny darker damp spots.
+    ctx.fillStyle = "#eeeeee";
+    ctx.fillRect(0, 0, size, size);
+
+    for (let i = 0; i < 9000; i++) {
+      const v = 180 + Math.random() * 65;
+      ctx.fillStyle = `rgba(${v},${v},${v},${0.10 + Math.random()*0.18})`;
+      ctx.fillRect(Math.random()*size, Math.random()*size, 1 + Math.random()*3, 1 + Math.random()*3);
+    }
+
+    ctx.globalCompositeOperation = "multiply";
+    for (let i = 0; i < 42; i++) {
+      const x = Math.random()*size, y = Math.random()*size;
+      const w = size * (0.018 + Math.random()*0.055);
+      const h = size * (0.007 + Math.random()*0.022);
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(Math.random()*Math.PI);
+      ctx.scale(1, h/w);
+      const g = ctx.createRadialGradient(0,0,0,0,0,w);
+      g.addColorStop(0, "rgba(95,95,95,.52)");
+      g.addColorStop(1, "rgba(210,210,210,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0,0,w,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalCompositeOperation = "source-over";
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(16, 16);
+    tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+    return tex;
+  }
+
+  const texGround = makeNoiseTexture();
+  const texRough = makeRoughnessTexture();
+
+  const themes = {
+    garbage: {
+      bg: 0x08110c, fog: 0x1d271c,
+      groundColor: 0x40512b, groundEmissive: 0x000000,
+      trash: [0x5a6046,0x555b43,0x60634b,0x4d5540,0x68644d],
+      sun: 0xffd19b, fill: 0x7997bb, rim: 0x7ab5ff,
+      exposure: 0.98
+    },
+    toxic: {
+      bg: 0x03100b, fog: 0x06371c,
+      groundColor: 0x234126, groundEmissive: 0x061704,
+      trash: [0x275f34,0x2c6a38,0x315d3c,0x245033,0x386d3d],
+      sun: 0xd7ff91, fill: 0x41ffc8, rim: 0x2aff95,
+      exposure: 1.05
+    },
+    scrap: {
+      bg: 0x120c08, fog: 0x3d2418,
+      groundColor: 0x4b3a27, groundEmissive: 0x000000,
+      trash: [0x6a4d35,0x624932,0x5b4430,0x6c543a,0x554333],
+      sun: 0xffb36b, fill: 0x6f89a8, rim: 0xff7b30,
+      exposure: 0.94
+    },
+    office: {
+      bg: 0x111316, fog: 0x6d7068,
+      groundColor: 0x565d59, groundEmissive: 0x000000,
+      trash: [0xc8c5ae,0xbdbbaa,0xd2cfbd,0xb5b7b3,0xcec9b4],
+      sun: 0xffe5bd, fill: 0xb8d5ff, rim: 0xffffff,
+      exposure: 1.0
+    },
+    wizard: {
+      bg: 0x080415, fog: 0x1a0c35,
+      groundColor: 0x362657, groundEmissive: 0x05000d,
+      trash: [0x49345f,0x503964,0x423154,0x583f6b,0x3e355c],
+      sun: 0xb885ff, fill: 0x2ecaff, rim: 0xff4fcb,
+      exposure: 1.08
+    },
+    candy: {
+      bg: 0x1c1021, fog: 0x443057,
+      groundColor: 0x5d4f73, groundEmissive: 0x030002,
+      trash: [0xb983aa,0xa97fa4,0xc09ab0,0xa58cb7,0xb9979c],
+      sun: 0xffdef0, fill: 0x8eeaff, rim: 0xff8ed8,
+      exposure: 1.05
+    }
+  };
+
+  const settings = {
+    cameraMode: 0,
+    zoom: 3,
+    theme: "garbage",
+    cinematic: true,
+    headlights: true,
+    shadows: true,
+    wheelDir: -1,
+    joystickMode: "fixed",
+    joyHome: [96, 0]
+  };
+
+  const input = {
+    throttle: 0,
+    steer: 0,
+    brake: false,
+    keys: Object.create(null),
+    pointer: null,
+    stickStart: [0,0]
+  };
+
+  const compactor = {
+    x: 0, z: 0, y: 0,
+    yaw: 0,
+    speed: 0,
+    steer: 0,
+    wheelSpin: 0,
+    packed: 0,
+    rumble: 0
+  };
+
+  const WORLD_LIMIT = 215;
+  const TRASH_GRID_N = 42;
+  const TRASH_GRID_SPACING = 3.0;
+  const TRASH_CELL = 0.95;
+  const CRUSH_HALF_WIDTH = 4.35;
+  const CRUSH_FRONT = 3.55;
+  const CRUSH_REAR = 2.45;
+
+  const mats = {
+    ground: new THREE.MeshStandardMaterial({
+      color: 0x39452f,
+      map: texGround,
+      roughnessMap: texRough,
+      bumpMap: texGround,
+      bumpScale: 0.18,
+      roughness: 0.92,
+      metalness: 0.0,
+      envMapIntensity: 0.05
+    }),
+    packedGround: new THREE.MeshStandardMaterial({ color: 0x363b31, roughness: 0.72, metalness: 0.06 }),
+    trashBase: new THREE.MeshStandardMaterial({ color: 0x6a613f, roughness: 0.62, metalness: 0.05 }),
+    compactorYellow: new THREE.MeshPhysicalMaterial({ color: 0xd49d27, roughness: 0.36, metalness: 0.32, clearcoat: 0.35, clearcoatRoughness: 0.35 }),
+    compactorDirty: new THREE.MeshPhysicalMaterial({ color: 0x94711d, roughness: 0.58, metalness: 0.25, clearcoat: 0.15 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x272a27, roughness: 0.5, metalness: 0.72 }),
+    tire: new THREE.MeshStandardMaterial({ color: 0x090a08, roughness: 0.78, metalness: 0.03 }),
+    lug: new THREE.MeshStandardMaterial({ color: 0x131511, roughness: 0.68, metalness: 0.25 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0x4d8aa0, roughness: 0.12, metalness: 0, transparent: true, opacity: 0.55, clearcoat: 1, clearcoatRoughness: 0.05 }),
+    workLight: new THREE.MeshStandardMaterial({ color: 0xfff1c5, emissive: 0xffcc74, emissiveIntensity: 1.8 }),
+    red: new THREE.MeshStandardMaterial({ color: 0x8b211a, roughness: 0.5, metalness: 0.35 }),
+    rust: new THREE.MeshStandardMaterial({ color: 0x783b1d, roughness: 0.72, metalness: 0.35 }),
+    shadow: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })
+  };
+
+  function makeMat(color, roughness = 0.65, metalness = 0.05) {
+    return new THREE.MeshStandardMaterial({ color, roughness, metalness });
+  }
+
+  const trashMaterials = [];
+  function updateTrashMaterials() {
+    trashMaterials.length = 0;
+    const th = themes[settings.theme];
+    for (const c of th.trash) {
+      trashMaterials.push(new THREE.MeshStandardMaterial({
+        color: c,
+        roughness: settings.cinematic ? 0.62 : 0.72,
+        metalness: settings.cinematic ? 0.05 : 0.02,
+        envMapIntensity: settings.cinematic ? 0.25 : 0.05
+      }));
+    }
+  }
+
+  const sun = new THREE.DirectionalLight(0xffd19b, 2.4);
+  sun.position.set(-24, 38, 18);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -90;
+  sun.shadow.camera.right = 90;
+  sun.shadow.camera.top = 90;
+  sun.shadow.camera.bottom = -90;
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 130;
+  sun.shadow.bias = -0.00018;
+  scene.add(sun);
+
+  const hemi = new THREE.HemisphereLight(0x7997bb, 0x18230f, 0.9);
+  scene.add(hemi);
+
+  const rimLight = new THREE.DirectionalLight(0x7ab5ff, 1.1);
+  rimLight.position.set(30, 16, -28);
+  scene.add(rimLight);
+
+  const toxicGlow = new THREE.PointLight(0x36ff7a, 0, 85, 2.0);
+  toxicGlow.position.set(12, 7, -18);
+  scene.add(toxicGlow);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(460, 460, 90, 90), mats.ground);
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  const gpos = ground.geometry.attributes.position;
+  for (let i = 0; i < gpos.count; i++) {
+    const x = gpos.getX(i);
+    const y = gpos.getY(i);
+    gpos.setZ(i, terrainH(x, y));
+  }
+  ground.geometry.computeVertexNormals();
+  world.add(ground);
+
+  const bermGroup = new THREE.Group();
+  world.add(bermGroup);
+  function buildBerms() {
+    bermGroup.clear();
+    const mat = new THREE.MeshStandardMaterial({ color: 0x2d3f25, roughness: 0.82, metalness: 0.02 });
+    for (let i = 0; i < 20; i++) {
+      const a = i / 20 * Math.PI * 2;
+      const x = Math.cos(a) * 225, z = Math.sin(a) * 225;
+      const b = new THREE.Mesh(new THREE.BoxGeometry(36, 2.2, 8), mat);
+      b.position.set(x, terrainH(x,z) + 1.0, z);
+      b.rotation.y = -a;
+      b.castShadow = true;
+      b.receiveShadow = true;
+      bermGroup.add(b);
+    }
+    const rampMat = new THREE.MeshStandardMaterial({ color: 0x5c5135, roughness: 0.78 });
+    const ramp1 = new THREE.Mesh(new THREE.BoxGeometry(24, 1.0, 8.4), rampMat);
+    ramp1.position.set(-55, terrainH(-55,50)+0.35, 50);
+    ramp1.rotation.y = 0.55;
+    ramp1.castShadow = ramp1.receiveShadow = true;
+    bermGroup.add(ramp1);
+    const ramp2 = ramp1.clone();
+    ramp2.position.set(64, terrainH(64,-45)+0.25, -45);
+    ramp2.rotation.y = -0.4;
+    bermGroup.add(ramp2);
+  }
+
+  const trashGroup = new THREE.Group();
+  world.add(trashGroup);
+  const trashPiles = [];
+
+  const propGroup = new THREE.Group();
+  world.add(propGroup);
+  const props = [];
+  let seed = 7;
+  function rnd() { seed = (seed*1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+
+  function makeTrashPiece(x, z, gx, gz) {
+    const baseMat = trashMaterials[Math.floor(rnd() * trashMaterials.length)] || mats.trashBase;
+    const mat = baseMat.clone();
+    // Keep piles in a coherent landfill family; vary subtly so it does not look like random colored tiles.
+    if (mat.color) mat.color.offsetHSL((rnd() - 0.5) * 0.018, (rnd() - 0.5) * 0.05, (rnd() - 0.5) * 0.08);
+    const h = lerp(.55, 1.55, rnd());
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(TRASH_CELL * 1.8, h, TRASH_CELL * 1.8), mat);
+    mesh.position.set(x, terrainH(x,z) + h * 0.5, z);
+    mesh.rotation.y = rnd() * 0.22 - 0.11;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    trashGroup.add(mesh);
+    return {
+      mesh, x, z, gx, gz, h,
+      c: mat.color ? mat.color.clone() : new THREE.Color(0x6a613f),
+      squish: 0,
+      popStep: 0,
+      gone: false
+    };
+  }
+
+  function resetWorld() {
+    trashGroup.clear();
+    trashPiles.length = 0;
+    propGroup.clear();
+    props.length = 0;
+    seed = 11;
+    updateTrashMaterials();
+
+    const half = (TRASH_GRID_N - 1) * TRASH_GRID_SPACING * 0.5;
+    for (let gx = 0; gx < TRASH_GRID_N; gx++) {
+      for (let gz = 0; gz < TRASH_GRID_N; gz++) {
+        const x = -half + gx * TRASH_GRID_SPACING + (rnd()-.5)*0.22;
+        const z = -half + gz * TRASH_GRID_SPACING + (rnd()-.5)*0.22;
+        if (Math.hypot(x,z) < 5.8) continue;
+        trashPiles.push(makeTrashPiece(x, z, gx, gz));
+      }
+    }
+
+    const rustMat = mats.rust;
+    const redMat = mats.red;
+    for (let i = 0; i < 70; i++) {
+      let x=(rnd()-.5)*WORLD_LIMIT*1.76, z=(rnd()-.5)*WORLD_LIMIT*1.76;
+      if (Math.hypot(x,z)<14) { i--; continue; }
+      const type = rnd()<.55 ? "barrel" : "block";
+      const mesh = type === "barrel"
+        ? new THREE.Mesh(new THREE.CylinderGeometry(0.38,0.38,0.95,18), rnd()<.5 ? rustMat : redMat)
+        : new THREE.Mesh(new THREE.BoxGeometry(1.1,.55,.85), makeMat(0x4c565b, .74, .16));
+      mesh.position.set(x, terrainH(x,z) + (type === "barrel" ? .48 : .28), z);
+      mesh.rotation.y = rnd()*Math.PI*2;
+      mesh.castShadow = mesh.receiveShadow = true;
+      propGroup.add(mesh);
+      props.push({ mesh, x, z, type });
+    }
+    buildBerms();
+  }
+
+  const compactorGroup = new THREE.Group();
+  scene.add(compactorGroup);
+
+  const wheelMeshes = [];
+  const lugMeshes = [];
+
+  function box(parent, mat, pos, scale, rot=[0,0,0]) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), mat);
+    mesh.position.set(...pos);
+    mesh.scale.set(...scale);
+    mesh.rotation.set(...rot);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function cyl(parent, mat, pos, scale, rot=[0,0,0], radial=32) {
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(1,1,2,radial), mat);
+    mesh.position.set(...pos);
+    mesh.scale.set(...scale);
+    mesh.rotation.set(...rot);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function buildCompactor() {
+    // Model nose/blade is local +X. World yaw 0 drives world +Z, so group rotates yaw - PI/2.
+    box(compactorGroup, mats.compactorDirty, [-1.95,.78,0], [1.02,.92,1.12]);
+    box(compactorGroup, mats.steel, [-2.9,.7,0], [.18,.78,.92]);
+    for (let i=0;i<7;i++) box(compactorGroup, mats.compactorYellow, [-2.72,.12+i*.18,0], [.03,.028,.82]);
+
+    box(compactorGroup, mats.compactorYellow, [-.45,.72,0], [2.35,.18,1.12]);
+    box(compactorGroup, mats.compactorDirty, [.3,.25,0], [2.95,.36,.5]);
+    box(compactorGroup, mats.steel, [-.35,-.1,0], [2.1,.18,.34]);
+    box(compactorGroup, mats.compactorYellow, [-1.35,.72,.88], [.74,.42,.27]);
+    box(compactorGroup, mats.compactorYellow, [-1.35,.72,-.88], [.74,.42,.27]);
+
+    box(compactorGroup, mats.compactorDirty, [1.72,.35,0], [.98,.22,.50]);
+    box(compactorGroup, mats.steel, [1.82,.68,.58], [1.14,.09,.09], [0,0,-.58]);
+    box(compactorGroup, mats.steel, [1.82,.68,-.58], [1.14,.09,.09], [0,0,.58]);
+
+    box(compactorGroup, mats.steel, [3.2,.1,0], [.18,.92,2.05]);
+    box(compactorGroup, mats.steel, [3.0,-.42,0], [.34,.4,2.1], [0,0,.18]);
+    box(compactorGroup, mats.steel, [2.92,.82,0], [.12,.58,2.0], [0,0,-.09]);
+    for (let i=-8;i<=8;i++) box(compactorGroup, mats.steel, [2.86,.95,i*.21], [.05,.42,.028]);
+    box(compactorGroup, mats.steel, [2.9,.58,1.98], [.12,.76,.09], [0,.25,0]);
+    box(compactorGroup, mats.steel, [2.9,.58,-1.98], [.12,.76,.09], [0,-.25,0]);
+
+    box(compactorGroup, mats.compactorYellow, [.15,1.12,0], [1.3,.34,.98]);
+    box(compactorGroup, mats.steel, [.28,1.72,0], [.88,.6,.68]);
+    box(compactorGroup, mats.glass, [.55,1.72,.70], [.42,.42,.035]);
+    box(compactorGroup, mats.glass, [.55,1.72,-.70], [.42,.42,.035]);
+    box(compactorGroup, mats.glass, [1.05,1.7,0], [.035,.4,.43]);
+    box(compactorGroup, mats.glass, [-.1,1.72,0], [.035,.4,.43]);
+    box(compactorGroup, mats.compactorYellow, [.3,2.35,0], [1.0,.06,.78]);
+
+    for (const zRail of [1.18,-1.18]) {
+      box(compactorGroup, mats.red, [-.35,1.25,zRail], [1.72,.03,.03]);
+      box(compactorGroup, mats.red, [-.35,1.55,zRail], [1.72,.03,.03]);
+      for (const xPost of [-1.55,-.95,-.30,.35,.88]) box(compactorGroup, mats.red, [xPost,1.4,zRail], [.03,.35,.03]);
+    }
+
+    cyl(compactorGroup, mats.steel, [-1.25,1.7,.68], [.08,.56,.08], [0,0,Math.PI/2], 16);
+    cyl(compactorGroup, mats.steel, [-1.25,1.7,-.68], [.08,.56,.08], [0,0,Math.PI/2], 16);
+    box(compactorGroup, mats.workLight, [.95,2.28,.52], [.08,.08,.08]);
+    box(compactorGroup, mats.workLight, [.95,2.28,-.52], [.08,.08,.08]);
+
+    box(compactorGroup, mats.steel, [1.0,.0,0], [.32,.18,1.46]);
+    box(compactorGroup, mats.steel, [-1.3,.0,0], [.32,.18,1.46]);
+
+    const wheelPositions = [[1.1,-.18,1.62],[1.1,-.18,-1.62],[-1.42,-.18,1.62],[-1.42,-.18,-1.62]];
+    for (const wp of wheelPositions) {
+      const holder = new THREE.Group();
+      holder.position.set(wp[0], wp[1], wp[2]);
+      compactorGroup.add(holder);
+
+      // Steering turns the holder. Rolling happens in a child group around the axle.
+      // Cylinder axis stays local Y; the visible wheel is a round X/Z tire, thick along Y.
+      const rollGroup = new THREE.Group();
+      holder.add(rollGroup);
+
+      const wheel = cyl(rollGroup, mats.tire, [0,0,0], [.82,.30,.82], [0,0,0], 40);
+      cyl(rollGroup, mats.steel, [0,0,0], [.50,.32,.50], [0,0,0], 32);
+      cyl(rollGroup, mats.lug, [0,0,0], [.18,.35,.18], [0,0,0], 24);
+
+      wheelMeshes.push({ holder, rollGroup, wheel, local: wp });
+
+      // Lugs/spikes are children of the rolling group, so they roll with the tire.
+      for (let i=0;i<16;i++) {
+        const a = i / 16 * Math.PI * 2;
+        const lug = box(rollGroup, mats.lug, [Math.cos(a)*.82, 0.02, Math.sin(a)*.82], [.13,.09,.26]);
+        lug.rotation.y = a;
+      }
+    }
+
+    // Cheap contact shadow that remains readable even when real shadows are soft.
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(2.25, 48), mats.shadow);
+    shadow.rotation.x = -Math.PI/2;
+    shadow.position.set(0, -0.94, 0);
+    shadow.scale.set(1.85, .86, 1);
+    shadow.renderOrder = -1;
+    compactorGroup.add(shadow);
+  }
+
+  buildCompactor();
+
+  const headLight1 = new THREE.SpotLight(0xfff1cc, 0, 24, Math.PI/8, 0.55, 1.0);
+  const headLight2 = headLight1.clone();
+  headLight1.position.set(3.05, 1.2, .66);
+  headLight2.position.set(3.05, 1.2, -.66);
+  headLight1.target.position.set(13, .25, 1.1);
+  headLight2.target.position.set(13, .25, -1.1);
+  headLight1.castShadow = true;
+  headLight2.castShadow = true;
+  headLight1.shadow.mapSize.set(1024,1024);
+  headLight2.shadow.mapSize.set(1024,1024);
+  compactorGroup.add(headLight1, headLight2, headLight1.target, headLight2.target);
+
+  const rearGlow1 = new THREE.PointLight(0xff432f, 0.8, 5, 2);
+  rearGlow1.position.set(-2.6, .7, .55);
+  const rearGlow2 = rearGlow1.clone();
+  rearGlow2.position.set(-2.6, .7, -.55);
+  compactorGroup.add(rearGlow1, rearGlow2);
+
+  function resetCar() {
+    compactor.x = 0; compactor.z = 0; compactor.y = 0; compactor.yaw = 0;
+    compactor.speed = 0; compactor.steer = 0; compactor.wheelSpin = 0; compactor.packed = 0; compactor.rumble = 0;
+    for (const p of trashPiles) {
+      p.squish = 0; p.popStep = 0; p.gone = false;
+      p.mesh.scale.set(1,1,1);
+      p.mesh.position.y = terrainH(p.x,p.z) + p.h * 0.5;
+      if (p.mesh.material) {
+        p.mesh.material.roughness = settings.cinematic ? 0.62 : 0.72;
+        p.mesh.material.metalness = settings.cinematic ? 0.05 : 0.02;
+        p.mesh.material.envMapIntensity = settings.cinematic ? 0.25 : 0.05;
+      }
+      if (p.mesh.material.color && p.c) p.mesh.material.color.copy(p.c);
+      p.mesh.visible = true;
+    }
+  }
+
+  function currentTheme() { return themes[settings.theme] || themes.garbage; }
+
+  function applyTheme() {
+    const th = currentTheme();
+    scene.background.setHex(th.bg);
+    scene.fog.color.setHex(th.fog);
+    renderer.toneMappingExposure = th.exposure;
+    mats.ground.color.setHex(th.groundColor);
+    mats.ground.emissive.setHex(th.groundEmissive);
+    sun.color.setHex(th.sun);
+    hemi.color.setHex(th.fill);
+    rimLight.color.setHex(th.rim);
+
+    if (settings.cinematic) {
+      scene.fog.density = settings.theme === "toxic" ? 0.013 : 0.0095;
+      sun.intensity = 2.35;
+      hemi.intensity = 0.82;
+      rimLight.intensity = 0.82;
+      toxicGlow.intensity = settings.theme === "toxic" || settings.theme === "wizard" ? 0.8 : 0.0;
+      mats.ground.roughness = 0.92;
+      mats.ground.metalness = 0.0;
+      mats.ground.bumpScale = 0.18;
+    } else {
+      scene.fog.density = 0.004;
+      sun.intensity = 2.0;
+      hemi.intensity = 1.25;
+      rimLight.intensity = 0.15;
+      toxicGlow.intensity = 0;
+      mats.ground.roughness = 0.96;
+      mats.ground.metalness = 0.0;
+      mats.ground.bumpScale = 0.10;
+    }
+
+    updateTrashMaterials();
+  }
+
+  function updateInput() {
+    let th=0, st=0;
+    if (input.keys["w"] || input.keys["arrowup"]) th += 1;
+    if (input.keys["s"] || input.keys["arrowdown"]) th -= 1;
+    if (input.keys["a"] || input.keys["arrowleft"]) st += 1;
+    if (input.keys["d"] || input.keys["arrowright"]) st -= 1;
+    if (input.pointer) {
+      th = input.pointer.throttle;
+      st = input.pointer.steer;
+    }
+    input.throttle = clamp(th,-1,1);
+    input.steer = clamp(st,-1,1);
+  }
+
+  function update(dt) {
+    updateInput();
+
+    const accel = input.throttle > 0 ? 8.0 : 5.6;
+    const drag = 2.7;
+    const brakeForce = input.brake ? 12.5 : 0;
+    compactor.speed += input.throttle * accel * dt;
+    compactor.speed -= compactor.speed * drag * dt * (input.throttle === 0 ? 1.2 : .65);
+    if (input.brake) compactor.speed -= Math.sign(compactor.speed) * Math.min(Math.abs(compactor.speed), brakeForce*dt);
+    compactor.speed = clamp(compactor.speed, -5.5, 8.5);
+
+    const targetSteer = input.steer;
+    compactor.steer = lerp(compactor.steer, targetSteer, 1 - Math.pow(.001, dt));
+    const turn = compactor.steer * (0.82 + Math.abs(compactor.speed)*.08) * clamp(compactor.speed/5, -1, 1);
+    compactor.yaw += turn * dt;
+
+    compactor.x += Math.sin(compactor.yaw) * compactor.speed * dt;
+    compactor.z += Math.cos(compactor.yaw) * compactor.speed * dt;
+    if (Math.abs(compactor.x)>WORLD_LIMIT) { compactor.x=clamp(compactor.x,-WORLD_LIMIT,WORLD_LIMIT); compactor.speed *= -.25; }
+    if (Math.abs(compactor.z)>WORLD_LIMIT) { compactor.z=clamp(compactor.z,-WORLD_LIMIT,WORLD_LIMIT); compactor.speed *= -.25; }
+
+    compactor.wheelSpin += compactor.speed * dt * 2.4;
+    compactor.y = terrainH(compactor.x, compactor.z);
+    compactor.rumble = Math.max(0, compactor.rumble - dt*4.5);
+
+    // Crush trash in the compactor footprint.
+    const cx = compactor.x, cz = compactor.z;
+    const activeRadius = 128 * settings.zoom;
+    for (const p of trashPiles) {
+      if (Math.abs(p.x - cx) > activeRadius || Math.abs(p.z - cz) > activeRadius) continue;
+      const dx = p.x - cx, dz = p.z - cz;
+      const localForward = dx * Math.sin(compactor.yaw) + dz * Math.cos(compactor.yaw);
+      const localSide = dx * Math.cos(compactor.yaw) - dz * Math.sin(compactor.yaw);
+      const underWideCompactor = Math.abs(localSide) < CRUSH_HALF_WIDTH && localForward > -CRUSH_REAR && localForward < CRUSH_FRONT;
+
+      if (underWideCompactor && Math.abs(compactor.speed) > .16) {
+        const oldSquish = p.squish;
+        p.squish = Math.min(1, p.squish + dt*1.05 + Math.abs(compactor.speed)*dt*.22);
+        compactor.rumble = 1;
+
+        if (!p.gone && oldSquish < .98 && p.squish >= .98) {
+          p.gone = true;
+          compactor.packed++;
+        }
+
+        // Squashed trash becomes a low, wider, matte packed-trash pad.
+        // It should read as compacted garbage, not a shiny floor tile.
+        const uneven = 0.78 + 0.22 * Math.sin(p.x * 1.7 + p.z * 1.13);
+        const h = Math.max(.055, p.h * (1 - p.squish*.88) * uneven);
+        const spreadX = 1 + p.squish * 0.34;
+        const spreadZ = 1 + p.squish * 0.24;
+        p.mesh.scale.set(spreadX, h / p.h, spreadZ);
+        p.mesh.position.y = terrainH(p.x,p.z) + h * 0.5;
+        if (p.mesh.material) {
+          p.mesh.material.roughness = lerp(0.62, 0.96, smooth(p.squish));
+          p.mesh.material.metalness = lerp(0.05, 0.0, smooth(p.squish));
+          p.mesh.material.envMapIntensity = lerp(0.35, 0.02, smooth(p.squish));
+        }
+        if (p.mesh.material.color && p.c) {
+          const flatColor = new THREE.Color(currentTheme().groundColor).offsetHSL(0, -0.16, -0.03);
+          p.mesh.material.color.copy(p.c).lerp(flatColor, smooth(p.squish));
+        }
+      }
+    }
+
+    // Bump props.
+    for (const p of props) {
+      const d = Math.hypot(compactor.x-p.x, compactor.z-p.z);
+      if (d < 1.7) {
+        const ax = p.x - compactor.x, az = p.z - compactor.z;
+        const l = Math.hypot(ax,az)||1;
+        p.x += ax/l * dt * Math.abs(compactor.speed)*.8;
+        p.z += az/l * dt * Math.abs(compactor.speed)*.8;
+        p.mesh.position.x = p.x;
+        p.mesh.position.z = p.z;
+        p.mesh.position.y = terrainH(p.x,p.z) + (p.type === "barrel" ? .48 : .28);
+        compactor.speed *= .985;
+      }
+    }
+  }
+
+  function updateCompactorVisuals(t) {
+    const groundY = terrainH(compactor.x, compactor.z);
+    const rumbleKick = compactor.rumble ? Math.sin(t*42)*0.035 : 0;
+    const bob = Math.sin(t*13 + compactor.wheelSpin*.22) * Math.min(Math.abs(compactor.speed)*.012, .045) + rumbleKick;
+    compactorGroup.position.set(compactor.x, groundY + 1.0 + bob, compactor.z);
+    compactorGroup.rotation.y = compactor.yaw - Math.PI/2;
+    compactorGroup.rotation.z = Math.sin(t*5.2)*compactor.speed*.004;
+
+    for (const wp of wheelMeshes) {
+      const steerYaw = wp.local[0] > 0 ? compactor.steer*.26 : 0;
+      wp.holder.rotation.y = steerYaw;
+      // Wheel axle is local Y, so rolling spin is local Y.
+      wp.rollGroup.rotation.y = compactor.wheelSpin * settings.wheelDir;
+    }
+
+    const headlightsOn = settings.headlights && settings.cinematic;
+    headLight1.intensity = headlightsOn ? 10.5 : 0;
+    headLight2.intensity = headlightsOn ? 10.5 : 0;
+    rearGlow1.intensity = input.brake || Math.abs(input.throttle) < .05 ? 1.6 : 0.55;
+    rearGlow2.intensity = rearGlow1.intensity;
+  }
+
+  const cameraRig = {
+    pos: new THREE.Vector3(0,7,12),
+    target: new THREE.Vector3(0,1,0)
+  };
+
+  function updateCamera(dt) {
+    const fwd = new THREE.Vector3(Math.sin(compactor.yaw),0,Math.cos(compactor.yaw));
+    const right = new THREE.Vector3(Math.cos(compactor.yaw),0,-Math.sin(compactor.yaw));
+    const zf = settings.zoom;
+    const base = new THREE.Vector3(compactor.x, terrainH(compactor.x,compactor.z), compactor.z);
+    let desired, target;
+    if (settings.cameraMode === 0) {
+      desired = base.clone().add(fwd.clone().multiplyScalar(-9.2*zf)).add(new THREE.Vector3(0,5.2*zf,0));
+      target = base.clone().add(new THREE.Vector3(0,1.2,0)).add(fwd.clone().multiplyScalar(4.6));
+    } else if (settings.cameraMode === 1) {
+      desired = base.clone().add(new THREE.Vector3(0,14*zf,0.01));
+      target = base.clone();
+    } else {
+      desired = base.clone().add(new THREE.Vector3(0,2.0*zf,0)).add(right.multiplyScalar(5.5*zf)).add(fwd.multiplyScalar(-5.5*zf));
+      target = base.clone().add(new THREE.Vector3(0,.8,0));
+    }
+    const k = 1 - Math.pow(.004, dt);
+    cameraRig.pos.lerp(desired, k);
+    cameraRig.target.lerp(target, k);
+    camera.position.copy(cameraRig.pos);
+    camera.lookAt(cameraRig.target);
+  }
+
+  let last=performance.now();
+  const clock = new THREE.Clock();
+
+  function frame(now) {
+    const dt = Math.min(.033, (now-last)/1000 || .016);
+    last = now;
+    update(dt);
+    updateCompactorVisuals(now/1000);
+    updateCamera(dt);
+
+    renderer.render(scene, camera);
+
+    const mph = Math.round(Math.abs(compactor.speed) * 5.7);
+    hudSpeed.innerHTML = `${mph} mph<br><small>packed: ${compactor.packed}<br>${Math.round(compactor.packed / Math.max(1, trashPiles.length) * 100)}% flat</small>`;
+    requestAnimationFrame(frame);
+  }
+
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w,h);
+    placeStickHome();
+  }
+  window.addEventListener("resize", resize);
+
+  function placeStickHome() {
+    if (settings.joystickMode === "fixed") {
+      settings.joyHome = [Math.min(96, innerWidth * .24), innerHeight - 122];
+    }
+    stickBase.style.left = settings.joyHome[0] + "px";
+    stickBase.style.top = settings.joyHome[1] + "px";
+    if (!input.pointer) {
+      stickKnob.style.left = settings.joyHome[0] + "px";
+      stickKnob.style.top = settings.joyHome[1] + "px";
+    }
+  }
+  function showStick(x,y) {
+    if (settings.joystickMode === "floating") {
+      input.stickStart = [x, y];
+      settings.joyHome = [x, y];
+      stickBase.style.left = x + "px";
+      stickBase.style.top = y + "px";
+      stickKnob.style.left = x + "px";
+      stickKnob.style.top = y + "px";
+    } else {
+      placeStickHome();
+      input.stickStart = settings.joyHome.slice();
+    }
+  }
+  function moveStick(x,y) {
+    const dx = x - input.stickStart[0], dy = y - input.stickStart[1];
+    const max = 58;
+    const mag = Math.hypot(dx,dy);
+    const k = mag > max ? max/mag : 1;
+    const kx = dx*k, ky = dy*k;
+    stickKnob.style.left = (input.stickStart[0]+kx) + "px";
+    stickKnob.style.top = (input.stickStart[1]+ky) + "px";
+    input.pointer = {
+      steer: clamp(-kx/max, -1, 1),
+      throttle: clamp(-ky/max, -1, 1)
+    };
+  }
+  function hideStick() {
+    input.pointer = null;
+    placeStickHome();
+  }
+
+  stickZone.addEventListener("pointerdown", e => {
+    if (e.target.closest && e.target.closest("#menuWrap")) return;
+    stickZone.setPointerCapture(e.pointerId);
+    showStick(e.clientX, e.clientY);
+    moveStick(e.clientX, e.clientY);
+  });
+  stickZone.addEventListener("pointermove", e => {
+    if (stickZone.hasPointerCapture(e.pointerId)) moveStick(e.clientX, e.clientY);
+  });
+  stickZone.addEventListener("pointerup", hideStick);
+  stickZone.addEventListener("pointercancel", hideStick);
+
+  addEventListener("keydown", e => {
+    input.keys[e.key.toLowerCase()] = true;
+    if (e.key === " ") input.brake = true;
+    if (e.key.toLowerCase() === "r") resetCar();
+  });
+  addEventListener("keyup", e => {
+    input.keys[e.key.toLowerCase()] = false;
+    if (e.key === " ") input.brake = false;
+  });
+
+  menuBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    menuPanel.classList.toggle("open");
+  });
+  menuPanel.addEventListener("pointerdown", e => e.stopPropagation());
+  menuPanel.addEventListener("click", e => e.stopPropagation());
+  document.addEventListener("pointerdown", e => {
+    if (!e.target.closest || !e.target.closest("#menuWrap")) menuPanel.classList.remove("open");
+  });
+
+  cameraSelect.addEventListener("change", () => {
+    settings.cameraMode = Number(cameraSelect.value);
+  });
+  zoomSelect.addEventListener("change", () => {
+    settings.zoom = Number(zoomSelect.value);
+  });
+  themeSelect.addEventListener("change", () => {
+    settings.theme = themeSelect.value;
+    applyTheme();
+    resetWorld();
+    resetCar();
+  });
+  lightingBtn.addEventListener("click", () => {
+    settings.cinematic = !settings.cinematic;
+    lightingBtn.textContent = "Lighting: " + (settings.cinematic ? "cinematic" : "classic");
+    applyTheme();
+  });
+  headlightsBtn.addEventListener("click", () => {
+    settings.headlights = !settings.headlights;
+    headlightsBtn.textContent = "Headlights: " + (settings.headlights ? "on" : "off");
+  });
+  shadowsBtn.addEventListener("click", () => {
+    settings.shadows = !settings.shadows;
+    renderer.shadowMap.enabled = settings.shadows;
+    sun.castShadow = settings.shadows;
+    headLight1.castShadow = settings.shadows;
+    headLight2.castShadow = settings.shadows;
+    shadowsBtn.textContent = "Shadows: " + (settings.shadows ? "on" : "off");
+    scene.traverse(obj => {
+      if (obj.isMesh) {
+        obj.castShadow = settings.shadows && obj.material !== mats.shadow;
+        obj.receiveShadow = settings.shadows || obj === ground;
+      }
+    });
+  });
+  regenBtn.addEventListener("click", () => {
+    resetWorld();
+    resetCar();
+  });
+  wheelDirBtn.addEventListener("click", () => {
+    settings.wheelDir *= -1;
+    wheelDirBtn.textContent = settings.wheelDir === 1 ? "Wheel rotation: normal" : "Wheel rotation: flipped";
+  });
+  joyModeBtn.addEventListener("click", () => {
+    settings.joystickMode = settings.joystickMode === "fixed" ? "floating" : "fixed";
+    joyModeBtn.textContent = settings.joystickMode === "fixed" ? "Joystick: fixed home" : "Joystick: floating";
+    placeStickHome();
+  });
+  resetBtn.addEventListener("click", () => resetCar());
+
+  document.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+
+  applyTheme();
+  resetWorld();
+  resetCar();
+  resize();
+  statusEl.textContent = "Three.js rebuild loaded · drag to drive";
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Bent Horizon Camera Prototype V10.2</title>
+<style>
+  :root {
+    --panel: rgba(18, 13, 18, 0.76);
+    --panel2: rgba(42, 31, 39, 0.72);
+    --line: rgba(255, 178, 178, 0.24);
+    --text: #f2dfd4;
+    --muted: #c1a69f;
+    --accent: #d45858;
+    --accent2: #f277a2;
+  }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #161116;
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #app {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+  #hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+  .panel {
+    pointer-events: auto;
+    background: linear-gradient(180deg, var(--panel), rgba(8, 7, 9, 0.54));
+    border: 1px solid var(--line);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.34);
+    backdrop-filter: blur(7px);
+    border-radius: 14px;
+  }
+  #topPanel {
+    position: absolute;
+    left: max(10px, env(safe-area-inset-left));
+    top: max(10px, env(safe-area-inset-top));
+    width: min(470px, calc(100vw - 20px));
+    padding: 10px;
+  }
+  #titleRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  #title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #ffe7dd;
+    flex: 1;
+  }
+  .tiny {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+  #modeButtons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+    margin-bottom: 8px;
+  }
+  button {
+    border: 1px solid rgba(255, 210, 190, 0.22);
+    background: rgba(54, 42, 47, 0.78);
+    color: #f7dfd7;
+    border-radius: 12px;
+    padding: 9px 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    touch-action: manipulation;
+  }
+  button:active { transform: translateY(1px); }
+  button.active {
+    background: linear-gradient(180deg, rgba(169, 64, 68, 0.95), rgba(78, 34, 41, 0.95));
+    border-color: rgba(255, 179, 151, 0.74);
+    box-shadow: inset 0 1px rgba(255,255,255,0.12), 0 0 20px rgba(196, 65, 86, 0.25);
+  }
+  #modeText {
+    min-height: 42px;
+    font-size: 12px;
+    color: #e8cfc6;
+    line-height: 1.34;
+  }
+  #smallControls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  #smallControls button {
+    padding: 7px 8px;
+    border-radius: 10px;
+    min-width: 72px;
+  }
+  .sliderWrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 1;
+    min-width: 170px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: #c95361;
+  }
+  #gamepadStatus {
+    position: absolute;
+    right: max(10px, env(safe-area-inset-right));
+    top: max(10px, env(safe-area-inset-top));
+    max-width: min(330px, calc(100vw - 20px));
+    padding: 9px 10px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #e8cbc3;
+  }
+  #helpPanel {
+    position: absolute;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    max-width: min(440px, calc(100vw - 20px));
+    padding: 10px 12px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  #legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .chip {
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05);
+    padding: 3px 7px;
+    border-radius: 999px;
+    color: #dcc5bd;
+  }
+  #joyZone {
+    pointer-events: auto;
+    position: absolute;
+    left: max(14px, env(safe-area-inset-left));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    width: 138px;
+    height: 138px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(244, 196, 184, 0.06), rgba(244, 196, 184, 0.02) 54%, rgba(244, 196, 184, 0.05) 55%);
+    border: 1px solid rgba(244, 196, 184, 0.15);
+    box-shadow: inset 0 0 24px rgba(0,0,0,0.28), 0 10px 35px rgba(0,0,0,0.34);
+    touch-action: none;
+  }
+  #joyKnob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 54px;
+    height: 54px;
+    margin-left: -27px;
+    margin-top: -27px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, rgba(255, 230, 218, 0.78), rgba(151, 83, 88, 0.74));
+    border: 1px solid rgba(255,255,255,0.26);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.45);
+  }
+  #quickCamBtn {
+    pointer-events: auto;
+    position: absolute;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    min-width: 92px;
+    min-height: 52px;
+    padding: 10px 12px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(178, 72, 78, 0.94), rgba(82, 36, 44, 0.94));
+    border-color: rgba(255, 193, 160, 0.62);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.36), 0 0 18px rgba(213, 82, 98, 0.22);
+    z-index: 5;
+  }
+  #quickCamBtn small {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255, 229, 218, 0.72);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1px;
+  }
+  #touchLookHint {
+    position: absolute;
+    left: 52%;
+    bottom: max(28px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.22);
+    color: rgba(240,220,212,0.58);
+    font-size: 11px;
+    pointer-events: none;
+  }
+
+  #seamBlend {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    opacity: 0;
+    display: none;
+    background: linear-gradient(to bottom, rgba(106,72,86,0.00) 0%, rgba(76,45,56,0.18) 22%, rgba(56,34,43,0.72) 50%, rgba(31,21,27,0.34) 76%, rgba(18,13,18,0.00) 100%);
+    z-index: 2;
+  }
+
+  #loading {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 50% 35%, #3a2931, #151116 62%);
+    color: #f1dfd7;
+    font-weight: 700;
+    text-align: center;
+    padding: 30px;
+    z-index: 10;
+  }
+  #loading small {
+    display: block;
+    margin-top: 8px;
+    color: #bea49d;
+    font-weight: 500;
+  }
+
+  #topPanel.collapsed {
+    width: auto;
+    min-width: 0;
+    max-width: calc(100vw - 20px);
+    padding: 7px 8px;
+    border-radius: 999px;
+  }
+  #topPanel.collapsed #titleRow { margin-bottom: 0; }
+  #topPanel.collapsed #title {
+    font-size: 12px;
+    white-space: nowrap;
+    max-width: 44vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #topPanel.collapsed #resetBtn,
+  #topPanel.collapsed #modeButtons,
+  #topPanel.collapsed #modeText,
+  #topPanel.collapsed #smallControls { display: none; }
+  #collapseBtn {
+    min-width: 56px;
+    padding: 7px 9px;
+    border-radius: 999px;
+  }
+  @media (max-width: 780px) {
+    #title { font-size: 12px; }
+    #resetBtn { min-width: 58px; }
+    #topPanel:not(.collapsed) { max-height: 46vh; overflow: auto; }
+  }
+
+  @media (max-width: 780px) {
+    #topPanel { width: calc(100vw - 20px); }
+    #gamepadStatus { display: none; }
+    #helpPanel { display: none; }
+    #modeText { font-size: 11px; }
+    button { padding: 10px 6px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="loading">Loading Three.js prototype…<small>This file uses the Three.js CDN, so it needs internet access the first time it opens.</small></div>
+<div id="hud">
+  <div id="topPanel" class="panel">
+    <div id="titleRow">
+      <div id="title">Bent Horizon Camera Prototype V10.2</div>
+      <button id="resetBtn" title="Reset player position">Reset</button>
+      <button id="collapseBtn" title="Hide/show the menu">Hide</button>
+    </div>
+    <div id="modeButtons">
+      <button id="btnA" class="active">A · Top-down</button>
+      <button id="btnB">B · 3rd-person</button>
+      <button id="btnC">C · Bent horizon</button>
+      <button id="btnD">D · 2-cam</button>
+    </div>
+    <div id="modeText"></div>
+    <div id="smallControls">
+      <button id="fullBtn">Fullscreen</button>
+      <button id="cycleBtn">Cycle Cam</button>
+      <div class="sliderWrap">
+        <span>Bend</span>
+        <input id="bendSlider" type="range" min="0" max="240" value="110" />
+      </div>
+      <div class="sliderWrap">
+        <span>Zoom</span>
+        <input id="zoomSlider" type="range" min="0" max="100" value="38" />
+      </div>
+      <div class="sliderWrap">
+        <span>Top Angle</span>
+        <input id="topAngleSlider" type="range" min="0" max="100" value="50" />
+      </div>
+      <div class="sliderWrap">
+        <span>Sky Y</span>
+        <input id="skyYSlider" type="range" min="-100" max="100" value="18" />
+      </div>
+      <div class="sliderWrap">
+        <span>Ground Cut</span>
+        <input id="groundCutSlider" type="range" min="0" max="100" value="46" />
+      </div>
+      <div class="sliderWrap">
+        <span>Blend Height</span>
+        <input id="blendHeightSlider" type="range" min="50" max="88" value="72" />
+      </div>
+      <div class="sliderWrap">
+        <span>Blend Soft</span>
+        <input id="blendSoftSlider" type="range" min="0" max="100" value="42" />
+      </div>
+      <div class="sliderWrap">
+        <span>Seam Fog</span>
+        <input id="seamFogSlider" type="range" min="0" max="100" value="62" />
+      </div>
+      <div class="sliderWrap">
+        <span>Top Cull</span>
+        <input id="topCullSlider" type="range" min="6" max="70" value="24" />
+      </div>
+      <div class="sliderWrap">
+        <span>Top FOV</span>
+        <input id="topFovSlider" type="range" min="20" max="70" value="34" />
+      </div>
+      <div class="sliderWrap">
+        <span>Seam Bend</span>
+        <input id="seamBendSlider" type="range" min="0" max="180" value="72" />
+      </div>
+    </div>
+  </div>
+  <div id="gamepadStatus" class="panel">Backbone/Gamepad: waiting. Press any gamepad button if Android has not exposed it yet.</div>
+  <div id="helpPanel" class="panel">
+    <b>Controls</b><br>
+    Touch: left joystick moves. Drag right side to look/rotate the camera. Keyboard: WASD/arrow keys. Backbone/gamepad: left stick moves, right stick looks, LB/RB cycles camera, Start toggles fullscreen.
+    <div id="legend">
+      <span class="chip">Red: executioner</span>
+      <span class="chip">Black: player ronin</span>
+      <span class="chip">Pale: idol companion</span>
+      <span class="chip">Tower + monster = horizon test</span>
+    </div>
+  </div>
+  <div id="seamBlend"></div>
+  <button id="quickCamBtn"><small>Camera</small>A</button>
+  <div id="joyZone"><div id="joyKnob"></div></div>
+  <div id="touchLookHint">right side drag = look / orbit</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const loading = document.getElementById('loading');
+  if (!window.THREE) {
+    loading.innerHTML = 'Three.js did not load.<small>Open this file with an internet connection, or replace the CDN script with a local Three.js build.</small>';
+    return;
+  }
+
+  const THREE = window.THREE;
+  const app = document.getElementById('app');
+  const modeText = document.getElementById('modeText');
+  const gamepadStatus = document.getElementById('gamepadStatus');
+  const bendSlider = document.getElementById('bendSlider');
+  const zoomSlider = document.getElementById('zoomSlider');
+  const topAngleSlider = document.getElementById('topAngleSlider');
+  const skyYSlider = document.getElementById('skyYSlider');
+  const groundCutSlider = document.getElementById('groundCutSlider');
+  const blendHeightSlider = document.getElementById('blendHeightSlider');
+  const blendSoftSlider = document.getElementById('blendSoftSlider');
+  const seamFogSlider = document.getElementById('seamFogSlider');
+  const topCullSlider = document.getElementById('topCullSlider');
+  const topFovSlider = document.getElementById('topFovSlider');
+  const seamBendSlider = document.getElementById('seamBendSlider');
+  const quickCamBtn = document.getElementById('quickCamBtn');
+  const seamBlend = document.getElementById('seamBlend');
+  const topPanel = document.getElementById('topPanel');
+  const collapseBtn = document.getElementById('collapseBtn');
+  const titleEl = document.getElementById('title');
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.16;
+  renderer.shadowMap.enabled = false;
+  renderer.setClearColor(0x2d222b, 1);
+  renderer.autoClear = false;
+  app.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = null;
+  scene.fog = new THREE.Fog(0x33262f, 24, 112);
+
+  const clock = new THREE.Clock();
+  const tmpVec = new THREE.Vector3();
+  const tmpVec2 = new THREE.Vector3();
+  const tmpMat = new THREE.Matrix4();
+
+  // Screen-locked sky pass. This is rendered first, then the 3D world is rendered on top.
+  // That makes the moon behave like a skybox element: it stays readable even when the
+  // camera moves, while the bent ground/tower can still reveal or hide parts of it.
+  const skyScene2D = new THREE.Scene();
+  const skyCamera2D = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+  skyCamera2D.position.z = 5;
+  const skyRoot2D = new THREE.Group();
+  skyScene2D.add(skyRoot2D);
+
+  function makeSkyBaseTexture() {
+    const c = document.createElement('canvas');
+    c.width = 1024;
+    c.height = 1024;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, c.height);
+    g.addColorStop(0.00, '#4b3442');
+    g.addColorStop(0.35, '#6b3c49');
+    g.addColorStop(0.70, '#4b2d36');
+    g.addColorStop(1.00, '#251820');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, c.width, c.height);
+
+    const glow = ctx.createRadialGradient(710, 315, 16, 710, 315, 390);
+    glow.addColorStop(0.00, 'rgba(255, 94, 112, 0.36)');
+    glow.addColorStop(0.42, 'rgba(196, 72, 93, 0.17)');
+    glow.addColorStop(1.00, 'rgba(0, 0, 0, 0.00)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, c.width, c.height);
+
+    // Very soft smoke bands baked into the sky gradient; the brighter moving wisps are separate.
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 9; i++) {
+      const y = 160 + i * 58;
+      ctx.beginPath();
+      ctx.strokeStyle = i % 2 ? 'rgba(20, 10, 17, 0.20)' : 'rgba(109, 52, 65, 0.18)';
+      ctx.lineWidth = 16 + i * 1.4;
+      ctx.moveTo(-120, y);
+      ctx.bezierCurveTo(180, y - 92, 420, y + 72, 680, y - 18);
+      ctx.bezierCurveTo(820, y - 62, 980, y + 42, 1160, y - 30);
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < 115; i++) {
+      const x = Math.abs(seededNoise(800 + i * 19.7)) * c.width;
+      const y = 62 + Math.abs(seededNoise(1200 + i * 23.9)) * 530;
+      const r = 0.8 + Math.abs(seededNoise(2400 + i * 4.1)) * 2.6;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(244, 101, 158, ${0.17 + Math.abs(seededNoise(1600 + i * 12.2)) * 0.45})`;
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  const skyBase2D = new THREE.Mesh(
+    new THREE.PlaneGeometry(4, 2),
+    new THREE.MeshBasicMaterial({ map: makeSkyBaseTexture(), depthWrite: false, depthTest: false })
+  );
+  skyBase2D.renderOrder = -100;
+  skyScene2D.add(skyBase2D);
+
+  const moonGroup2D = new THREE.Group();
+  skyRoot2D.add(moonGroup2D);
+  const moon2D = new THREE.Mesh(
+    new THREE.CircleGeometry(0.155, 96),
+    new THREE.MeshBasicMaterial({ color: 0xff334b, transparent: true, opacity: 0.97, depthWrite: false, depthTest: false, side: THREE.DoubleSide })
+  );
+  moonGroup2D.add(moon2D);
+  const moonCut2D = new THREE.Mesh(
+    new THREE.CircleGeometry(0.145, 96),
+    new THREE.MeshBasicMaterial({ color: 0x4b3442, transparent: true, opacity: 1.0, depthWrite: false, depthTest: false, side: THREE.DoubleSide })
+  );
+  moonCut2D.position.set(0.073, 0.042, 0.01);
+  moonGroup2D.add(moonCut2D);
+
+  function makeCloudTexture(seed, color = 'rgba(255, 235, 196, 0.86)') {
+    const c = document.createElement('canvas');
+    c.width = 512;
+    c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(255, 208, 184, 0.18)';
+    ctx.shadowBlur = 12;
+
+    const lanes = 2 + Math.floor(Math.abs(seededNoise(seed * 3.1)) * 2);
+    for (let j = 0; j < lanes; j++) {
+      const y = 42 + j * 28 + Math.abs(seededNoise(seed + j * 11.4)) * 10;
+      const start = 22 + Math.abs(seededNoise(seed + j * 17.7)) * 52;
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 5 + Math.abs(seededNoise(seed + j * 7.4)) * 4;
+      ctx.moveTo(start, y);
+      ctx.bezierCurveTo(150, y - 34, 230, y + 28, 330, y - 4);
+      ctx.bezierCurveTo(410, y - 28, 458, y + 18, 500, y + 2);
+      ctx.stroke();
+    }
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  const cloudWisps2D = [];
+  function addCloudWisp(x, y, w, h, speed, seed, alpha = 1) {
+    const mat = new THREE.MeshBasicMaterial({
+      map: makeCloudTexture(seed),
+      transparent: true,
+      opacity: alpha,
+      depthWrite: false,
+      depthTest: false,
+      side: THREE.DoubleSide
+    });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    m.position.set(x, y, 0.04);
+    m.userData.baseX = x;
+    m.userData.speed = speed;
+    m.userData.wrapW = w;
+    skyRoot2D.add(m);
+    cloudWisps2D.push(m);
+    return m;
+  }
+
+  addCloudWisp(-0.12, 0.46, 0.72, 0.18, 0.018, 3.1, 0.90);
+  addCloudWisp( 0.46, 0.36, 0.70, 0.16, 0.012, 8.2, 0.72);
+  addCloudWisp( 0.03, 0.27, 0.95, 0.18, 0.010, 12.7, 0.67);
+  addCloudWisp( 0.73, 0.55, 0.36, 0.12, 0.023, 15.4, 0.88);
+
+  function updateSky2D(t) {
+    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    const skyOffset = (Number(skyYSlider?.value ?? 18) / 100) * 0.62;
+    skyRoot2D.position.y = skyOffset;
+    skyCamera2D.left = -aspect;
+    skyCamera2D.right = aspect;
+    skyCamera2D.top = 1;
+    skyCamera2D.bottom = -1;
+    skyCamera2D.updateProjectionMatrix();
+
+    // Lower than the old moon and biased right, so the tower can sit on one side
+    // while the moon/cloud shape remains visible on the other side.
+    const x = aspect * 0.47;
+    const y = 0.46 + Math.sin(t * 0.12) * 0.018;
+    moonGroup2D.position.set(x, y, 0.02);
+    moonGroup2D.scale.setScalar(1.0 + Math.sin(t * 0.07) * 0.012);
+
+    for (const m of cloudWisps2D) {
+      const span = aspect * 2 + m.userData.wrapW + 0.2;
+      let localX = m.userData.baseX + t * m.userData.speed;
+      localX = ((localX + span * 0.5) % span) - span * 0.5;
+      m.position.x = localX;
+    }
+  }
+
+  const bendUniforms = {
+    uPlayerXZ: { value: new THREE.Vector2(0, 0) },
+    uBendDir: { value: new THREE.Vector2(0, -1) },
+    uBendStart: { value: 18.0 },
+    uBendStrength: { value: 0.0 },
+    uBendMaxDrop: { value: 22.0 },
+    uGroundClipStart: { value: 999.0 },
+    uGroundClipOn: { value: 0.0 },
+    uHorizonCullZ: { value: -16.0 },
+    uHorizonCullOn: { value: 0.0 },
+    uBandNearZ: { value: 999.0 },
+    uBandFarZ: { value: -999.0 },
+    uBandCullOn: { value: 0.0 }
+  };
+
+  function makeBentMaterial(color, roughness = 0.92, metalness = 0.02, groundClip = false) {
+    const mat = new THREE.MeshStandardMaterial({
+      color,
+      roughness,
+      metalness,
+      flatShading: true
+    });
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uPlayerXZ = bendUniforms.uPlayerXZ;
+      shader.uniforms.uBendDir = bendUniforms.uBendDir;
+      shader.uniforms.uBendStart = bendUniforms.uBendStart;
+      shader.uniforms.uBendStrength = bendUniforms.uBendStrength;
+      shader.uniforms.uBendMaxDrop = bendUniforms.uBendMaxDrop;
+      shader.uniforms.uGroundClipStart = bendUniforms.uGroundClipStart;
+      shader.uniforms.uGroundClipOn = bendUniforms.uGroundClipOn;
+      shader.uniforms.uHorizonCullZ = bendUniforms.uHorizonCullZ;
+      shader.uniforms.uHorizonCullOn = bendUniforms.uHorizonCullOn;
+      shader.uniforms.uBandNearZ = bendUniforms.uBandNearZ;
+      shader.uniforms.uBandFarZ = bendUniforms.uBandFarZ;
+      shader.uniforms.uBandCullOn = bendUniforms.uBandCullOn;
+      shader.uniforms.uBandNearZ = bendUniforms.uBandNearZ;
+      shader.uniforms.uBandFarZ = bendUniforms.uBandFarZ;
+      shader.uniforms.uBandCullOn = bendUniforms.uBandCullOn;
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `#include <common>
+        uniform vec2 uPlayerXZ;
+        uniform vec2 uBendDir;
+        uniform float uBendStart;
+        uniform float uBendStrength;
+        uniform float uBendMaxDrop;
+        varying float vBendD;
+        varying float vWorldZ;`
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `vec3 transformed = vec3(position);
+        vec4 worldBeforeBend = modelMatrix * vec4(transformed, 1.0);
+        vec2 bendDir = normalize(uBendDir);
+        float bendD = dot(worldBeforeBend.xz - uPlayerXZ, bendDir);
+        vBendD = bendD;
+        vWorldZ = worldBeforeBend.z;
+        if (bendD > uBendStart) {
+          float t = bendD - uBendStart;
+          // Smooth + capped falloff keeps the far band coherent, so big distant objects
+          // do not visually peel away from the ground as aggressively.
+          float softT = t * smoothstep(0.0, 14.0, t);
+          transformed.y -= min(softT * softT * uBendStrength, uBendMaxDrop);
+        }`
+      );
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        `#include <common>
+        uniform float uGroundClipStart;
+        uniform float uGroundClipOn;
+        uniform float uHorizonCullZ;
+        uniform float uHorizonCullOn;
+        uniform float uBandNearZ;
+        uniform float uBandFarZ;
+        uniform float uBandCullOn;
+        varying float vBendD;
+        varying float vWorldZ;`
+      );
+
+      const groundClipLine = groundClip
+        ? `if (uGroundClipOn > 0.5 && vBendD > uGroundClipStart) { discard; }`
+        : ``;
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <alphatest_fragment>',
+        `#include <alphatest_fragment>
+        // D / two-camera mode: top scenic camera can hard-cull near-side world geometry.
+        // This keeps the player and nearby objects out of the horizon band.
+        if (uHorizonCullOn > 0.5 && vWorldZ > uHorizonCullZ) { discard; }
+        if (uBandCullOn > 0.5 && (vWorldZ > uBandNearZ || vWorldZ < uBandFarZ)) { discard; }
+        ${groundClipLine}`
+      );
+
+      mat.userData.shader = shader;
+    };
+    return mat;
+  }
+
+  function makeBentBasicMaterial(options, groundClip = false) {
+    const mat = new THREE.MeshBasicMaterial(options);
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uPlayerXZ = bendUniforms.uPlayerXZ;
+      shader.uniforms.uBendDir = bendUniforms.uBendDir;
+      shader.uniforms.uBendStart = bendUniforms.uBendStart;
+      shader.uniforms.uBendStrength = bendUniforms.uBendStrength;
+      shader.uniforms.uBendMaxDrop = bendUniforms.uBendMaxDrop;
+      shader.uniforms.uGroundClipStart = bendUniforms.uGroundClipStart;
+      shader.uniforms.uGroundClipOn = bendUniforms.uGroundClipOn;
+      shader.uniforms.uHorizonCullZ = bendUniforms.uHorizonCullZ;
+      shader.uniforms.uHorizonCullOn = bendUniforms.uHorizonCullOn;
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `#include <common>
+        uniform vec2 uPlayerXZ;
+        uniform vec2 uBendDir;
+        uniform float uBendStart;
+        uniform float uBendStrength;
+        uniform float uBendMaxDrop;
+        varying float vBendD;
+        varying float vWorldZ;`
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `vec3 transformed = vec3(position);
+        vec4 worldBeforeBend = modelMatrix * vec4(transformed, 1.0);
+        vec2 bendDir = normalize(uBendDir);
+        float bendD = dot(worldBeforeBend.xz - uPlayerXZ, bendDir);
+        vBendD = bendD;
+        vWorldZ = worldBeforeBend.z;
+        if (bendD > uBendStart) {
+          float t = bendD - uBendStart;
+          float softT = t * smoothstep(0.0, 14.0, t);
+          transformed.y -= min(softT * softT * uBendStrength, uBendMaxDrop);
+        }`
+      );
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        `#include <common>
+        uniform float uGroundClipStart;
+        uniform float uGroundClipOn;
+        uniform float uHorizonCullZ;
+        uniform float uHorizonCullOn;
+        uniform float uBandNearZ;
+        uniform float uBandFarZ;
+        uniform float uBandCullOn;
+        varying float vBendD;
+        varying float vWorldZ;`
+      );
+
+      const groundClipLine = groundClip
+        ? `if (uGroundClipOn > 0.5 && vBendD > uGroundClipStart) { discard; }`
+        : ``;
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <alphatest_fragment>',
+        `#include <alphatest_fragment>
+        if (uHorizonCullOn > 0.5 && vWorldZ > uHorizonCullZ) { discard; }
+        if (uBandCullOn > 0.5 && (vWorldZ > uBandNearZ || vWorldZ < uBandFarZ)) { discard; }
+        ${groundClipLine}`
+      );
+
+      mat.userData.shader = shader;
+    };
+    return mat;
+  }
+
+  const matGroundBase = makeBentMaterial(0x362a31, 0.98, 0.0, true);
+  const matGround1 = makeBentMaterial(0x46343d, 0.97, 0.0, true);
+  const matGround2 = makeBentMaterial(0x563d40, 0.96, 0.0, true);
+  const matGround3 = makeBentMaterial(0x333238, 0.98, 0.0, true);
+  [matGround1, matGround2, matGround3].forEach((m) => { m.transparent = true; m.opacity = 0.52; m.depthWrite = false; });
+  const matStone = makeBentMaterial(0x84716d, 0.9, 0.03);
+  const matDarkStone = makeBentMaterial(0x383333, 0.95, 0.02);
+  const matBlack = makeBentMaterial(0x17171c, 0.9, 0.04);
+  const matBlack2 = makeBentMaterial(0x242329, 0.9, 0.03);
+  const matRed = makeBentMaterial(0xaa3636, 0.86, 0.02);
+  const matRedDark = makeBentMaterial(0x682024, 0.92, 0.02);
+  const matBlade = makeBentMaterial(0x8c8175, 0.82, 0.12);
+  const matBlood = makeBentMaterial(0x7b171a, 0.92, 0.02);
+  const matPale = makeBentMaterial(0xd3c4b2, 0.92, 0.0);
+  const matPurple = makeBentMaterial(0x59415e, 0.94, 0.01);
+  const matGlow = new THREE.MeshBasicMaterial({ color: 0xff5b62 });
+  const matMoon = new THREE.MeshBasicMaterial({ color: 0xff4b58, transparent: true, opacity: 0.94, side: THREE.DoubleSide });
+  const matSkyStreak = new THREE.MeshBasicMaterial({ color: 0x09070a, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+
+  const hemi = new THREE.HemisphereLight(0xffcdc2, 0x20171d, 2.08);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffd0bd, 2.85);
+  dir.position.set(-12, 22, 14);
+  scene.add(dir);
+  const redLight = new THREE.PointLight(0xff565e, 17, 42, 1.7);
+  redLight.position.set(-22, 9, -45);
+  scene.add(redLight);
+
+  const world = new THREE.Group();
+  scene.add(world);
+
+  function addBox(parent, size, pos, mat, rotY = 0) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), mat);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    mesh.rotation.y = rotY;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function addCylinder(parent, radiusTop, radiusBottom, height, radial, pos, mat, rotX = 0, rotZ = 0) {
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radial, 1, false), mat);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    mesh.rotation.x = rotX;
+    mesh.rotation.z = rotZ;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function seededNoise(n) {
+    return Math.sin(n * 12.9898) * 43758.5453 % 1;
+  }
+
+  // Cohesive terrain: one continuous floor handles the bend, so the horizon falls away as a
+  // single sheet instead of lots of small tiles moving at visibly different rates.
+  const groundGeo = new THREE.PlaneGeometry(112, 132, 96, 124);
+  const ground = new THREE.Mesh(groundGeo, matGroundBase);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.set(0, -0.045, -26);
+  world.add(ground);
+
+  // Soft color patches sit on top as visual texture only. They are transparent and low-contrast
+  // so seams do not read as broken geometry when the background bends away.
+  const tileMats = [matGround1, matGround2, matGround3];
+  const tileGeo = new THREE.PlaneGeometry(4.1, 4.1, 1, 1);
+  for (let ix = -13; ix <= 13; ix++) {
+    for (let iz = -18; iz <= 10; iz++) {
+      const r = Math.abs(seededNoise(ix * 37 + iz * 19));
+      if (r < 0.18) continue;
+      const mat = tileMats[Math.floor(r * tileMats.length) % tileMats.length];
+      const mesh = new THREE.Mesh(tileGeo, mat);
+      const x = ix * 4 + (r - 0.5) * 0.16;
+      const z = iz * 4 + (Math.abs(seededNoise(ix * 11 - iz * 31)) - 0.5) * 0.16;
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(x, 0.006, z);
+      world.add(mesh);
+    }
+  }
+
+  // Water/reflection strips, deliberately simple.
+  const waterMat = makeBentBasicMaterial({ color: 0x3c2931, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false }, true);
+  for (let i = 0; i < 5; i++) {
+    const strip = new THREE.Mesh(new THREE.PlaneGeometry(18 + i * 4, 2.4), waterMat);
+    strip.rotation.x = -Math.PI / 2;
+    strip.rotation.z = 0.15 * Math.sin(i);
+    strip.position.set(-18 + i * 9, 0.012, 8 - i * 7);
+    world.add(strip);
+  }
+
+  // Dramatic sky plate: this is intentionally a backdrop layer, not gameplay geometry.
+  function makeSkyTexture() {
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 512;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, c.height);
+    g.addColorStop(0.00, '#2c202a');
+    g.addColorStop(0.42, '#52313d');
+    g.addColorStop(1.00, '#24191f');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, c.width, c.height);
+
+    // Soft smoky red glow behind the moon.
+    const glow = ctx.createRadialGradient(735, 140, 10, 735, 140, 270);
+    glow.addColorStop(0, 'rgba(255,82,98,0.42)');
+    glow.addColorStop(0.45, 'rgba(170,52,72,0.19)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, c.width, c.height);
+
+    function drawWisp(points, width, alpha) {
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = 'rgba(255, 219, 174, 0.18)';
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = `rgba(255, 231, 190, ${alpha})`;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (let i = 1; i < points.length - 1; i += 2) {
+        ctx.quadraticCurveTo(points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Pale, simple cloud strokes inspired by the sketch: clean wisps rather than scribbly lines.
+    drawWisp([[300,210],[390,188],[506,203],[610,198],[686,205]], 7, 0.82);
+    drawWisp([[335,230],[430,228],[520,226]], 5, 0.65);
+    drawWisp([[430,305],[560,292],[700,280],[820,286]], 6, 0.78);
+    drawWisp([[815,148],[870,135],[920,148]], 5, 0.82);
+    drawWisp([[44,262],[64,272],[84,266]], 4, 0.82);
+
+    // Tiny hot-pink star/ash flecks.
+    for (let i = 0; i < 170; i++) {
+      const x = Math.abs(seededNoise(i * 31.7)) * c.width;
+      const y = 24 + Math.abs(seededNoise(i * 18.9)) * 260;
+      const r = 0.7 + Math.abs(seededNoise(i * 7.1)) * 2.2;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(242, 98, 156, ${0.18 + Math.abs(seededNoise(i * 12.2)) * 0.55})`;
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Long smoky brush bands.
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 7; i++) {
+      const y = 85 + i * 35 + Math.abs(seededNoise(i * 5.5)) * 24;
+      ctx.beginPath();
+      ctx.strokeStyle = i % 2 ? 'rgba(12,8,11,0.42)' : 'rgba(95,45,55,0.20)';
+      ctx.lineWidth = 9 + i * 1.9;
+      ctx.moveTo(-80, y);
+      ctx.bezierCurveTo(180, y - 70, 350, y + 52, 560, y - 18);
+      ctx.bezierCurveTo(720, y - 62, 890, y + 55, 1130, y - 28);
+      ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  const skyBackdrop = new THREE.Mesh(
+    new THREE.PlaneGeometry(175, 90),
+    new THREE.MeshBasicMaterial({ map: makeSkyTexture(), side: THREE.DoubleSide, depthWrite: false })
+  );
+  skyBackdrop.position.set(0, 42, -96);
+  skyBackdrop.visible = false;
+  scene.add(skyBackdrop);
+
+  // Bigger red crescent moon, with a separate cutout so it reads over the textured sky.
+  const moon = new THREE.Mesh(new THREE.CircleGeometry(9.4, 80), matMoon);
+  moon.position.set(31, 39, -89);
+  moon.rotation.y = Math.PI;
+  moon.visible = false;
+  scene.add(moon);
+  const moonCut = new THREE.Mesh(new THREE.CircleGeometry(8.7, 80), new THREE.MeshBasicMaterial({ color: 0x2c202a, transparent: true, opacity: 0.98, side: THREE.DoubleSide, depthWrite: false }));
+  moonCut.position.set(35.2, 40.4, -88.85);
+  moonCut.rotation.y = Math.PI;
+  moonCut.visible = false;
+  scene.add(moonCut);
+
+  // Extra foreground wisps so the sky has a theatrical brush-stroke feel.
+  for (let i = 0; i < 6; i++) {
+    const streak = new THREE.Mesh(new THREE.PlaneGeometry(42 + i * 9, 1.4 + i * 0.22, 1, 1), matSkyStreak);
+    streak.position.set(-36 + i * 15, 26 + i * 2.4, -70 - i * 2.2);
+    streak.rotation.set(0.04, 0, -0.10 + i * 0.045);
+    streak.visible = false;
+    scene.add(streak);
+  }
+
+  // Tower on horizon.
+  const tower = new THREE.Group();
+  tower.position.set(-24, 0, -52);
+  world.add(tower);
+  addBox(tower, new THREE.Vector3(6, 18, 6), new THREE.Vector3(0, 9, 0), matStone);
+  addBox(tower, new THREE.Vector3(9, 5, 8), new THREE.Vector3(0, 2.5, 1), matDarkStone);
+  addBox(tower, new THREE.Vector3(2, 5, 0.3), new THREE.Vector3(0, 3.2, 4.15), matGlow);
+  addBox(tower, new THREE.Vector3(0.6, 2.5, 0.25), new THREE.Vector3(-1.7, 11.5, 3.15), matGlow);
+  addBox(tower, new THREE.Vector3(0.6, 2.5, 0.25), new THREE.Vector3(1.7, 11.5, 3.15), matGlow);
+  for (let i = -2; i <= 2; i++) {
+    addBox(tower, new THREE.Vector3(0.9, 2.4, 1.0), new THREE.Vector3(i * 1.35, 19.2, 2.6), matStone);
+    addBox(tower, new THREE.Vector3(0.9, 2.4, 1.0), new THREE.Vector3(i * 1.35, 19.2, -2.6), matStone);
+  }
+
+  // Ruins and pines.
+  function addPine(x, z, s = 1) {
+    const g = new THREE.Group();
+    g.position.set(x, 0, z);
+    world.add(g);
+    addCylinder(g, 0.12 * s, 0.18 * s, 1.6 * s, 5, new THREE.Vector3(0, 0.8 * s, 0), matBlack);
+    addCylinder(g, 0.05 * s, 1.1 * s, 2.4 * s, 5, new THREE.Vector3(0, 2.2 * s, 0), matBlack2);
+    addCylinder(g, 0.04 * s, 0.8 * s, 1.9 * s, 5, new THREE.Vector3(0, 3.3 * s, 0), matBlack);
+    return g;
+  }
+  for (let i = 0; i < 88; i++) {
+    const n1 = Math.abs(seededNoise(i * 13.7));
+    const n2 = Math.abs(seededNoise(i * 29.1));
+    let x = -48 + n1 * 96;
+    let z = -66 + n2 * 72;
+    if (z > -16 && Math.abs(x) < 20) continue; // keep play space open
+    const s = 0.8 + Math.abs(seededNoise(i * 7.3)) * 2.2;
+    addPine(x, z, s);
+  }
+  for (let i = 0; i < 26; i++) {
+    const x = -45 + Math.abs(seededNoise(i * 17.1)) * 90;
+    const z = -54 + Math.abs(seededNoise(i * 27.4)) * 70;
+    const h = 1.5 + Math.abs(seededNoise(i * 5.7)) * 8;
+    const w = 1.2 + Math.abs(seededNoise(i * 9.2)) * 2.2;
+    addBox(world, new THREE.Vector3(w, h, 1.2), new THREE.Vector3(x, h / 2, z), i % 2 ? matDarkStone : matStone, Math.abs(seededNoise(i * 3.1)) * Math.PI);
+  }
+
+  // Distant monster: giant, simple blocky silhouette.
+  const monster = new THREE.Group();
+  monster.position.set(26, 0, -56);
+  world.add(monster);
+  addBox(monster, new THREE.Vector3(8, 12, 5), new THREE.Vector3(0, 8, 0), matPurple, 0.15);
+  addBox(monster, new THREE.Vector3(5.5, 5.5, 5.5), new THREE.Vector3(-0.6, 16.5, 0.2), matPurple, 0.25);
+  addBox(monster, new THREE.Vector3(4.2, 9, 3), new THREE.Vector3(-5.2, 8, -0.2), matPurple, -0.4);
+  addBox(monster, new THREE.Vector3(4.0, 9, 3), new THREE.Vector3(5.1, 8, -0.3), matPurple, 0.35);
+  addBox(monster, new THREE.Vector3(3.2, 6, 3), new THREE.Vector3(-2.8, 3, 0), matPurple, 0.15);
+  addBox(monster, new THREE.Vector3(3.2, 6, 3), new THREE.Vector3(2.8, 3, 0), matPurple, -0.15);
+  for (let i = 0; i < 9; i++) {
+    const strand = addBox(monster, new THREE.Vector3(0.8, 13, 0.9), new THREE.Vector3(-5 + i * 1.25, 17 - i * 0.2, -1.7), matPurple, -0.55 + i * 0.09);
+    strand.rotation.z = -0.42 + i * 0.08;
+  }
+  addBox(monster, new THREE.Vector3(0.7, 0.7, 0.3), new THREE.Vector3(-1.7, 17.2, 2.86), matGlow);
+  addBox(monster, new THREE.Vector3(0.7, 0.7, 0.3), new THREE.Vector3(0.8, 17.2, 2.86), matGlow);
+
+  // Red executioner and huge blade.
+  const executioner = new THREE.Group();
+  executioner.position.set(11, 0, -28);
+  world.add(executioner);
+  addBox(executioner, new THREE.Vector3(3.4, 5.8, 2.3), new THREE.Vector3(0, 2.9, 0), matRedDark, 0.1);
+  addBox(executioner, new THREE.Vector3(2.1, 1.6, 1.5), new THREE.Vector3(0, 6.2, 0.1), matRed, 0.1);
+  addBox(executioner, new THREE.Vector3(1.0, 0.9, 0.25), new THREE.Vector3(0, 6.15, 0.9), matPale, 0.1);
+  const blade = addBox(executioner, new THREE.Vector3(14, 1.6, 3.1), new THREE.Vector3(-8.4, 2.3, 0.0), matBlade, -0.04);
+  blade.rotation.z = -0.03;
+  addBox(executioner, new THREE.Vector3(13, 0.18, 3.2), new THREE.Vector3(-8.5, 3.15, 0.02), matBlood, -0.04);
+  addCylinder(executioner, 1.25, 1.25, 0.35, 20, new THREE.Vector3(-1.7, 2.55, 1.62), matDarkStone, Math.PI/2, 0);
+  addBox(executioner, new THREE.Vector3(7.5, 0.3, 0.3), new THREE.Vector3(1.7, 2.6, 1.7), matDarkStone, 0.0);
+  for (let i = 0; i < 3; i++) {
+    const rib = addBox(executioner, new THREE.Vector3(0.45, 0.22, 7 + i * 2), new THREE.Vector3(0.5 + i, 6.5 + i * 0.25, 0), matRed, 0.32 + i * 0.3);
+    rib.rotation.z = 0.12 + i * 0.08;
+  }
+
+  // Player ronin, kept readable as a primitive silhouette.
+  const player = new THREE.Group();
+  scene.add(player);
+  addBox(player, new THREE.Vector3(1.2, 2.3, 0.9), new THREE.Vector3(0, 1.15, 0), matBlack);
+  addBox(player, new THREE.Vector3(0.82, 0.75, 0.58), new THREE.Vector3(0, 2.65, 0.05), matDarkStone);
+  addCylinder(player, 1.55, 0.75, 0.22, 8, new THREE.Vector3(0, 3.18, 0), matBlack, 0, 0);
+  addCylinder(player, 0.35, 0.52, 0.95, 8, new THREE.Vector3(0, 3.75, 0), matBlack, 0, 0);
+  addBox(player, new THREE.Vector3(0.16, 1.8, 0.16), new THREE.Vector3(0.88, 1.15, 0.15), matBlade, -0.2);
+  addBox(player, new THREE.Vector3(0.18, 2.5, 0.18), new THREE.Vector3(-0.82, 1.3, -0.2), matBlade, 0.4);
+  player.position.set(0, 0, 8);
+
+  // Small companion follows loosely.
+  const idol = new THREE.Group();
+  scene.add(idol);
+  addBox(idol, new THREE.Vector3(0.92, 1.16, 0.72), new THREE.Vector3(0, 0.58, 0), matDarkStone);
+  addBox(idol, new THREE.Vector3(0.58, 0.52, 0.12), new THREE.Vector3(0, 0.88, 0.37), matPale);
+  addBox(idol, new THREE.Vector3(0.08, 0.34, 0.04), new THREE.Vector3(0, 0.89, 0.45), matBlack);
+  addBox(idol, new THREE.Vector3(0.07, 0.11, 0.04), new THREE.Vector3(-0.16, 0.9, 0.45), matBlack);
+  addBox(idol, new THREE.Vector3(0.07, 0.11, 0.04), new THREE.Vector3(0.16, 0.9, 0.45), matBlack);
+  idol.position.set(-1.35, 0, 9.3);
+
+  // A few red/pink particles for mood.
+  const particleGeo = new THREE.BufferGeometry();
+  const pCount = 130;
+  const pPositions = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount; i++) {
+    pPositions[i * 3 + 0] = -48 + Math.abs(seededNoise(i * 15.4)) * 96;
+    pPositions[i * 3 + 1] = 8 + Math.abs(seededNoise(i * 25.7)) * 26;
+    pPositions[i * 3 + 2] = -72 + Math.abs(seededNoise(i * 35.3)) * 86;
+  }
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+  const particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0xf26a9d, size: 0.16, transparent: true, opacity: 0.75 }));
+  scene.add(particles);
+
+  const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.05, 220);
+  const orthoCamera = new THREE.OrthographicCamera(-20, 20, 12, -12, 0.05, 220);
+  const horizonCamera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.05, 260);
+  let activeCamera = orthoCamera;
+
+  let mode = 'A';
+  let thirdOrbit = Math.PI; // camera behind player relative north/south
+  let thirdPitch = 0.52;
+  let lookBiasX = 0;
+  let lookBiasZ = -2;
+  let desiredYaw = 0;
+  let yaw = 0;
+  let playerSpeed = 8.2;
+  let lastCyclePress = 0;
+  let lastFullPress = 0;
+
+  const controls = {
+    keys: new Set(),
+    touchMove: new THREE.Vector2(0, 0),
+    gameMove: new THREE.Vector2(0, 0),
+    gameLook: new THREE.Vector2(0, 0),
+    touchLook: new THREE.Vector2(0, 0),
+    pointerLookActive: false,
+    pointerLookId: -1,
+    pointerLookLast: new THREE.Vector2(0, 0)
+  };
+
+  const modeDescriptions = {
+    A: '<b>A · Pure high ¾ top-down.</b> Clean readability test: simple tactical space, easiest distance judgment, least dramatic horizon.',
+    B: '<b>B · Low third-person-ish.</b> Presence test: tower and monster feel taller, but nearby space is harder to read.',
+    C: '<b>C · Bent horizon hybrid.</b> Shares A\'s playable-space camera angle, then bends the far band down and away. Ground Cut helps keep the floor from turning into a wall.',
+    D: '<b>D · Two-camera + seam.</b> Bottom gameplay stays top-down, the middle strip uses a bent seam pass, and the top scenic band uses a separate horizon camera with hard culling. Top Cull, Top FOV, and Seam Bend help tune the handoff.'
+  };
+
+  function setMode(next) {
+    mode = next;
+    document.getElementById('btnA').classList.toggle('active', mode === 'A');
+    document.getElementById('btnB').classList.toggle('active', mode === 'B');
+    document.getElementById('btnC').classList.toggle('active', mode === 'C');
+    document.getElementById('btnD').classList.toggle('active', mode === 'D');
+    quickCamBtn.innerHTML = `<small>Camera</small>${mode}`;
+    quickCamBtn.title = `Current camera: ${mode}. Tap to cycle.`;
+    modeText.innerHTML = modeDescriptions[mode];
+  }
+
+  function cycleMode(step = 1) {
+    const list = ['A', 'B', 'C', 'D'];
+    const idx = list.indexOf(mode);
+    setMode(list[(idx + step + list.length) % list.length]);
+  }
+
+  document.getElementById('btnA').addEventListener('pointerdown', () => setMode('A'));
+  document.getElementById('btnB').addEventListener('pointerdown', () => setMode('B'));
+  document.getElementById('btnC').addEventListener('pointerdown', () => setMode('C'));
+  document.getElementById('btnD').addEventListener('pointerdown', () => setMode('D'));
+  document.getElementById('cycleBtn').addEventListener('pointerdown', () => cycleMode(1));
+  quickCamBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    cycleMode(1);
+  });
+  document.getElementById('resetBtn').addEventListener('pointerdown', () => {
+    player.position.set(0, 0, 8);
+    idol.position.set(-1.35, 0, 9.3);
+    yaw = 0;
+    desiredYaw = 0;
+  });
+  document.getElementById('fullBtn').addEventListener('pointerdown', toggleFullscreen);
+  collapseBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const collapsed = !topPanel.classList.contains('collapsed');
+    topPanel.classList.toggle('collapsed', collapsed);
+    collapseBtn.textContent = collapsed ? 'Show' : 'Hide';
+    titleEl.textContent = collapsed ? 'Camera Prototype' : 'Bent Horizon Camera Prototype';
+  });
+
+  function toggleFullscreen() {
+    const root = document.documentElement;
+    if (!document.fullscreenElement) {
+      root.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    controls.keys.add(e.key.toLowerCase());
+    if (e.key === '1') setMode('A');
+    if (e.key === '2') setMode('B');
+    if (e.key === '3') setMode('C');
+    if (e.key === '4') setMode('D');
+    if (e.key.toLowerCase() === 'f') toggleFullscreen();
+    if (e.key.toLowerCase() === 'c') cycleMode(1);
+  }, { passive: false });
+  window.addEventListener('keyup', (e) => controls.keys.delete(e.key.toLowerCase()));
+
+  const joyZone = document.getElementById('joyZone');
+  const joyKnob = document.getElementById('joyKnob');
+  let joyPointer = -1;
+  let joyCenter = new THREE.Vector2();
+  const joyRadius = 54;
+
+  function setJoyFromEvent(e) {
+    const rect = joyZone.getBoundingClientRect();
+    joyCenter.set(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    const p = new THREE.Vector2(e.clientX, e.clientY);
+    const delta = p.sub(joyCenter);
+    const len = delta.length();
+    if (len > joyRadius) delta.multiplyScalar(joyRadius / len);
+    joyKnob.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
+    controls.touchMove.set(delta.x / joyRadius, delta.y / joyRadius);
+  }
+  function resetJoy() {
+    joyPointer = -1;
+    controls.touchMove.set(0, 0);
+    joyKnob.style.transform = 'translate(0px, 0px)';
+  }
+  joyZone.addEventListener('pointerdown', (e) => {
+    joyPointer = e.pointerId;
+    joyZone.setPointerCapture(e.pointerId);
+    setJoyFromEvent(e);
+  });
+  joyZone.addEventListener('pointermove', (e) => {
+    if (e.pointerId === joyPointer) setJoyFromEvent(e);
+  });
+  joyZone.addEventListener('pointerup', (e) => { if (e.pointerId === joyPointer) resetJoy(); });
+  joyZone.addEventListener('pointercancel', (e) => { if (e.pointerId === joyPointer) resetJoy(); });
+
+  // Right-side touch look/orbit. Ignore UI and joystick.
+  renderer.domElement.addEventListener('pointerdown', (e) => {
+    if (e.clientX < window.innerWidth * 0.45) return;
+    controls.pointerLookActive = true;
+    controls.pointerLookId = e.pointerId;
+    controls.pointerLookLast.set(e.clientX, e.clientY);
+    renderer.domElement.setPointerCapture(e.pointerId);
+  });
+  renderer.domElement.addEventListener('pointermove', (e) => {
+    if (!controls.pointerLookActive || e.pointerId !== controls.pointerLookId) return;
+    const dx = e.clientX - controls.pointerLookLast.x;
+    const dy = e.clientY - controls.pointerLookLast.y;
+    controls.pointerLookLast.set(e.clientX, e.clientY);
+    controls.touchLook.x += dx * 0.006;
+    controls.touchLook.y += dy * 0.004;
+  });
+  renderer.domElement.addEventListener('pointerup', (e) => {
+    if (e.pointerId === controls.pointerLookId) controls.pointerLookActive = false;
+  });
+  renderer.domElement.addEventListener('pointercancel', (e) => {
+    if (e.pointerId === controls.pointerLookId) controls.pointerLookActive = false;
+  });
+
+  function deadzone(v, d = 0.14) {
+    return Math.abs(v) < d ? 0 : v;
+  }
+
+  function pollGamepad(now) {
+    const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
+    const pad = pads[0];
+    controls.gameMove.set(0, 0);
+    controls.gameLook.set(0, 0);
+    if (!pad) {
+      gamepadStatus.textContent = 'Backbone/Gamepad: waiting. Press any gamepad button if Android has not exposed it yet.';
+      return;
+    }
+    const lx = deadzone(pad.axes[0] || 0);
+    const ly = deadzone(pad.axes[1] || 0);
+    const rx = deadzone(pad.axes[2] || 0);
+    const ry = deadzone(pad.axes[3] || 0);
+    controls.gameMove.set(lx, ly);
+    controls.gameLook.set(rx, ry);
+
+    // D-pad fallback.
+    const b = pad.buttons;
+    if (b[14]?.pressed) controls.gameMove.x = -1;
+    if (b[15]?.pressed) controls.gameMove.x = 1;
+    if (b[12]?.pressed) controls.gameMove.y = -1;
+    if (b[13]?.pressed) controls.gameMove.y = 1;
+
+    if ((b[4]?.pressed || b[5]?.pressed) && now - lastCyclePress > 280) {
+      cycleMode(b[4]?.pressed ? -1 : 1);
+      lastCyclePress = now;
+    }
+    if ((b[9]?.pressed || b[8]?.pressed) && now - lastFullPress > 700) {
+      toggleFullscreen();
+      lastFullPress = now;
+    }
+    const name = pad.id ? pad.id.slice(0, 42) : 'connected controller';
+    gamepadStatus.innerHTML = `Backbone/Gamepad: connected<br><span style="color:#bfa7a0">${name}</span><br>LB/RB cycle camera · Start fullscreen`;
+  }
+
+  window.addEventListener('gamepadconnected', () => pollGamepad(performance.now()));
+  window.addEventListener('gamepaddisconnected', () => pollGamepad(performance.now()));
+
+  function getKeyboardMove() {
+    const m = new THREE.Vector2(0, 0);
+    if (controls.keys.has('a') || controls.keys.has('arrowleft')) m.x -= 1;
+    if (controls.keys.has('d') || controls.keys.has('arrowright')) m.x += 1;
+    if (controls.keys.has('w') || controls.keys.has('arrowup')) m.y -= 1;
+    if (controls.keys.has('s') || controls.keys.has('arrowdown')) m.y += 1;
+    if (m.lengthSq() > 1) m.normalize();
+    return m;
+  }
+
+  function combinedMove() {
+    const kb = getKeyboardMove();
+    const m = new THREE.Vector2(0, 0);
+    m.add(kb);
+    m.add(controls.touchMove);
+    m.add(controls.gameMove);
+    if (m.lengthSq() > 1) m.normalize();
+    return m;
+  }
+
+  function smoothDamp(current, target, lambda, dt) {
+    return current + (target - current) * (1 - Math.exp(-lambda * dt));
+  }
+
+  function updatePlayer(dt) {
+    const m = combinedMove();
+    if (m.lengthSq() > 0.002) {
+      const speed = playerSpeed * (mode === 'B' ? 0.92 : 1.0);
+      player.position.x += m.x * speed * dt;
+      player.position.z += m.y * speed * dt;
+      player.position.x = THREE.MathUtils.clamp(player.position.x, -44, 44);
+      player.position.z = THREE.MathUtils.clamp(player.position.z, -58, 30);
+      desiredYaw = Math.atan2(m.x, m.y);
+    }
+    let delta = desiredYaw - yaw;
+    delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+    yaw += delta * (1 - Math.exp(-12 * dt));
+    player.rotation.y = yaw;
+
+    // Little companion follows offset behind/left of player.
+    const target = tmpVec.set(player.position.x - 1.35, 0, player.position.z + 1.25);
+    idol.position.lerp(target, 1 - Math.exp(-4.2 * dt));
+    idol.rotation.y = smoothDamp(idol.rotation.y, yaw * 0.35, 4, dt);
+  }
+
+  function updateCompositeSeam() {
+    if (mode !== 'D') {
+      seamBlend.style.display = 'none';
+      seamBlend.style.opacity = '0';
+      return;
+    }
+    const splitFrac = Number(blendHeightSlider.value) / 100;
+    const splitPx = window.innerHeight * splitFrac;
+    const softness = 16 + (Number(blendSoftSlider.value) / 100) * 160;
+    const fog = Number(seamFogSlider.value) / 100;
+    seamBlend.style.display = 'block';
+    seamBlend.style.bottom = `${Math.max(0, splitPx - softness * 0.5)}px`;
+    seamBlend.style.height = `${softness * 1.5}px`;
+    seamBlend.style.opacity = `${0.12 + fog * 0.78}`;
+  }
+
+  function updateCamera(dt) {
+    const bendVal = Number(bendSlider.value) / 100;
+    const zoomVal = Number(zoomSlider.value) / 100;
+    const topAngleVal = Number(topAngleSlider.value) / 100;
+    const groundCutVal = Number(groundCutSlider.value) / 100;
+    bendUniforms.uPlayerXZ.value.set(player.position.x, player.position.z);
+
+    const rightLook = controls.gameLook.clone();
+    rightLook.x += controls.touchLook.x;
+    rightLook.y += controls.touchLook.y;
+    controls.touchLook.multiplyScalar(0.82);
+
+    const updateTopdownStyleCamera = () => {
+      activeCamera = orthoCamera;
+      bendUniforms.uBendDir.value.set(0, -1);
+      const aspect = window.innerWidth / window.innerHeight;
+      const frustum = 28 + zoomVal * 26;
+      orthoCamera.left = -frustum * aspect * 0.5;
+      orthoCamera.right = frustum * aspect * 0.5;
+      orthoCamera.top = frustum * 0.5;
+      orthoCamera.bottom = -frustum * 0.5;
+      orthoCamera.updateProjectionMatrix();
+      lookBiasX = smoothDamp(lookBiasX, rightLook.x * 5, 5, dt);
+      lookBiasZ = smoothDamp(lookBiasZ, -2 + rightLook.y * 4, 5, dt);
+      const topHeight = 25 + (topAngleVal - 0.5) * 30;
+      const topBackOffset = 22 - (topAngleVal - 0.5) * 18;
+      const topLookAhead = -1 - (topAngleVal - 0.5) * 5;
+      tmpVec.set(player.position.x + lookBiasX, 0, player.position.z + lookBiasZ);
+      tmpVec2.set(tmpVec.x, topHeight, tmpVec.z + topBackOffset);
+      orthoCamera.position.lerp(tmpVec2, 1 - Math.exp(-8 * dt));
+      orthoCamera.lookAt(tmpVec.x, 0, tmpVec.z + topLookAhead);
+    };
+
+    const updateHorizonCompositeCamera = (viewportHeight = window.innerHeight) => {
+      const topFovVal = Number(topFovSlider.value);
+      horizonCamera.fov = smoothDamp(horizonCamera.fov, topFovVal, 8, dt);
+      horizonCamera.aspect = window.innerWidth / Math.max(1, viewportHeight);
+      horizonCamera.updateProjectionMatrix();
+      const camX = player.position.x + lookBiasX * 0.38;
+      const camY = 4.2 + (0.55 - topAngleVal) * 1.5 + zoomVal * 1.1;
+      const camZ = player.position.z + 11.0 + zoomVal * 7.0;
+      const lookX = player.position.x + lookBiasX * 1.35;
+      const lookY = 2.6;
+      const lookZ = player.position.z - 28 + lookBiasZ * 0.18;
+      tmpVec.set(lookX, lookY, lookZ);
+      tmpVec2.set(camX, camY, camZ);
+      horizonCamera.position.lerp(tmpVec2, 1 - Math.exp(-7 * dt));
+      horizonCamera.lookAt(tmpVec);
+    };
+
+    if (mode === 'A') {
+      bendUniforms.uBendStart.value = 17.0;
+      bendUniforms.uBendStrength.value = 0.0;
+      bendUniforms.uBendMaxDrop.value = 24.0;
+      bendUniforms.uGroundClipOn.value = 0.0;
+      bendUniforms.uGroundClipStart.value = 999.0;
+      updateTopdownStyleCamera();
+    } else if (mode === 'B') {
+      activeCamera = camera;
+      bendUniforms.uBendDir.value.set(0, -1);
+      bendUniforms.uBendStart.value = 17.0;
+      bendUniforms.uBendStrength.value = 0.0;
+      bendUniforms.uBendMaxDrop.value = 24.0;
+      bendUniforms.uGroundClipOn.value = 0.0;
+      bendUniforms.uGroundClipStart.value = 999.0;
+      camera.fov = smoothDamp(camera.fov, 54 + zoomVal * 10, 8, dt);
+      camera.updateProjectionMatrix();
+      thirdOrbit += rightLook.x * 0.055;
+      thirdPitch = THREE.MathUtils.clamp(thirdPitch + rightLook.y * 0.018, 0.22, 0.9);
+      const m = combinedMove();
+      if (m.lengthSq() > 0.03 && Math.abs(rightLook.x) < 0.08) {
+        const targetOrbit = yaw + Math.PI;
+        let od = targetOrbit - thirdOrbit;
+        od = Math.atan2(Math.sin(od), Math.cos(od));
+        thirdOrbit += od * (1 - Math.exp(-2.4 * dt));
+      }
+      const dist = 7.8 + zoomVal * 8.5;
+      const height = 3.2 + thirdPitch * 4.5 + zoomVal * 3.2;
+      const camX = player.position.x + Math.sin(thirdOrbit) * dist;
+      const camZ = player.position.z + Math.cos(thirdOrbit) * dist;
+      const target = tmpVec.set(player.position.x, 1.7, player.position.z);
+      const pos = tmpVec2.set(camX, height, camZ);
+      camera.position.lerp(pos, 1 - Math.exp(-8.5 * dt));
+      camera.lookAt(target.x, target.y, target.z);
+    } else if (mode === 'C') {
+      bendUniforms.uBendStart.value = 12.5 + zoomVal * 6.0;
+      bendUniforms.uBendStrength.value = 0.10 + Math.pow(Math.max(0, bendVal), 1.18) * 2.15;
+      bendUniforms.uBendMaxDrop.value = 24.0 + Math.max(0, bendVal) * 68.0;
+      bendUniforms.uGroundClipOn.value = 1.0;
+      bendUniforms.uGroundClipStart.value = bendUniforms.uBendStart.value + 13.0 + groundCutVal * 34.0;
+      updateTopdownStyleCamera();
+    } else {
+      // Two-camera composite preview: gameplay space is true top-down; scenic band gets its own horizon camera.
+      bendUniforms.uBendStart.value = 17.0;
+      bendUniforms.uBendStrength.value = 0.0;
+      bendUniforms.uBendMaxDrop.value = 24.0;
+      bendUniforms.uGroundClipOn.value = 0.0;
+      bendUniforms.uGroundClipStart.value = 999.0;
+      updateTopdownStyleCamera();
+      updateHorizonCompositeCamera();
+    }
+
+    updateCompositeSeam();
+  }
+
+  function updateMood(dt, t) {
+    redLight.intensity = 14 + Math.sin(t * 1.7) * 2.4;
+    updateSky2D(t);
+    particles.rotation.y += dt * 0.01;
+    executioner.rotation.y = Math.sin(t * 0.35) * 0.04;
+    monster.rotation.y = Math.sin(t * 0.2) * 0.05;
+  }
+
+  function onResize() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    horizonCamera.aspect = window.innerWidth / window.innerHeight;
+    horizonCamera.updateProjectionMatrix();
+    updateSky2D(performance.now() * 0.001);
+  }
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', () => setTimeout(onResize, 250));
+
+  function animate() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const now = performance.now();
+    pollGamepad(now);
+    updatePlayer(dt);
+    updateCamera(dt);
+    updateMood(dt, now * 0.001);
+    renderer.setScissorTest(false);
+    renderer.clear();
+    renderer.render(skyScene2D, skyCamera2D);
+    renderer.clearDepth();
+    if (mode === 'D') {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const zoomVal = Number(zoomSlider.value) / 100;
+      const splitFrac = Number(blendHeightSlider.value) / 100;
+      const splitY = Math.floor(h * splitFrac);
+      const softness = Math.floor(20 + (Number(blendSoftSlider.value) / 100) * 170);
+      const seamHeight = Math.floor(Math.max(36, softness));
+      const seamBottomY = Math.max(0, splitY - Math.floor(seamHeight * 0.72));
+      const seamTopY = Math.min(h, splitY + Math.floor(seamHeight * 0.28));
+      const bottomH = Math.max(1, splitY);
+      const topY = Math.max(0, seamTopY - Math.floor(softness * 0.18));
+      const topCullDistance = Number(topCullSlider.value);
+      const cullZ = player.position.z - topCullDistance;
+      const seamDepth = 7.0 + (Number(blendSoftSlider.value) / 100) * 13.0;
+      const seamNearZ = cullZ + seamDepth;
+      const seamFarZ = cullZ - seamDepth * 0.55;
+      const seamBendVal = Number(seamBendSlider.value) / 100;
+
+      try {
+        // Bottom gameplay pass: truthful top-down view.
+        renderer.setScissorTest(true);
+        renderer.setViewport(0, 0, w, bottomH);
+        renderer.setScissor(0, 0, w, bottomH);
+        bendUniforms.uBendStrength.value = 0.0;
+        bendUniforms.uBendMaxDrop.value = 24.0;
+        bendUniforms.uGroundClipOn.value = 0.0;
+        bendUniforms.uHorizonCullOn.value = 0.0;
+        bendUniforms.uBandCullOn.value = 0.0;
+        player.visible = true;
+        idol.visible = true;
+        renderer.render(scene, orthoCamera);
+        renderer.clearDepth();
+
+        // Middle seam pass: only a slice of far-ish world, bent downward to imply the fold.
+        renderer.setViewport(0, seamBottomY, w, Math.max(1, seamTopY - seamBottomY));
+        renderer.setScissor(0, seamBottomY, w, Math.max(1, seamTopY - seamBottomY));
+        bendUniforms.uBandNearZ.value = seamNearZ;
+        bendUniforms.uBandFarZ.value = seamFarZ;
+        bendUniforms.uBandCullOn.value = 1.0;
+        bendUniforms.uBendStart.value = 8.0 + zoomVal * 3.0;
+        bendUniforms.uBendStrength.value = 0.08 + Math.max(0, seamBendVal) * 1.8;
+        bendUniforms.uBendMaxDrop.value = 18.0 + Math.max(0, seamBendVal) * 52.0;
+        bendUniforms.uGroundClipOn.value = 0.0;
+        bendUniforms.uHorizonCullOn.value = 0.0;
+        player.visible = false;
+        idol.visible = false;
+        renderer.render(scene, orthoCamera);
+        renderer.clearDepth();
+
+        // Top scenic pass: separate perspective camera with hard near-side culling.
+        horizonCamera.aspect = w / Math.max(1, h - topY);
+        horizonCamera.updateProjectionMatrix();
+        renderer.setViewport(0, topY, w, Math.max(1, h - topY));
+        renderer.setScissor(0, topY, w, Math.max(1, h - topY));
+        bendUniforms.uBandCullOn.value = 0.0;
+        bendUniforms.uBendStrength.value = 0.0;
+        bendUniforms.uBendMaxDrop.value = 24.0;
+        bendUniforms.uHorizonCullZ.value = cullZ;
+        bendUniforms.uHorizonCullOn.value = 1.0;
+        renderer.render(scene, horizonCamera);
+      } finally {
+        // Always restore render state so one future error does not leave the scene invisible/frozen.
+        player.visible = true;
+        idol.visible = true;
+        bendUniforms.uHorizonCullOn.value = 0.0;
+        bendUniforms.uBandCullOn.value = 0.0;
+        bendUniforms.uGroundClipOn.value = 0.0;
+        renderer.setScissorTest(false);
+        renderer.setViewport(0, 0, w, h);
+      }
+    } else {
+      renderer.render(scene, activeCamera);
+    }
+    requestAnimationFrame(animate);
+  }
+
+  setMode('A');
+  loading.style.display = 'none';
+  animate();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#090b12" />
+<title>Bone Choir × Deck Dash</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#070910;color:#eef2ff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+  #wrap{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,#151126 0,#090b12 46%,#05070c 100%)}
+  canvas{display:block;width:min(100vw,calc(100vh * 16 / 9));height:min(100vh,calc(100vw * 9 / 16));aspect-ratio:16/9;background:#080b12;outline:none}
+  #topButtons{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));display:flex;gap:8px;z-index:10}
+  .chrome{border:1px solid rgba(255,255,255,.18);background:rgba(12,16,27,.88);color:#f5f7ff;border-radius:12px;min-width:44px;height:44px;padding:0 12px;font-weight:800;font-size:18px;backdrop-filter:blur(8px)}
+  .chrome:active{transform:scale(.96)}
+  #rotate{display:none;position:fixed;inset:0;z-index:50;background:#080b12;color:#fff;align-items:center;justify-content:center;text-align:center;padding:28px;font-size:20px}
+  #rotate strong{display:block;font-size:30px;margin-bottom:8px}
+  @media (orientation:portrait) and (max-width:900px){#rotate{display:flex}}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="1280" height="720" tabindex="0" aria-label="Bone Choir Deck Dash prototype"></canvas></div>
+<div id="topButtons"><button id="restart" class="chrome" title="Restart">↻</button><button id="fs" class="chrome" title="Fullscreen">⛶</button></div>
+<div id="rotate"><div><strong>Turn sideways</strong>This prototype is built for a Backbone-style controller in landscape.</div></div>
+<script>
+'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const W=1280,H=720,TAU=Math.PI*2;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dist=(a,b,c,d)=>Math.hypot(c-a,d-b);
+const norm=(x,y)=>{const d=Math.hypot(x,y)||1;return{x:x/d,y:y/d}};
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a};
+const C={bg:'#080b12',panel:'#111625',panel2:'#171e30',ink:'#eef2ff',muted:'#8e9ab7',purple:'#aa7cff',cyan:'#65e5ff',green:'#71e6a8',red:'#ff7185',orange:'#ffad66',yellow:'#f6dc73',blue:'#7aa8ff',doom:'#d06cff',bone:'#c7efff'};
+function rr(x,y,w,h,r,fill,stroke=null,lw=1){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function txt(s,x,y,size=18,color=C.ink,align='left',weight=700,maxW){ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.font=`${weight} ${size}px Inter,system-ui,sans-serif`;if(maxW)ctx.fillText(s,x,y,maxW);else ctx.fillText(s,x,y)}
+function line(x1,y1,x2,y2,color,lw=2,alpha=1){ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()}
+function glow(x,y,r,color,fill=color){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=16;ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();ctx.restore()}
+function bar(x,y,w,h,v,max,color,label=''){rr(x,y,w,h,h/2,'#202637');rr(x,y,Math.max(0,w*clamp(v/max,0,1)),h,h/2,color);if(label)txt(label,x+w/2,y+h/2,12,C.ink,'center',900)}
+function wrap(text,x,y,maxW,lineH=22,size=15,color=C.muted,weight=650){const words=text.split(' ');let s='',yy=y;ctx.font=`${weight} ${size}px Inter,system-ui`;ctx.fillStyle=color;ctx.textAlign='left';ctx.textBaseline='top';for(const w of words){const t=s?`${s} ${w}`:w;if(ctx.measureText(t).width>maxW&&s){ctx.fillText(s,x,yy);s=w;yy+=lineH}else s=t}if(s)ctx.fillText(s,x,yy);return yy+lineH}
+
+const input={keys:new Set(),pressed:new Set(),mx:0,my:0,mouse:false,lastPad:null,buttons:[],prevButtons:[],axes:[0,0,0,0],update(){const pads=navigator.getGamepads?.()||[];const p=[...pads].find(Boolean);this.lastPad=p||null;if(p){this.axes=p.axes.slice(0,4);this.prevButtons=this.buttons;this.buttons=p.buttons.map(b=>b.pressed||b.value>.5)}else{this.axes=[0,0,0,0];this.prevButtons=this.buttons;this.buttons=[]}},down(k){return this.keys.has(k)},tap(k){return this.pressed.has(k)},padTap(i){return !!this.buttons[i]&&!this.prevButtons[i]},end(){this.pressed.clear()}};
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(!input.keys.has(k))input.pressed.add(k);input.keys.add(k);if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault()});
+window.addEventListener('keyup',e=>input.keys.delete(e.key.toLowerCase()));
+canvas.addEventListener('pointermove',e=>{const r=canvas.getBoundingClientRect();input.mx=(e.clientX-r.left)*W/r.width;input.my=(e.clientY-r.top)*H/r.height;input.mouse=true});
+canvas.addEventListener('pointerdown',()=>canvas.focus());
+document.getElementById('restart').addEventListener('click',()=>resetGame());
+document.getElementById('fs').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{}});
+
+let idSeq=1;
+const cardDefs={
+  bolt:{name:'Bone Bolt',icon:'✦',color:C.purple,cd:1.15,desc:'Fire a piercing bone bolt.',use:g=>g.fireBolt(13)},
+  guard:{name:'Grave Guard',icon:'◇',color:C.blue,cd:4.2,desc:'Briefly ignore damage and shove nearby enemies.',use:g=>{g.player.invuln=Math.max(g.player.invuln,1.05);g.radialShove(g.player.x,g.player.y,115,130)}},
+  bodyguard:{name:'Bodyguard',icon:'☠',color:C.cyan,cd:4.8,desc:'Restore 7 Osty HP and call him to you.',use:g=>{g.osty.hp=Math.min(g.osty.maxHp,g.osty.hp+7);g.osty.goal={x:g.player.x,y:g.player.y};g.toast('OSTY +7 HP')}},
+  unleash:{name:'Unleash',icon:'➤',color:C.orange,cd:3.6,desc:'Osty charges your aimed target. Damage = 5 + current HP.',use:g=>g.commandCharge(5+Math.floor(g.osty.hp))},
+  pull:{name:'Grave Pull',icon:'↢',color:C.cyan,cd:5.2,desc:'Osty hooks the aimed enemy and drags it out of formation.',use:g=>g.gravePull()},
+  doom:{name:'Doom Brand',icon:'⌁',color:C.doom,cd:3.4,desc:'Brand the aimed enemy. Osty hits add 4 Doom.',use:g=>g.brandTarget()},
+  harvest:{name:'Soul Harvest',icon:'◈',color:C.green,cd:4.5,desc:'For 8s, a Doomed death creates 2 Soul cards.',use:g=>{g.harvest=8;g.toast('SOUL HARVEST ACTIVE')}},
+  soul:{name:'Soul',icon:'✧',color:C.green,cd:0,desc:'Zero cooldown. Consume this and immediately expose another card.',soul:true,use:g=>{g.osty.hp=Math.min(g.osty.maxHp,g.osty.hp+1);g.coolAll(.45)}},
+  pin:{name:'Bone Pin',icon:'⌖',color:C.yellow,cd:5.8,desc:'Osty pins the aimed enemy in place for 2.5s.',use:g=>g.pinTarget()},
+  protector:{name:'Protector',icon:'✹',color:C.red,cd:6.5,desc:'Osty slams the target for 8 + Max HP and blasts its neighbors.',use:g=>g.protector()},
+  swap:{name:'Grave Step',icon:'↭',color:C.blue,cd:5.0,desc:'Swap places with Osty. Both endpoints shove enemies.',use:g=>g.swapWithOsty()},
+  funeral:{name:'Funeral March',icon:'♬',color:C.purple,cd:7.0,desc:'For 8s, when a Doomed enemy dies Osty charges the next target.',use:g=>{g.funeral=8;g.toast('FUNERAL MARCH')}},
+  recall:{name:'Soul Recall',icon:'↺',color:C.green,cd:6.0,desc:'For 10s, every Soul played restores 3 extra Osty HP.',use:g=>{g.soulRecall=10;g.toast('SOUL RECALL')}}
+};
+function makeCard(key){const d=cardDefs[key];return{id:idSeq++,key,...d,remain:0}}
+
+class Game{
+  constructor(){this.arena={x:34,y:64,w:900,h:620};this.player={x:250,y:390,r:14,hp:48,maxHp:48,invuln:0};this.osty={x:340,y:390,r:27,hp:24,maxHp:24,goal:null,attackCd:0,charge:null};this.aim={x:1,y:0};this.bullets=[];this.enemyShots=[];this.enemies=[];this.effects=[];this.wave=1;this.score=0;this.kills=0;this.harvest=0;this.funeral=0;this.soulRecall=0;this.toastText='';this.toastT=0;this.reward=null;this.finished=false;this.paused=false;this.deck=[];this.draw=[];this.discard=[];this.hand=[];this.seedDeck();this.startWave()}
+  seedDeck(){['bolt','bolt','bolt','bolt','guard','guard','bodyguard','bodyguard','unleash','unleash'].forEach(k=>this.deck.push(makeCard(k)));this.draw=shuffle([...this.deck]);this.drawTo(3)}
+  drawOne(){if(!this.draw.length){this.draw=shuffle(this.discard.splice(0));}return this.draw.shift()||null}
+  drawTo(n){while(this.hand.length<n){const c=this.drawOne();if(!c)break;this.hand.push(c)}}
+  playSlot(i){if(this.reward||this.finished)return;const c=this.hand[i];if(!c)return;if(c.remain>0){this.toast(`${c.name}: ${c.remain.toFixed(1)}s`);return}c.use(this);c.remain=c.cd;this.hand.splice(i,1);if(c.soul){if(this.soulRecall>0)this.osty.hp=Math.min(this.osty.maxHp,this.osty.hp+3);this.effects.push({type:'pulse',x:this.player.x,y:this.player.y,r:20,t:.35,color:C.green})}this.discard.push(c);this.drawTo(3)}
+  coolAll(n){for(const c of this.deck)c.remain=Math.max(0,c.remain-n)}
+  toast(s){this.toastText=s;this.toastT=1.2}
+  target(){let best=null,bestScore=1e9;for(const e of this.enemies){if(e.dead)continue;const vx=e.x-this.player.x,vy=e.y-this.player.y,d=Math.hypot(vx,vy);const n=norm(vx,vy),align=n.x*this.aim.x+n.y*this.aim.y;if(align<.35)continue;const score=d*(1.25-align);if(score<bestScore){bestScore=score;best=e}}return best||this.enemies.filter(e=>!e.dead).sort((a,b)=>dist(a.x,a.y,this.player.x,this.player.y)-dist(b.x,b.y,this.player.x,this.player.y))[0]}
+  fireBolt(dmg){this.bullets.push({x:this.player.x+this.aim.x*20,y:this.player.y+this.aim.y*20,vx:this.aim.x*620,vy:this.aim.y*620,r:6,dmg,life:1.6,pierce:2,color:C.purple})}
+  commandCharge(dmg,target=this.target()){if(!target){this.toast('NO TARGET');return}this.osty.charge={target,dmg,speed:650};this.effects.push({type:'line',x:this.osty.x,y:this.osty.y,x2:target.x,y2:target.y,t:.18,color:C.orange})}
+  gravePull(){const e=this.target();if(!e)return;this.osty.charge={target:e,dmg:5,speed:600,onHit:()=>{e.pulled=1.6;e.formBreak=3;e.vx=(this.osty.x-e.x)*3.2;e.vy=(this.osty.y-e.y)*3.2;this.toast('FORMATION BROKEN')}}}
+  brandTarget(){const e=this.target();if(!e)return;e.branded=10;e.doom=Math.max(e.doom,1);this.effects.push({type:'pulse',x:e.x,y:e.y,r:24,t:.5,color:C.doom});this.toast('DOOM BRAND')}
+  pinTarget(){const e=this.target();if(!e)return;this.osty.charge={target:e,dmg:4,speed:620,onHit:()=>{e.pinned=2.5;e.formBreak=3;this.toast('PINNED')}}}
+  protector(){const e=this.target();if(!e)return;const dmg=8+Math.floor(this.osty.maxHp);this.osty.charge={target:e,dmg,speed:720,onHit:()=>{for(const n of this.enemies){if(!n.dead&&n!==e&&dist(e.x,e.y,n.x,n.y)<115){this.hitEnemy(n,9);const nn=norm(n.x-e.x,n.y-e.y);n.vx+=nn.x*220;n.vy+=nn.y*220;n.formBreak=2}}this.effects.push({type:'pulse',x:e.x,y:e.y,r:28,t:.5,color:C.red})}}}
+  swapWithOsty(){const px=this.player.x,py=this.player.y;this.player.x=this.osty.x;this.player.y=this.osty.y;this.osty.x=px;this.osty.y=py;this.radialShove(this.player.x,this.player.y,105,180);this.radialShove(this.osty.x,this.osty.y,105,180);this.player.invuln=.55}
+  radialShove(x,y,r,power){for(const e of this.enemies){if(e.dead)continue;const d=dist(x,y,e.x,e.y);if(d<r){const n=norm(e.x-x,e.y-y);e.vx+=n.x*power;e.vy+=n.y*power;e.formBreak=1.4}}this.effects.push({type:'pulse',x,y,r:20,t:.35,color:C.blue})}
+  addDoom(e,n){e.doom=(e.doom||0)+n;if(e.doom>=Math.ceil(e.hp)){this.hitEnemy(e,999,'doom')}}
+  hitEnemy(e,dmg,kind='hit'){if(!e||e.dead)return;e.hp-=dmg;e.flash=.15;if(e.hp<=0){e.dead=true;this.kills++;this.score+=30;if(e.doom>0&&this.harvest>0){this.addSouls(2)}if(e.doom>0&&this.funeral>0){setTimeout(()=>{if(!this.finished&&!this.reward){const t=this.enemies.find(x=>!x.dead);if(t)this.commandCharge(7,t)}},80)}this.effects.push({type:'burst',x:e.x,y:e.y,t:.5,color:kind==='doom'?C.doom:C.red})}}
+  addSouls(n){for(let i=0;i<n;i++){const c=makeCard('soul');this.deck.push(c);this.draw.splice(Math.min(this.draw.length,Math.floor(Math.random()*3)),0,c)}this.toast(`+${n} SOULS`)}
+  damagePlayer(n){if(this.player.invuln>0)return;this.player.hp-=n;this.player.invuln=.6;this.effects.push({type:'pulse',x:this.player.x,y:this.player.y,r:18,t:.35,color:C.red});if(this.player.hp<=0){this.finished=true;this.toast('RUN ENDED')}}
+  damageOsty(n){this.osty.hp-=n;if(this.osty.hp<=0){this.osty.hp=0;this.osty.charge=null;this.toast('OSTY DOWN — BODYGUARD CAN RESTORE HIM')}}
+  spawnEnemy(role,formation,index,count,ox,oy){const spec={shield:{hp:34,r:20,speed:56,color:C.orange},dart:{hp:18,r:15,speed:48,color:C.cyan},support:{hp:24,r:17,speed:45,color:C.green},brute:{hp:46,r:23,speed:45,color:C.red}}[role];const e={id:idSeq++,role,formation,index,count,x:ox,y:oy,homeX:ox,homeY:oy,hp:spec.hp,maxHp:spec.hp,r:spec.r,speed:spec.speed,color:spec.color,cd:rand(.3,1.2),doom:0,branded:0,pinned:0,formBreak:0,pulled:0,vx:0,vy:0,flash:0,dead:false};this.enemies.push(e);return e}
+  makeFormation(type,anchorX,anchorY,id){let layout=[];if(type==='wedge')layout=[['shield',0,-35],['shield',0,35],['dart',80,-55],['support',90,0],['dart',80,55]];if(type==='line')layout=[['brute',0,0],['dart',72,-70],['dart',72,70],['support',115,0]];if(type==='escort')layout=[['shield',0,-42],['shield',0,42],['brute',62,0],['support',120,0]];layout.forEach((a,i)=>this.spawnEnemy(a[0],id,i,layout.length,anchorX+a[1],anchorY+a[2]))}
+  startWave(){this.enemies=[];this.enemyShots=[];if(this.wave===1){this.makeFormation('wedge',655,355,'A')}else if(this.wave===2){this.makeFormation('line',610,235,'A');this.makeFormation('escort',720,485,'B')}else if(this.wave===3){this.makeFormation('wedge',610,205,'A');this.makeFormation('line',735,475,'B')}else{this.makeFormation('escort',590,210,'A');this.makeFormation('wedge',735,420,'B');this.spawnEnemy('dart','C',0,1,845,585)}this.toast(`WAVE ${this.wave}`)}
+  formationAnchor(fid){const m=this.enemies.filter(e=>!e.dead&&e.formation===fid);if(!m.length)return null;let x=0,y=0;for(const e of m){x+=e.x;y+=e.y}return{x:x/m.length,y:y/m.length}}
+  updateEnemy(e,dt){if(e.dead)return;e.flash=Math.max(0,e.flash-dt);e.branded=Math.max(0,e.branded-dt);e.pinned=Math.max(0,e.pinned-dt);e.formBreak=Math.max(0,e.formBreak-dt);e.pulled=Math.max(0,e.pulled-dt);e.cd-=dt;e.vx*=Math.pow(.06,dt);e.vy*=Math.pow(.06,dt);if(e.pinned<=0){if(e.formBreak<=0){const fid=e.formation,group=this.enemies.filter(n=>!n.dead&&n.formation===fid);const fIndex=group.indexOf(e);const roleOffset={shield:{x:-38,y:(fIndex%2?32:-32)},brute:{x:-18,y:0},support:{x:60,y:0},dart:{x:72,y:(fIndex%2?65:-65)}}[e.role];const toward=norm(this.player.x-(e.x-roleOffset.x),this.player.y-(e.y-roleOffset.y));const desiredX=this.player.x-toward.x*(e.role==='dart'?285:e.role==='support'?245:185)+roleOffset.x;const desiredY=this.player.y-toward.y*(e.role==='dart'?285:e.role==='support'?245:185)+roleOffset.y;const n=norm(desiredX-e.x,desiredY-e.y);e.x+=n.x*e.speed*dt;e.y+=n.y*e.speed*dt}else{const n=norm(this.player.x-e.x,this.player.y-e.y);e.x+=n.x*e.speed*.55*dt;e.y+=n.y*e.speed*.55*dt}e.x+=e.vx*dt;e.y+=e.vy*dt}
+    const dp=dist(e.x,e.y,this.player.x,this.player.y),do_=dist(e.x,e.y,this.osty.x,this.osty.y);if((e.role==='shield'||e.role==='brute')&&e.cd<=0){const target=do_<dp+25&&this.osty.hp>0?this.osty:this.player;const d=dist(e.x,e.y,target.x,target.y);if(d<e.r+(target.r||14)+12){if(target===this.osty)this.damageOsty(e.role==='brute'?5:3);else this.damagePlayer(e.role==='brute'?5:3);e.cd=e.role==='brute'?1.3:1.0}}
+    if(e.role==='dart'&&e.cd<=0&&dp<520){const t=(this.osty.hp>0&&Math.random()<.28)?this.osty:this.player;const n=norm(t.x-e.x,t.y-e.y);this.enemyShots.push({x:e.x,y:e.y,vx:n.x*300,vy:n.y*300,r:5,life:3,dmg:3,target:t===this.osty?'osty':'player'});e.cd=1.45}
+    if(e.role==='support'&&e.cd<=0){const ally=this.enemies.filter(n=>!n.dead&&n!==e&&dist(e.x,e.y,n.x,n.y)<180).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(ally&&ally.hp<ally.maxHp){ally.hp=Math.min(ally.maxHp,ally.hp+6);this.effects.push({type:'line',x:e.x,y:e.y,x2:ally.x,y2:ally.y,t:.35,color:C.green});e.cd=3.1}else e.cd=.7}
+  }
+  updateOsty(dt){const o=this.osty;o.attackCd=Math.max(0,o.attackCd-dt);if(o.hp<=0)return;if(o.charge?.target&&!o.charge.target.dead){const t=o.charge.target,n=norm(t.x-o.x,t.y-o.y);o.x+=n.x*o.charge.speed*dt;o.y+=n.y*o.charge.speed*dt;if(dist(o.x,o.y,t.x,t.y)<o.r+t.r+8){this.hitEnemy(t,o.charge.dmg);if(t.branded>0)this.addDoom(t,4);if(o.charge.onHit)o.charge.onHit();o.charge=null;o.attackCd=.5;this.effects.push({type:'pulse',x:t.x,y:t.y,r:20,t:.3,color:C.cyan})}return}else o.charge=null;
+    let target=this.enemies.filter(e=>!e.dead).sort((a,b)=>dist(o.x,o.y,a.x,a.y)-dist(o.x,o.y,b.x,b.y))[0];if(target&&dist(o.x,o.y,target.x,target.y)<170){const n=norm(target.x-o.x,target.y-o.y);o.x+=n.x*105*dt;o.y+=n.y*105*dt;if(dist(o.x,o.y,target.x,target.y)<o.r+target.r+8&&o.attackCd<=0){this.hitEnemy(target,3);if(target.branded>0)this.addDoom(target,4);o.attackCd=.85}}else{const gx=this.player.x+this.aim.x*58,gy=this.player.y+this.aim.y*58,n=norm(gx-o.x,gy-o.y);o.x+=n.x*90*dt;o.y+=n.y*90*dt}}
+  update(dt){input.update();if(this.finished){if(input.tap('r')||input.padTap(0))resetGame();input.end();return}if(input.tap('escape')||input.padTap(9))this.paused=!this.paused;if(this.paused){input.end();return}if(this.reward){this.updateReward();input.end();return}
+    this.toastT=Math.max(0,this.toastT-dt);this.player.invuln=Math.max(0,this.player.invuln-dt);this.harvest=Math.max(0,this.harvest-dt);this.funeral=Math.max(0,this.funeral-dt);this.soulRecall=Math.max(0,this.soulRecall-dt);for(const c of this.deck)c.remain=Math.max(0,c.remain-dt);
+    let mx=(input.down('d')||input.down('arrowright')?1:0)-(input.down('a')||input.down('arrowleft')?1:0),my=(input.down('s')||input.down('arrowdown')?1:0)-(input.down('w')||input.down('arrowup')?1:0);if(input.lastPad){if(Math.abs(input.axes[0])>.16)mx=input.axes[0];if(Math.abs(input.axes[1])>.16)my=input.axes[1]}const m=norm(mx,my);if(Math.hypot(mx,my)>.1){this.player.x+=m.x*245*dt;this.player.y+=m.y*245*dt}
+    if(input.lastPad&&Math.hypot(input.axes[2],input.axes[3])>.25)this.aim=norm(input.axes[2],input.axes[3]);else if(input.mouse)this.aim=norm(input.mx-this.player.x,input.my-this.player.y);
+    this.player.x=clamp(this.player.x,this.arena.x+18,this.arena.x+this.arena.w-18);this.player.y=clamp(this.player.y,this.arena.y+18,this.arena.y+this.arena.h-18);
+    if(input.tap('j')||input.padTap(0))this.playSlot(0);if(input.tap('k')||input.padTap(2))this.playSlot(1);if(input.tap('l')||input.padTap(3))this.playSlot(2);
+    for(const b of this.bullets){b.life-=dt;b.x+=b.vx*dt;b.y+=b.vy*dt;for(const e of this.enemies){if(e.dead||b.life<=0||e._hit===b)continue;if(dist(b.x,b.y,e.x,e.y)<b.r+e.r){this.hitEnemy(e,b.dmg);e.formBreak=Math.max(e.formBreak,.45);e._hit=b;b.pierce--;if(b.pierce<0)b.life=0}}}this.bullets=this.bullets.filter(b=>b.life>0);
+    for(const s of this.enemyShots){s.life-=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;if(s.target==='osty'&&this.osty.hp>0&&dist(s.x,s.y,this.osty.x,this.osty.y)<s.r+this.osty.r){this.damageOsty(s.dmg);s.life=0}else if(dist(s.x,s.y,this.player.x,this.player.y)<s.r+this.player.r){this.damagePlayer(s.dmg);s.life=0}}this.enemyShots=this.enemyShots.filter(s=>s.life>0);
+    this.updateOsty(dt);for(const e of this.enemies)this.updateEnemy(e,dt);this.effects.forEach(e=>e.t-=dt);this.effects=this.effects.filter(e=>e.t>0);
+    if(!this.enemies.some(e=>!e.dead)){this.openReward()}
+    input.end()
+  }
+  openReward(){if(this.wave>=4){this.finished=true;this.toastText='FORMATION BROKEN — RUN WON';this.toastT=99;return}const owned=new Set(this.deck.map(c=>c.key));let pool=['pull','doom','harvest','pin','protector','swap','funeral','recall'].filter(k=>!owned.has(k));if(pool.length<3)pool=['pull','doom','harvest','pin','protector','swap','funeral','recall'];shuffle(pool);this.reward=pool.slice(0,3).map(k=>cardDefs[k])}
+  updateReward(){let idx=-1;if(input.tap('1')||input.padTap(0))idx=0;if(input.tap('2')||input.padTap(2))idx=1;if(input.tap('3')||input.padTap(3))idx=2;if(idx>=0){const def=this.reward[idx],key=Object.keys(cardDefs).find(k=>cardDefs[k]===def);const c=makeCard(key);this.deck.push(c);this.discard.push(c);this.reward=null;this.wave++;this.player.hp=Math.min(this.player.maxHp,this.player.hp+8);this.osty.hp=Math.min(this.osty.maxHp,this.osty.hp+8);this.startWave()}}
+  render(){ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);this.drawArena();this.drawHUD();if(this.reward)this.drawReward();if(this.paused){ctx.fillStyle='rgba(5,7,12,.78)';ctx.fillRect(0,0,W,H);txt('PAUSED',W/2,310,42,C.ink,'center',1000);txt('Options / Esc to resume',W/2,360,18,C.muted,'center',700)}if(this.finished){ctx.fillStyle='rgba(5,7,12,.72)';ctx.fillRect(0,0,W,H);txt(this.player.hp>0?'RUN WON':'RUN ENDED',W/2,270,46,this.player.hp>0?C.green:C.red,'center',1000);txt(`Wave ${this.wave} • ${this.kills} kills • Deck ${this.deck.length}`,W/2,325,21,C.ink,'center',800);txt('Press ✕ or R to restart',W/2,382,18,C.muted,'center',700)}}
+  drawArena(){const a=this.arena;rr(a.x,a.y,a.w,a.h,24,'#0d1120','#222b44',2);ctx.save();ctx.globalAlpha=.14;ctx.strokeStyle='#52607e';ctx.lineWidth=1;for(let x=a.x+40;x<a.x+a.w;x+=50)line(x,a.y,x,a.y+a.h,'#52607e',1,.18);for(let y=a.y+40;y<a.y+a.h;y+=50)line(a.x,y,a.x+a.w,y,'#52607e',1,.18);ctx.restore();
+    const forms=[...new Set(this.enemies.filter(e=>!e.dead).map(e=>e.formation))];for(const fid of forms){const g=this.enemies.filter(e=>!e.dead&&e.formation===fid&&e.formBreak<=0);if(g.length>1){const cx=g.reduce((s,e)=>s+e.x,0)/g.length,cy=g.reduce((s,e)=>s+e.y,0)/g.length;for(const e of g)line(cx,cy,e.x,e.y,'#39425d',2,.4)}}
+    for(const e of this.effects){const p=clamp(e.t/.5,0,1);if(e.type==='line')line(e.x,e.y,e.x2,e.y2,e.color,5,p);else if(e.type==='pulse'){ctx.save();ctx.globalAlpha=p;ctx.strokeStyle=e.color;ctx.lineWidth=4;ctx.beginPath();ctx.arc(e.x,e.y,e.r+(1-p)*60,0,TAU);ctx.stroke();ctx.restore()}else{for(let i=0;i<6;i++){const ang=i/6*TAU;glow(e.x+Math.cos(ang)*(1-p)*42,e.y+Math.sin(ang)*(1-p)*42,4,e.color)}}}
+    for(const b of this.bullets)glow(b.x,b.y,b.r,b.color);for(const s of this.enemyShots)glow(s.x,s.y,s.r,C.red);
+    for(const e of this.enemies){if(e.dead)continue;ctx.save();if(e.flash>0)ctx.globalAlpha=.55;glow(e.x,e.y,e.r,e.color,e.color);ctx.restore();txt(e.role==='shield'?'▰':e.role==='dart'?'◆':e.role==='support'?'✚':'⬟',e.x,e.y,e.role==='brute'?20:16,'#071018','center',1000);bar(e.x-e.r,e.y-e.r-11,e.r*2,5,e.hp,e.maxHp,e.color);if(e.doom>0){txt(`☠${Math.ceil(e.doom)}`,e.x,e.y+e.r+13,12,C.doom,'center',900)}if(e.branded>0){ctx.strokeStyle=C.doom;ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.r+6,0,TAU);ctx.stroke()}if(e.pinned>0){line(e.x-18,e.y+e.r+5,e.x+18,e.y+e.r+5,C.yellow,4)}}
+    if(this.osty.hp>0){glow(this.osty.x,this.osty.y,this.osty.r,C.cyan,'#2b6472');txt('☠',this.osty.x,this.osty.y,27,C.ink,'center',1000);bar(this.osty.x-34,this.osty.y-42,68,7,this.osty.hp,this.osty.maxHp,C.cyan)}else{ctx.save();ctx.globalAlpha=.45;ctx.strokeStyle=C.cyan;ctx.lineWidth=3;ctx.beginPath();ctx.arc(this.osty.x,this.osty.y,this.osty.r,0,TAU);ctx.stroke();ctx.restore();txt('☠',this.osty.x,this.osty.y,25,C.muted,'center',900)}
+    glow(this.player.x,this.player.y,this.player.r,this.player.invuln>0?C.blue:C.ink,this.player.invuln>0?'#304876':'#dfe8ff');line(this.player.x,this.player.y,this.player.x+this.aim.x*38,this.player.y+this.aim.y*38,C.ink,3,.8);
+    if(this.toastT>0)txt(this.toastText,a.x+a.w/2,a.y+22,18,C.yellow,'center',1000)
+  }
+  drawHUD(){const x=958;rr(x,64,288,620,22,C.panel,'#28314a',2);txt('BONE CHOIR × DECK DASH',x+18,92,17,C.ink,'left',1000);txt(`Wave ${this.wave}/4 • ${this.enemies.filter(e=>!e.dead).length} enemies`,x+18,119,13,C.muted,'left',700);txt('YOU',x+18,151,12,C.muted,'left',900);bar(x+58,143,202,16,this.player.hp,this.player.maxHp,C.green,`${Math.ceil(this.player.hp)} / ${this.player.maxHp}`);txt('OSTY',x+18,181,12,C.muted,'left',900);bar(x+58,173,202,16,this.osty.hp,this.osty.maxHp,C.cyan,`${Math.ceil(this.osty.hp)} / ${this.osty.maxHp}`);if(this.harvest>0)txt(`Soul Harvest ${this.harvest.toFixed(1)}s`,x+18,211,13,C.green,'left',800);else if(this.funeral>0)txt(`Funeral March ${this.funeral.toFixed(1)}s`,x+18,211,13,C.purple,'left',800);else if(this.soulRecall>0)txt(`Soul Recall ${this.soulRecall.toFixed(1)}s`,x+18,211,13,C.green,'left',800);else txt('No global buff active',x+18,211,13,C.muted,'left',650);
+    txt('LIVE CARDS',x+18,244,12,C.muted,'left',900);const labels=['✕','□','△'];for(let i=0;i<3;i++){const c=this.hand[i],y=260+i*112;rr(x+14,y,260,98,16,c?C.panel2:'#0c101a',c?.color||'#28314a',c?.remain>0?1:2);txt(labels[i],x+32,y+24,21,c?.color||C.muted,'left',1000);txt(c?.name||'—',x+64,y+23,17,C.ink,'left',900,188);if(c){wrap(c.desc,x+26,y+43,232,18,12,C.muted,650);if(c.remain>0){ctx.fillStyle='rgba(5,7,12,.66)';ctx.fillRect(x+14,y,260,98);txt(`${c.remain.toFixed(1)}s`,x+144,y+49,24,c.color,'center',1000)}}}
+    txt(`Deck ${this.deck.length} • Draw ${this.draw.length} • Discard ${this.discard.length}`,x+18,614,12,C.muted,'left',750);txt(input.lastPad?'L move • R aim • ✕ □ △ cards':'WASD move • mouse aim • J K L cards',x+18,642,12,C.ink,'left',750);txt('Cards cycle. Cooldowns keep ticking everywhere.',x+18,666,11,C.muted,'left',650)
+  }
+  drawReward(){ctx.fillStyle='rgba(4,6,11,.82)';ctx.fillRect(0,0,W,H);txt('CHOOSE A NEW RELATIONSHIP',W/2,128,34,C.ink,'center',1000);txt('No stat percentages. Add a new thing the machine can do.',W/2,166,17,C.muted,'center',700);const labels=['✕ / 1','□ / 2','△ / 3'];for(let i=0;i<3;i++){const d=this.reward[i],x=160+i*330,y=235;rr(x,y,300,290,24,C.panel,d.color,3);txt(labels[i],x+24,y+32,15,d.color,'left',1000);txt(d.icon,x+150,y+88,44,d.color,'center',1000);txt(d.name,x+150,y+143,23,C.ink,'center',1000);wrap(d.desc,x+28,y+178,244,24,16,C.muted,700);txt(`Cooldown ${d.cd.toFixed(1)}s`,x+150,y+256,13,d.color,'center',850)}txt('Pick one. It enters your 10+ card cycling deck.',W/2,574,16,C.ink,'center',750)}
+}
+
+let game;
+function resetGame(){game=new Game()}
+resetGame();
+let last=performance.now();function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;game.update(dt);game.render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+</script>
+</body>
+</html>

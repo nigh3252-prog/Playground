@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carlson-Style Multi-Scale Truchet Generator</title>
+  <style>
+    :root{
+      --bg:#0d1020;
+      --panel:#171b31;
+      --panel2:#212745;
+      --text:#eef2ff;
+      --muted:#aeb8df;
+      --accent:#8ab4ff;
+      --accent2:#b7ffd8;
+      --border:rgba(255,255,255,.1);
+      --shadow:0 12px 28px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:radial-gradient(circle at top, #1a2141 0%, var(--bg) 60%);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .app{
+      display:grid;
+      grid-template-columns:minmax(300px,390px) 1fr;
+      gap:16px;
+      max-width:1600px;
+      margin:0 auto;
+      padding:16px;
+    }
+    .panel{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .controls{
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      position:sticky;
+      top:16px;
+      align-self:start;
+    }
+    h1{
+      margin:0;
+      font-size:1.35rem;
+      line-height:1.1;
+    }
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.45;
+      font-size:.95rem;
+    }
+    .group{
+      display:grid;
+      gap:10px;
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.07);
+    }
+    .group-title{
+      color:var(--accent2);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-size:.82rem;
+      margin:0;
+    }
+    label{display:grid;gap:6px;font-size:.93rem}
+    .inline{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+    }
+    .value{
+      min-width:44px;
+      text-align:right;
+      color:var(--muted);
+      font-variant-numeric:tabular-nums;
+    }
+    input[type="range"]{width:100%;accent-color:var(--accent)}
+    input[type="text"], select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:var(--panel2);
+      color:var(--text);
+      font-size:.95rem;
+    }
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{
+      appearance:none;border:0;cursor:pointer;
+      border-radius:14px;padding:12px 14px;font-weight:700;
+      background:linear-gradient(180deg,#d8e6ff,#8ab4ff);
+      color:#091224;
+      box-shadow:0 8px 18px rgba(138,180,255,.26);
+    }
+    button.secondary{
+      background:linear-gradient(180deg,#e0fff2,#b7ffd8);
+      box-shadow:0 8px 18px rgba(183,255,216,.2);
+    }
+    button.ghost{
+      color:var(--text);
+      background:rgba(255,255,255,.06);
+      box-shadow:none;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .canvasWrap{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-width:0;
+    }
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:.92rem;
+    }
+    .canvasShell{
+      background:#0f1117;
+      border-radius:20px;
+      min-height:72vh;
+      border:1px solid rgba(255,255,255,.08);
+      display:grid;
+      place-items:center;
+      overflow:auto;
+    }
+    canvas{
+      display:block;
+      max-width:100%;
+      height:auto;
+      background:#fff;
+      margin:16px;
+      border-radius:14px;
+      box-shadow:0 10px 24px rgba(0,0,0,.35);
+    }
+    .hint,.foot{
+      color:var(--muted);
+      line-height:1.45;
+      font-size:.9rem;
+    }
+    code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:6px}
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr}
+      .controls{position:static}
+      .canvasShell{min-height:54vh}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel controls">
+      <div>
+        <h1>Carlson-Style Multi-Scale Truchet Generator</h1>
+        <div class="sub">A closer remake of the layered multi-scale idea: 1/2 scaling, alternating black/white by level, edge connection points at 1/3 and 2/3, overlapping “winged” tiles, and motif rendering on top.</div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Seed</div>
+        <label>
+          Pattern seed
+          <div class="row2">
+            <input id="seed" type="text" value="carlson-remake" />
+            <button id="randSeed" class="ghost" type="button">Randomize</button>
+          </div>
+        </label>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Structure</div>
+        <label>
+          <div class="inline"><span>Canvas size</span><span class="value" id="sizeV">1200</span></div>
+          <input id="canvasSize" type="range" min="512" max="2048" step="128" value="1200" />
+        </label>
+        <label>
+          <div class="inline"><span>Base grid</span><span class="value" id="gridV">5</span></div>
+          <input id="baseGrid" type="range" min="1" max="12" step="1" value="5" />
+        </label>
+        <label>
+          <div class="inline"><span>Levels</span><span class="value" id="levelsV">5</span></div>
+          <input id="levels" type="range" min="1" max="7" step="1" value="5" />
+        </label>
+        <label>
+          <div class="inline"><span>Coverage decay</span><span class="value" id="coverageV">0.68</span></div>
+          <input id="coverageDecay" type="range" min="0.25" max="1" step="0.01" value="0.68" />
+        </label>
+        <label>
+          <div class="inline"><span>Jitter</span><span class="value" id="jitterV">0.05</span></div>
+          <input id="jitter" type="range" min="0" max="0.22" step="0.01" value="0.05" />
+        </label>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Tile & Motif</div>
+        <label>
+          Motif mode
+          <select id="motifMode">
+            <option value="mixed" selected>Mixed motifs</option>
+            <option value="arc">Arc motif</option>
+            <option value="s">S-curve motif</option>
+            <option value="cross">Cross motif</option>
+            <option value="diag">Diagonal motif</option>
+          </select>
+        </label>
+        <label>
+          <div class="inline"><span>Wing size</span><span class="value" id="wingV">0.18</span></div>
+          <input id="wing" type="range" min="0" max="0.35" step="0.01" value="0.18" />
+        </label>
+        <label>
+          <div class="inline"><span>Motif weight</span><span class="value" id="lineV">7</span></div>
+          <input id="lineWidth" type="range" min="1" max="24" step="1" value="7" />
+        </label>
+        <label>
+          <div class="inline"><span>Tile outlines</span><span class="value" id="outlineV">On</span></div>
+          <input id="showOutlines" type="range" min="0" max="1" step="1" value="1" />
+        </label>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Color</div>
+        <div class="row2">
+          <label>Background
+            <input id="bg" type="text" value="#f7f6f2" />
+          </label>
+          <label>Stroke
+            <input id="stroke" type="text" value="#101010" />
+          </label>
+        </div>
+        <div class="row2">
+          <label>Dark domain
+            <input id="dark" type="text" value="#111111" />
+          </label>
+          <label>Light domain
+            <input id="light" type="text" value="#fbfbfb" />
+          </label>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button id="generate" type="button">Generate</button>
+        <button id="save" class="secondary" type="button">Save PNG</button>
+      </div>
+      <div class="buttons">
+        <button id="copySeed" class="ghost" type="button">Copy Seed</button>
+        <button id="reset" class="ghost" type="button">Reset</button>
+      </div>
+
+      <div class="hint">This remake is designed to follow the page’s logic more closely than the earlier recursive-square version: each level is half the previous scale, smaller tiles are layered above larger ones, colors invert by level, and motifs connect edge points placed at <code>1/3</code> and <code>2/3</code>.</div>
+      <div class="foot">Tip: try base grid 3–5, levels 5–6, and mixed motifs for the most Carlson-ish feel.</div>
+    </section>
+
+    <section class="panel canvasWrap">
+      <div class="toolbar">
+        <div><strong>Preview</strong></div>
+        <div id="stats">Ready</div>
+      </div>
+      <div class="canvasShell">
+        <canvas id="canvas" width="1200" height="1200"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const els = {
+      seed:$('seed'), randSeed:$('randSeed'),
+      canvas:$('canvas'),
+      canvasSize:$('canvasSize'), baseGrid:$('baseGrid'), levels:$('levels'),
+      coverageDecay:$('coverageDecay'), jitter:$('jitter'),
+      motifMode:$('motifMode'), wing:$('wing'), lineWidth:$('lineWidth'),
+      showOutlines:$('showOutlines'),
+      bg:$('bg'), stroke:$('stroke'), dark:$('dark'), light:$('light'),
+      generate:$('generate'), save:$('save'), copySeed:$('copySeed'), reset:$('reset'),
+      stats:$('stats'),
+      sizeV:$('sizeV'), gridV:$('gridV'), levelsV:$('levelsV'),
+      coverageV:$('coverageV'), jitterV:$('jitterV'),
+      wingV:$('wingV'), lineV:$('lineV'), outlineV:$('outlineV')
+    };
+    const ctx = els.canvas.getContext('2d');
+
+    const defaults = {
+      seed:'carlson-remake',
+      canvasSize:1200,
+      baseGrid:5,
+      levels:5,
+      coverageDecay:0.68,
+      jitter:0.05,
+      motifMode:'mixed',
+      wing:0.18,
+      lineWidth:7,
+      showOutlines:1,
+      bg:'#f7f6f2',
+      stroke:'#101010',
+      dark:'#111111',
+      light:'#fbfbfb'
+    };
+
+    function syncLabels(){
+      els.sizeV.textContent = els.canvasSize.value;
+      els.gridV.textContent = els.baseGrid.value;
+      els.levelsV.textContent = els.levels.value;
+      els.coverageV.textContent = Number(els.coverageDecay.value).toFixed(2);
+      els.jitterV.textContent = Number(els.jitter.value).toFixed(2);
+      els.wingV.textContent = Number(els.wing.value).toFixed(2);
+      els.lineV.textContent = els.lineWidth.value;
+      els.outlineV.textContent = Number(els.showOutlines.value) ? 'On' : 'Off';
+    }
+
+    function xmur3(str){
+      let h = 1779033703 ^ str.length;
+      for(let i=0;i<str.length;i++){
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      return function(){
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+      };
+    }
+    function sfc32(a,b,c,d){
+      return function(){
+        a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+        let t = (a + b) | 0;
+        a = b ^ (b >>> 9);
+        b = (c + (c << 3)) | 0;
+        c = (c << 21) | (c >>> 11);
+        d = (d + 1) | 0;
+        t = (t + d) | 0;
+        c = (c + t) | 0;
+        return (t >>> 0) / 4294967296;
+      };
+    }
+    function rngFromSeed(seed){
+      const seedFn = xmur3(seed || 'seed');
+      return sfc32(seedFn(), seedFn(), seedFn(), seedFn());
+    }
+    function randSeed(){
+      const bits = ['multi','scale','wing','tile','truchet','motif','nest','loop','path','field'];
+      const out = [];
+      for(let i=0;i<3;i++) out.push(bits[Math.floor(Math.random()*bits.length)]);
+      out.push(String(Math.floor(Math.random()*10000)).padStart(4,'0'));
+      return out.join('-');
+    }
+
+    function getSettings(){
+      return {
+        seed: els.seed.value.trim() || defaults.seed,
+        canvasSize: Number(els.canvasSize.value),
+        baseGrid: Number(els.baseGrid.value),
+        levels: Number(els.levels.value),
+        coverageDecay: Number(els.coverageDecay.value),
+        jitter: Number(els.jitter.value),
+        motifMode: els.motifMode.value,
+        wing: Number(els.wing.value),
+        lineWidth: Number(els.lineWidth.value),
+        showOutlines: Number(els.showOutlines.value) === 1,
+        bg: els.bg.value.trim() || defaults.bg,
+        stroke: els.stroke.value.trim() || defaults.stroke,
+        dark: els.dark.value.trim() || defaults.dark,
+        light: els.light.value.trim() || defaults.light
+      };
+    }
+
+    function resizeCanvas(size){
+      els.canvas.width = size;
+      els.canvas.height = size;
+    }
+
+    function sampleGridCells(level, baseGrid, coverageDecay, rng){
+      const grid = baseGrid * Math.pow(2, level);
+      const occupied = [];
+      const chance = Math.min(1, Math.pow(coverageDecay, level) * 1.08);
+      for(let y=0;y<grid;y++){
+        for(let x=0;x<grid;x++){
+          if(level === 0 || rng() < chance){
+            occupied.push({x,y});
+          }
+        }
+      }
+      return {grid, occupied};
+    }
+
+    function pickVariant(rng){
+      return rng() < 0.5 ? 0 : 1;
+    }
+
+    function pickMotif(mode, rng){
+      if(mode !== 'mixed') return mode;
+      const motifs = ['arc','s','cross','diag'];
+      return motifs[Math.floor(rng()*motifs.length)];
+    }
+
+    function makeTiles(settings){
+      const rng = rngFromSeed(settings.seed);
+      const margin = settings.canvasSize * 0.045;
+      const drawSize = settings.canvasSize - margin * 2;
+      const tiles = [];
+
+      for(let level=0; level<settings.levels; level++){
+        const {grid, occupied} = sampleGridCells(level, settings.baseGrid, settings.coverageDecay, rng);
+        const size = drawSize / grid;
+        for(const cell of occupied){
+          const j = settings.jitter * size;
+          const dx = (rng()*2 - 1) * j;
+          const dy = (rng()*2 - 1) * j;
+          tiles.push({
+            level,
+            size,
+            x: margin + cell.x * size + dx,
+            y: margin + cell.y * size + dy,
+            variant: pickVariant(rng),
+            motif: pickMotif(settings.motifMode, rng)
+          });
+        }
+      }
+      return tiles;
+    }
+
+    function edgePoints(x,y,s){
+      const one = s/3;
+      const two = 2*s/3;
+      return {
+        t1:[x+one, y],     t2:[x+two, y],
+        r1:[x+s, y+one],   r2:[x+s, y+two],
+        b1:[x+one, y+s],   b2:[x+two, y+s],
+        l1:[x, y+one],     l2:[x, y+two],
+        c:[x+s/2, y+s/2]
+      };
+    }
+
+    function wingedPath(ctx, x, y, s, variant, wing){
+      const w = s * wing;
+      const p = edgePoints(x,y,s);
+
+      ctx.beginPath();
+      if(variant === 0){
+        ctx.moveTo(x - w, y + s/3);
+        ctx.lineTo(x + s/3, y - w);
+        ctx.lineTo(x + 2*s/3, y - w);
+        ctx.lineTo(x + s + w, y + s/3);
+        ctx.lineTo(x + s + w, y + 2*s/3);
+        ctx.lineTo(x + 2*s/3, y + s + w);
+        ctx.lineTo(x + s/3, y + s + w);
+        ctx.lineTo(x - w, y + 2*s/3);
+        ctx.closePath();
+      } else {
+        ctx.moveTo(x + s/3, y - w);
+        ctx.lineTo(x - w, y + s/3);
+        ctx.lineTo(x - w, y + 2*s/3);
+        ctx.lineTo(x + s/3, y + s + w);
+        ctx.lineTo(x + 2*s/3, y + s + w);
+        ctx.lineTo(x + s + w, y + 2*s/3);
+        ctx.lineTo(x + s + w, y + s/3);
+        ctx.lineTo(x + 2*s/3, y - w);
+        ctx.closePath();
+      }
+      return p;
+    }
+
+    function fillWingedTile(ctx, tile, settings){
+      const {x,y,size,level,variant} = tile;
+      const darkFirst = level % 2 === 0;
+      const a = darkFirst ? settings.dark : settings.light;
+      const b = darkFirst ? settings.light : settings.dark;
+
+      ctx.save();
+      ctx.fillStyle = b;
+      ctx.fillRect(x, y, size, size);
+
+      wingedPath(ctx, x, y, size, variant, settings.wing);
+      ctx.fillStyle = a;
+      ctx.fill();
+
+      if(settings.showOutlines){
+        ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+        ctx.lineWidth = Math.max(1, settings.lineWidth * 0.18);
+        ctx.strokeRect(x, y, size, size);
+      }
+      ctx.restore();
+    }
+
+    function drawArcMotif(ctx, p, variant){
+      ctx.beginPath();
+      if(variant === 0){
+        ctx.moveTo(...p.t1); ctx.quadraticCurveTo(p.c[0]-18, p.c[1]-18, ...p.l1);
+        ctx.moveTo(...p.t2); ctx.quadraticCurveTo(p.c[0]+18, p.c[1]-18, ...p.r1);
+        ctx.moveTo(...p.l2); ctx.quadraticCurveTo(p.c[0]-18, p.c[1]+18, ...p.b1);
+        ctx.moveTo(...p.r2); ctx.quadraticCurveTo(p.c[0]+18, p.c[1]+18, ...p.b2);
+      } else {
+        ctx.moveTo(...p.t1); ctx.quadraticCurveTo(p.c[0]-18, p.c[1]-18, ...p.r1);
+        ctx.moveTo(...p.t2); ctx.quadraticCurveTo(p.c[0]+18, p.c[1]-18, ...p.l1);
+        ctx.moveTo(...p.l2); ctx.quadraticCurveTo(p.c[0]-18, p.c[1]+18, ...p.b2);
+        ctx.moveTo(...p.r2); ctx.quadraticCurveTo(p.c[0]+18, p.c[1]+18, ...p.b1);
+      }
+      ctx.stroke();
+    }
+
+    function drawSCurveMotif(ctx, p, variant){
+      ctx.beginPath();
+      if(variant === 0){
+        ctx.moveTo(...p.l1); ctx.bezierCurveTo(p.c[0]-12, p.c[1]-26, p.c[0]+12, p.c[1]-26, ...p.r1);
+        ctx.moveTo(...p.l2); ctx.bezierCurveTo(p.c[0]-12, p.c[1]+26, p.c[0]+12, p.c[1]+26, ...p.r2);
+        ctx.moveTo(...p.t1); ctx.bezierCurveTo(p.c[0]-26, p.c[1]-12, p.c[0]-26, p.c[1]+12, ...p.b1);
+        ctx.moveTo(...p.t2); ctx.bezierCurveTo(p.c[0]+26, p.c[1]-12, p.c[0]+26, p.c[1]+12, ...p.b2);
+      } else {
+        ctx.moveTo(...p.l1); ctx.bezierCurveTo(p.c[0]-16, p.c[1]-20, p.c[0]+16, p.c[1]+20, ...p.r2);
+        ctx.moveTo(...p.l2); ctx.bezierCurveTo(p.c[0]-16, p.c[1]+20, p.c[0]+16, p.c[1]-20, ...p.r1);
+        ctx.moveTo(...p.t1); ctx.bezierCurveTo(p.c[0]-20, p.c[1]-16, p.c[0]+20, p.c[1]+16, ...p.b2);
+        ctx.moveTo(...p.t2); ctx.bezierCurveTo(p.c[0]+20, p.c[1]-16, p.c[0]-20, p.c[1]+16, ...p.b1);
+      }
+      ctx.stroke();
+    }
+
+    function drawCrossMotif(ctx, p, variant){
+      ctx.beginPath();
+      if(variant === 0){
+        ctx.moveTo(...p.t1); ctx.lineTo(...p.b1);
+        ctx.moveTo(...p.t2); ctx.lineTo(...p.b2);
+        ctx.moveTo(...p.l1); ctx.lineTo(...p.r1);
+        ctx.moveTo(...p.l2); ctx.lineTo(...p.r2);
+      } else {
+        ctx.moveTo(...p.t1); ctx.lineTo(...p.b2);
+        ctx.moveTo(...p.t2); ctx.lineTo(...p.b1);
+        ctx.moveTo(...p.l1); ctx.lineTo(...p.r2);
+        ctx.moveTo(...p.l2); ctx.lineTo(...p.r1);
+      }
+      ctx.stroke();
+    }
+
+    function drawDiagMotif(ctx, p, variant){
+      ctx.beginPath();
+      if(variant === 0){
+        ctx.moveTo(...p.l1); ctx.lineTo(...p.t1);
+        ctx.moveTo(...p.l2); ctx.lineTo(...p.b1);
+        ctx.moveTo(...p.t2); ctx.lineTo(...p.r1);
+        ctx.moveTo(...p.r2); ctx.lineTo(...p.b2);
+      } else {
+        ctx.moveTo(...p.t1); ctx.lineTo(...p.r1);
+        ctx.moveTo(...p.l1); ctx.lineTo(...p.t2);
+        ctx.moveTo(...p.l2); ctx.lineTo(...p.b2);
+        ctx.moveTo(...p.r2); ctx.lineTo(...p.b1);
+      }
+      ctx.stroke();
+    }
+
+    function drawMotif(ctx, tile, settings){
+      const p = edgePoints(tile.x, tile.y, tile.size);
+      ctx.save();
+      ctx.strokeStyle = settings.stroke;
+      ctx.lineWidth = settings.lineWidth * Math.max(0.35, tile.size / 110);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if(tile.motif === 'arc') drawArcMotif(ctx, p, tile.variant);
+      else if(tile.motif === 's') drawSCurveMotif(ctx, p, tile.variant);
+      else if(tile.motif === 'cross') drawCrossMotif(ctx, p, tile.variant);
+      else drawDiagMotif(ctx, p, tile.variant);
+
+      ctx.restore();
+    }
+
+    function render(){
+      syncLabels();
+      const settings = getSettings();
+      resizeCanvas(settings.canvasSize);
+      const tiles = makeTiles(settings);
+
+      ctx.clearRect(0,0,settings.canvasSize,settings.canvasSize);
+      ctx.fillStyle = settings.bg;
+      ctx.fillRect(0,0,settings.canvasSize,settings.canvasSize);
+
+      // Larger tiles first, smaller tiles on top
+      tiles.sort((a,b) => a.level - b.level);
+
+      for(const tile of tiles) fillWingedTile(ctx, tile, settings);
+      for(const tile of tiles) drawMotif(ctx, tile, settings);
+
+      const countsByLevel = Array.from({length:settings.levels}, (_,i)=>0);
+      for(const t of tiles) countsByLevel[t.level]++;
+      els.stats.textContent = `${tiles.length} tiles · levels ${settings.levels} · seed: ${settings.seed}`;
+    }
+
+    function savePNG(){
+      const link = document.createElement('a');
+      const safe = getSettings().seed.replace(/[^a-z0-9-_]+/gi,'_');
+      link.download = `carlson_style_truchet_${safe || 'pattern'}.png`;
+      link.href = els.canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function copySeed(){
+      navigator.clipboard.writeText(els.seed.value).then(()=>{
+        const prev = els.copySeed.textContent;
+        els.copySeed.textContent = 'Copied';
+        setTimeout(()=>els.copySeed.textContent = prev, 900);
+      }).catch(()=>{});
+    }
+
+    function reset(){
+      els.seed.value = defaults.seed;
+      els.canvasSize.value = defaults.canvasSize;
+      els.baseGrid.value = defaults.baseGrid;
+      els.levels.value = defaults.levels;
+      els.coverageDecay.value = defaults.coverageDecay;
+      els.jitter.value = defaults.jitter;
+      els.motifMode.value = defaults.motifMode;
+      els.wing.value = defaults.wing;
+      els.lineWidth.value = defaults.lineWidth;
+      els.showOutlines.value = defaults.showOutlines;
+      els.bg.value = defaults.bg;
+      els.stroke.value = defaults.stroke;
+      els.dark.value = defaults.dark;
+      els.light.value = defaults.light;
+      render();
+    }
+
+    [
+      els.canvasSize, els.baseGrid, els.levels, els.coverageDecay, els.jitter,
+      els.motifMode, els.wing, els.lineWidth, els.showOutlines,
+      els.bg, els.stroke, els.dark, els.light
+    ].forEach(el => el.addEventListener('input', render));
+
+    els.seed.addEventListener('change', render);
+    els.generate.addEventListener('click', render);
+    els.save.addEventListener('click', savePNG);
+    els.copySeed.addEventListener('click', copySeed);
+    els.randSeed.addEventListener('click', ()=>{
+      els.seed.value = randSeed();
+      render();
+    });
+    els.reset.addEventListener('click', reset);
+
+    syncLabels();
+    render();
+  </script>
+</body>
+</html>
