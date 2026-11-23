@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#151a19">
+  <title>VR Reference Bench · Playground</title>
+  <link rel="stylesheet" href="./room.css">
+  <script type="importmap">
+    {"imports":{"three":"../../armory/vendor/three.module.min.js","three/addons/":"../../armory/vendor/addons/"}}
+  </script>
+  <script type="module" src="./room.mjs"></script>
+</head>
+<body>
+  <main>
+    <a class="back" href="../">← Model Review Bench</a>
+    <header>
+      <div>
+        <h1>VR Reference Bench</h1>
+        <p>Pull out the tray. Pick up a miniature, turn it in your hand, and give it a spot on the shelf.</p>
+      </div>
+      <button id="enter-vr" type="button" disabled>Enter VR</button>
+    </header>
+    <div id="stage" role="region" aria-label="Interactive miniature workshop"></div>
+    <p id="status" role="status">Loading Mike, Warden, and Keraunos…</p>
+    <p id="xr-status">Checking for immersive VR…</p>
+    <details id="desktop">
+      <summary>Desktop controls</summary>
+      <p>Drag the view to orbit. Scroll or pinch to zoom.</p>
+      <div id="model-controls">
+        <button id="tray" type="button" aria-expanded="false" disabled>Pull out tray</button>
+        <label>Miniature <select id="miniature" disabled><option value="">Choose a miniature</option></select></label>
+        <button id="rotate" type="button" disabled>Turn 45°</button>
+      </div>
+      <div id="placement-controls"></div>
+    </details>
+  </main>
+</body>
+</html>
