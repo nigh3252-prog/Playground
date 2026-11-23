@@ -40,7 +40,7 @@ test('VR room loads the three models and restores the tray, shelf placements, an
     assert.equal(await page.locator('#stage canvas').count(), 1);
     for (const piece of PIECES) assert(assets.has(`${piece.id}-${piece.version}.glb`));
 
-    await page.getByText('Desktop controls').click();
+    await page.getByText('Desktop controls', {exact: true}).click();
     await page.getByRole('button', {name: 'Pull out tray'}).click();
     await page.getByLabel('Miniature', {exact: true}).selectOption(PIECES[0].id);
     await page.getByRole('button', {name: 'Turn 45°'}).click();
@@ -54,7 +54,7 @@ test('VR room loads the three models and restores the tray, shelf placements, an
     page = await context.newPage();
     await page.goto(origin + '/models/vr/');
     await page.getByText('Mike, Warden, and Keraunos are ready.').waitFor({timeout: 30000});
-    await page.getByText('Desktop controls').click();
+    await page.getByText('Desktop controls', {exact: true}).click();
     assert.equal(await page.getByRole('button', {name: 'Close tray'}).getAttribute('aria-expanded'), 'true');
     const options = await page.getByLabel('Miniature', {exact: true}).locator('option').allTextContents();
     assert.deepEqual(options.slice(1), ['Mike · Shelf 1', 'Warden · Shelf 2', 'Keraunos · Tray 3']);
