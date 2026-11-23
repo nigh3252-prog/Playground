@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Floating Joystick Ship Dev Tool</title>
+  <style>
+    :root {
+      --bg: #05070b;
+      --fg: #e8f0ff;
+      --muted: #8ea3c7;
+      --accent: #7bd3ff;
+      --panel: rgba(10, 14, 24, 0.74);
+      --line: rgba(255,255,255,0.14);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      touch-action: none;
+    }
+    body { position: fixed; inset: 0; }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(40,60,110,.25), transparent 40%),
+        radial-gradient(circle at 20% 30%, rgba(40,60,110,.12), transparent 25%),
+        linear-gradient(180deg, #08101e, #030507 60%);
+    }
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.22);
+    }
+    .stats {
+      display: flex;
+      gap: 14px;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+    .stats strong {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .hint {
+      max-width: 420px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0,0,0,.38);
+      backdrop-filter: blur(4px);
+    }
+    .menu {
+      width: min(92vw, 460px);
+      pointer-events: auto;
+      text-align: center;
+      background: rgba(12, 18, 30, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.38);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0.04em;
+    }
+    p {
+      margin: 8px 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(123,211,255,.18), rgba(123,211,255,.08));
+      color: var(--fg);
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      min-width: 140px;
+      cursor: pointer;
+    }
+    .small-note {
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .hidden { display: none; }
+    .touch-surface {
+      position: fixed;
+      inset: 0;
+      touch-action: none;
+    }
+    .floating-stick {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 80ms linear;
+    }
+    .floating-stick.visible {
+      opacity: 1;
+    }
+    .stick-ring,
+    .stick-thumb {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+    }
+    .stick-ring {
+      width: 132px;
+      height: 132px;
+      border: 2px solid rgba(255,255,255,.14);
+      background: radial-gradient(circle, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      box-shadow: inset 0 0 24px rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.25);
+    }
+    .stick-thumb {
+      width: 58px;
+      height: 58px;
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), rgba(123,211,255,.18));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 6px 16px rgba(0,0,0,.3);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div class="touch-surface" id="touchSurface"></div>
+
+  <div class="floating-stick" id="floatingStick" aria-hidden="true">
+    <div class="stick-ring"></div>
+    <div class="stick-thumb" id="stickThumb"></div>
+  </div>
+
+  <div class="hud">
+    <div class="topbar">
+      <div class="card stats">
+        <div><strong>X</strong><span id="xVal">0</span></div>
+        <div><strong>Y</strong><span id="yVal">0</span></div>
+        <div><strong>SPEED</strong><span id="speedVal">0</span></div>
+        <div><strong>TURN</strong><span id="turnVal">3.1</span></div>
+      </div>
+      <div class="card hint">Touch anywhere on the screen to spawn the joystick. The ship now has a turning radius, so it rotates toward the target direction instead of snapping instantly.</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="menu">
+      <h1>FLOATING JOYSTICK SHIP TOOL</h1>
+      <p>This is a stripped-down movement sandbox. No asteroids, no shooting, just ship feel and floating-stick behavior.</p>
+      <p>Touch anywhere on the screen to spawn the joystick where your thumb lands, then drag to move. The ship turns gradually instead of instantly pivoting.</p>
+      <div class="buttons">
+        <button id="startBtn">Start</button>
+      </div>
+      <div class="small-note">Built as a single HTML dev tool for Android phone testing.</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const xVal = document.getElementById('xVal');
+    const yVal = document.getElementById('yVal');
+    const speedVal = document.getElementById('speedVal');
+    const turnVal = document.getElementById('turnVal');
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('startBtn');
+    const touchSurface = document.getElementById('touchSurface');
+    const floatingStick = document.getElementById('floatingStick');
+    const stickThumb = document.getElementById('stickThumb');
+
+    const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+    function resize() {
+      const dpr = DPR();
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const TUNE = {
+      maxStickRadius: 52,
+      acceleration: 320,
+      dragPerFrame60: 0.978,
+      turnRate: 3.1
+    };
+
+    const state = {
+      running: false,
+      stars: [],
+      lastTime: 0,
+      ship: {
+        x: window.innerWidth * 0.5,
+        y: window.innerHeight * 0.5,
+        vx: 0,
+        vy: 0,
+        angle: -Math.PI / 2,
+        radius: 15
+      },
+      joystick: {
+        active: false,
+        pointerId: null,
+        baseX: 0,
+        baseY: 0,
+        dx: 0,
+        dy: 0,
+        mag: 0,
+        angle: -Math.PI / 2,
+        maxRadius: TUNE.maxStickRadius
+      }
+    };
+
+    function makeStars() {
+      state.stars = Array.from({ length: Math.floor((window.innerWidth * window.innerHeight) / 9000) }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 1.8 + 0.4,
+        a: Math.random() * 0.7 + 0.2
+      }));
+    }
+
+    function wrap(obj, r = 0) {
+      if (obj.x < -r) obj.x = window.innerWidth + r;
+      if (obj.x > window.innerWidth + r) obj.x = -r;
+      if (obj.y < -r) obj.y = window.innerHeight + r;
+      if (obj.y > window.innerHeight + r) obj.y = -r;
+    }
+
+    function updateHud() {
+      xVal.textContent = Math.round(state.ship.x);
+      yVal.textContent = Math.round(state.ship.y);
+      speedVal.textContent = Math.round(Math.hypot(state.ship.vx, state.ship.vy));
+      turnVal.textContent = TUNE.turnRate.toFixed(1);
+    }
+
+    function startTool() {
+      state.running = true;
+      state.ship.x = window.innerWidth * 0.5;
+      state.ship.y = window.innerHeight * 0.5;
+      state.ship.vx = 0;
+      state.ship.vy = 0;
+      state.ship.angle = -Math.PI / 2;
+      overlay.classList.add('hidden');
+      makeStars();
+      updateHud();
+    }
+
+    function updateJoystickVisual() {
+      const joy = state.joystick;
+      floatingStick.style.left = joy.baseX + 'px';
+      floatingStick.style.top = joy.baseY + 'px';
+      stickThumb.style.left = (joy.dx * joy.maxRadius) + 'px';
+      stickThumb.style.top = (joy.dy * joy.maxRadius) + 'px';
+    }
+
+    function showJoystick(x, y) {
+      const joy = state.joystick;
+      joy.baseX = x;
+      joy.baseY = y;
+      joy.dx = 0;
+      joy.dy = 0;
+      joy.mag = 0;
+      updateJoystickVisual();
+      floatingStick.classList.add('visible');
+    }
+
+    function hideJoystick() {
+      floatingStick.classList.remove('visible');
+    }
+
+    function resetJoystick() {
+      const joy = state.joystick;
+      joy.active = false;
+      joy.pointerId = null;
+      joy.dx = 0;
+      joy.dy = 0;
+      joy.mag = 0;
+      hideJoystick();
+    }
+
+    function drawShip(ship) {
+      ctx.save();
+      ctx.translate(ship.x, ship.y);
+      ctx.rotate(ship.angle + Math.PI / 2);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#eaf4ff';
+      ctx.beginPath();
+      ctx.moveTo(0, -18);
+      ctx.lineTo(12, 12);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-12, 12);
+      ctx.closePath();
+      ctx.stroke();
+
+      if (state.joystick.active && state.joystick.mag > 0.08) {
+        ctx.strokeStyle = '#7bd3ff';
+        ctx.beginPath();
+        ctx.moveTo(-6, 12);
+        ctx.lineTo(0, 22 + Math.random() * 6);
+        ctx.lineTo(6, 12);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function normalizeAngle(angle) {
+      while (angle > Math.PI) angle -= Math.PI * 2;
+      while (angle < -Math.PI) angle += Math.PI * 2;
+      return angle;
+    }
+
+    function update(dt) {
+      const joy = state.joystick;
+      const ship = state.ship;
+
+      if (joy.active && joy.mag > 0.04) {
+        const targetAngle = joy.angle;
+        let angleDiff = normalizeAngle(targetAngle - ship.angle);
+        const maxTurn = TUNE.turnRate * dt;
+        angleDiff = Math.max(-maxTurn, Math.min(maxTurn, angleDiff));
+        ship.angle += angleDiff;
+
+        const facingAlignment = Math.max(0.15, Math.cos(normalizeAngle(targetAngle - ship.angle)));
+        const accel = TUNE.acceleration * joy.mag * facingAlignment;
+        ship.vx += Math.cos(ship.angle) * accel * dt;
+        ship.vy += Math.sin(ship.angle) * accel * dt;
+      }
+
+      const drag = Math.pow(TUNE.dragPerFrame60, dt * 60);
+      ship.vx *= drag;
+      ship.vy *= drag;
+      ship.x += ship.vx * dt;
+      ship.y += ship.vy * dt;
+      wrap(ship, ship.radius + 2);
+      updateHud();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      for (const s of state.stars) {
+        ctx.globalAlpha = s.a;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      drawShip(state.ship);
+    }
+
+    function frame(ts) {
+      if (!state.lastTime) state.lastTime = ts;
+      let dt = (ts - state.lastTime) / 1000;
+      state.lastTime = ts;
+      dt = Math.min(dt, 0.033);
+      if (state.running) update(dt);
+      render();
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    touchSurface.addEventListener('pointerdown', (e) => {
+      if (!state.running) return;
+      const joy = state.joystick;
+      joy.active = true;
+      joy.pointerId = e.pointerId;
+      showJoystick(e.clientX, e.clientY);
+      touchSurface.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    touchSurface.addEventListener('pointermove', (e) => {
+      const joy = state.joystick;
+      if (!joy.active || e.pointerId !== joy.pointerId) return;
+      const rawDx = e.clientX - joy.baseX;
+      const rawDy = e.clientY - joy.baseY;
+      const dist = Math.hypot(rawDx, rawDy);
+      const max = joy.maxRadius;
+      const limited = Math.min(dist, max);
+      const angle = dist > 0 ? Math.atan2(rawDy, rawDx) : joy.angle;
+      joy.dx = dist > 0 ? (Math.cos(angle) * limited) / max : 0;
+      joy.dy = dist > 0 ? (Math.sin(angle) * limited) / max : 0;
+      joy.mag = limited / max;
+      joy.angle = angle;
+      updateJoystickVisual();
+    });
+
+    function endPointer(e) {
+      const joy = state.joystick;
+      if (e.pointerId !== joy.pointerId) return;
+      resetJoystick();
+    }
+    touchSurface.addEventListener('pointerup', endPointer);
+    touchSurface.addEventListener('pointercancel', endPointer);
+
+    startBtn.addEventListener('click', startTool);
+
+    makeStars();
+    updateHud();
+    render();
+  </script>
+</body>
+</html>

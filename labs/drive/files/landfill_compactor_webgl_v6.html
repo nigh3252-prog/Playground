@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>WebGL Landfill Compactor Drive Test v6</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #151812;
+    touch-action: none;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #f3f3df;
+  }
+  canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    background: linear-gradient(#7c9aa0, #c9c19b 52%, #4d5c3f 53%, #283322);
+  }
+  #hud {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    background: rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 12px;
+    padding: 9px 11px;
+    font-size: 12px;
+    line-height: 1.35;
+    user-select: none;
+    pointer-events: none;
+    backdrop-filter: blur(3px);
+  }
+  #hud b { font-size: 13px; color: #fff6bd; }
+  #speed {
+    position: fixed;
+    right: 10px;
+    top: 68px;
+    background: rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 12px;
+    padding: 9px 11px;
+    min-width: 92px;
+    text-align: right;
+    font-size: 13px;
+    pointer-events: none;
+    user-select: none;
+  }
+  #stickZone {
+    position: fixed;
+    inset: 0;
+    touch-action: none;
+    z-index: 2;
+  }
+  #stickBase, #stickKnob {
+    position: fixed;
+    border-radius: 999px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+  }
+  #stickBase {
+    width: 116px;
+    height: 116px;
+    display: block;
+    border: 2px solid rgba(255,255,255,.34);
+    background: rgba(255,255,255,.075);
+  }
+  #stickKnob {
+    width: 48px;
+    height: 48px;
+    display: block;
+    border: 2px solid rgba(255,255,255,.58);
+    background: rgba(255,244,176,.28);
+    box-shadow: 0 0 18px rgba(255,244,176,.18);
+  }
+  #menuWrap {
+    position: fixed;
+    right: 10px;
+    top: 10px;
+    z-index: 10;
+  }
+  #menuBtn {
+    width: 52px;
+    height: 48px;
+    min-width: 0;
+    padding: 0;
+    font-size: 28px;
+    line-height: 1;
+    border-radius: 14px;
+  }
+  #menuPanel {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 58px;
+    width: min(315px, calc(100vw - 22px));
+    background: rgba(0,0,0,.68);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.35);
+    backdrop-filter: blur(4px);
+  }
+  #menuPanel.open { display: block; }
+  .menuTitle {
+    font-weight: 700;
+    color: #fff6bd;
+    margin: 2px 2px 10px;
+    font-size: 14px;
+  }
+  .menuRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    margin: 9px 0;
+  }
+  .menuRow label {
+    font-size: 12px;
+    opacity: .9;
+  }
+  .menuHint {
+    font-size: 11px;
+    opacity: .76;
+    line-height: 1.25;
+    margin-top: -2px;
+  }
+  button, select {
+    color: #f8f3d4;
+    background: rgba(0,0,0,.48);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 14px;
+    padding: 11px 12px;
+    font-size: 14px;
+    backdrop-filter: blur(3px);
+  }
+  select {
+    width: 100%;
+    color-scheme: dark;
+  }
+  button:active { transform: translateY(1px); background: rgba(70,70,40,.7); }
+  #msg {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-size: 13px;
+    opacity: .9;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+    z-index: 3;
+  }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="hud">
+  <b>Landfill Compactor v6</b><br>
+  Drag anywhere to drive/steer<br>
+  WASD / arrows also work<br>
+  Space = brake · R = reset<br>
+  Audio starts after first tap
+</div>
+<div id="speed">0 mph<br><small>packed: 0</small></div>
+<div id="stickZone"></div>
+<div id="stickBase"></div>
+<div id="stickKnob"></div>
+<div id="menuWrap">
+  <button id="menuBtn" aria-label="Open menu">☰</button>
+  <div id="menuPanel">
+    <div class="menuTitle">Options</div>
+    <div class="menuRow">
+      <label for="cameraSelect">Camera</label>
+      <select id="cameraSelect">
+        <option value="0" selected>Chase</option>
+        <option value="1">Top</option>
+        <option value="2">Side</option>
+      </select>
+    </div>
+    <div class="menuRow">
+      <label for="zoomSelect">Zoom out</label>
+      <select id="zoomSelect">
+        <option value="1">1x close</option>
+        <option value="2">2x</option>
+        <option value="3" selected>3x default</option>
+        <option value="4">4x</option>
+        <option value="5">5x huge area</option>
+      </select>
+      <div class="menuHint">Zoom also expands the playable boundary view. The world is now 5x wider than before.</div>
+    </div>
+    <div class="menuRow">
+      <label for="themeSelect">Trash / world theme</label>
+      <select id="themeSelect">
+        <option value="garbage" selected>Classic garbage colors</option>
+        <option value="candy">Candy landfill</option>
+        <option value="toxic">Toxic neon dump</option>
+        <option value="office">Office paper avalanche</option>
+        <option value="scrap">Rusty scrap yard</option>
+        <option value="wizard">Wizard junk dimension</option>
+      </select>
+    </div>
+    <div class="menuRow">
+      <button id="wheelDirBtn">Wheel rotation: flipped</button>
+      <button id="joyModeBtn">Joystick: fixed home</button>
+      <button id="audioBtn">Audio: on</button>
+      <button id="regenBtn">Regenerate trash grid</button>
+      <button id="resetBtn">Reset vehicle</button>
+    </div>
+  </div>
+</div>
+<div id="msg">Flatten trash · diesel rumble + crush pops</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("gl");
+  const gl = canvas.getContext("webgl", { antialias: true, alpha: false });
+  if (!gl) {
+    document.body.innerHTML = "<p style='padding:20px'>WebGL is not available on this device/browser.</p>";
+    return;
+  }
+
+  const hudSpeed = document.getElementById("speed");
+  const menuBtn = document.getElementById("menuBtn");
+  const menuPanel = document.getElementById("menuPanel");
+  const cameraSelect = document.getElementById("cameraSelect");
+  const zoomSelect = document.getElementById("zoomSelect");
+  const themeSelect = document.getElementById("themeSelect");
+  const wheelDirBtn = document.getElementById("wheelDirBtn");
+  const joyModeBtn = document.getElementById("joyModeBtn");
+  const audioBtn = document.getElementById("audioBtn");
+  const regenBtn = document.getElementById("regenBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const stickZone = document.getElementById("stickZone");
+  const stickBase = document.getElementById("stickBase");
+  const stickKnob = document.getElementById("stickKnob");
+
+  const vs = `
+    attribute vec3 a_pos;
+    attribute vec3 a_norm;
+    uniform mat4 u_mvp;
+    uniform mat4 u_model;
+    uniform mat3 u_normal;
+    uniform vec3 u_color;
+    uniform vec3 u_lightDir;
+    varying vec3 v_color;
+    varying float v_fog;
+    void main() {
+      vec4 world = u_model * vec4(a_pos, 1.0);
+      vec3 n = normalize(u_normal * a_norm);
+      float diff = max(dot(n, normalize(u_lightDir)), 0.0);
+      float shade = 0.34 + diff * 0.72;
+      v_color = u_color * shade;
+      v_fog = clamp((length(world.xz) - 28.0) / 75.0, 0.0, 1.0);
+      gl_Position = u_mvp * vec4(a_pos, 1.0);
+    }`;
+  const fs = `
+    precision mediump float;
+    varying vec3 v_color;
+    varying float v_fog;
+    void main() {
+      vec3 fog = vec3(0.54, 0.62, 0.58);
+      gl_FragColor = vec4(mix(v_color, fog, v_fog * 0.62), 1.0);
+    }`;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+
+  const loc = {
+    pos: gl.getAttribLocation(prog, "a_pos"),
+    norm: gl.getAttribLocation(prog, "a_norm"),
+    mvp: gl.getUniformLocation(prog, "u_mvp"),
+    model: gl.getUniformLocation(prog, "u_model"),
+    normal: gl.getUniformLocation(prog, "u_normal"),
+    color: gl.getUniformLocation(prog, "u_color"),
+    lightDir: gl.getUniformLocation(prog, "u_lightDir")
+  };
+
+  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK);
+  gl.clearColor(0.54, 0.62, 0.58, 1);
+
+  const M = {
+    ident() {
+      return [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
+    },
+    mul(a,b) {
+      const o = new Array(16);
+      for (let r=0;r<4;r++) for (let c=0;c<4;c++) {
+        o[c*4+r] = a[0*4+r]*b[c*4+0] + a[1*4+r]*b[c*4+1] + a[2*4+r]*b[c*4+2] + a[3*4+r]*b[c*4+3];
+      }
+      return o;
+    },
+    trans(x,y,z) {
+      return [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1];
+    },
+    scale(x,y,z) {
+      return [x,0,0,0, 0,y,0,0, 0,0,z,0, 0,0,0,1];
+    },
+    rotX(a) {
+      const c=Math.cos(a), s=Math.sin(a);
+      return [1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1];
+    },
+    rotY(a) {
+      const c=Math.cos(a), s=Math.sin(a);
+      return [c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1];
+    },
+    rotZ(a) {
+      const c=Math.cos(a), s=Math.sin(a);
+      return [c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1];
+    },
+    persp(fov, aspect, near, far) {
+      const f = 1 / Math.tan(fov / 2), nf = 1 / (near - far);
+      return [f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,(2*far*near)*nf,0];
+    },
+    lookAt(eye, target, up) {
+      const z = norm(sub(eye, target));
+      const x = norm(cross(up, z));
+      const y = cross(z, x);
+      return [
+        x[0], y[0], z[0], 0,
+        x[1], y[1], z[1], 0,
+        x[2], y[2], z[2], 0,
+        -dot(x,eye), -dot(y,eye), -dot(z,eye), 1
+      ];
+    },
+    normal3(m) {
+      // Good enough here because models only use translate/rotate/uniform-ish scales.
+      return [m[0],m[1],m[2], m[4],m[5],m[6], m[8],m[9],m[10]];
+    }
+  };
+
+  function v3(x,y,z){return [x,y,z];}
+  function add(a,b){return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];}
+  function sub(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+  function muls(a,s){return [a[0]*s,a[1]*s,a[2]*s];}
+  function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+  function cross(a,b){return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];}
+  function len(a){return Math.hypot(a[0],a[1],a[2]);}
+  function norm(a){const l=len(a)||1; return [a[0]/l,a[1]/l,a[2]/l];}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function smooth(t){return t*t*(3-2*t);}
+
+  function makeMesh(verts, norms, indices) {
+    const vbo = gl.createBuffer();
+    const nbo = gl.createBuffer();
+    const ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(norms), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    return { vbo, nbo, ibo, count: indices.length };
+  }
+
+  function boxMesh() {
+    const p = [], n = [], idx = [];
+    const faces = [
+      [[-1,-1, 1],[ 1,-1, 1],[ 1, 1, 1],[-1, 1, 1],[0,0,1]],
+      [[ 1,-1,-1],[-1,-1,-1],[-1, 1,-1],[ 1, 1,-1],[0,0,-1]],
+      [[-1, 1, 1],[ 1, 1, 1],[ 1, 1,-1],[-1, 1,-1],[0,1,0]],
+      [[-1,-1,-1],[ 1,-1,-1],[ 1,-1, 1],[-1,-1, 1],[0,-1,0]],
+      [[ 1,-1, 1],[ 1,-1,-1],[ 1, 1,-1],[ 1, 1, 1],[1,0,0]],
+      [[-1,-1,-1],[-1,-1, 1],[-1, 1, 1],[-1, 1,-1],[-1,0,0]]
+    ];
+    for (const f of faces) {
+      const base = p.length/3;
+      for (let i=0;i<4;i++) { p.push(...f[i]); n.push(...f[4]); }
+      idx.push(base,base+1,base+2, base,base+2,base+3);
+    }
+    return makeMesh(p,n,idx);
+  }
+
+  function cylinderMesh(segments=28) {
+    const p=[], n=[], idx=[];
+    // axis along X; radius in YZ.
+    for (let i=0;i<=segments;i++) {
+      const a = i/segments * Math.PI*2;
+      const y = Math.cos(a), z = Math.sin(a);
+      p.push(-1,y,z, 1,y,z);
+      n.push(0,y,z, 0,y,z);
+    }
+    for (let i=0;i<segments;i++) {
+      const b=i*2;
+      idx.push(b,b+1,b+3, b,b+3,b+2);
+    }
+    const leftCenter = p.length/3; p.push(-1,0,0); n.push(-1,0,0);
+    const rightCenter = p.length/3; p.push(1,0,0); n.push(1,0,0);
+    for (let i=0;i<segments;i++) {
+      const b=i*2, nb=((i+1)%segments)*2;
+      idx.push(leftCenter, nb, b);
+      idx.push(rightCenter, b+1, nb+1);
+    }
+    return makeMesh(p,n,idx);
+  }
+
+  function groundMesh(size=460, divisions=92) {
+    const p=[], n=[], idx=[];
+    for (let z=0; z<=divisions; z++) for (let x=0; x<=divisions; x++) {
+      const wx = (x/divisions-.5)*size;
+      const wz = (z/divisions-.5)*size;
+      const h = terrainH(wx,wz) - 0.06;
+      p.push(wx,h,wz);
+      n.push(0,1,0);
+    }
+    for (let z=0; z<divisions; z++) for (let x=0; x<divisions; x++) {
+      const i=z*(divisions+1)+x;
+      idx.push(i,i+1,i+divisions+2, i,i+divisions+2,i+divisions+1);
+    }
+    return makeMesh(p,n,idx);
+  }
+
+  function terrainH(x,z) {
+    return Math.sin(x*.19)*.13 + Math.sin(z*.13+1.7)*.11 + Math.sin((x+z)*.08)*.08;
+  }
+
+  const meshes = {
+    box: boxMesh(),
+    cyl: cylinderMesh(32),
+    ground: null
+  };
+  meshes.ground = groundMesh();
+
+  const colors = {
+    yellow: [0.92,0.68,0.18],
+    dirtyYellow: [0.68,0.52,0.18],
+    darkSteel: [0.15,0.16,0.14],
+    tire: [0.055,0.06,0.055],
+    lug: [0.09,0.095,0.085],
+    glass: [0.15,0.28,0.35],
+    rust: [0.48,0.22,0.12],
+    trash1: [0.34,0.38,0.27],
+    trash2: [0.43,0.36,0.25],
+    trash3: [0.28,0.32,0.35],
+    ground: [0.29,0.42,0.25],
+    paper: [0.70,0.66,0.46],
+    red: [0.55,0.10,0.07],
+    shadow: [0.05,0.06,0.045]
+  };
+
+  const themes = {
+    garbage: {
+      ground: [0.29,0.42,0.25],
+      flat: [0.35,0.36,0.34],
+      palette: [[0.34,0.38,0.27],[0.43,0.36,0.25],[0.28,0.32,0.35],[0.70,0.66,0.46],[0.45,0.26,0.22]]
+    },
+    candy: {
+      ground: [0.34,0.27,0.42],
+      flat: [0.45,0.43,0.46],
+      palette: [[0.95,0.35,0.55],[0.35,0.82,0.95],[0.95,0.85,0.30],[0.65,0.42,0.95],[0.58,0.95,0.52]]
+    },
+    toxic: {
+      ground: [0.14,0.25,0.17],
+      flat: [0.30,0.36,0.31],
+      palette: [[0.20,0.95,0.18],[0.75,0.98,0.10],[0.12,0.80,0.62],[0.50,0.18,0.75],[0.08,0.55,0.18]]
+    },
+    office: {
+      ground: [0.32,0.35,0.34],
+      flat: [0.55,0.55,0.53],
+      palette: [[0.86,0.84,0.72],[0.78,0.80,0.82],[0.60,0.67,0.78],[0.88,0.76,0.62],[0.50,0.52,0.55]]
+    },
+    scrap: {
+      ground: [0.35,0.29,0.22],
+      flat: [0.33,0.32,0.31],
+      palette: [[0.55,0.22,0.10],[0.38,0.38,0.36],[0.18,0.23,0.28],[0.68,0.48,0.18],[0.42,0.18,0.12]]
+    },
+    wizard: {
+      ground: [0.22,0.16,0.34],
+      flat: [0.35,0.34,0.39],
+      palette: [[0.46,0.18,0.80],[0.12,0.68,0.92],[0.95,0.72,0.18],[0.82,0.18,0.55],[0.36,0.82,0.55]]
+    }
+  };
+
+  function mixColor(a,b,t) {
+    return [lerp(a[0],b[0],t), lerp(a[1],b[1],t), lerp(a[2],b[2],t)];
+  }
+
+  function draw(mesh, model, color, vp) {
+    const mvp = M.mul(vp, model);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
+    gl.vertexAttribPointer(loc.pos, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc.pos);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.nbo);
+    gl.vertexAttribPointer(loc.norm, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc.norm);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
+    gl.uniformMatrix4fv(loc.mvp, false, new Float32Array(mvp));
+    gl.uniformMatrix4fv(loc.model, false, new Float32Array(model));
+    gl.uniformMatrix3fv(loc.normal, false, new Float32Array(M.normal3(model)));
+    gl.uniform3fv(loc.color, new Float32Array(color));
+    gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_SHORT, 0);
+  }
+
+  function compose(...mats) {
+    return mats.reduce((a,b)=>M.mul(a,b), M.ident());
+  }
+
+
+  const audio = {
+    ctx: null,
+    master: null,
+    engineGain: null,
+    engineOsc: null,
+    enginePulse: null,
+    engineFilter: null,
+    compressor: null,
+    unlocked: false,
+    lastPopTime: 0,
+    popDebt: 0
+  };
+
+  function ensureAudio() {
+    if (!settings.audioOn) return;
+    if (!audio.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audio.ctx = new AC();
+
+      audio.compressor = audio.ctx.createDynamicsCompressor();
+      audio.compressor.threshold.value = -18;
+      audio.compressor.knee.value = 18;
+      audio.compressor.ratio.value = 5;
+      audio.compressor.attack.value = 0.004;
+      audio.compressor.release.value = 0.18;
+
+      audio.master = audio.ctx.createGain();
+      audio.master.gain.value = 0.55;
+      audio.master.connect(audio.compressor);
+      audio.compressor.connect(audio.ctx.destination);
+
+      audio.engineGain = audio.ctx.createGain();
+      audio.engineGain.gain.value = 0.0;
+
+      audio.engineFilter = audio.ctx.createBiquadFilter();
+      audio.engineFilter.type = "lowpass";
+      audio.engineFilter.frequency.value = 135;
+      audio.engineFilter.Q.value = 1.3;
+
+      audio.engineOsc = audio.ctx.createOscillator();
+      audio.engineOsc.type = "sawtooth";
+      audio.engineOsc.frequency.value = 38;
+
+      audio.enginePulse = audio.ctx.createOscillator();
+      audio.enginePulse.type = "square";
+      audio.enginePulse.frequency.value = 19;
+
+      const pulseGain = audio.ctx.createGain();
+      pulseGain.gain.value = 0.18;
+
+      audio.engineOsc.connect(audio.engineFilter);
+      audio.enginePulse.connect(pulseGain);
+      pulseGain.connect(audio.engineFilter);
+      audio.engineFilter.connect(audio.engineGain);
+      audio.engineGain.connect(audio.master);
+
+      audio.engineOsc.start();
+      audio.enginePulse.start();
+    }
+    if (audio.ctx.state === "suspended") audio.ctx.resume();
+    audio.unlocked = true;
+  }
+
+  function updateAudio(dt) {
+    if (!audio.ctx || !audio.unlocked || !audio.engineGain) return;
+    const t = audio.ctx.currentTime;
+    const speedAmt = clamp(Math.abs(compactor.speed) / 8.5, 0, 1);
+    const throttleAmt = Math.abs(input.throttle);
+    const load = clamp(speedAmt * 0.72 + throttleAmt * 0.28 + compactor.rumble * 0.25, 0, 1);
+
+    const baseHz = 32 + speedAmt * 34 + throttleAmt * 10;
+    audio.engineOsc.frequency.setTargetAtTime(baseHz, t, 0.055);
+    audio.enginePulse.frequency.setTargetAtTime(baseHz * 0.48, t, 0.06);
+    audio.engineFilter.frequency.setTargetAtTime(120 + load * 330, t, 0.07);
+    audio.engineGain.gain.setTargetAtTime(settings.audioOn ? (0.045 + load * 0.18) : 0.0, t, 0.08);
+
+    if (audio.popDebt > 0 && t - audio.lastPopTime > 0.018) {
+      const n = Math.min(audio.popDebt, 3);
+      audio.popDebt -= n;
+      audio.lastPopTime = t;
+      for (let i=0; i<n; i++) playCrushPop(0.75 + Math.random()*0.45, i * 0.012);
+    }
+  }
+
+  function playCrushPop(intensity=1, delay=0) {
+    if (!settings.audioOn || !audio.ctx || !audio.unlocked) return;
+    const ctx = audio.ctx;
+    const t = ctx.currentTime + delay;
+    const out = ctx.createGain();
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(0.12 * intensity, t + 0.008);
+    out.gain.exponentialRampToValueAtTime(0.0001, t + 0.115);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(260 + Math.random()*820, t);
+    filter.Q.value = 2.2 + Math.random()*5.5;
+
+    const osc = ctx.createOscillator();
+    osc.type = Math.random() < 0.5 ? "triangle" : "sine";
+    osc.frequency.setValueAtTime(115 + Math.random()*150, t);
+    osc.frequency.exponentialRampToValueAtTime(32 + Math.random()*38, t + 0.11);
+
+    const crackle = ctx.createOscillator();
+    crackle.type = "square";
+    crackle.frequency.setValueAtTime(520 + Math.random()*900, t);
+    crackle.frequency.exponentialRampToValueAtTime(95 + Math.random()*120, t + 0.045);
+
+    const crackleGain = ctx.createGain();
+    crackleGain.gain.setValueAtTime(0.035 * intensity, t);
+    crackleGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.042);
+
+    osc.connect(filter);
+    filter.connect(out);
+    crackle.connect(crackleGain);
+    crackleGain.connect(out);
+    out.connect(audio.master);
+
+    osc.start(t);
+    crackle.start(t);
+    osc.stop(t + 0.13);
+    crackle.stop(t + 0.05);
+  }
+
+  function queueCrushPop(amount=1) {
+    if (!settings.audioOn || !audio.ctx || !audio.unlocked) return;
+    audio.popDebt = Math.min(28, audio.popDebt + amount);
+  }
+
+  const compactor = {
+    x: 0, z: 0, y: 0,
+    yaw: 0,
+    speed: 0,
+    steer: 0,
+    wheelSpin: 0,
+    packed: 0,
+    rumble: 0
+  };
+
+  const input = {
+    throttle: 0,
+    steer: 0,
+    brake: false,
+    keys: Object.create(null),
+    pointer: null,
+    stickStart: [0,0]
+  };
+
+  const settings = {
+    wheelDir: -1,
+    joystickMode: "fixed",
+    joyHome: [96, 0],
+    zoom: 3,
+    theme: "garbage",
+    audioOn: true
+  };
+
+  const WORLD_LIMIT = 215;        // Original was 43; this is 5x wider.
+  const TRASH_CELL = 0.95;        // Roughly one-third of the compactor body width.
+  const TRASH_GRID_N = 74;        // Dense enough to feel like a field without melting phones.
+  const TRASH_GRID_SPACING = 2.15; // Leaves visible square cells with small seams.
+  const CRUSH_HALF_WIDTH = 4.35;    // About 2.5x wider than the old crush radius.
+  const CRUSH_FRONT = 3.45;
+  const CRUSH_REAR = 2.45;
+
+  const camera = {
+    mode: 0,
+    pos: [0,7,12],
+    target: [0,1,0]
+  };
+
+  const trashPiles = [];
+  const props = [];
+  let seed = 7;
+  function rnd() { seed = (seed*1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+
+  function currentTheme() {
+    return themes[settings.theme] || themes.garbage;
+  }
+
+  function resetWorld() {
+    trashPiles.length = 0;
+    props.length = 0;
+    seed = 11;
+    const theme = currentTheme();
+    const half = (TRASH_GRID_N - 1) * TRASH_GRID_SPACING * 0.5;
+
+    // A square-cell field of trash. Each cell can be flattened independently.
+    for (let gx=0; gx<TRASH_GRID_N; gx++) {
+      for (let gz=0; gz<TRASH_GRID_N; gz++) {
+        const x = -half + gx * TRASH_GRID_SPACING + (rnd()-.5)*0.18;
+        const z = -half + gz * TRASH_GRID_SPACING + (rnd()-.5)*0.18;
+        if (Math.hypot(x,z) < 5.2) continue;
+        const c = theme.palette[Math.floor(rnd()*theme.palette.length)];
+        trashPiles.push({
+          x,z,
+          gx,gz,
+          r: TRASH_CELL,
+          h: lerp(.55,1.55,rnd()),
+          c,
+          squish: 0,
+          popStep: 0,
+          gone: false,
+          rot: rnd()*0.20 - 0.10
+        });
+      }
+    }
+
+    // Sparse landfill clutter over the 5x world.
+    for (let i=0;i<90;i++) {
+      let x=(rnd()-.5)*WORLD_LIMIT*1.82, z=(rnd()-.5)*WORLD_LIMIT*1.82;
+      if (Math.hypot(x,z)<12) { i--; continue; }
+      props.push({
+        x,z,
+        type: rnd()<.55 ? "barrel" : "block",
+        rot: rnd()*Math.PI*2,
+        c: rnd()<.5 ? colors.rust : colors.red
+      });
+    }
+  }
+  resetWorld();
+
+  function resetCar() {
+    compactor.x = 0; compactor.z = 0; compactor.y = 0; compactor.yaw = 0;
+    compactor.speed = 0; compactor.steer = 0; compactor.wheelSpin = 0; compactor.packed = 0;
+    for (const p of trashPiles) { p.squish = 0; p.popStep = 0; p.gone = false; }
+  }
+
+  function drawCompactor(vp, t) {
+    const x=compactor.x, z=compactor.z;
+    const groundY = terrainH(x,z);
+    const rumbleKick = compactor.rumble ? Math.sin(t*42)*0.035 : 0;
+    const bob = Math.sin(t*13 + compactor.wheelSpin*.22) * Math.min(Math.abs(compactor.speed)*.012, .045) + rumbleKick;
+    // The vehicle model is built with its nose/blade along local +X.
+    // Driving forward is world +Z at yaw 0, so rotate the model -90 degrees
+    // before applying the vehicle yaw. This keeps the body facing the direction
+    // the controls/camera consider "forward."
+    const base = compose(
+      M.trans(x, groundY + 1.0 + bob, z),
+      M.rotY(compactor.yaw - Math.PI / 2),
+      M.rotZ(Math.sin(t*5.2)*compactor.speed*.004)
+    );
+
+    // Contact shadow
+    draw(meshes.cyl, compose(M.trans(x, groundY+.04, z), M.rotY(compactor.yaw - Math.PI / 2), M.scale(3.8,.09,1.95)), colors.shadow, vp);
+
+    // Rear radiator and engine body
+    draw(meshes.box, M.mul(base, compose(M.trans(-1.95,.78,0), M.scale(1.02,.92,1.12))), colors.dirtyYellow, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-2.9,.7,0), M.scale(.18,.78,.92))), colors.darkSteel, vp);
+    for (let i=0;i<7;i++) {
+      draw(meshes.box, M.mul(base, compose(M.trans(-2.72,.12 + i*.18,0), M.scale(.03,.028,.82))), colors.yellow, vp);
+    }
+
+    // Walkway deck and center chassis
+    draw(meshes.box, M.mul(base, compose(M.trans(-.45,.72,0), M.scale(2.35,.18,1.12))), colors.yellow, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.3,.25,0), M.scale(2.95,.36,.50))), [0.72,0.47,0.16], vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-.35,-.1,0), M.scale(2.1,.18,.34))), colors.darkSteel, vp);
+
+    // Rear fenders / upper haunches
+    draw(meshes.box, M.mul(base, compose(M.trans(-1.35,.72,.88), M.scale(.74,.42,.27))), colors.yellow, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-1.35,.72,-.88), M.scale(.74,.42,.27))), colors.yellow, vp);
+
+    // Front frame and push arms
+    draw(meshes.box, M.mul(base, compose(M.trans(1.72,.35,0), M.scale(.98,.22,.50))), [0.74,0.50,0.14], vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(1.82,.68,.58), M.rotZ(-.58), M.scale(1.14,.09,.09))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(1.82,.68,-.58), M.rotZ(.58), M.scale(1.14,.09,.09))), colors.darkSteel, vp);
+
+    // Blade - broader, taller landfill blade with slatted upper section
+    draw(meshes.box, M.mul(base, compose(M.trans(3.2,.1,0), M.scale(.18,.92,2.05))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(3.0,-.42,0), M.rotZ(.18), M.scale(.34,.4,2.1))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(2.92,.82,0), M.rotZ(-.09), M.scale(.12,.58,2.0))), [0.24,0.25,0.27], vp);
+    for (let i=-8;i<=8;i++) {
+      draw(meshes.box, M.mul(base, compose(M.trans(2.86,.95,i*.21), M.scale(.05,.42,.028))), [0.14,0.15,0.16], vp);
+    }
+    draw(meshes.box, M.mul(base, compose(M.trans(2.9,.58,1.98), M.rotY(.25), M.scale(.12,.76,.09))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(2.9,.58,-1.98), M.rotY(-.25), M.scale(.12,.76,.09))), colors.darkSteel, vp);
+
+    // Cab base and cab
+    draw(meshes.box, M.mul(base, compose(M.trans(.15,1.12,0), M.scale(1.3,.34,.98))), colors.yellow, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.28,1.72,0), M.scale(.88,.6,.68))), [0.14,0.14,0.14], vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.55,1.72,.70), M.scale(.42,.42,.035))), colors.glass, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.55,1.72,-.70), M.scale(.42,.42,.035))), colors.glass, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(1.05,1.7,0), M.scale(.035,.4,.43))), colors.glass, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-.1,1.72,0), M.scale(.035,.4,.43))), colors.glass, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.3,2.35,0), M.scale(1.0,.06,.78))), colors.yellow, vp);
+
+    // Safety rails and ladder
+    for (const zRail of [1.18,-1.18]) {
+      draw(meshes.box, M.mul(base, compose(M.trans(-.35,1.25,zRail), M.scale(1.72,.03,.03))), [0.86,0.34,0.12], vp);
+      draw(meshes.box, M.mul(base, compose(M.trans(-.35,1.55,zRail), M.scale(1.72,.03,.03))), [0.86,0.34,0.12], vp);
+      for (const xPost of [-1.55,-.95,-.30,.35,.88]) {
+        draw(meshes.box, M.mul(base, compose(M.trans(xPost,1.4,zRail), M.scale(.03,.35,.03))), [0.86,0.34,0.12], vp);
+      }
+    }
+    for (let i=0;i<4;i++) {
+      draw(meshes.box, M.mul(base, compose(M.trans(-.38,.25 + i*.18,.92), M.scale(.24,.022,.022))), colors.darkSteel, vp);
+    }
+    draw(meshes.box, M.mul(base, compose(M.trans(-.5,.52,.92), M.scale(.024,.34,.024))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-.26,.52,.92), M.scale(.024,.34,.024))), colors.darkSteel, vp);
+
+    // Exhaust stacks and work lights
+    draw(meshes.cyl, M.mul(base, compose(M.trans(-1.25,1.7,.68), M.rotZ(Math.PI/2), M.scale(.08,.08,.56))), colors.darkSteel, vp);
+    draw(meshes.cyl, M.mul(base, compose(M.trans(-1.25,1.7,-.68), M.rotZ(Math.PI/2), M.scale(.08,.08,.56))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.95,2.28,.52), M.scale(.08,.08,.08))), [0.95,0.95,0.82], vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.95,2.28,-.52), M.scale(.08,.08,.08))), [0.95,0.95,0.82], vp);
+
+    // Wheel carriers / axle blocks
+    draw(meshes.box, M.mul(base, compose(M.trans(1.0,.0,0), M.scale(.32,.18,1.46))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-1.3,.0,0), M.scale(.32,.18,1.46))), colors.darkSteel, vp);
+
+    // Wheels with prominent landfill spikes
+    const wheelPositions = [[1.1,-.18,1.62],[1.1,-.18,-1.62],[-1.42,-.18,1.62],[-1.42,-.18,-1.62]];
+    for (const wp of wheelPositions) {
+      const side = wp[2] > 0 ? 1 : -1;
+      const steerYaw = wp[0] > 0 ? compactor.steer*.26 : 0;
+      const spin = compactor.wheelSpin * settings.wheelDir;
+      const wheelOrient = compose(
+        M.rotY(steerYaw),
+        M.rotY(-Math.PI / 2),
+        M.rotX(spin)
+      );
+      draw(meshes.cyl, M.mul(base, compose(
+        M.trans(wp[0], wp[1], wp[2]),
+        wheelOrient,
+        M.scale(.48,.96,.96)
+      )), colors.tire, vp);
+      draw(meshes.cyl, M.mul(base, compose(
+        M.trans(wp[0], wp[1], wp[2] + side*.035),
+        wheelOrient,
+        M.scale(.56,.67,.67)
+      )), [0.26,0.27,0.29], vp);
+      draw(meshes.cyl, M.mul(base, compose(
+        M.trans(wp[0], wp[1], wp[2] + side*.06),
+        wheelOrient,
+        M.scale(.18,.22,.22)
+      )), colors.darkSteel, vp);
+
+      // Lugs are placed around the rolling circle in local X/Y while the axle runs through local Z.
+      // They inherit the same wheel orientation, so they roll instead of yawing like propeller blades.
+      for (let i=0;i<16;i++) {
+        const a = i/16*Math.PI*2 + spin;
+        const lx = Math.cos(a)*.94;
+        const ly = Math.sin(a)*.94;
+        draw(meshes.box, M.mul(base, compose(
+          M.trans(wp[0], wp[1], wp[2]),
+          M.rotY(steerYaw),
+          M.trans(lx, ly, 0),
+          M.rotZ(a),
+          M.scale(.16,.54,.085)
+        )), colors.lug, vp);
+        draw(meshes.box, M.mul(base, compose(
+          M.trans(wp[0], wp[1], wp[2] + side*.18),
+          M.rotY(steerYaw),
+          M.trans(lx*.9, ly*.9, 0),
+          M.rotZ(a + .75),
+          M.scale(.15,.22,.085)
+        )), colors.lug, vp);
+        draw(meshes.box, M.mul(base, compose(
+          M.trans(wp[0], wp[1], wp[2] - side*.18),
+          M.rotY(steerYaw),
+          M.trans(lx*.9, ly*.9, 0),
+          M.rotZ(a - .75),
+          M.scale(.15,.22,.085)
+        )), colors.lug, vp);
+      }
+    }
+  }
+
+  function drawTrash(vp, dt) {
+    const theme = currentTheme();
+    const cx = compactor.x, cz = compactor.z;
+    const activeRadius = 128 * settings.zoom;
+
+    for (const p of trashPiles) {
+      const far = Math.abs(p.x - cx) > activeRadius || Math.abs(p.z - cz) > activeRadius;
+      if (far && p.squish >= .98) continue;
+
+      const dx = p.x - cx, dz = p.z - cz;
+      const localForward = dx * Math.sin(compactor.yaw) + dz * Math.cos(compactor.yaw);
+      const localSide = dx * Math.cos(compactor.yaw) - dz * Math.sin(compactor.yaw);
+      const underWideCompactor = Math.abs(localSide) < CRUSH_HALF_WIDTH && localForward > -CRUSH_REAR && localForward < CRUSH_FRONT;
+
+      if (underWideCompactor && Math.abs(compactor.speed) > .16) {
+        const oldSquish = p.squish;
+        p.squish = Math.min(1, p.squish + dt*1.05 + Math.abs(compactor.speed)*dt*.22);
+        compactor.rumble = 1;
+
+        const newStep = Math.floor(p.squish * 4.0);
+        if (newStep > p.popStep) {
+          queueCrushPop(Math.min(3, newStep - p.popStep));
+          p.popStep = newStep;
+        }
+
+        if (!p.gone && oldSquish < .98 && p.squish >= .98) {
+          p.gone = true;
+          compactor.packed++;
+          queueCrushPop(2);
+        }
+      }
+
+      // Cells sink down and desaturate toward dull grey as they get packed.
+      const y = terrainH(p.x,p.z);
+      const h = Math.max(.035, p.h * (1 - p.squish*.92));
+      const spread = 1 + p.squish*.18;
+      const color = mixColor(p.c, theme.flat, smooth(p.squish));
+      draw(meshes.box, compose(
+        M.trans(p.x, y + h*.48, p.z),
+        M.rotY(p.rot),
+        M.scale(TRASH_CELL*spread, h*.48, TRASH_CELL*spread)
+      ), color, vp);
+    }
+  }
+
+  function drawProps(vp) {
+    const cx=compactor.x, cz=compactor.z;
+    const visible = 140 * settings.zoom;
+    for (const p of props) {
+      if (Math.abs(p.x-cx)>visible || Math.abs(p.z-cz)>visible) continue;
+      const y = terrainH(p.x,p.z);
+      if (p.type === "barrel") {
+        draw(meshes.cyl, compose(M.trans(p.x,y+.42,p.z), M.rotZ(Math.PI/2), M.scale(.35,.35,.42)), p.c, vp);
+        draw(meshes.cyl, compose(M.trans(p.x,y+.86,p.z), M.rotZ(Math.PI/2), M.scale(.36,.36,.05)), colors.darkSteel, vp);
+      } else {
+        draw(meshes.box, compose(M.trans(p.x,y+.28,p.z), M.rotY(p.rot), M.scale(.55,.28,.42)), colors.trash3, vp);
+      }
+    }
+  }
+
+  function drawRampAndLandfill(vp) {
+    // Distant berms
+    for (let i=0;i<16;i++) {
+      const a = i/16*Math.PI*2;
+      const x=Math.cos(a)*225, z=Math.sin(a)*225;
+      const y=terrainH(x,z);
+      draw(meshes.box, compose(M.trans(x,y+.45,z), M.rotY(-a), M.scale(18,.8,3.2)), [0.20,0.30,0.18], vp);
+    }
+
+    // A simple ramp / mound
+    draw(meshes.box, compose(M.trans(-55,terrainH(-55,50)+.28,50), M.rotY(.55), M.scale(12,.35,4.2)), [0.36,0.31,0.20], vp);
+    draw(meshes.box, compose(M.trans(64,terrainH(64,-45)+.18,-45), M.rotY(-.4), M.scale(11,.26,3.5)), [0.32,0.38,0.25], vp);
+  }
+
+  function updateInput() {
+    let th=0, st=0;
+    if (input.keys["w"] || input.keys["arrowup"]) th += 1;
+    if (input.keys["s"] || input.keys["arrowdown"]) th -= 1;
+    if (input.keys["a"] || input.keys["arrowleft"]) st += 1;
+    if (input.keys["d"] || input.keys["arrowright"]) st -= 1;
+    if (input.pointer) {
+      th = input.pointer.throttle;
+      st = input.pointer.steer;
+    }
+    input.throttle = clamp(th,-1,1);
+    input.steer = clamp(st,-1,1);
+  }
+
+  function update(dt) {
+    updateInput();
+
+    const accel = input.throttle > 0 ? 8.0 : 5.6;
+    const drag = 2.7;
+    const brakeForce = input.brake ? 12.5 : 0;
+    compactor.speed += input.throttle * accel * dt;
+    compactor.speed -= compactor.speed * drag * dt * (input.throttle === 0 ? 1.2 : .65);
+    if (input.brake) compactor.speed -= Math.sign(compactor.speed) * Math.min(Math.abs(compactor.speed), brakeForce*dt);
+    compactor.speed = clamp(compactor.speed, -5.5, 8.5);
+
+    const targetSteer = input.steer;
+    compactor.steer = lerp(compactor.steer, targetSteer, 1 - Math.pow(.001, dt));
+    const turn = compactor.steer * (0.82 + Math.abs(compactor.speed)*.08) * clamp(compactor.speed/5, -1, 1);
+    compactor.yaw += turn * dt;
+
+    compactor.x += Math.sin(compactor.yaw) * compactor.speed * dt;
+    compactor.z += Math.cos(compactor.yaw) * compactor.speed * dt;
+    const limit = WORLD_LIMIT;
+    if (Math.abs(compactor.x)>limit) { compactor.x=clamp(compactor.x,-limit,limit); compactor.speed *= -.25; }
+    if (Math.abs(compactor.z)>limit) { compactor.z=clamp(compactor.z,-limit,limit); compactor.speed *= -.25; }
+
+    compactor.wheelSpin += compactor.speed * dt * 2.4;
+    compactor.y = terrainH(compactor.x, compactor.z);
+    compactor.rumble = Math.max(0, compactor.rumble - dt*4.5);
+
+    // Bump props a little.
+    for (const p of props) {
+      const d = Math.hypot(compactor.x-p.x, compactor.z-p.z);
+      if (d < 1.7) {
+        const ax = p.x - compactor.x, az = p.z - compactor.z;
+        const l = Math.hypot(ax,az)||1;
+        p.x += ax/l * dt * Math.abs(compactor.speed)*.8;
+        p.z += az/l * dt * Math.abs(compactor.speed)*.8;
+        compactor.speed *= .985;
+      }
+    }
+  }
+
+  function updateCamera(dt) {
+    const fwd = [Math.sin(compactor.yaw),0,Math.cos(compactor.yaw)];
+    const right = [Math.cos(compactor.yaw),0,-Math.sin(compactor.yaw)];
+    const zf = settings.zoom;
+    let desired, target;
+    if (camera.mode === 0) {
+      desired = add([compactor.x, terrainH(compactor.x,compactor.z), compactor.z], add(muls(fwd,-9.2*zf), [0,5.2*zf,0]));
+      target = add([compactor.x, terrainH(compactor.x,compactor.z)+1.2, compactor.z], muls(fwd,4.6));
+    } else if (camera.mode === 1) {
+      desired = add([compactor.x, terrainH(compactor.x,compactor.z), compactor.z], [0,14*zf,0.01]);
+      target = [compactor.x, terrainH(compactor.x,compactor.z), compactor.z];
+    } else {
+      desired = add([compactor.x, terrainH(compactor.x,compactor.z)+2.0*zf, compactor.z], add(muls(right,5.5*zf), muls(fwd,-5.5*zf)));
+      target = [compactor.x, terrainH(compactor.x,compactor.z)+.8, compactor.z];
+    }
+    const k = 1 - Math.pow(.004, dt);
+    camera.pos = [lerp(camera.pos[0],desired[0],k), lerp(camera.pos[1],desired[1],k), lerp(camera.pos[2],desired[2],k)];
+    camera.target = [lerp(camera.target[0],target[0],k), lerp(camera.target[1],target[1],k), lerp(camera.target[2],target[2],k)];
+  }
+
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.floor(innerWidth * dpr);
+    const h = Math.floor(innerHeight * dpr);
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w; canvas.height = h;
+      if (typeof placeStickHome === "function") placeStickHome();
+    }
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }
+
+  let last=performance.now();
+  function frame(now) {
+    const dt = Math.min(.033, (now-last)/1000 || .016);
+    last = now;
+    resize();
+    update(dt);
+    updateCamera(dt);
+    updateAudio(dt);
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniform3fv(loc.lightDir, new Float32Array(norm([-0.42, 0.82, 0.25])));
+
+    const aspect = canvas.width / canvas.height;
+    const proj = M.persp(Math.PI/(3.1 - Math.min(settings.zoom-1,4)*0.22), aspect, .08, 620);
+    const view = M.lookAt(camera.pos, camera.target, [0,1,0]);
+    const vp = M.mul(proj, view);
+
+    draw(meshes.ground, M.ident(), currentTheme().ground, vp);
+    drawRampAndLandfill(vp);
+    drawTrash(vp, dt);
+    drawProps(vp);
+    drawCompactor(vp, now/1000);
+
+    const mph = Math.round(Math.abs(compactor.speed) * 5.7);
+    hudSpeed.innerHTML = `${mph} mph<br><small>packed: ${compactor.packed}<br>${Math.round(compactor.packed / Math.max(1, trashPiles.length) * 100)}% flat</small>`;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  function placeStickHome() {
+    if (settings.joystickMode === "fixed") {
+      settings.joyHome = [Math.min(96, innerWidth * .24), innerHeight - 122];
+    }
+    stickBase.style.left = settings.joyHome[0] + "px";
+    stickBase.style.top = settings.joyHome[1] + "px";
+    if (!input.pointer) {
+      stickKnob.style.left = settings.joyHome[0] + "px";
+      stickKnob.style.top = settings.joyHome[1] + "px";
+    }
+  }
+  function showStick(x,y) {
+    if (settings.joystickMode === "floating") {
+      input.stickStart = [x, y];
+      settings.joyHome = [x, y];
+      stickBase.style.left = x + "px";
+      stickBase.style.top = y + "px";
+      stickKnob.style.left = x + "px";
+      stickKnob.style.top = y + "px";
+    } else {
+      placeStickHome();
+    }
+  }
+  function moveStick(x,y) {
+    const dx = x - input.stickStart[0], dy = y - input.stickStart[1];
+    const max = 58;
+    const mag = Math.hypot(dx,dy);
+    const k = mag > max ? max/mag : 1;
+    const kx = dx*k, ky = dy*k;
+    stickKnob.style.left = (input.stickStart[0]+kx) + "px";
+    stickKnob.style.top = (input.stickStart[1]+ky) + "px";
+    input.pointer = {
+      steer: clamp(-kx/max, -1, 1),
+      throttle: clamp(-ky/max, -1, 1)
+    };
+  }
+  function hideStick() {
+    input.pointer = null;
+    placeStickHome();
+  }
+
+  stickZone.addEventListener("pointerdown", e => {
+    ensureAudio();
+    if (e.target.closest && e.target.closest("#menuWrap")) return;
+    stickZone.setPointerCapture(e.pointerId);
+    showStick(e.clientX, e.clientY);
+    if (settings.joystickMode === "fixed") {
+      input.stickStart = settings.joyHome.slice();
+    }
+    moveStick(e.clientX, e.clientY);
+  });
+  stickZone.addEventListener("pointermove", e => {
+    if (stickZone.hasPointerCapture(e.pointerId)) moveStick(e.clientX, e.clientY);
+  });
+  stickZone.addEventListener("pointerup", e => { hideStick(); });
+  stickZone.addEventListener("pointercancel", e => { hideStick(); });
+
+  addEventListener("keydown", e => {
+    ensureAudio();
+    input.keys[e.key.toLowerCase()] = true;
+    if (e.key === " ") input.brake = true;
+    if (e.key.toLowerCase() === "r") resetCar();
+  });
+  addEventListener("keyup", e => {
+    input.keys[e.key.toLowerCase()] = false;
+    if (e.key === " ") input.brake = false;
+  });
+
+  menuBtn.addEventListener("click", (e) => {
+    ensureAudio();
+    e.stopPropagation();
+    menuPanel.classList.toggle("open");
+  });
+  menuPanel.addEventListener("pointerdown", e => e.stopPropagation());
+  menuPanel.addEventListener("click", e => e.stopPropagation());
+  document.addEventListener("pointerdown", e => {
+    if (!e.target.closest || !e.target.closest("#menuWrap")) menuPanel.classList.remove("open");
+  });
+
+  cameraSelect.addEventListener("change", () => {
+    camera.mode = Number(cameraSelect.value);
+  });
+  zoomSelect.addEventListener("change", () => {
+    settings.zoom = Number(zoomSelect.value);
+  });
+  themeSelect.addEventListener("change", () => {
+    settings.theme = themeSelect.value;
+    resetWorld();
+    resetCar();
+  });
+  regenBtn.addEventListener("click", () => {
+    resetWorld();
+    resetCar();
+  });
+  wheelDirBtn.addEventListener("click", () => {
+    settings.wheelDir *= -1;
+    wheelDirBtn.textContent = settings.wheelDir === 1 ? "Wheel rotation: normal" : "Wheel rotation: flipped";
+  });
+  joyModeBtn.addEventListener("click", () => {
+    settings.joystickMode = settings.joystickMode === "fixed" ? "floating" : "fixed";
+    joyModeBtn.textContent = settings.joystickMode === "fixed" ? "Joystick: fixed home" : "Joystick: floating";
+    placeStickHome();
+  });
+  resetBtn.addEventListener("click", () => resetCar());
+  placeStickHome();
+
+  // Prevent accidental browser scrolling/zooming on mobile.
+  document.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+})();
+</script>
+</body>
+</html>

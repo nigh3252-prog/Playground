@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Touch Asteroids</title>
+  <style>
+    :root {
+      --bg: #05070b;
+      --fg: #e8f0ff;
+      --muted: #8ea3c7;
+      --accent: #7bd3ff;
+      --danger: #ff8078;
+      --panel: rgba(10, 14, 24, 0.72);
+      --line: rgba(255,255,255,0.16);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      touch-action: none;
+    }
+    body { position: fixed; inset: 0; }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(40,60,110,.25), transparent 40%),
+        radial-gradient(circle at 20% 30%, rgba(40,60,110,.12), transparent 25%),
+        linear-gradient(180deg, #08101e, #030507 60%);
+    }
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.22);
+    }
+    .stats {
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+    .stats strong { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+    .hint { max-width: 360px; font-size: 12px; color: var(--muted); }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0,0,0,.38);
+      backdrop-filter: blur(4px);
+    }
+    .menu {
+      width: min(92vw, 460px);
+      pointer-events: auto;
+      text-align: center;
+      background: rgba(12, 18, 30, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.38);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0.04em; }
+    p { margin: 8px 0; color: var(--muted); line-height: 1.4; }
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(123,211,255,.18), rgba(123,211,255,.08));
+      color: var(--fg);
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      min-width: 140px;
+      cursor: pointer;
+    }
+    .controls { position: fixed; inset: 0; pointer-events: none; }
+    .joystick-zone, .fire-zone {
+      position: absolute;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    .joystick-zone {
+      left: calc(18px + env(safe-area-inset-left));
+      width: min(36vw, 180px);
+      height: min(36vw, 180px);
+      border-radius: 50%;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 24px rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.25);
+    }
+    .stick-base, .stick-knob {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+    }
+    .stick-base {
+      width: 72%; height: 72%;
+      border: 1px solid rgba(255,255,255,.1);
+      background: radial-gradient(circle, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    }
+    .stick-knob {
+      width: 34%; height: 34%;
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), rgba(123,211,255,.18));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 6px 16px rgba(0,0,0,.3);
+    }
+    .fire-zone {
+      right: calc(18px + env(safe-area-inset-right));
+      width: min(22vw, 110px);
+      height: min(22vw, 110px);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, rgba(255,140,120,.33), rgba(255,100,100,.12));
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      letter-spacing: .08em;
+      color: #fff;
+    }
+    .fire-zone.pressed { transform: scale(0.97); }
+    .small-note { margin-top: 12px; font-size: 11px; color: var(--muted); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div class="hud">
+    <div class="topbar">
+      <div class="card stats">
+        <div><strong>SCORE</strong><span id="score">0</span></div>
+        <div><strong>LIVES</strong><span id="lives">3</span></div>
+        <div><strong>WAVE</strong><span id="wave">1</span></div>
+      </div>
+      <div class="card hint">Left thumb joystick aims and thrusts. Right button fires. Tap after a game over to play again.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="joystick-zone" id="joystickZone" aria-label="Movement joystick">
+      <div class="stick-base"></div>
+      <div class="stick-knob" id="stickKnob"></div>
+    </div>
+    <div class="fire-zone" id="fireButton">FIRE</div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="menu">
+      <h1>TOUCH ASTEROIDS</h1>
+      <p>Built for phone play. Glide with the joystick, point the ship where you drag, and blast through each wave.</p>
+      <p>Asteroids split into smaller chunks. Avoid collisions and keep the screen clear.</p>
+      <div class="buttons">
+        <button id="startBtn">Start Game</button>
+      </div>
+      <div class="small-note">Single self-contained HTML file for Android browsers.</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const waveEl = document.getElementById('wave');
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('startBtn');
+    const joystickZone = document.getElementById('joystickZone');
+    const stickKnob = document.getElementById('stickKnob');
+    const fireButton = document.getElementById('fireButton');
+
+    const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+    function resize() {
+      const dpr = DPR();
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const state = {
+      running: false,
+      score: 0,
+      lives: 3,
+      wave: 1,
+      ship: null,
+      bullets: [],
+      asteroids: [],
+      particles: [],
+      stars: [],
+      lastTime: 0,
+      fireHeld: false,
+      gameOver: false,
+      spawnCooldown: 0,
+      invuln: 0,
+      shake: 0,
+      joystick: {
+        active: false,
+        pointerId: null,
+        cx: 0,
+        cy: 0,
+        dx: 0,
+        dy: 0,
+        mag: 0,
+        angle: 0
+      }
+    };
+
+    function resetShip() {
+      state.ship = {
+        x: window.innerWidth * 0.5,
+        y: window.innerHeight * 0.5,
+        vx: 0,
+        vy: 0,
+        angle: -Math.PI / 2,
+        radius: 14,
+        fireCooldown: 0
+      };
+      state.invuln = 2;
+    }
+
+    function newGame() {
+      state.running = true;
+      state.score = 0;
+      state.lives = 3;
+      state.wave = 1;
+      state.bullets = [];
+      state.asteroids = [];
+      state.particles = [];
+      state.shake = 0;
+      state.gameOver = false;
+      resetShip();
+      makeStars();
+      spawnWave(state.wave);
+      overlay.classList.add('hidden');
+      updateHud();
+    }
+
+    function updateHud() {
+      scoreEl.textContent = state.score;
+      livesEl.textContent = state.lives;
+      waveEl.textContent = state.wave;
+    }
+
+    function makeStars() {
+      state.stars = Array.from({ length: Math.floor((window.innerWidth * window.innerHeight) / 9000) }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 1.8 + 0.4,
+        a: Math.random() * 0.7 + 0.2
+      }));
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function wrap(obj, r = 0) {
+      if (obj.x < -r) obj.x = window.innerWidth + r;
+      if (obj.x > window.innerWidth + r) obj.x = -r;
+      if (obj.y < -r) obj.y = window.innerHeight + r;
+      if (obj.y > window.innerHeight + r) obj.y = -r;
+    }
+
+    function spawnWave(level) {
+      const count = Math.min(4 + level, 11);
+      for (let i = 0; i < count; i++) {
+        let x, y, tries = 0;
+        do {
+          x = Math.random() * window.innerWidth;
+          y = Math.random() * window.innerHeight;
+          tries++;
+        } while (Math.hypot(x - state.ship.x, y - state.ship.y) < 180 && tries < 40);
+        state.asteroids.push(createAsteroid(x, y, 3));
+      }
+      updateHud();
+    }
+
+    function createAsteroid(x, y, size) {
+      const base = size === 3 ? 42 : size === 2 ? 26 : 16;
+      const pts = [];
+      const count = 10;
+      for (let i = 0; i < count; i++) {
+        const a = (Math.PI * 2 * i) / count;
+        const r = base * rand(0.72, 1.2);
+        pts.push({ a, r });
+      }
+      return {
+        x, y,
+        vx: rand(-55, 55) * (1 + state.wave * 0.04),
+        vy: rand(-55, 55) * (1 + state.wave * 0.04),
+        spin: rand(-1.2, 1.2),
+        angle: rand(0, Math.PI * 2),
+        size,
+        radius: base,
+        pts
+      };
+    }
+
+    function addBurst(x, y, n, speed, life, color = '#d7ecff') {
+      for (let i = 0; i < n; i++) {
+        const a = rand(0, Math.PI * 2);
+        const s = rand(speed * 0.35, speed);
+        state.particles.push({
+          x, y,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s,
+          life,
+          maxLife: life,
+          size: rand(1.2, 3.2),
+          color
+        });
+      }
+    }
+
+    function fireBullet() {
+      const ship = state.ship;
+      if (!ship || ship.fireCooldown > 0) return;
+      const speed = 420;
+      const noseX = ship.x + Math.cos(ship.angle) * 18;
+      const noseY = ship.y + Math.sin(ship.angle) * 18;
+      state.bullets.push({
+        x: noseX,
+        y: noseY,
+        vx: ship.vx + Math.cos(ship.angle) * speed,
+        vy: ship.vy + Math.sin(ship.angle) * speed,
+        life: 1.15,
+        radius: 2.5
+      });
+      ship.fireCooldown = 0.16;
+      addBurst(noseX, noseY, 5, 75, 0.16, '#fff2c4');
+    }
+
+    function splitAsteroid(index) {
+      const a = state.asteroids[index];
+      state.score += a.size === 3 ? 20 : a.size === 2 ? 50 : 100;
+      addBurst(a.x, a.y, a.size === 3 ? 18 : 12, 120, 0.5, '#c9dcff');
+      if (a.size > 1) {
+        for (let i = 0; i < 2; i++) {
+          const child = createAsteroid(a.x + rand(-8, 8), a.y + rand(-8, 8), a.size - 1);
+          child.vx += a.vx * 0.35;
+          child.vy += a.vy * 0.35;
+          state.asteroids.push(child);
+        }
+      }
+      state.asteroids.splice(index, 1);
+      updateHud();
+    }
+
+    function hitShip() {
+      if (state.invuln > 0 || state.spawnCooldown > 0 || state.gameOver) return;
+      state.lives -= 1;
+      state.shake = 12;
+      addBurst(state.ship.x, state.ship.y, 28, 180, 0.8, '#ffb0a9');
+      updateHud();
+      if (state.lives <= 0) {
+        state.gameOver = true;
+        state.running = false;
+        startBtn.textContent = 'Play Again';
+        overlay.classList.remove('hidden');
+      } else {
+        resetShip();
+        state.spawnCooldown = 1.0;
+      }
+    }
+
+    function dist(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function update(dt) {
+      if (!state.ship) return;
+      const ship = state.ship;
+      if (state.invuln > 0) state.invuln -= dt;
+      if (state.spawnCooldown > 0) state.spawnCooldown -= dt;
+      if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 20);
+
+      const joy = state.joystick;
+      if (joy.active && joy.mag > 0.06) {
+        ship.angle = joy.angle;
+        const thrust = 220 * joy.mag;
+        ship.vx += Math.cos(ship.angle) * thrust * dt;
+        ship.vy += Math.sin(ship.angle) * thrust * dt;
+        addBurst(
+          ship.x - Math.cos(ship.angle) * 12,
+          ship.y - Math.sin(ship.angle) * 12,
+          1,
+          12,
+          0.18,
+          '#88d9ff'
+        );
+      }
+
+      const drag = Math.pow(0.985, dt * 60);
+      ship.vx *= drag;
+      ship.vy *= drag;
+      ship.x += ship.vx * dt;
+      ship.y += ship.vy * dt;
+      wrap(ship, ship.radius + 2);
+
+      if (ship.fireCooldown > 0) ship.fireCooldown -= dt;
+      if (state.fireHeld) fireBullet();
+
+      for (let i = state.bullets.length - 1; i >= 0; i--) {
+        const b = state.bullets[i];
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= dt;
+        wrap(b, 4);
+        if (b.life <= 0) state.bullets.splice(i, 1);
+      }
+
+      for (const a of state.asteroids) {
+        a.x += a.vx * dt;
+        a.y += a.vy * dt;
+        a.angle += a.spin * dt;
+        wrap(a, a.radius + 4);
+      }
+
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        const p = state.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= Math.pow(0.985, dt * 60);
+        p.vy *= Math.pow(0.985, dt * 60);
+        p.life -= dt;
+        if (p.life <= 0) state.particles.splice(i, 1);
+      }
+
+      for (let i = state.asteroids.length - 1; i >= 0; i--) {
+        const a = state.asteroids[i];
+        for (let j = state.bullets.length - 1; j >= 0; j--) {
+          const b = state.bullets[j];
+          if (dist(a, b) < a.radius + b.radius) {
+            state.bullets.splice(j, 1);
+            splitAsteroid(i);
+            break;
+          }
+        }
+      }
+
+      if (state.spawnCooldown <= 0) {
+        for (const a of state.asteroids) {
+          if (dist(a, ship) < a.radius + ship.radius + 2) {
+            hitShip();
+            break;
+          }
+        }
+      }
+
+      if (state.asteroids.length === 0 && !state.gameOver) {
+        state.wave += 1;
+        spawnWave(state.wave);
+      }
+    }
+
+    function drawShip(ship) {
+      ctx.save();
+      ctx.translate(ship.x, ship.y);
+      ctx.rotate(ship.angle + Math.PI / 2);
+      const blink = state.invuln > 0 && Math.floor(state.invuln * 12) % 2 === 0;
+      ctx.globalAlpha = blink ? 0.38 : 1;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#eaf4ff';
+      ctx.beginPath();
+      ctx.moveTo(0, -16);
+      ctx.lineTo(11, 12);
+      ctx.lineTo(0, 7);
+      ctx.lineTo(-11, 12);
+      ctx.closePath();
+      ctx.stroke();
+      if (state.joystick.active && state.joystick.mag > 0.08) {
+        ctx.strokeStyle = '#7bd3ff';
+        ctx.beginPath();
+        ctx.moveTo(-6, 12);
+        ctx.lineTo(0, 20 + Math.random() * 5);
+        ctx.lineTo(6, 12);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawAsteroid(a) {
+      ctx.save();
+      ctx.translate(a.x, a.y);
+      ctx.rotate(a.angle);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#dbe8ff';
+      ctx.beginPath();
+      a.pts.forEach((p, i) => {
+        const x = Math.cos(p.a) * p.r;
+        const y = Math.sin(p.a) * p.r;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function render() {
+      const sx = state.shake > 0 ? rand(-state.shake, state.shake) : 0;
+      const sy = state.shake > 0 ? rand(-state.shake, state.shake) : 0;
+      ctx.save();
+      ctx.translate(sx, sy);
+
+      ctx.clearRect(-20, -20, window.innerWidth + 40, window.innerHeight + 40);
+
+      for (const s of state.stars) {
+        ctx.globalAlpha = s.a;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      for (const p of state.particles) {
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      for (const b of state.bullets) {
+        ctx.fillStyle = '#fff0b5';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (const a of state.asteroids) drawAsteroid(a);
+      if (state.ship) drawShip(state.ship);
+
+      ctx.restore();
+    }
+
+    function frame(ts) {
+      if (!state.lastTime) state.lastTime = ts;
+      let dt = (ts - state.lastTime) / 1000;
+      state.lastTime = ts;
+      dt = Math.min(dt, 0.033);
+      if (state.running) update(dt);
+      render();
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    function updateJoystickVisual() {
+      const joy = state.joystick;
+      const max = joystickZone.clientWidth * 0.28;
+      const x = joy.dx * max;
+      const y = joy.dy * max;
+      stickKnob.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    }
+
+    function resetJoystick() {
+      state.joystick.active = false;
+      state.joystick.pointerId = null;
+      state.joystick.dx = 0;
+      state.joystick.dy = 0;
+      state.joystick.mag = 0;
+      updateJoystickVisual();
+    }
+
+    joystickZone.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const rect = joystickZone.getBoundingClientRect();
+      state.joystick.active = true;
+      state.joystick.pointerId = e.pointerId;
+      state.joystick.cx = rect.left + rect.width / 2;
+      state.joystick.cy = rect.top + rect.height / 2;
+      joystickZone.setPointerCapture(e.pointerId);
+    });
+
+    joystickZone.addEventListener('pointermove', (e) => {
+      if (!state.joystick.active || e.pointerId !== state.joystick.pointerId) return;
+      const joy = state.joystick;
+      const dx = e.clientX - joy.cx;
+      const dy = e.clientY - joy.cy;
+      const maxPx = joystickZone.clientWidth * 0.34;
+      const magPx = Math.min(maxPx, Math.hypot(dx, dy));
+      const ang = Math.atan2(dy, dx);
+      joy.dx = (Math.cos(ang) * magPx) / maxPx;
+      joy.dy = (Math.sin(ang) * magPx) / maxPx;
+      joy.mag = magPx / maxPx;
+      joy.angle = ang;
+      updateJoystickVisual();
+    });
+
+    function endJoystick(e) {
+      if (state.joystick.pointerId !== e.pointerId) return;
+      resetJoystick();
+    }
+    joystickZone.addEventListener('pointerup', endJoystick);
+    joystickZone.addEventListener('pointercancel', endJoystick);
+
+    function setFire(on) {
+      state.fireHeld = on;
+      fireButton.classList.toggle('pressed', on);
+    }
+    fireButton.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      fireButton.setPointerCapture(e.pointerId);
+      setFire(true);
+      if (state.running) fireBullet();
+    });
+    fireButton.addEventListener('pointerup', () => setFire(false));
+    fireButton.addEventListener('pointercancel', () => setFire(false));
+
+    startBtn.addEventListener('click', newGame);
+    canvas.addEventListener('pointerdown', () => {
+      if (state.gameOver) newGame();
+    });
+
+    makeStars();
+    render();
+  </script>
+</body>
+</html>

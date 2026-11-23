@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Beast Mech Hangar</title>
+<style>
+  :root{
+    --ink:#211b18; --paper:#ddd5c8; --amber:#f2a41f;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;background:var(--paper);font-family:'Courier New',monospace;}
+  #c{position:fixed;inset:0;touch-action:none;}
+  .hud{position:fixed;left:0;right:0;pointer-events:none;color:var(--ink);}
+  .hud.top{top:0;padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .plate{background:rgba(33,27,24,.88);color:#e8dfd0;padding:8px 12px;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%);}
+  .plate h1{font-size:13px;letter-spacing:.28em;font-weight:700;}
+  .plate small{display:block;font-size:9px;letter-spacing:.18em;opacity:.6;margin-top:2px;}
+  #des{ text-align:right;}
+  #des .nm{font-size:17px;font-weight:700;letter-spacing:.14em;}
+  #des .cl{font-size:9px;letter-spacing:.2em;opacity:.65;margin-top:2px;}
+  #des .no{font-size:9px;letter-spacing:.2em;color:var(--amber);margin-top:3px;}
+  .hud.bot{bottom:0;padding:14px 12px calc(14px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+  .chip{pointer-events:auto;cursor:pointer;border:none;font-family:inherit;font-size:10px;letter-spacing:.16em;font-weight:700;
+    padding:10px 14px 10px 11px;color:#e8dfd0;background:rgba(33,27,24,.88);display:flex;align-items:center;gap:8px;
+    clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px);transition:transform .15s, background .15s;}
+  .chip .dot{width:9px;height:9px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);}
+  .chip.on{background:#e8dfd0;color:var(--ink);transform:translateY(-3px);}
+  .hint{position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:9px;letter-spacing:.22em;color:rgba(33,27,24,.5);pointer-events:none;transition:opacity 1s;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud top">
+  <div class="plate"><h1>BEAST MECH HANGAR</h1><small>ZOANTHROPE FRAME REGISTRY</small></div>
+  <div class="plate" id="des"><div class="nm" id="desNm"></div><div class="cl" id="desCl"></div><div class="no" id="desNo"></div></div>
+</div>
+<div class="hint" id="hint">DRAG TO ORBIT &nbsp;·&nbsp; PINCH / SCROLL TO ZOOM</div>
+<div class="hud bot" id="chips"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   BEAST MECH HANGAR — four zoanthrope frames, flat-shaded
+   ============================================================ */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xddd5c8);
+scene.fog = new THREE.Fog(0xddd5c8, 26, 70);
+
+const camera = new THREE.PerspectiveCamera(38, 1, .1, 200);
+
+/* ---------- lights ---------- */
+scene.add(new THREE.HemisphereLight(0xfff3e2, 0x7a6a58, .85));
+const key = new THREE.DirectionalLight(0xffe8c8, 1.05); key.position.set(-8, 14, 12); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffc27a, .5);  rim.position.set(9, 8, -10);  scene.add(rim);
+const warm = new THREE.PointLight(0xff9a3c, .5, 40);   warm.position.set(0, 3, 8);   scene.add(warm);
+
+/* ---------- helpers ---------- */
+function hash(x,y,z){ const s = Math.sin(x*12.9898 + y*78.233 + z*37.719) * 43758.5453; return s - Math.floor(s); }
+
+// faceted ovoid — position-hashed jitter keeps duplicated verts welded
+function orbGeo(detail=1, jitter=.14){
+  const g = new THREE.IcosahedronGeometry(1, detail);
+  const p = g.attributes.position;
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+    const r = 1 + (hash(x,y,z) - .5) * jitter;
+    p.setXYZ(i, x*r, y*r, z*r);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+const ORB = orbGeo();
+
+function mesh(geo, mat, x=0,y=0,z=0, sx=1,sy=1,sz=1, rx=0,ry=0,rz=0){
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x,y,z); m.scale.set(sx,sy,sz); m.rotation.set(rx,ry,rz);
+  return m;
+}
+const BOX = new THREE.BoxGeometry(1,1,1);
+const CONE = new THREE.ConeGeometry(1,1,5);
+const CYL = new THREE.CylinderGeometry(1,1,1,7);
+const DODE = new THREE.DodecahedronGeometry(1,0);
+
+function makeMats(c){
+  const std = (color, extra={}) => new THREE.MeshStandardMaterial(Object.assign({color, flatShading:true, roughness:.55, metalness:.35}, extra));
+  return {
+    prim : std(c.prim),                                   // main armor
+    sec  : std(c.sec),                                    // pauldron / secondary armor
+    dark : std(c.dark, {roughness:.5, metalness:.55}),    // frame & joints
+    gold : std(0xc9992e, {roughness:.4, metalness:.6}),
+    bone : std(c.bone || 0xefe4cf, {roughness:.65, metalness:.1}),
+    glow : new THREE.MeshStandardMaterial({color:0xffb731, emissive:0xffb731, emissiveIntensity:1.6, roughness:.4}),
+    eye  : new THREE.MeshStandardMaterial({color:0xffcc44, emissive:0xffaa22, emissiveIntensity:2.2}),
+  };
+}
+
+/* ---------- shared frame ---------- */
+function buildFrame(M, A){   // A = anim registry
+  const g = new THREE.Group();
+
+  // pelvis + spine
+  g.add(mesh(BOX, M.dark, 0,5.3,0, 1.7,1.0,1.2));
+  g.add(mesh(BOX, M.prim, 0,5.15,.55, 1.1,.9,.5));           // crotch plate
+  g.add(mesh(BOX, M.dark, 0,6.15,0, 1.15,1.1,.95));          // lower spine
+  g.add(mesh(BOX, M.gold, 0,6.15,.42, .5,.8,.3));            // spine vent
+  // chest
+  g.add(mesh(BOX, M.prim, 0,7.45,0, 2.5,1.5,1.7));
+  g.add(mesh(BOX, M.prim, 0,7.5,.85, 1.5,1.1,.4, .12));      // chest plate
+  g.add(mesh(BOX, M.glow, 0,6.9,.8, .5,.16,.3));             // chest lamp
+  g.add(mesh(BOX, M.dark, 0,8.35,0, 1.6,.5,1.2));            // collar
+
+  // shoulders + arms
+  for(const s of [-1,1]){
+    const pd = mesh(ORB, M.sec, s*3.25, 9.0, 0, 1.95,2.65,1.75, 0,0,s*-.12);
+    g.add(pd);
+    g.add(mesh(BOX, M.glow, s*3.15, 9.4, 1.55, .28,1.3,.14, 0,0,s*-.12));   // pauldron light bar
+    g.add(mesh(DODE, M.dark, s*2.55, 7.7, 0, .62,.62,.62));                 // shoulder joint
+    const ua = mesh(CYL, M.dark, s*3.0, 6.7, 0, .42,1.0,.42, 0,0,s*.35);    // upper arm
+    g.add(ua);
+    const fa = mesh(ORB, M.sec, s*3.65, 4.85, .1, 1.55,2.0,1.65);           // gauntlet
+    g.add(fa);
+    g.add(mesh(BOX, M.glow, s*3.65, 4.5, 1.6, .24,.9,.12));                 // gauntlet light
+    // fist
+    g.add(mesh(DODE, M.dark, s*3.65, 2.95, .25, .78,.85,.78, .3));
+    g.add(mesh(BOX, M.dark, s*3.65, 2.95, .95, .8,.7,.35, .25));            // knuckles
+    A.arms.push(fa);
+  }
+
+  // legs
+  for(const s of [-1,1]){
+    g.add(mesh(DODE, M.dark, s*.95, 4.75, 0, .55,.55,.55));                 // hip
+    g.add(mesh(BOX, M.dark, s*1.1, 3.85, 0, .8,1.7,.85, 0,0,s*.06));        // thigh frame
+    g.add(mesh(ORB, M.prim, s*1.28, 3.9, .35, .85,1.25,.7, .15,0,s*.1));    // thigh armor
+    g.add(mesh(DODE, M.dark, s*1.2, 2.85, .1, .5,.5,.5));                   // knee
+    g.add(mesh(BOX, M.dark, s*1.25, 1.8, -.05, .78,1.9,.8));                // shin frame
+    g.add(mesh(BOX, M.gold, s*1.25, 1.75, .38, .5,1.4,.25));                // shin gold
+    g.add(mesh(BOX, M.prim, s*1.25, 2.3, .5, .7,.9,.3, .18));               // shin guard
+    g.add(mesh(BOX, M.glow, s*1.25, 1.35, .52, .2,.5,.1));                  // shin light
+    g.add(mesh(BOX, M.dark, s*1.3, .5, .25, 1.0,.65,1.9));                  // foot
+    g.add(mesh(BOX, M.prim, s*1.3, .45, 1.05, .95,.55,.7, -.15));           // toe
+    g.add(mesh(BOX, M.prim, s*1.3, .8, -.6, .9,.5,.6));                     // heel
+  }
+  return g;
+}
+
+// segmented tail chain — returns root group; segments registered for sway
+function chainTail(M, A, {segs, mat, s0, taper, spikes, tip, lift=.13, drop=-.35}){
+  const root = new THREE.Group();
+  root.position.set(0, 5.1, -.7);
+  root.rotation.x = drop;
+  let parent = root, size = s0;
+  for(let i=0;i<segs;i++){
+    const j = new THREE.Group();
+    j.position.z = -size*1.15;
+    j.rotation.x = lift;
+    parent.add(j);
+    j.add(mesh(BOX, mat, 0,0,0, size, size*.85, size*1.2));
+    if(spikes){
+      j.add(mesh(CONE, M.gold, 0, size*.7, 0, size*.3, size*.9, size*.3));
+      j.add(mesh(CONE, M.gold, size*.55, 0, 0, size*.25, size*.7, size*.25, 0,0,-1.2));
+      j.add(mesh(CONE, M.gold, -size*.55, 0, 0, size*.25, size*.7, size*.25, 0,0,1.2));
+    }
+    A.tail.push(j);
+    parent = j; size *= taper;
+  }
+  if(tip) tip(parent, size);
+  return root;
+}
+
+/* ---------- heads & species parts ---------- */
+
+function dragonHead(M, A){
+  const h = new THREE.Group();
+  h.add(mesh(BOX, M.prim, 0,.15,0, 1.5,1.1,1.5));                    // skull
+  h.add(mesh(BOX, M.prim, 0,-.05,1.15, 1.0,.6,1.4, .08));            // snout
+  h.add(mesh(BOX, M.prim, 0,-.7,.95, .85,.35,1.25, .55));            // jaw (open)
+  h.add(mesh(BOX, M.dark, 0,-.35,.5, .7,.5,.6));                     // maw shadow
+  // teeth
+  for(const s of [-1,1]) for(let i=0;i<4;i++){
+    h.add(mesh(CONE, M.bone, s*.36, -.32, .6+i*.4, .09,.34,.09, Math.PI));
+    h.add(mesh(CONE, M.bone, s*.3, -.62, .55+i*.38, .08,.3,.08, .5));
+  }
+  for(const s of [-1,1]){
+    h.add(mesh(BOX, M.eye, s*.62, .3, .78, .28,.14,.2, 0, s*.2));     // eyes
+    h.add(mesh(CONE, M.gold, s*.55, .85, -.35, .16,.7,.16, -.5, 0, s*.35)); // brow horns
+  }
+  h.add(mesh(CONE, M.gold, 0,-1.15,1.3, .14,.6,.14, Math.PI));       // chin barb
+  // crest spikes marching back
+  for(let i=0;i<5;i++)
+    h.add(mesh(CONE, M.prim, 0, .75-i*.12, -.1-i*.42, .2,.55,.2, -.4));
+  return h;
+}
+function dragonExtras(M, A, g){
+  // dorsal spikes across the shoulders
+  for(const s of [-1,1]) for(let i=0;i<4;i++)
+    g.add(mesh(CONE, M.prim, s*(0.5+i*.45), 8.75-i*.1, -.55, .2,.6,.2, -.35, 0, s*.25));
+  g.add(chainTail(M, A, {segs:9, mat:M.prim, s0:.62, taper:.86, spikes:true,
+    tip:(p,sz)=>p.add(mesh(CONE, M.gold, 0,0,-sz, sz*.5, sz*2.2, sz*.5, -Math.PI/2))}));
+}
+
+function lionHead(M, A){
+  const h = new THREE.Group();
+  h.add(mesh(ORB, M.bone, 0,.15,.2, 1.05,.95,1.0));                  // skull
+  h.add(mesh(BOX, M.bone, 0,-.1,1.0, .8,.6,.7, .1));                 // muzzle
+  h.add(mesh(BOX, M.dark, 0,.08,1.38, .32,.2,.2));                   // nose
+  h.add(mesh(BOX, M.bone, 0,-.5,.9, .6,.3,.55, .3));                 // jaw
+  for(const s of [-1,1]){
+    h.add(mesh(CONE, M.bone, s*.26, -.55, 1.1, .09,.42,.09, Math.PI)); // fangs
+    h.add(mesh(BOX, M.eye, s*.42, .3, .85, .24,.13,.15, 0, s*.15));
+    h.add(mesh(CONE, M.gold, s*.55, .85, 0, .2,.4,.2, 0,0,s*-.4));    // ears
+  }
+  // chest ruff plates
+  h.add(mesh(BOX, M.bone, 0,-.95,.35, 1.5,.8,.9, .25));
+  h.add(mesh(BOX, M.bone, 0,-1.5,.45, 1.1,.6,.7, .35));
+  return h;
+}
+function lionExtras(M, A, g){
+  // flame mane — emissive shards ringed behind the head
+  const flameM = new THREE.MeshStandardMaterial({color:0xffc93c, emissive:0xff8a1e, emissiveIntensity:1.8, flatShading:true, roughness:.5});
+  const flameM2 = new THREE.MeshStandardMaterial({color:0xfff0a0, emissive:0xffc23c, emissiveIntensity:2.2, flatShading:true, roughness:.5});
+  for(let i=0;i<16;i++){
+    const a = (i/16)*Math.PI*2;
+    const r = 1.6 + hash(i,3,7)*.5;
+    const f = mesh(CONE, i%2?flameM:flameM2,
+      Math.cos(a)*r, 9.7+Math.sin(a)*r*.9, -.75 - hash(i,1,2)*.4,
+      .28+hash(i,5,1)*.18, 1.1+hash(i,2,9)*1.1, .2,
+      0, 0, Math.atan2(-Math.cos(a), Math.sin(a)) + Math.PI);
+    f.userData.ph = i*.7;
+    A.flames.push(f); g.add(f);
+  }
+  // thin tail with flame tuft
+  g.add(chainTail(M, A, {segs:6, mat:M.dark, s0:.3, taper:.9, spikes:false, drop:-.9, lift:.06,
+    tip:(p,sz)=>{ for(let i=0;i<3;i++){ const t=mesh(CONE, flameM, (i-1)*.14, -.35, 0, .14,.7,.12, Math.PI+.2*(i-1)); t.userData.ph=i; A.flames.push(t); p.add(t);} }}));
+}
+
+function spiderHead(M, A){
+  const h = new THREE.Group();
+  h.add(mesh(ORB, M.dark, 0,.1,.3, 1.25,1.0,1.2));                   // cephalothorax bulb
+  h.add(mesh(ORB, M.dark, 0,.55,-.7, 1.0,.75,.95));                  // hump
+  // 6 eyes, two rows
+  const eyeG = new THREE.SphereGeometry(1, 8, 6);
+  for(const s of [-1,1]){
+    h.add(mesh(eyeG, M.eye, s*.3, .45, 1.15, .2,.2,.2));
+    h.add(mesh(eyeG, M.eye, s*.7, .35, .95, .15,.15,.15));
+    h.add(mesh(eyeG, M.eye, s*.32, .1, 1.25, .12,.12,.12));
+    h.add(mesh(CONE, M.gold, s*.3, -.6, 1.0, .13,.75,.13, Math.PI+ s*-.1)); // fangs
+  }
+  return h;
+}
+function spiderExtras(M, A, g){
+  // six jointed limbs arcing from the upper back down the front
+  for(const s of [-1,1]) for(let i=0;i<3;i++){
+    const leg = new THREE.Group();
+    leg.position.set(s*(.7+i*.35), 8.9, -.6);
+    leg.rotation.set(.5, s*(.35+i*.4), s*-.9);
+    const a = mesh(CYL, M.dark, 0,-1.1,0, .1,1.1,.1);  leg.add(a);
+    const k = new THREE.Group(); k.position.y=-2.2; k.rotation.x=.9; leg.add(k);
+    k.add(mesh(CYL, M.dark, 0,-1.3,0, .07,1.3,.07));
+    k.add(mesh(CONE, M.gold, 0,-2.7,0, .09,.5,.09, Math.PI));
+    leg.userData.ph = i + (s>0?3:0);
+    A.legs.push(leg); g.add(leg);
+  }
+  // stinger tail
+  g.add(chainTail(M, A, {segs:7, mat:M.dark, s0:.34, taper:.92, spikes:false, drop:-.7, lift:.22,
+    tip:(p,sz)=>{
+      p.add(mesh(CONE, M.sec, 0,0,-sz*2, sz*1.4, sz*3, sz*1.4, -Math.PI/2));
+      p.add(mesh(CONE, M.sec, sz*.8,0,-sz, sz*.5, sz*1.4, sz*.5, -Math.PI/2, 0, .6));
+      p.add(mesh(CONE, M.sec, -sz*.8,0,-sz, sz*.5, sz*1.4, sz*.5, -Math.PI/2, 0, -.6));
+    }}));
+}
+
+function oryxHead(M, A){
+  const h = new THREE.Group();
+  h.add(mesh(BOX, M.bone, 0,.2,.1, 1.0,1.05,1.1));                   // skull
+  h.add(mesh(BOX, M.bone, 0,-.05,1.0, .6,.6,1.1, .18));              // long snout
+  h.add(mesh(BOX, M.dark, 0,-.2,1.6, .35,.3,.25));                   // nose
+  for(const s of [-1,1]){
+    h.add(mesh(BOX, M.eye, s*.44, .3, .6, .2,.12,.16, 0, s*.2));
+    h.add(mesh(CONE, M.bone, s*.85, .55, -.1, .3,.8,.12, 0,0,s*-1.5)); // ears
+    // long ringed horns — stacked, tilting back
+    let hx=s*.35, hy=.85, hz=-.15, tilt=-.15, rad=.14;
+    for(let i=0;i<8;i++){
+      h.add(mesh(CYL, M.gold, hx, hy, hz, rad, .5, rad, tilt, 0, s*.05));
+      const dy=Math.cos(tilt)*.46, dz=Math.sin(tilt)*.46;
+      hy+=dy; hz+=dz; tilt-=.09; rad*=.88; hx+=s*.02;
+    }
+  }
+  // neck / chest fur plates
+  h.add(mesh(BOX, M.bone, 0,-.9,.3, 1.4,.9,.95, .2));
+  h.add(mesh(BOX, M.bone, 0,-1.5,.4, 1.0,.6,.7, .3));
+  return h;
+}
+function oryxExtras(M, A, g){
+  g.add(chainTail(M, A, {segs:6, mat:M.bone, s0:.28, taper:.92, spikes:false, drop:-.85, lift:.05,
+    tip:(p,sz)=>{
+      p.add(mesh(CONE, M.gold, 0,-.6,0, .3,.8,.1, Math.PI));
+      p.add(mesh(CONE, M.gold, .18,-.45,0, .16,.5,.08, Math.PI+.5));
+      p.add(mesh(CONE, M.gold, -.18,-.45,0, .16,.5,.08, Math.PI-.5));
+    }}));
+}
+
+/* ---------- registry ---------- */
+const SPECIES = [
+  { name:'VOLKREX',  cls:'SAURIAN SIEGE FRAME',   no:'ZF-01 · IGNIS',
+    colors:{prim:0xc92b26, sec:0xe0611c, dark:0x241c1c, bone:0xf2e8d2},
+    head:dragonHead, extras:dragonExtras, headY:9.55, headZ:.45, headS:1.15 },
+  { name:'SOLMANE',  cls:'LEONID VANGUARD FRAME', no:'ZF-02 · SOL',
+    colors:{prim:0xd7301f, sec:0xd7301f, dark:0x221c22, bone:0xdfc07a},
+    head:lionHead, extras:lionExtras, headY:9.6, headZ:.5, headS:1.2 },
+  { name:'ARAKHNE',  cls:'ARACHNID AMBUSH FRAME', no:'ZF-03 · UMBRA',
+    colors:{prim:0x2a1f28, sec:0xdd5a12, dark:0x241a24, bone:0xefe4cf},
+    head:spiderHead, extras:spiderExtras, headY:9.35, headZ:.4, headS:1.15 },
+  { name:'ORYXUS',   cls:'ANTELOPE LANCER FRAME', no:'ZF-04 · ALBUS',
+    colors:{prim:0xd9491d, sec:0xd9491d, dark:0x26201e, bone:0xece2cc},
+    head:oryxHead, extras:oryxExtras, headY:9.6, headZ:.45, headS:1.1 },
+];
+
+const mechs = SPECIES.map(sp=>{
+  const A = {arms:[], tail:[], flames:[], legs:[], glow:null};
+  const M = makeMats(sp.colors);
+  A.glow = M.glow;
+  const g = buildFrame(M, A);
+  const head = sp.head(M, A);
+  head.position.set(0, sp.headY, sp.headZ);
+  head.scale.setScalar(sp.headS);
+  g.add(head);
+  sp.extras(M, A, g);
+  g.visible = false;
+  scene.add(g);
+  return {sp, g, A};
+});
+
+/* ---------- ground & embers ---------- */
+(function(){
+  const geo = new THREE.CylinderGeometry(6.2, 7.2, 1.1, 24, 3);
+  const p = geo.attributes.position;
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+    if(y > -0.5) p.setXYZ(i, x*(1+(hash(x,y,z)-.5)*.14), y+(hash(z,x,y)-.5)*.35, z*(1+(hash(y,z,x)-.5)*.14));
+  }
+  geo.computeVertexNormals();
+  const rock = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0x5d534b, flatShading:true, roughness:.9}));
+  rock.position.y = -.55;
+  scene.add(rock);
+})();
+
+const embers = (function(){
+  const N=70, pos=new Float32Array(N*3), spd=[];
+  for(let i=0;i<N;i++){
+    pos[i*3]= (Math.random()-.5)*18; pos[i*3+1]= Math.random()*13; pos[i*3+2]= (Math.random()-.5)*18;
+    spd.push(.4+Math.random()*.9);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const pts=new THREE.Points(g, new THREE.PointsMaterial({color:0xff8c30, size:.09, transparent:true, opacity:.75}));
+  pts.userData={spd};
+  scene.add(pts);
+  return pts;
+})();
+
+/* ---------- damped orbit (smooth on touch) ---------- */
+const orbit = { yaw:.5, pitch:.18, dist:20.5, vyaw:0, vpitch:0, vdist:0, tgtY:6.1 };
+let dragging=false, px=0, py=0, pinch=0, moved=false;
+
+function onDown(x,y){ dragging=true; px=x; py=y; orbit.vyaw=0; orbit.vpitch=0; }
+function onMove(x,y){
+  if(!dragging) return;
+  const dx=(x-px)/innerWidth, dy=(y-py)/innerHeight;
+  orbit.vyaw   = dx*4.2;
+  orbit.vpitch = dy*3.0;
+  orbit.yaw   += orbit.vyaw;
+  orbit.pitch  = Math.max(-.15, Math.min(.9, orbit.pitch + orbit.vpitch));
+  px=x; py=y; moved=true;
+}
+canvas.addEventListener('pointerdown', e=>{ if(e.isPrimary) onDown(e.clientX,e.clientY); });
+addEventListener('pointermove', e=>{ if(e.isPrimary) onMove(e.clientX,e.clientY); });
+addEventListener('pointerup',   ()=>dragging=false);
+canvas.addEventListener('wheel', e=>{ e.preventDefault(); orbit.vdist += e.deltaY*.004; }, {passive:false});
+canvas.addEventListener('touchstart', e=>{
+  if(e.touches.length===2){ dragging=false; pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+},{passive:true});
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    orbit.vdist += (pinch-d)*.02; pinch=d;
+  }
+},{passive:true});
+
+/* ---------- selection UI ---------- */
+const chipsEl = document.getElementById('chips');
+let current = 0, swapT = 1;
+SPECIES.forEach((sp,i)=>{
+  const b=document.createElement('button');
+  b.className='chip';
+  b.innerHTML=`<span class="dot" style="background:#${sp.colors.sec.toString(16).padStart(6,'0')}"></span>${sp.name}`;
+  b.onclick=()=>select(i);
+  chipsEl.appendChild(b);
+});
+function select(i){
+  current=i; swapT=0;
+  mechs.forEach((m,j)=>m.g.visible = j===i);
+  [...chipsEl.children].forEach((c,j)=>c.classList.toggle('on', j===i));
+  document.getElementById('desNm').textContent = SPECIES[i].name;
+  document.getElementById('desCl').textContent = SPECIES[i].cls;
+  document.getElementById('desNo').textContent = SPECIES[i].no;
+}
+select(0);
+
+/* ---------- loop ---------- */
+function resize(){
+  const w=innerWidth, h=innerHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+  orbit.dist = Math.max(19, 24 - 5*Math.min(1, w/h));   // pull back on portrait
+}
+addEventListener('resize', resize); resize();
+
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const t = clock.getElapsedTime(), dt = Math.min(clock.getDelta()+.016, .05);
+
+  // orbit physics
+  if(!dragging){
+    orbit.yaw += orbit.vyaw; orbit.pitch = Math.max(-.15, Math.min(.9, orbit.pitch+orbit.vpitch));
+    orbit.vyaw *= .93; orbit.vpitch *= .9;
+    orbit.yaw += .0012;                                   // lazy idle turn
+  }
+  orbit.dist = Math.max(11, Math.min(34, orbit.dist + orbit.vdist)); orbit.vdist *= .82;
+  const cy = orbit.tgtY + Math.sin(orbit.pitch)*orbit.dist;
+  const cr = Math.cos(orbit.pitch)*orbit.dist;
+  camera.position.set(Math.sin(orbit.yaw)*cr, cy, Math.cos(orbit.yaw)*cr);
+  camera.lookAt(0, orbit.tgtY, 0);
+
+  // active mech animation
+  const m = mechs[current], A = m.A;
+  swapT = Math.min(1, swapT + dt*3.2);
+  const pop = 1 - Math.pow(1-swapT, 3);
+  m.g.scale.setScalar(.85 + .15*pop);
+  m.g.position.y = Math.sin(t*1.1)*.07;
+  m.g.rotation.z = Math.sin(t*.9)*.008;
+  A.glow.emissiveIntensity = 1.5 + Math.sin(t*2.4)*.5;
+  A.arms.forEach((a,i)=>{ a.rotation.z = Math.sin(t*1.1 + i*Math.PI)*.03; });
+  A.tail.forEach((j,i)=>{ j.rotation.y = Math.sin(t*1.4 + i*.55)*.07; });
+  A.flames.forEach(f=>{
+    const ph=f.userData.ph||0;
+    f.scale.y = (1 + Math.sin(t*7 + ph*2.1)*.28) * (1.1+Math.sin(ph)*.5);
+    f.material.emissiveIntensity = 1.8 + Math.sin(t*9+ph)*.6;
+  });
+  A.legs.forEach(l=>{ l.rotation.z += Math.sin(t*1.6 + l.userData.ph)*.0016; });
+
+  // embers drift
+  const ep = embers.geometry.attributes.position, spd = embers.userData.spd;
+  for(let i=0;i<spd.length;i++){
+    let y = ep.getY(i) + spd[i]*dt;
+    if(y>13) y=0;
+    ep.setY(i, y);
+    ep.setX(i, ep.getX(i) + Math.sin(t+i)*.004);
+  }
+  ep.needsUpdate = true;
+
+  renderer.render(scene, camera);
+}
+tick();
+
+// fade hint after first interaction
+addEventListener('pointerdown', ()=>{ if(moved||true) setTimeout(()=>document.getElementById('hint').style.opacity=0, 2500); }, {once:true});
+</script>
+</body>
+</html>

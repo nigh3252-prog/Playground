@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Saturn's Gravity — Warden Mech Mixer</title>
+<style>
+  :root{
+    --bg:#887b65;
+    --panel:#14171ccf;
+    --line:#d4c39e;
+    --text:#f1ead7;
+    --muted:#bcae8d;
+    --accent:#d3ab4f;
+    --accent2:#bf5134;
+  }
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text)}
+  #stage{position:fixed;inset:0;touch-action:none}
+  #overlay{position:fixed;inset:0;pointer-events:none;background:
+    radial-gradient(ellipse at 50% 40%, rgba(255,244,219,.12), transparent 50%),
+    radial-gradient(ellipse at 50% 65%, transparent 0%, rgba(0,0,0,.18) 78%, rgba(0,0,0,.34) 100%)}
+  #grain{position:fixed;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+  #title{position:fixed;left:18px;top:16px;pointer-events:none;text-shadow:0 2px 0 rgba(0,0,0,.22)}
+  #title .eyebrow{font-size:12px;letter-spacing:2px;color:var(--muted);font-weight:700;text-transform:uppercase}
+  #title h1{margin:.18rem 0 0 0;font-size:34px;line-height:.92;letter-spacing:.04em}
+  #title .sub{margin-top:6px;font-size:13px;color:var(--muted);max-width:340px}
+  #panel{
+    position:fixed;right:14px;top:14px;z-index:3;width:min(340px,calc(100vw - 28px));
+    background:var(--panel);backdrop-filter:blur(10px);
+    border:1px solid rgba(212,195,158,.28);border-radius:16px;
+    box-shadow:0 20px 50px rgba(0,0,0,.28);overflow:hidden
+  }
+  #panelHeader{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(212,195,158,.16)}
+  #panelHeader strong{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--line)}
+  #collapseBtn{border:0;background:#ffffff12;color:var(--text);width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer}
+  #panelBody{padding:12px 14px 14px 14px;display:grid;gap:12px}
+  .group{display:grid;gap:8px}
+  .labelRow{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
+  .seg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .seg button,.smallBtn{
+    background:#ffffff10;border:1px solid rgba(212,195,158,.16);color:var(--text);
+    padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:600
+  }
+  .seg button.active,.smallBtn.active{background:linear-gradient(180deg, rgba(211,171,79,.35), rgba(191,81,52,.25));border-color:rgba(212,195,158,.45)}
+  .checkboxRow{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#ffffff08;border-radius:12px;padding:10px 12px}
+  input[type="range"]{width:100%}
+  .hint{font-size:12px;color:var(--muted);line-height:1.35}
+  #footerRow{display:flex;gap:8px}
+  #footerRow .smallBtn{flex:1}
+  #status{position:fixed;left:16px;bottom:16px;background:#14171c9e;border:1px solid rgba(212,195,158,.2);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--muted);max-width:min(480px,calc(100vw - 32px));backdrop-filter:blur(10px)}
+  #status strong{color:var(--text)}
+  #mobileToggle{display:none;position:fixed;right:14px;bottom:14px;z-index:4;width:52px;height:52px;border-radius:14px;border:1px solid rgba(212,195,158,.25);background:var(--panel);color:var(--text);font-size:22px;backdrop-filter:blur(10px)}
+  .collapsed #panelBody{display:none}
+  .collapsed #panel{width:auto}
+  @media (max-width: 760px){
+    #panel{display:none}
+    #mobileToggle{display:block}
+    #panel.show{display:block}
+    #title h1{font-size:28px}
+    #title .sub{max-width:220px}
+    #status{font-size:11px}
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="overlay"></div>
+<div id="grain"></div>
+<div id="title">
+  <div class="eyebrow">Saturn's Gravity</div>
+  <h1>Warden Mech<br/>Mixer</h1>
+  <div class="sub">God Arm underframe + Megalith-style warden shell. Built for low-poly silhouette testing.</div>
+</div>
+<div id="panel">
+  <div id="panelHeader">
+    <strong>Combination Tuning</strong>
+    <button id="collapseBtn" aria-label="Collapse panel">−</button>
+  </div>
+  <div id="panelBody">
+    <div class="group">
+      <div class="labelRow"><span>Mode</span><span id="modeReadout">Stacked</span></div>
+      <div class="seg">
+        <button data-mode="stacked" class="active">Stacked</button>
+        <button data-mode="integrated">Integrated</button>
+      </div>
+      <div class="hint">Stacked keeps the mashup literal. Integrated hides and tucks more of the God Arm torso so it reads as one looming mech.</div>
+    </div>
+
+    <div class="group">
+      <div class="checkboxRow">
+        <div>
+          <div style="font-weight:700;color:var(--text)">Show floating arms</div>
+          <div style="font-size:12px;color:var(--muted)">Rayman / Vectorman-style hovering weapon limbs</div>
+        </div>
+        <input id="armsToggle" type="checkbox" checked />
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="labelRow"><span>Megalith body height</span><span id="heightValue">4.8</span></div>
+      <input id="heightSlider" type="range" min="2.0" max="7.6" step="0.05" value="4.8" />
+      <div class="hint">Moves the warden shell vertically on the God Arm frame.</div>
+    </div>
+
+    <div class="group">
+      <div class="labelRow"><span>Megalith body scale</span><span id="scaleValue">1.00</span></div>
+      <input id="scaleSlider" type="range" min="0.70" max="1.40" step="0.01" value="1.00" />
+      <div class="hint">Uniform scale for testing how bulky and cloak-dominant the silhouette should be.</div>
+    </div>
+
+    <div class="group">
+      <div class="labelRow"><span>Pose emphasis</span><span id="poseReadout">Bruiser</span></div>
+      <div class="seg">
+        <button data-pose="bruiser" class="active">Bruiser</button>
+        <button data-pose="warden">Warden</button>
+      </div>
+      <div class="hint">Bruiser pushes the broad-shouldered mech feeling. Warden dials up the ominous statue-like silhouette.</div>
+    </div>
+
+    <div id="footerRow">
+      <button id="resetBtn" class="smallBtn">Reset fit</button>
+      <button id="spinBtn" class="smallBtn active">Turntable on</button>
+    </div>
+  </div>
+</div>
+<button id="mobileToggle" aria-label="Open controls">☰</button>
+<div id="status"><strong>Orbit:</strong> drag &nbsp; <strong>Zoom:</strong> wheel / pinch &nbsp; <strong>Current:</strong> <span id="statusReadout">Stacked · Arms on · Bruiser pose</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const canvas = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x887b65);
+  scene.fog = new THREE.Fog(0x887b65, 24, 54);
+
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 120);
+  camera.position.set(15, 10, 18);
+
+  scene.add(new THREE.HemisphereLight(0xf5e9c9, 0x2d3137, 1.15));
+  const sun = new THREE.DirectionalLight(0xffefce, 1.25);
+  sun.position.set(-10, 16, 10);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -18;
+  sun.shadow.camera.right = 18;
+  sun.shadow.camera.top = 18;
+  sun.shadow.camera.bottom = -18;
+  scene.add(sun);
+  const rim = new THREE.DirectionalLight(0x8ea9c7, 0.35);
+  rim.position.set(7, 4, -8);
+  scene.add(rim);
+
+  const COLORS = {
+    paper: 0x887b65,
+    dark: 0x1a1e24,
+    darker: 0x111318,
+    edge: 0x30353d,
+    red: 0xb6452d,
+    redDark: 0x8c331f,
+    yellow: 0xc4a04a,
+    yellowDark: 0x8d7031,
+    steel: 0x87909a,
+    steelDark: 0x616b74,
+    tan: 0xb49b6c,
+    glow: 0xa8dfff
+  };
+
+  function makeMat(color, extra={}){
+    return new THREE.MeshLambertMaterial({ color, flatShading:true, ...extra });
+  }
+  const mats = {
+    dark: makeMat(COLORS.dark),
+    darker: makeMat(COLORS.darker),
+    edge: makeMat(COLORS.edge),
+    red: makeMat(COLORS.red),
+    redDark: makeMat(COLORS.redDark),
+    yellow: makeMat(COLORS.yellow),
+    yellowDark: makeMat(COLORS.yellowDark),
+    steel: makeMat(COLORS.steel),
+    steelDark: makeMat(COLORS.steelDark),
+    tan: makeMat(COLORS.tan),
+    glow: new THREE.MeshBasicMaterial({ color: COLORS.glow, transparent:true, opacity:0.75 })
+  };
+
+  function addMesh(geo, mat, parent, pos=[0,0,0], rot=[0,0,0], scale=[1,1,1], cast=true){
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...pos);
+    mesh.rotation.set(...rot);
+    mesh.scale.set(...scale);
+    mesh.castShadow = cast;
+    mesh.receiveShadow = true;
+    (parent || scene).add(mesh);
+    return mesh;
+  }
+
+  function taperBox(wb, db, wt, dt, h){
+    const x0 = wb/2, z0 = db/2, x1 = wt/2, z1 = dt/2, y = h/2;
+    const b = [[-x0,-y,-z0],[x0,-y,-z0],[x0,-y,z0],[-x0,-y,z0]];
+    const t = [[-x1,y,-z1],[x1,y,-z1],[x1,y,z1],[-x1,y,z1]];
+    const tris = [
+      b[3],b[2],t[2], b[3],t[2],t[3],
+      b[1],b[0],t[0], b[1],t[0],t[1],
+      b[2],b[1],t[1], b[2],t[1],t[2],
+      b[0],b[3],t[3], b[0],t[3],t[0],
+      t[3],t[2],t[1], t[3],t[1],t[0],
+      b[0],b[1],b[2], b[0],b[2],b[3]
+    ];
+    const pos = new Float32Array(tris.flat());
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.computeVertexNormals();
+    return g;
+  }
+
+  function chamferPanel(w, h, d, ch=0.06){
+    const s = new THREE.Shape();
+    s.moveTo(-w/2+ch,-h/2); s.lineTo(w/2-ch,-h/2); s.lineTo(w/2,-h/2+ch);
+    s.lineTo(w/2,h/2-ch); s.lineTo(w/2-ch,h/2); s.lineTo(-w/2+ch,h/2);
+    s.lineTo(-w/2,h/2-ch); s.lineTo(-w/2,-h/2+ch); s.closePath();
+    const g = new THREE.ExtrudeGeometry(s,{ depth:d, bevelEnabled:true, bevelThickness:ch, bevelSize:ch, bevelSegments:1 });
+    g.translate(0,0,-d/2);
+    return g;
+  }
+
+  function capeShapeGeometry(topW, bottomW, h, depth){
+    const s = new THREE.Shape();
+    s.moveTo(-topW/2, h/2);
+    s.lineTo(topW/2, h/2);
+    s.lineTo(bottomW/2, -h/2);
+    s.lineTo(-bottomW/2, -h/2);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled:true, bevelThickness:0.04, bevelSize:0.04, bevelSegments:1 });
+    g.translate(0, 0, -depth/2);
+    return g;
+  }
+
+  function buildFloatingArm(side){
+    const group = new THREE.Group();
+    const s = side;
+    addMesh(new THREE.CylinderGeometry(0.55,0.55,0.28,10), mats.redDark, group, [1.95*s, 8.7, 0], [0,0,Math.PI/2]);
+    addMesh(new THREE.CylinderGeometry(0.34,0.34,0.44,10), mats.steelDark, group, [2.45*s, 8.7, 0], [0,0,Math.PI/2]);
+
+    const forearm = new THREE.Group();
+    forearm.position.set(3.5*s, 8.15, 0.15);
+    group.add(forearm);
+    addMesh(taperBox(0.9,0.85,0.7,0.65,2.1), mats.red, forearm, [0,0,0], [0,0,0]);
+    addMesh(chamferPanel(0.75, 0.95, 0.12, 0.05), mats.steel, forearm, [0, 0.25, 0.43], [0,0,0]);
+    addMesh(new THREE.BoxGeometry(0.7,0.32,0.95), mats.darker, forearm, [0,-1.15,0.05]);
+    addMesh(new THREE.BoxGeometry(0.22,0.75,0.22), mats.steelDark, forearm, [-0.18,-1.55,0.25]);
+    addMesh(new THREE.BoxGeometry(0.22,0.75,0.22), mats.steelDark, forearm, [ 0.18,-1.55,0.25]);
+    addMesh(new THREE.CylinderGeometry(0.20,0.14,1.6,8), mats.darker, forearm, [0,-0.2,0.65], [Math.PI/2,0,0]);
+    addMesh(new THREE.CylinderGeometry(0.06,0.18,0.9,8), mats.glow, forearm, [0,-0.2,1.45], [Math.PI/2,0,0], [1,1,1.1]);
+    group.userData.forearm = forearm;
+    return group;
+  }
+
+  function buildGodArmBase(){
+    const root = new THREE.Group();
+
+    const pelvis = new THREE.Group();
+    pelvis.position.y = 4.2;
+    root.add(pelvis);
+    addMesh(taperBox(2.25,1.45,2.6,1.65,0.8), mats.yellow, pelvis, [0,0.1,0]);
+    for(let i=0;i<3;i++) addMesh(taperBox(2.3 - i*0.08, 1.48, 2.12 - i*0.1, 1.35, 0.14), i%2 ? mats.yellowDark : mats.yellow, pelvis, [0, -0.34 - i*0.16, 0]);
+    addMesh(chamferPanel(0.9, 0.7, 0.14), mats.yellow, pelvis, [-0.54,-0.18,0.74], [0.18,0,0.14]);
+    addMesh(chamferPanel(0.9, 0.7, 0.14), mats.yellow, pelvis, [ 0.54,-0.18,0.74], [0.18,0,-0.14]);
+
+    function buildLeg(side){
+      const g = new THREE.Group();
+      g.position.set(1.05*side, 3.95, 0);
+      root.add(g);
+      addMesh(new THREE.CylinderGeometry(0.28,0.28,0.55,10), mats.steelDark, g, [0,0,0], [0,0,Math.PI/2]);
+      addMesh(taperBox(0.92,0.82,0.74,0.72,1.3), mats.red, g, [0.05*side,-0.78,0]);
+      addMesh(new THREE.CylinderGeometry(0.48,0.56,0.28,8), mats.redDark, g, [0.04*side,-1.5,0]);
+      addMesh(taperBox(1.2,1.08,0.85,0.78,1.65), mats.red, g, [0.08*side,-2.42,0]);
+      addMesh(new THREE.CylinderGeometry(0.46,0.56,0.32,8), mats.redDark, g, [0.08*side,-3.38,0]);
+      const foot = addMesh(new THREE.BoxGeometry(1.3,0.55,2.35), mats.red, g, [0.1*side,-3.9,0.18]);
+      foot.rotation.y = 0.08*side;
+      addMesh(new THREE.BoxGeometry(1.0,0.1,0.14), mats.darker, g, [0.1*side,-3.78,1.15]);
+      addMesh(new THREE.BoxGeometry(1.0,0.1,0.14), mats.darker, g, [0.1*side,-3.62,1.28]);
+      addMesh(new THREE.BoxGeometry(1.0,0.1,0.14), mats.darker, g, [0.1*side,-3.46,1.41]);
+      return g;
+    }
+    buildLeg(-1); buildLeg(1);
+
+    const torso = new THREE.Group();
+    torso.position.y = 5.45;
+    root.add(torso);
+    root.userData.torso = torso;
+    addMesh(chamferPanel(1.55,0.42,0.95,0.05), mats.steel, torso, [0,0.15,0.12]);
+    addMesh(chamferPanel(1.72,0.42,1.04,0.05), mats.steel, torso, [0,0.55,0.14]);
+    addMesh(chamferPanel(1.96,0.46,1.12,0.05), mats.steel, torso, [0,0.98,0.16]);
+    root.userData.coreChest = addMesh(taperBox(1.8,1.15,2.45,1.5,1.25), mats.yellow, torso, [0,1.78,0.02], [-0.05,0,0]);
+    root.userData.collar = addMesh(chamferPanel(1.9,0.28,1.12,0.05), mats.steelDark, torso, [0,2.48,0]);
+    addMesh(new THREE.CylinderGeometry(0.22,0.22,1.4,8), mats.redDark, torso, [-1.1,1.95,0.05], [0,0,Math.PI/2]);
+    addMesh(new THREE.CylinderGeometry(0.22,0.22,1.4,8), mats.redDark, torso, [ 1.1,1.95,0.05], [0,0,Math.PI/2]);
+
+    const head = new THREE.Group();
+    head.position.set(0, 3.05, 0.03);
+    torso.add(head);
+    root.userData.head = head;
+    addMesh(new THREE.BoxGeometry(0.9,0.7,0.88), mats.edge, head, [0,0.15,0]);
+    addMesh(new THREE.BoxGeometry(0.5,0.32,0.94), mats.yellowDark, head, [0,0.5,0]);
+    addMesh(new THREE.BoxGeometry(0.14,0.14,0.06), mats.darker, head, [-0.18,0.12,0.48]);
+    addMesh(new THREE.BoxGeometry(0.14,0.14,0.06), mats.darker, head, [ 0.18,0.12,0.48]);
+
+    const shoulderHull = new THREE.Group();
+    shoulderHull.position.y = 7.35;
+    root.add(shoulderHull);
+    root.userData.shoulderHull = shoulderHull;
+    addMesh(taperBox(1.2,1.15,1.55,1.35,0.72), mats.redDark, shoulderHull, [-1.9,0,0], [0,0,0.12]);
+    addMesh(taperBox(1.2,1.15,1.55,1.35,0.72), mats.redDark, shoulderHull, [ 1.9,0,0], [0,0,-0.12]);
+    addMesh(new THREE.BoxGeometry(1.0,1.25,1.0), mats.red, shoulderHull, [-2.55,-0.22,0.05], [0,0,0.12]);
+    addMesh(new THREE.BoxGeometry(1.0,1.25,1.0), mats.red, shoulderHull, [ 2.55,-0.22,0.05], [0,0,-0.12]);
+
+    const backpack = new THREE.Group();
+    backpack.position.set(0, 7.0, -0.95);
+    root.add(backpack);
+    root.userData.backpack = backpack;
+    addMesh(new THREE.BoxGeometry(1.0,1.6,0.9), mats.edge, backpack, [0,0,0]);
+    addMesh(new THREE.CylinderGeometry(0.35,0.35,1.2,10), mats.steelDark, backpack, [-0.55,0.1,-0.15], [Math.PI/2,0,0]);
+    addMesh(new THREE.CylinderGeometry(0.35,0.35,1.2,10), mats.steelDark, backpack, [ 0.55,0.1,-0.15], [Math.PI/2,0,0]);
+
+    return root;
+  }
+
+  function buildMegalithShell(){
+    const shell = new THREE.Group();
+
+    const cloak = new THREE.Group();
+    shell.add(cloak);
+    addMesh(new THREE.CylinderGeometry(2.6, 3.95, 6.3, 7, 1), mats.dark, cloak, [0,0,0], [0,0,0], [1,1,0.7]);
+    addMesh(new THREE.BoxGeometry(4.9, 4.8, 2.9), mats.dark, cloak, [0,0.15,0]);
+    addMesh(new THREE.BoxGeometry(1.15,5.3,3.1), mats.edge, cloak, [-2.35,-0.15,0], [0,0,-0.08]);
+    addMesh(new THREE.BoxGeometry(1.15,5.3,3.1), mats.edge, cloak, [ 2.35,-0.15,0], [0,0, 0.08]);
+    addMesh(new THREE.BoxGeometry(2.6,0.34,2.85), mats.darker, cloak, [0,2.52,0]);
+    addMesh(new THREE.BoxGeometry(2.0,0.24,2.92), mats.redDark, cloak, [0,1.25,0]);
+    addMesh(new THREE.BoxGeometry(0.34,3.55,2.96), mats.darker, cloak, [-1.52,-0.2,0]);
+    addMesh(new THREE.BoxGeometry(0.34,3.55,2.96), mats.darker, cloak, [ 1.52,-0.2,0]);
+    addMesh(new THREE.BoxGeometry(0.84,0.24,2.98), mats.tan, cloak, [-0.75,-1.42,0]);
+    addMesh(new THREE.BoxGeometry(0.84,0.24,2.98), mats.tan, cloak, [ 0.75,-1.42,0]);
+
+    const chestPlateL = addMesh(chamferPanel(0.9,1.55,0.12,0.06), mats.edge, shell, [-1.35,1.5,1.34], [0.08,0.08,0.18]);
+    const chestPlateR = addMesh(chamferPanel(0.9,1.55,0.12,0.06), mats.edge, shell, [ 1.35,1.5,1.34], [0.08,-0.08,-0.18]);
+    chestPlateL.scale.z = 1.2; chestPlateR.scale.z = 1.2;
+    addMesh(new THREE.BoxGeometry(0.7,0.18,0.14), mats.tan, shell, [-1.34,1.68,1.48]);
+    addMesh(new THREE.BoxGeometry(0.18,0.92,0.14), mats.tan, shell, [-1.53,1.42,1.48]);
+    addMesh(new THREE.BoxGeometry(0.18,0.26,0.14), mats.tan, shell, [-1.53,0.92,1.48]);
+    addMesh(new THREE.BoxGeometry(0.18,0.26,0.14), mats.tan, shell, [-1.53,0.54,1.48]);
+    addMesh(new THREE.BoxGeometry(0.18,0.92,0.14), mats.tan, shell, [1.1,1.42,1.48]);
+    addMesh(new THREE.BoxGeometry(0.18,0.92,0.14), mats.tan, shell, [1.34,1.42,1.48]);
+    addMesh(new THREE.BoxGeometry(0.18,0.92,0.14), mats.tan, shell, [1.58,1.42,1.48]);
+
+    const faceRig = new THREE.Group();
+    faceRig.position.set(0,3.46,0.18);
+    shell.add(faceRig);
+    addMesh(new THREE.BoxGeometry(2.12,1.14,1.55), mats.darker, faceRig, [0,0,0]);
+    addMesh(new THREE.BoxGeometry(1.55,0.55,1.59), mats.edge, faceRig, [0,0.4,0]);
+    const mask = addMesh(taperBox(0.82,0.4,0.56,0.28,1.1), mats.steel, faceRig, [0,-0.1,0.82], [0,0,0]);
+    addMesh(new THREE.BoxGeometry(0.08,0.48,0.08), mats.darker, faceRig, [0,0.18,1.09]);
+    const ventGroup = new THREE.Group(); ventGroup.position.set(0,-0.35,1.1); faceRig.add(ventGroup);
+    for(let y=0;y<3;y++) for(let x=-1;x<=1;x++) addMesh(new THREE.BoxGeometry(0.08,0.08,0.03), mats.darker, ventGroup, [x*0.12, -y*0.12, 0]);
+
+    const hat = new THREE.Group();
+    hat.position.set(0,4.18,0.05);
+    shell.add(hat);
+    const brim = addMesh(new THREE.CylinderGeometry(3.8,3.8,0.28,8), mats.dark, hat, [0,0,0], [0,0,0], [1,1,0.72]);
+    brim.scale.z = 0.78;
+    addMesh(new THREE.CylinderGeometry(0.75,1.06,1.9,8), mats.edge, hat, [0,1.1,0]);
+    addMesh(new THREE.BoxGeometry(0.52,0.18,1.18), mats.tan, hat, [0,0.95,0]);
+
+    const strap = new THREE.Group();
+    strap.position.set(0.92,0.62,1.52);
+    strap.rotation.z = -0.72;
+    shell.add(strap);
+    addMesh(new THREE.BoxGeometry(0.4,4.8,0.18), mats.edge, strap, [0,0,0]);
+    addMesh(new THREE.BoxGeometry(0.66,0.44,0.18), mats.steelDark, strap, [0.06,-0.25,0.02]);
+
+    const frontLatches = new THREE.Group();
+    frontLatches.position.set(-0.28, 0.0, 1.48);
+    shell.add(frontLatches);
+    [-0.4, 0.5, 1.45].forEach(y => {
+      addMesh(new THREE.BoxGeometry(0.14,0.62,0.12), mats.edge, frontLatches, [0,y,0]);
+      addMesh(new THREE.BoxGeometry(0.48,0.1,0.14), mats.steelDark, frontLatches, [0,y,0.02]);
+    });
+
+    shell.userData.cloak = cloak;
+    shell.userData.faceRig = faceRig;
+    shell.userData.hat = hat;
+    shell.userData.chestPlateL = chestPlateL;
+    shell.userData.chestPlateR = chestPlateR;
+    return shell;
+  }
+
+  const world = new THREE.Group();
+  scene.add(world);
+
+  const mech = new THREE.Group();
+  mech.position.y = 3.95;
+  world.add(mech);
+
+  const godArm = buildGodArmBase();
+  mech.add(godArm);
+
+  const leftArm = buildFloatingArm(-1);
+  const rightArm = buildFloatingArm(1);
+  mech.add(leftArm); mech.add(rightArm);
+  const armsGroup = new THREE.Group(); armsGroup.add(leftArm); armsGroup.add(rightArm); mech.add(armsGroup);
+
+  const megalithMount = new THREE.Group();
+  megalithMount.position.set(0,4.8,0.1);
+  mech.add(megalithMount);
+  const megalithShell = buildMegalithShell();
+  megalithMount.add(megalithShell);
+
+  const collarRing = addMesh(new THREE.CylinderGeometry(1.45, 1.75, 0.6, 10), mats.steelDark, mech, [0,8.1,0.02], [0,0,0], [1,1,0.8]);
+  collarRing.visible = false;
+  const cloakSpacer = addMesh(new THREE.CylinderGeometry(1.9, 2.15, 1.15, 8), mats.edge, mech, [0,7.3,-0.05], [0,0,0], [1,1,0.72]);
+  cloakSpacer.visible = false;
+
+  const shadow = addMesh(new THREE.CircleGeometry(5.7, 30), new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.2}), world, [0,0.02,0], [-Math.PI/2,0,0]);
+  shadow.receiveShadow = false; shadow.castShadow = false;
+
+  const ground = addMesh(new THREE.CircleGeometry(16, 40), new THREE.MeshLambertMaterial({color:0x6c6c60}), world, [0,0,0], [-Math.PI/2,0,0]);
+  ground.receiveShadow = true;
+  shadow.renderOrder = 2;
+
+  // Sparse low-poly structures for scale context.
+  const ruins = new THREE.Group();
+  world.add(ruins);
+  for(let i=0;i<10;i++){
+    const x = (i%2?1:-1) * (8.5 + (i%3)*2.6);
+    const z = -12 + i*2.8;
+    addMesh(new THREE.BoxGeometry(2.4 + (i%2), 2.8 + (i%3)*1.2, 2.6), makeMat(i%2 ? 0x997559 : 0xb89f70), ruins, [x,1.4 + (i%3)*0.6,z], [0,(i%4)*0.08,0]);
+    addMesh(new THREE.BoxGeometry(0.4,1.8,0.4), mats.edge, ruins, [x*0.82,0.9,z+1.4]);
+  }
+
+  const state = {
+    mode: 'stacked',
+    pose: 'bruiser',
+    armsVisible: true,
+    shellHeight: 4.8,
+    shellScale: 1.0,
+    spin: true,
+    camYaw: 0.72,
+    camPitch: 0.34,
+    camDist: 22,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+    touchDist: 0
+  };
+
+  function applyState(){
+    megalithMount.position.y = state.shellHeight;
+    megalithMount.scale.setScalar(state.shellScale);
+    armsGroup.visible = state.armsVisible;
+
+    const integrated = state.mode === 'integrated';
+    document.getElementById('modeReadout').textContent = integrated ? 'Integrated' : 'Stacked';
+    document.getElementById('poseReadout').textContent = state.pose === 'bruiser' ? 'Bruiser' : 'Warden';
+    document.getElementById('statusReadout').textContent = `${integrated ? 'Integrated' : 'Stacked'} · Arms ${state.armsVisible ? 'on' : 'off'} · ${state.pose === 'bruiser' ? 'Bruiser' : 'Warden'} pose`;
+
+    godArm.userData.head.visible = !integrated;
+    godArm.userData.coreChest.visible = !integrated;
+    godArm.userData.collar.visible = !integrated;
+    collarRing.visible = integrated;
+    cloakSpacer.visible = integrated;
+    godArm.userData.backpack.visible = !integrated;
+
+    if(integrated){
+      megalithShell.userData.faceRig.position.y = 3.35;
+      megalithShell.userData.hat.position.y = 4.0;
+      megalithShell.userData.cloak.position.y = -0.28;
+      megalithShell.rotation.set(0,0,0);
+      megalithShell.userData.chestPlateL.rotation.set(0.08,0.05,0.08);
+      megalithShell.userData.chestPlateR.rotation.set(0.08,-0.05,-0.08);
+      godArm.userData.shoulderHull.position.y = 7.0;
+      godArm.userData.shoulderHull.scale.set(0.9,0.9,0.95);
+      godArm.userData.torso.scale.set(0.86,0.78,0.85);
+      godArm.userData.torso.position.z = -0.25;
+    } else {
+      megalithShell.userData.faceRig.position.y = 3.46;
+      megalithShell.userData.hat.position.y = 4.18;
+      megalithShell.userData.cloak.position.y = 0;
+      megalithShell.rotation.set(0,0,0);
+      megalithShell.userData.chestPlateL.rotation.set(0.08,0.08,0.18);
+      megalithShell.userData.chestPlateR.rotation.set(0.08,-0.08,-0.18);
+      godArm.userData.shoulderHull.position.y = 7.35;
+      godArm.userData.shoulderHull.scale.set(1,1,1);
+      godArm.userData.torso.scale.set(1,1,1);
+      godArm.userData.torso.position.z = 0;
+    }
+
+    if(state.pose === 'bruiser'){
+      leftArm.position.set(0,0,0);
+      rightArm.position.set(0,0,0);
+      leftArm.rotation.z = 0.08;
+      rightArm.rotation.z = -0.08;
+      shadow.scale.set(1.08, 0.85, 1);
+      godArm.userData.shoulderHull.scale.x *= 1.05;
+      megalithShell.userData.hat.scale.set(1,1,1);
+    } else {
+      leftArm.position.set(-0.35, 0.2, 0.28);
+      rightArm.position.set(0.35, 0.2, 0.28);
+      leftArm.rotation.z = -0.02;
+      rightArm.rotation.z = 0.02;
+      shadow.scale.set(1.15, 0.88, 1);
+      megalithShell.userData.hat.scale.set(1.04,1,1.02);
+    }
+    leftArm.userData.basePos = leftArm.position.clone();
+    rightArm.userData.basePos = rightArm.position.clone();
+
+    document.querySelectorAll('[data-mode]').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === state.mode));
+    document.querySelectorAll('[data-pose]').forEach(btn => btn.classList.toggle('active', btn.dataset.pose === state.pose));
+    document.getElementById('armsToggle').checked = state.armsVisible;
+    document.getElementById('spinBtn').classList.toggle('active', state.spin);
+    document.getElementById('heightValue').textContent = state.shellHeight.toFixed(2);
+    document.getElementById('scaleValue').textContent = state.shellScale.toFixed(2);
+  }
+
+  function resetFit(){
+    state.mode = 'stacked';
+    state.pose = 'bruiser';
+    state.armsVisible = true;
+    state.shellHeight = 4.8;
+    state.shellScale = 1.0;
+    state.spin = true;
+    state.camYaw = 0.72;
+    state.camPitch = 0.34;
+    state.camDist = 22;
+    document.getElementById('heightSlider').value = state.shellHeight;
+    document.getElementById('scaleSlider').value = state.shellScale;
+    applyState();
+  }
+
+  document.querySelectorAll('[data-mode]').forEach(btn => btn.addEventListener('click', () => { state.mode = btn.dataset.mode; applyState(); }));
+  document.querySelectorAll('[data-pose]').forEach(btn => btn.addEventListener('click', () => { state.pose = btn.dataset.pose; applyState(); }));
+  document.getElementById('armsToggle').addEventListener('input', e => { state.armsVisible = e.target.checked; applyState(); });
+  document.getElementById('heightSlider').addEventListener('input', e => { state.shellHeight = parseFloat(e.target.value); applyState(); });
+  document.getElementById('scaleSlider').addEventListener('input', e => { state.shellScale = parseFloat(e.target.value); applyState(); });
+  document.getElementById('resetBtn').addEventListener('click', resetFit);
+  document.getElementById('spinBtn').addEventListener('click', () => { state.spin = !state.spin; document.getElementById('spinBtn').textContent = state.spin ? 'Turntable on' : 'Turntable off'; applyState(); });
+  document.getElementById('collapseBtn').addEventListener('click', () => {
+    document.body.classList.toggle('collapsed');
+    document.getElementById('collapseBtn').textContent = document.body.classList.contains('collapsed') ? '+' : '−';
+  });
+  document.getElementById('mobileToggle').addEventListener('click', () => document.getElementById('panel').classList.toggle('show'));
+
+  canvas.addEventListener('pointerdown', e => {
+    state.dragging = true;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if(!state.dragging) return;
+    state.camYaw -= (e.clientX - state.lastX) * 0.008;
+    state.camPitch = Math.max(0.08, Math.min(0.65, state.camPitch + (e.clientY - state.lastY) * 0.006));
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+  });
+  canvas.addEventListener('pointerup', () => state.dragging = false);
+  canvas.addEventListener('pointercancel', () => state.dragging = false);
+  canvas.addEventListener('wheel', e => {
+    state.camDist = Math.max(12, Math.min(34, state.camDist + e.deltaY * 0.015));
+  }, {passive:true});
+
+  canvas.addEventListener('touchstart', e => {
+    if(e.touches.length === 2){
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      state.touchDist = Math.hypot(dx,dy);
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchmove', e => {
+    if(e.touches.length === 2){
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx,dy);
+      if(state.touchDist){
+        state.camDist = Math.max(12, Math.min(34, state.camDist - (dist - state.touchDist) * 0.02));
+      }
+      state.touchDist = dist;
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchend', () => { state.touchDist = 0; }, {passive:true});
+
+  function resize(){
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const dt = Math.min(clock.getDelta(), 0.033);
+
+    if(state.spin && !state.dragging) world.rotation.y += dt * 0.22;
+
+    mech.position.y = 3.95 + Math.sin(t*1.35) * 0.1;
+    mech.rotation.z = Math.sin(t*0.95) * 0.012;
+    megalithShell.rotation.x = Math.sin(t*0.72) * 0.01;
+
+    if(leftArm.userData.basePos){
+      leftArm.position.copy(leftArm.userData.basePos);
+      rightArm.position.copy(rightArm.userData.basePos);
+      leftArm.position.y += Math.sin(t*1.8) * 0.08;
+      rightArm.position.y += Math.sin(t*1.8 + Math.PI) * 0.08;
+    }
+    leftArm.userData.forearm.rotation.z = Math.sin(t*1.3) * 0.08 - 0.04;
+    rightArm.userData.forearm.rotation.z = -Math.sin(t*1.3) * 0.08 + 0.04;
+    leftArm.userData.forearm.rotation.x = Math.sin(t*0.9) * 0.06;
+    rightArm.userData.forearm.rotation.x = -Math.sin(t*0.9) * 0.06;
+
+    const target = new THREE.Vector3(0, 8.4, 0);
+    const cp = Math.cos(state.camPitch);
+    const desired = new THREE.Vector3(
+      Math.sin(state.camYaw) * cp * state.camDist,
+      Math.sin(state.camPitch) * state.camDist,
+      Math.cos(state.camYaw) * cp * state.camDist
+    );
+    camera.position.lerp(desired, 0.08);
+    camera.lookAt(target);
+
+    renderer.render(scene, camera);
+  }
+
+  resetFit();
+  animate();
+})();
+</script>
+</body>
+</html>

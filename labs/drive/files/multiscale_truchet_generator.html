@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Scale Truchet Tile Generator</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --panel: #181c2f;
+      --panel-2: #202642;
+      --text: #ecf1ff;
+      --muted: #a8b1d8;
+      --accent: #7ea6ff;
+      --accent-2: #9ff0d0;
+      --line: #ffffff;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 12px 30px rgba(0,0,0,0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1a2140 0%, var(--bg) 58%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(290px, 380px) 1fr;
+      gap: 16px;
+      padding: 16px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .controls {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-self: start;
+      position: sticky;
+      top: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.15;
+      letter-spacing: 0.01em;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+
+    .group {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+    }
+
+    .group-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-2);
+      margin: 0 0 4px 0;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+
+    .inline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .value {
+      min-width: 44px;
+      text-align: right;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.92rem;
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #091224;
+      background: linear-gradient(180deg, #cfe0ff, #7ea6ff);
+      box-shadow: 0 8px 18px rgba(126,166,255,0.28);
+    }
+
+    button.secondary {
+      background: linear-gradient(180deg, #dbfff3, #9ff0d0);
+      box-shadow: 0 8px 18px rgba(159,240,208,0.22);
+    }
+
+    button.ghost {
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+      box-shadow: none;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .canvas-wrap {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .canvas-shell {
+      background: #111;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: grid;
+      place-items: center;
+      min-height: 70vh;
+      overflow: auto;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #fff;
+      border-radius: 14px;
+      margin: 16px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+      touch-action: manipulation;
+    }
+
+    .hint {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+      }
+
+      .canvas-shell {
+        min-height: 52vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel controls">
+      <div>
+        <h1>Multi-Scale Truchet Tile Generator</h1>
+        <div class="sub">Recursive Truchet-style quarter-arc tiles with scale variation, seeded randomness, and export.</div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Randomness</div>
+        <label>
+          Seed
+          <div class="row2">
+            <input id="seedInput" type="text" value="stepforge" />
+            <button id="randomSeedBtn" class="ghost" type="button">Randomize</button>
+          </div>
+        </label>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Structure</div>
+        <label>
+          <div class="inline"><span>Canvas size</span><span class="value" id="sizeValue">1024</span></div>
+          <input id="canvasSize" type="range" min="512" max="2048" step="128" value="1024" />
+        </label>
+        <label>
+          <div class="inline"><span>Base grid</span><span class="value" id="baseGridValue">4</span></div>
+          <input id="baseGrid" type="range" min="1" max="12" step="1" value="4" />
+        </label>
+        <label>
+          <div class="inline"><span>Max recursion depth</span><span class="value" id="depthValue">4</span></div>
+          <input id="maxDepth" type="range" min="0" max="7" step="1" value="4" />
+        </label>
+        <label>
+          <div class="inline"><span>Subdivision chance</span><span class="value" id="subdivideValue">0.58</span></div>
+          <input id="subdivideChance" type="range" min="0" max="1" step="0.01" value="0.58" />
+        </label>
+        <label>
+          <div class="inline"><span>Depth falloff</span><span class="value" id="falloffValue">0.18</span></div>
+          <input id="depthFalloff" type="range" min="0" max="0.5" step="0.01" value="0.18" />
+        </label>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Drawing</div>
+        <label>
+          <div class="inline"><span>Line weight</span><span class="value" id="lineWidthValue">12</span></div>
+          <input id="lineWidth" type="range" min="1" max="40" step="1" value="12" />
+        </label>
+        <label>
+          <div class="inline"><span>Outer margin</span><span class="value" id="marginValue">28</span></div>
+          <input id="margin" type="range" min="0" max="120" step="2" value="28" />
+        </label>
+        <label>
+          <div class="inline"><span>Show tile guides</span><span class="value" id="guidesValue">Off</span></div>
+          <input id="showGuides" type="range" min="0" max="1" step="1" value="0" />
+        </label>
+        <div class="row2">
+          <label>
+            Background
+            <input id="bgColor" type="text" value="#ffffff" />
+          </label>
+          <label>
+            Stroke
+            <input id="lineColor" type="text" value="#111111" />
+          </label>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button id="generateBtn" type="button">Generate</button>
+        <button id="exportBtn" class="secondary" type="button">Save PNG</button>
+      </div>
+
+      <div class="buttons">
+        <button id="copySeedBtn" class="ghost" type="button">Copy Seed</button>
+        <button id="resetBtn" class="ghost" type="button">Reset</button>
+      </div>
+
+      <div class="hint">How it works: the canvas starts as a coarse grid. Each cell may recursively split into 2×2 children. Final leaf cells draw one of the two classic Truchet quarter-arc pairings.</div>
+      <div class="footer-note">Tip: lower base grid and higher recursion gives stronger “large forms made of smaller forms” energy. Higher base grid gives denser texture.</div>
+    </section>
+
+    <section class="panel canvas-wrap">
+      <div class="canvas-toolbar">
+        <div><strong>Preview</strong></div>
+        <div id="stats">Ready</div>
+      </div>
+      <div class="canvas-shell">
+        <canvas id="canvas" width="1024" height="1024"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const els = {
+      canvas: document.getElementById('canvas'),
+      seedInput: document.getElementById('seedInput'),
+      randomSeedBtn: document.getElementById('randomSeedBtn'),
+      canvasSize: document.getElementById('canvasSize'),
+      baseGrid: document.getElementById('baseGrid'),
+      maxDepth: document.getElementById('maxDepth'),
+      subdivideChance: document.getElementById('subdivideChance'),
+      depthFalloff: document.getElementById('depthFalloff'),
+      lineWidth: document.getElementById('lineWidth'),
+      margin: document.getElementById('margin'),
+      showGuides: document.getElementById('showGuides'),
+      bgColor: document.getElementById('bgColor'),
+      lineColor: document.getElementById('lineColor'),
+      generateBtn: document.getElementById('generateBtn'),
+      exportBtn: document.getElementById('exportBtn'),
+      copySeedBtn: document.getElementById('copySeedBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      stats: document.getElementById('stats'),
+      sizeValue: document.getElementById('sizeValue'),
+      baseGridValue: document.getElementById('baseGridValue'),
+      depthValue: document.getElementById('depthValue'),
+      subdivideValue: document.getElementById('subdivideValue'),
+      falloffValue: document.getElementById('falloffValue'),
+      lineWidthValue: document.getElementById('lineWidthValue'),
+      marginValue: document.getElementById('marginValue'),
+      guidesValue: document.getElementById('guidesValue')
+    };
+
+    const ctx = els.canvas.getContext('2d');
+
+    const defaults = {
+      seed: 'stepforge',
+      canvasSize: 1024,
+      baseGrid: 4,
+      maxDepth: 4,
+      subdivideChance: 0.58,
+      depthFalloff: 0.18,
+      lineWidth: 12,
+      margin: 28,
+      showGuides: 0,
+      bgColor: '#ffffff',
+      lineColor: '#111111'
+    };
+
+    function syncValueLabels() {
+      els.sizeValue.textContent = els.canvasSize.value;
+      els.baseGridValue.textContent = els.baseGrid.value;
+      els.depthValue.textContent = els.maxDepth.value;
+      els.subdivideValue.textContent = Number(els.subdivideChance.value).toFixed(2);
+      els.falloffValue.textContent = Number(els.depthFalloff.value).toFixed(2);
+      els.lineWidthValue.textContent = els.lineWidth.value;
+      els.marginValue.textContent = els.margin.value;
+      els.guidesValue.textContent = Number(els.showGuides.value) ? 'On' : 'Off';
+    }
+
+    function xmur3(str) {
+      let h = 1779033703 ^ str.length;
+      for (let i = 0; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      return function() {
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+      };
+    }
+
+    function sfc32(a, b, c, d) {
+      return function() {
+        a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+        let t = (a + b) | 0;
+        a = b ^ (b >>> 9);
+        b = (c + (c << 3)) | 0;
+        c = (c << 21) | (c >>> 11);
+        d = (d + 1) | 0;
+        t = (t + d) | 0;
+        c = (c + t) | 0;
+        return (t >>> 0) / 4294967296;
+      };
+    }
+
+    function makeRng(seedStr) {
+      const seed = xmur3(seedStr || 'seed');
+      return sfc32(seed(), seed(), seed(), seed());
+    }
+
+    function randomSeedString() {
+      const syllables = ['tru', 'chet', 'arc', 'grid', 'scale', 'loop', 'nest', 'tile', 'flow', 'path'];
+      const out = [];
+      for (let i = 0; i < 3; i++) out.push(syllables[Math.floor(Math.random() * syllables.length)]);
+      out.push(Math.floor(Math.random() * 10000));
+      return out.join('-');
+    }
+
+    function getSettings() {
+      return {
+        seed: els.seedInput.value.trim() || defaults.seed,
+        canvasSize: Number(els.canvasSize.value),
+        baseGrid: Number(els.baseGrid.value),
+        maxDepth: Number(els.maxDepth.value),
+        subdivideChance: Number(els.subdivideChance.value),
+        depthFalloff: Number(els.depthFalloff.value),
+        lineWidth: Number(els.lineWidth.value),
+        margin: Number(els.margin.value),
+        showGuides: Number(els.showGuides.value) === 1,
+        bgColor: els.bgColor.value.trim() || defaults.bgColor,
+        lineColor: els.lineColor.value.trim() || defaults.lineColor
+      };
+    }
+
+    function resizeCanvas(size) {
+      els.canvas.width = size;
+      els.canvas.height = size;
+    }
+
+    function shouldSubdivide(rng, depth, maxDepth, chance, falloff) {
+      if (depth >= maxDepth) return false;
+      const adjusted = Math.max(0, chance - depth * falloff);
+      return rng() < adjusted;
+    }
+
+    function buildCells(rng, x, y, size, depth, settings, out) {
+      if (shouldSubdivide(rng, depth, settings.maxDepth, settings.subdivideChance, settings.depthFalloff)) {
+        const half = size / 2;
+        buildCells(rng, x, y, half, depth + 1, settings, out);
+        buildCells(rng, x + half, y, half, depth + 1, settings, out);
+        buildCells(rng, x, y + half, half, depth + 1, settings, out);
+        buildCells(rng, x + half, y + half, half, depth + 1, settings, out);
+      } else {
+        out.push({ x, y, size, depth, orientation: rng() < 0.5 ? 0 : 1 });
+      }
+    }
+
+    function drawTruchetCell(ctx, cell, stroke, showGuides) {
+      const { x, y, size, orientation } = cell;
+      const r = size;
+
+      if (showGuides) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+        ctx.lineWidth = Math.max(1, stroke * 0.08);
+        ctx.strokeRect(x, y, size, size);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      if (orientation === 0) {
+        ctx.arc(x, y, r, 0, Math.PI / 2);
+        ctx.arc(x + size, y + size, r, Math.PI, Math.PI * 1.5);
+      } else {
+        ctx.arc(x + size, y, r, Math.PI / 2, Math.PI);
+        ctx.arc(x, y + size, r, Math.PI * 1.5, Math.PI * 2);
+      }
+      ctx.stroke();
+    }
+
+    function render() {
+      syncValueLabels();
+      const settings = getSettings();
+      resizeCanvas(settings.canvasSize);
+      const rng = makeRng(settings.seed);
+      const size = settings.canvasSize;
+      const margin = settings.margin;
+      const drawSize = size - margin * 2;
+      const baseCell = drawSize / settings.baseGrid;
+      const cells = [];
+
+      for (let row = 0; row < settings.baseGrid; row++) {
+        for (let col = 0; col < settings.baseGrid; col++) {
+          buildCells(
+            rng,
+            margin + col * baseCell,
+            margin + row * baseCell,
+            baseCell,
+            0,
+            settings,
+            cells
+          );
+        }
+      }
+
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = settings.bgColor;
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.strokeStyle = settings.lineColor;
+      ctx.lineWidth = settings.lineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (const cell of cells) {
+        drawTruchetCell(ctx, cell, settings.lineWidth, settings.showGuides);
+      }
+
+      const counts = new Map();
+      for (const cell of cells) {
+        const key = cell.size.toFixed(2);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      els.stats.textContent = `${cells.length} leaf tiles · ${counts.size} scale levels · seed: ${settings.seed}`;
+    }
+
+    function exportPng() {
+      const link = document.createElement('a');
+      const seed = getSettings().seed.replace(/[^a-z0-9-_]+/gi, '_');
+      link.download = `truchet_${seed || 'pattern'}.png`;
+      link.href = els.canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function copySeed() {
+      navigator.clipboard.writeText(els.seedInput.value).then(() => {
+        const old = els.copySeedBtn.textContent;
+        els.copySeedBtn.textContent = 'Copied';
+        setTimeout(() => els.copySeedBtn.textContent = old, 900);
+      }).catch(() => {});
+    }
+
+    function resetAll() {
+      els.seedInput.value = defaults.seed;
+      els.canvasSize.value = defaults.canvasSize;
+      els.baseGrid.value = defaults.baseGrid;
+      els.maxDepth.value = defaults.maxDepth;
+      els.subdivideChance.value = defaults.subdivideChance;
+      els.depthFalloff.value = defaults.depthFalloff;
+      els.lineWidth.value = defaults.lineWidth;
+      els.margin.value = defaults.margin;
+      els.showGuides.value = defaults.showGuides;
+      els.bgColor.value = defaults.bgColor;
+      els.lineColor.value = defaults.lineColor;
+      render();
+    }
+
+    [
+      els.canvasSize,
+      els.baseGrid,
+      els.maxDepth,
+      els.subdivideChance,
+      els.depthFalloff,
+      els.lineWidth,
+      els.margin,
+      els.showGuides,
+      els.bgColor,
+      els.lineColor
+    ].forEach(el => el.addEventListener('input', render));
+
+    els.seedInput.addEventListener('change', render);
+    els.generateBtn.addEventListener('click', render);
+    els.exportBtn.addEventListener('click', exportPng);
+    els.copySeedBtn.addEventListener('click', copySeed);
+    els.randomSeedBtn.addEventListener('click', () => {
+      els.seedInput.value = randomSeedString();
+      render();
+    });
+    els.resetBtn.addEventListener('click', resetAll);
+
+    syncValueLabels();
+    render();
+  </script>
+</body>
+</html>

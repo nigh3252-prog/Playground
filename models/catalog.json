@@ -7613,6 +7613,2837 @@
       "collection": "Recovered Model Studies"
     },
     {
+      "id": "hammer-mech",
+      "version": "v2",
+      "name": "Hammer Mech",
+      "asset": "assets/hammer-mech-v2.glb",
+      "sha256": "f41a5806ef8d0f3ddb31a0151692cfe38ee117289d6f81cb5456f172561f0d1d",
+      "bytes": 1530848,
+      "triangles": 17404,
+      "meshes": 106,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Turn_right_90"
+        },
+        {
+          "name": "Turn_left_90"
+        }
+      ],
+      "type": "humanoid",
+      "credits": "GLB recovered unchanged from hammer-mech-v2.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Workshop Mechs"
+    },
+    {
+      "id": "hammer-mech",
+      "version": "v3",
+      "name": "Hammer Mech",
+      "asset": "assets/hammer-mech-v3.glb",
+      "sha256": "3ce6e9e39fa479c3c15fa7dcbc859a304477543349e800225c023096d91fae3e",
+      "bytes": 1658080,
+      "triangles": 17404,
+      "meshes": 112,
+      "textures": 0,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Turn_right_90"
+        },
+        {
+          "name": "Turn_left_90"
+        },
+        {
+          "name": "Smash_PileDriver"
+        },
+        {
+          "name": "Sweep_Wrecking"
+        },
+        {
+          "name": "Lunge_Breach"
+        }
+      ],
+      "type": "humanoid",
+      "credits": "GLB recovered unchanged from hammer-mech-attacks.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Workshop Mechs"
+    },
+    {
+      "id": "cyberpunk-ac",
+      "version": "v1",
+      "name": "AC",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from AC.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-ac-v1.glb",
+      "sha256": "82dba248c90d0399b85eb9a8a69ea2f01f71da8e7ff040d27d9fb8431b1a31b4",
+      "bytes": 37076,
+      "triangles": 946,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-ac-side",
+      "version": "v1",
+      "name": "AC Side",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from AC_Side.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-ac-side-v1.glb",
+      "sha256": "9cc4e9ec4157e5ae13fc172fd1a7c784daa7d1c216a3d2c5e28ffa60e41d472d",
+      "bytes": 30948,
+      "triangles": 924,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-ac-stacked",
+      "version": "v1",
+      "name": "AC Stacked",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from AC_Stacked.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-ac-stacked-v1.glb",
+      "sha256": "84440245a34590d29d61b1ea5b4dbff81cb38ca488920bfcd1bc704aa34a6453",
+      "bytes": 351948,
+      "triangles": 776,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-antenna-1",
+      "version": "v1",
+      "name": "Antenna 1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Antenna_1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-antenna-1-v1.glb",
+      "sha256": "dbcd65cfc82b04c7262082271045de7f7862eb2f22547bb2393c69cffbc2f533",
+      "bytes": 5796,
+      "triangles": 88,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-antenna-2",
+      "version": "v1",
+      "name": "Antenna 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Antenna_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-antenna-2-v1.glb",
+      "sha256": "1aff569f46fb0759ae56a2e35033d451acf7f30b90b949a96b76789e4c58141b",
+      "bytes": 14088,
+      "triangles": 412,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-cable-long",
+      "version": "v1",
+      "name": "Cable Long",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Cable_Long.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-cable-long-v1.glb",
+      "sha256": "f0e802bfc7d5ce78e3efbdde003266ae00b673e8f900c9e5a95599591280e2d0",
+      "bytes": 15264,
+      "triangles": 768,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-cable-small",
+      "version": "v1",
+      "name": "Cable Small",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Cable_Small.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-cable-small-v1.glb",
+      "sha256": "0918c352e0fa364f129f04fc678874f9bbd239936de5f87fa7b56cb5361cde75",
+      "bytes": 8160,
+      "triangles": 384,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-cable-thick",
+      "version": "v1",
+      "name": "Cable Thick",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Cable_Thick.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-cable-thick-v1.glb",
+      "sha256": "0b3d15d8d02c5a6cb75e8ad8e87a6d4a638f3c14cdeb6e73efb442ed39b487a5",
+      "bytes": 8160,
+      "triangles": 384,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-character",
+      "version": "v1",
+      "name": "Character",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Character.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-character-v1.glb",
+      "sha256": "a02b6222d6aa0541ec1e9d0ca1b58ff6ee902dc9eaa4dc33d84236dc7709e2e7",
+      "bytes": 899224,
+      "triangles": 7520,
+      "meshes": 4,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Gun_Shoot"
+        },
+        {
+          "name": "HitRecieve"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle_Gun_Pointing"
+        },
+        {
+          "name": "Idle_Gun_Shoot"
+        },
+        {
+          "name": "Idle_Neutral"
+        },
+        {
+          "name": "Idle_Sword"
+        },
+        {
+          "name": "Interact"
+        },
+        {
+          "name": "Kick_Left"
+        },
+        {
+          "name": "Kick_Right"
+        },
+        {
+          "name": "Punch_Left"
+        },
+        {
+          "name": "Punch_Right"
+        },
+        {
+          "name": "Roll"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Back"
+        },
+        {
+          "name": "Run_Left"
+        },
+        {
+          "name": "Run_Right"
+        },
+        {
+          "name": "Run_Shoot"
+        },
+        {
+          "name": "Sword_Slash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Wave"
+        }
+      ]
+    },
+    {
+      "id": "cyberpunk-collectible-board",
+      "version": "v1",
+      "name": "Collectible Board",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Collectible_Board.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-collectible-board-v1.glb",
+      "sha256": "fffa2ac0f8cab156af9f030584b2766e07752d3ae64fd74e680d94d189262e66",
+      "bytes": 18364,
+      "triangles": 280,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-collectible-gear",
+      "version": "v1",
+      "name": "Collectible Gear",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Collectible_Gear.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-collectible-gear-v1.glb",
+      "sha256": "c5c5625ee30cda08b1d4ea15f619eecaff7c7e6c5a90c174ae49054aa56af19a",
+      "bytes": 15688,
+      "triangles": 440,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-computer",
+      "version": "v1",
+      "name": "Computer",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Computer.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-computer-v1.glb",
+      "sha256": "0cab0665cc5bbdd4aae02f5f3faf88eb61cf2c82aa52b6c91f0ef5feb5e9c7f8",
+      "bytes": 34636,
+      "triangles": 1008,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-computer-large",
+      "version": "v1",
+      "name": "Computer Large",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Computer_Large.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-computer-large-v1.glb",
+      "sha256": "71a14224db4f1a75bf07c5a65ba73e31980d6721db39c3c0946c3d15521ef639",
+      "bytes": 424772,
+      "triangles": 2356,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-door",
+      "version": "v1",
+      "name": "Door",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Door.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-door-v1.glb",
+      "sha256": "fc3635e2068a51fad200196f2eb84a87c7d8d4726c0b94b4e4a170678bb98f75",
+      "bytes": 23160,
+      "triangles": 324,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-enemy-2legs",
+      "version": "v1",
+      "name": "Enemy 2Legs",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Enemy_2Legs.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-enemy-2legs-v1.glb",
+      "sha256": "9350108cbbc0793de8e2a017f44b492529cdf09c2b8ff470adefc98631e085ed",
+      "bytes": 544848,
+      "triangles": 4400,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Attack"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "Walk"
+        }
+      ]
+    },
+    {
+      "id": "cyberpunk-enemy-2legs-gun",
+      "version": "v1",
+      "name": "Enemy 2Legs Gun",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Enemy_2Legs_Gun.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-enemy-2legs-gun-v1.glb",
+      "sha256": "a660732dcf19302b21b1d1b010d605b787af3de2ff049f8256a5919103e38859",
+      "bytes": 319684,
+      "triangles": 4722,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Attack"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "Walk"
+        }
+      ]
+    },
+    {
+      "id": "cyberpunk-enemy-flying",
+      "version": "v1",
+      "name": "Enemy Flying",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Enemy_Flying.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-enemy-flying-v1.glb",
+      "sha256": "35e5b445466220047cc16b0cf7827e365ab2816ebf6583cdcb46a5f917623efb",
+      "bytes": 205636,
+      "triangles": 2966,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Attack"
+        },
+        {
+          "name": "Dead"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "Walk"
+        }
+      ]
+    },
+    {
+      "id": "cyberpunk-enemy-flying-gun",
+      "version": "v1",
+      "name": "Enemy Flying Gun",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Enemy_Flying_Gun.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-enemy-flying-gun-v1.glb",
+      "sha256": "8eb2cbcd60ac4e9619565f46add6d7a78a42c9ee8b96cbf5d656c6e7342fae8e",
+      "bytes": 226540,
+      "triangles": 3004,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Attack"
+        },
+        {
+          "name": "Dead"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "Walk"
+        }
+      ]
+    },
+    {
+      "id": "cyberpunk-enemy-large",
+      "version": "v1",
+      "name": "Enemy Large",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Enemy_Large.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-enemy-large-v1.glb",
+      "sha256": "5d25f55fb4894b1617b105dfa4a74cf00db4cd9123e408699bc8d7c80059461f",
+      "bytes": 287988,
+      "triangles": 2924,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Attack"
+        },
+        {
+          "name": "Attack.001"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "Walk"
+        }
+      ]
+    },
+    {
+      "id": "cyberpunk-enemy-large-gun",
+      "version": "v1",
+      "name": "Enemy Large Gun",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Enemy_Large_Gun.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-enemy-large-gun-v1.glb",
+      "sha256": "01264719d2a6bf1b2e8b39169833d9013f9d0989f9a93d55baa219b4fa5781a5",
+      "bytes": 695572,
+      "triangles": 6902,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Attack"
+        },
+        {
+          "name": "Attack.001"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "Walk"
+        }
+      ]
+    },
+    {
+      "id": "cyberpunk-fence",
+      "version": "v1",
+      "name": "Fence",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Fence.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-fence-v1.glb",
+      "sha256": "f1ad7ea8402ce686e4f22af015d2796080e85e8afbb6aa9a3bec1046058a603a",
+      "bytes": 12172,
+      "triangles": 160,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-lever",
+      "version": "v1",
+      "name": "Lever",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Lever.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-lever-v1.glb",
+      "sha256": "fcb9363ab14018d4c488391fd681a73ac4f7bc0da1ad4d59ea5b6017865aaf0f",
+      "bytes": 15560,
+      "triangles": 328,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-light-square",
+      "version": "v1",
+      "name": "Light Square",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Light_Square.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-light-square-v1.glb",
+      "sha256": "171b244f37cbee41e55b96241f508328298f4149955fa0ab4d0306f04525da31",
+      "bytes": 10432,
+      "triangles": 148,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-light-street-1",
+      "version": "v1",
+      "name": "Light Street 1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Light_Street_1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-light-street-1-v1.glb",
+      "sha256": "9892512853d082ff8d46e2d0a9458eb91a1837e9b3d26409430623fa8f1237aa",
+      "bytes": 17984,
+      "triangles": 526,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-light-street-2",
+      "version": "v1",
+      "name": "Light Street 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Light_Street_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-light-street-2-v1.glb",
+      "sha256": "fb6c7ec2b0b3d1536a6250387f345e6bd856504d9bc37133778caec3b9e30259",
+      "bytes": 23324,
+      "triangles": 664,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-lootbox",
+      "version": "v1",
+      "name": "Lootbox",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Lootbox.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-lootbox-v1.glb",
+      "sha256": "78a15c86f3d95a36d9b0657d25a03a2fd16d64ab96238c151d985954c4224244",
+      "bytes": 48352,
+      "triangles": 940,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-pickup-health",
+      "version": "v1",
+      "name": "Pickup Health",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Pickup_Health.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-pickup-health-v1.glb",
+      "sha256": "25e61fc9343bce386290587f48f960dee113c4ab9a1d5ffb2960126d819b337b",
+      "bytes": 37968,
+      "triangles": 752,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-pickup-heart",
+      "version": "v1",
+      "name": "Pickup Heart",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Pickup_Heart.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-pickup-heart-v1.glb",
+      "sha256": "9a60195974882689bad42e64c4902c092468002af8e8af9bf9b6ff3566fe07b1",
+      "bytes": 35752,
+      "triangles": 784,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-pickup-tank",
+      "version": "v1",
+      "name": "Pickup Tank",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Pickup_Tank.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-pickup-tank-v1.glb",
+      "sha256": "d7727d0d2777881eff61b6c0811d54d90f02c35014c74e530eeaba56b9ccd761",
+      "bytes": 26204,
+      "triangles": 654,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-pipe-1",
+      "version": "v1",
+      "name": "Pipe 1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Pipe_1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-pipe-1-v1.glb",
+      "sha256": "c501cc5e7c6b154b72d81e321038efb553a95017e83573900ee6ec72da3295c5",
+      "bytes": 6344,
+      "triangles": 224,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-pipe-2",
+      "version": "v1",
+      "name": "Pipe 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Pipe_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-pipe-2-v1.glb",
+      "sha256": "34fc0523f784d8fd0b1e8576a84eace2805fe5d7fe1fef42ac4b6b5a631012fb",
+      "bytes": 5640,
+      "triangles": 192,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-pipe-corner",
+      "version": "v1",
+      "name": "Pipe Corner",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Pipe_Corner.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-pipe-corner-v1.glb",
+      "sha256": "9da1dd3b9f178734b9288a5ed29651ec66e5f21044bbfb11ec1867b5e6e3b6b4",
+      "bytes": 8108,
+      "triangles": 304,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-pipe-corner-2",
+      "version": "v1",
+      "name": "Pipe Corner 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Pipe_Corner_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-pipe-corner-2-v1.glb",
+      "sha256": "c32a4efcedb1eee9454b89beeeb3e782e5a033ab802f1e3fcbc83baca0771c27",
+      "bytes": 8112,
+      "triangles": 304,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-1x1-empty",
+      "version": "v1",
+      "name": "Platform 1x1 Empty",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_1x1_Empty.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-1x1-empty-v1.glb",
+      "sha256": "a38d30613ac90b779e84227905f559aed3ab0a784080fd98c3f7262581d0d8d3",
+      "bytes": 330212,
+      "triangles": 76,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-2x1-empty",
+      "version": "v1",
+      "name": "Platform 2x1 Empty",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_2x1_Empty.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-2x1-empty-v1.glb",
+      "sha256": "371293d6f35febb5e47d3b3afcbf9abd04ca98a6942f5612ad6ca74db3cc9724",
+      "bytes": 8100,
+      "triangles": 76,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-2x2",
+      "version": "v1",
+      "name": "Platform 2x2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_2x2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-2x2-v1.glb",
+      "sha256": "f8fdf48fe461a40ba377abd02d8932b78c4964c194741ffa69688e5c061f5d6b",
+      "bytes": 807436,
+      "triangles": 9934,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-2x2-empty",
+      "version": "v1",
+      "name": "Platform 2x2 Empty",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_2x2_Empty.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-2x2-empty-v1.glb",
+      "sha256": "6d5f7d04efa2d539a417eff81a402aba798c5f6857f452fe166c72851cfe289c",
+      "bytes": 330212,
+      "triangles": 76,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-4x1",
+      "version": "v1",
+      "name": "Platform 4x1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_4x1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-4x1-v1.glb",
+      "sha256": "9fed380da583126f9a41a56221d11cfb9d5d2a8e264f02c76674ac41941dfb7f",
+      "bytes": 497468,
+      "triangles": 4316,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-4x1-empty",
+      "version": "v1",
+      "name": "Platform 4x1 Empty",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_4x1_Empty.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-4x1-empty-v1.glb",
+      "sha256": "68d8260984e4285a27225c177681fc90b9ce4c801ff04d00bfd9a103504c9e1c",
+      "bytes": 330208,
+      "triangles": 76,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-4x2",
+      "version": "v1",
+      "name": "Platform 4x2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_4x2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-4x2-v1.glb",
+      "sha256": "cb77fef5cd824471742afdfa83b776ea09c465593336188eecfa1ff5de5a98b4",
+      "bytes": 818832,
+      "triangles": 12060,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-4x4",
+      "version": "v1",
+      "name": "Platform 4x4",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_4x4.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-4x4-v1.glb",
+      "sha256": "6a6a1fc3bf322b71a8195a4bd8eaa0fcce67b1a21e9cb057a1b4605c59a78f00",
+      "bytes": 879084,
+      "triangles": 13328,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-platform-4x4-empty",
+      "version": "v1",
+      "name": "Platform 4x4 Empty",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Platform_4x4_Empty.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-platform-4x4-empty-v1.glb",
+      "sha256": "8023ede03043b5d00d07acb6066eb25ccf7c0741e047e18b99289ea149ef9ad6",
+      "bytes": 330212,
+      "triangles": 76,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-rail-corner",
+      "version": "v1",
+      "name": "Rail Corner",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Rail_Corner.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-rail-corner-v1.glb",
+      "sha256": "32021449fbef5e2e3bd4c664173379a120d15dca4b125dff9e6c26945395f701",
+      "bytes": 10164,
+      "triangles": 368,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-rail-corner-2",
+      "version": "v1",
+      "name": "Rail Corner 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Rail_Corner_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-rail-corner-2-v1.glb",
+      "sha256": "bd519e103f000bd64f22c5bb6ab7f99a2ff007cc706548ece22becf4d78f97e0",
+      "bytes": 10168,
+      "triangles": 368,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-rail-long",
+      "version": "v1",
+      "name": "Rail Long",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Rail_Long.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-rail-long-v1.glb",
+      "sha256": "baf8bd87da98f567367d553289d31bb0d842e9856efb66512778d39e790f028a",
+      "bytes": 7316,
+      "triangles": 256,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-rail-short",
+      "version": "v1",
+      "name": "Rail Short",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Rail_Short.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-rail-short-v1.glb",
+      "sha256": "25ecb8d198bd0187a0c71868fc883eabb09362a7351e14eeecbb9305e776e518",
+      "bytes": 7316,
+      "triangles": 256,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-1",
+      "version": "v1",
+      "name": "Sign 1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-1-v1.glb",
+      "sha256": "c5541050dbc599dfe9f33c3a3b845adbf89b7cf7f69caec27c31ffa587fd1aea",
+      "bytes": 327604,
+      "triangles": 52,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-2",
+      "version": "v1",
+      "name": "Sign 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-2-v1.glb",
+      "sha256": "8ba3c268d1c6fb2c88afc685e9ef44378aa4cfd95e569d260e4a248c98fdc8d9",
+      "bytes": 327604,
+      "triangles": 52,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-3",
+      "version": "v1",
+      "name": "Sign 3",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_3.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-3-v1.glb",
+      "sha256": "11b386012a4c95a250797f841bd445cad4ef8164feadeab0fa6f08503114cd2c",
+      "bytes": 327540,
+      "triangles": 52,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-4",
+      "version": "v1",
+      "name": "Sign 4",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_4.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-4-v1.glb",
+      "sha256": "b391cac1751b5330c35b27203c7a4586efad5da418fa7af8c3206968452d3966",
+      "bytes": 327668,
+      "triangles": 52,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-corner-1",
+      "version": "v1",
+      "name": "Sign Corner 1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Corner_1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-corner-1-v1.glb",
+      "sha256": "904a820d85fa8081edf9bd7bb2fff6dc431292ae428d0be0d4ffc34a00cbe12c",
+      "bytes": 329340,
+      "triangles": 124,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-corner-2",
+      "version": "v1",
+      "name": "Sign Corner 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Corner_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-corner-2-v1.glb",
+      "sha256": "c9290686c8724e99f8d9bd7dfbdaef7212100a27d7b5fa26fb08536de9d188fe",
+      "bytes": 329340,
+      "triangles": 124,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-corner-3",
+      "version": "v1",
+      "name": "Sign Corner 3",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Corner_3.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-corner-3-v1.glb",
+      "sha256": "ace85c3683ac8e5924bbce77942552dcefb9141be64afb5c571082b59940f8c0",
+      "bytes": 329340,
+      "triangles": 124,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-corner-3-fenced",
+      "version": "v1",
+      "name": "Sign Corner 3 Fenced",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Corner_3_Fenced.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-corner-3-fenced-v1.glb",
+      "sha256": "150f707d73a7d8008eb2926503fa5cb457d53b05fe32bbf974a6c7bf6846d49b",
+      "bytes": 338788,
+      "triangles": 332,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-corner-hazard",
+      "version": "v1",
+      "name": "Sign Corner Hazard",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Corner_Hazard.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-corner-hazard-v1.glb",
+      "sha256": "f752d389e3b18a4d991d56638fc4cd602750d20fbd2d729b4467628d1200b48d",
+      "bytes": 329340,
+      "triangles": 124,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-corner-small1",
+      "version": "v1",
+      "name": "Sign Corner Small1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Corner_Small1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-corner-small1-v1.glb",
+      "sha256": "bc9bf885f8c710320e56bd438ffa1d4763c27e757a5cb8d7caed8c239b0bbf0a",
+      "bytes": 329408,
+      "triangles": 124,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-corner-small2",
+      "version": "v1",
+      "name": "Sign Corner Small2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Corner_Small2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-corner-small2-v1.glb",
+      "sha256": "462bb229e171b4b35dc10a8530473426658773e877c326aa4cebed0cd4329358",
+      "bytes": 329408,
+      "triangles": 124,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-small-1",
+      "version": "v1",
+      "name": "Sign Small 1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Small_1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-small-1-v1.glb",
+      "sha256": "bcc72a8c712a7a2d68887f1dbc870d7afcda3ff77695a76789ef59d9fced5092",
+      "bytes": 327676,
+      "triangles": 52,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-small-2",
+      "version": "v1",
+      "name": "Sign Small 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Small_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-small-2-v1.glb",
+      "sha256": "c69835e9b779ab70b0c85feb0d34aac3f44da6f72498ecf792371f05499fe1b9",
+      "bytes": 327676,
+      "triangles": 52,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-sign-small-3",
+      "version": "v1",
+      "name": "Sign Small 3",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Sign_Small_3.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-sign-small-3-v1.glb",
+      "sha256": "1ec764998b39f303f82c589a6199a45c2725c4d5b8187fde2fe06bfd635e3d07",
+      "bytes": 327676,
+      "triangles": 52,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-support",
+      "version": "v1",
+      "name": "Support",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Support.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-support-v1.glb",
+      "sha256": "a8c6308b0a60391a6b654b7b9690b01c9e3595291914936890a3486b233a0730",
+      "bytes": 4996,
+      "triangles": 60,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-support-long",
+      "version": "v1",
+      "name": "Support Long",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Support_Long.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-support-long-v1.glb",
+      "sha256": "3b75b8fc4d25e874f118701d11121482c28b06327da3a6ff3e1f0ae482312a97",
+      "bytes": 31008,
+      "triangles": 524,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-support-short",
+      "version": "v1",
+      "name": "Support Short",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Support_Short.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-support-short-v1.glb",
+      "sha256": "2482e094508de7cc9570bd733844ffe085d28bd48789591ea148732b9081d947",
+      "bytes": 18208,
+      "triangles": 288,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-tank",
+      "version": "v1",
+      "name": "Tank",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Tank.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-tank-v1.glb",
+      "sha256": "336699f7040fc498d05c170692daa48081c9d1721266af7a6b6d395cd695d129",
+      "bytes": 58604,
+      "triangles": 1392,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-turret-cannon",
+      "version": "v1",
+      "name": "Turret Cannon",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Turret_Cannon.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-turret-cannon-v1.glb",
+      "sha256": "ae2f56de508696eaf45aa28634d029c7fc860a56a0a85f5c9bc4ed3b00226640",
+      "bytes": 72448,
+      "triangles": 1318,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-turret-gun",
+      "version": "v1",
+      "name": "Turret Gun",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Turret_Gun.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-turret-gun-v1.glb",
+      "sha256": "8e300147fef6dc02ee9f49cb054b76de04ee5e68e442450e24646cb67d366ee6",
+      "bytes": 66732,
+      "triangles": 1182,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-turret-gundouble",
+      "version": "v1",
+      "name": "Turret GunDouble",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Turret_GunDouble.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-turret-gundouble-v1.glb",
+      "sha256": "09a9d08716c1b5cfbae942d098fef976c65f89d66f2e09fc8a84b2d2c550ce34",
+      "bytes": 82596,
+      "triangles": 1504,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-turret-teleporter",
+      "version": "v1",
+      "name": "Turret Teleporter",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from Turret_Teleporter.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-turret-teleporter-v1.glb",
+      "sha256": "1a8a457ac215d9021fadb46a28e9f75b0bd078f69929d81fc2aca28c85a95183",
+      "bytes": 63344,
+      "triangles": 1136,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-tv-1",
+      "version": "v1",
+      "name": "TV 1",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from TV_1.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-tv-1-v1.glb",
+      "sha256": "33e68d7b552d291c3cf1dfc8e6f83b940f1632b89ea42eedd111beb7637df8d5",
+      "bytes": 346920,
+      "triangles": 312,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-tv-2",
+      "version": "v1",
+      "name": "TV 2",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from TV_2.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-tv-2-v1.glb",
+      "sha256": "647bba0cea55a4e7f0cd96e747fc4b9057a64fb655abdea9402ab39cf79a94c5",
+      "bytes": 348344,
+      "triangles": 336,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "cyberpunk-tv-3",
+      "version": "v1",
+      "name": "TV 3",
+      "type": "other",
+      "collection": "Cyberpunk Game Kit",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/cyberpunkgamekit.html",
+      "credits": "Cyberpunk Game Kit by Quaternius. Repackaged from TV_3.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/cyberpunk-tv-3-v1.glb",
+      "sha256": "5483ee25a36f7c88774e9a28a7329a79253d738876320e3de8346faa734c223e",
+      "bytes": 358548,
+      "triangles": 554,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "unrigged",
+      "clips": []
+    },
+    {
+      "id": "animated-mech-george",
+      "version": "v1",
+      "name": "George \u00b7 Flat Colors",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Flat Colors - George.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-george-v1.glb",
+      "sha256": "9640a6453b970c76b2b2661ffb061a2ae6762e5a74ada61808bffe84d637d50f",
+      "bytes": 1178104,
+      "triangles": 8818,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Holding"
+        },
+        {
+          "name": "Run_Tall"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Holding"
+        },
+        {
+          "name": "Walk_Tall"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "animated-mech-leela",
+      "version": "v1",
+      "name": "Leela \u00b7 Flat Colors",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Flat Colors - Leela.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-leela-v1.glb",
+      "sha256": "7ddeed4c7f52491c29ba2985e0c8e2d3ae8b1cef7ff733563cc98d6f679d8ddf",
+      "bytes": 458916,
+      "triangles": 2400,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Tall"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Tall"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "animated-mech-mike",
+      "version": "v1",
+      "name": "Mike \u00b7 Flat Colors",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Flat Colors - Mike.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-mike-v1.glb",
+      "sha256": "ac9d622a0a7d06b1f1cc632e8d3f6ed2f6683702ead79d2d68e37f0dae9a06be",
+      "bytes": 876656,
+      "triangles": 6230,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Holding"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Holding"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "animated-mech-stan",
+      "version": "v1",
+      "name": "Stan \u00b7 Flat Colors",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Flat Colors - Stan.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-stan-v1.glb",
+      "sha256": "7e18692378943b6f7cbe24ea9054454ecb1702ac3a02f2e61a45ff294d0e7087",
+      "bytes": 886096,
+      "triangles": 5972,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Holding"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Holding"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "animated-mech-george",
+      "version": "v2",
+      "name": "George \u00b7 Textured",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Textured - George.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-george-v2.glb",
+      "sha256": "230933433316257a6233481600a5802a41852b6af49e92085d7ae6c88523d5dd",
+      "bytes": 3392028,
+      "triangles": 7864,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Holding"
+        },
+        {
+          "name": "Run_Tall"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Holding"
+        },
+        {
+          "name": "Walk_Tall"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "animated-mech-leela",
+      "version": "v2",
+      "name": "Leela \u00b7 Textured",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Textured - Leela.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-leela-v2.glb",
+      "sha256": "4cfec379f11b8fdea245fa5bfcf2f4ab7284ddfaeeb77c3cd3a0c82510a4ff02",
+      "bytes": 2379244,
+      "triangles": 2368,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Tall"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Tall"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "animated-mech-mike",
+      "version": "v2",
+      "name": "Mike \u00b7 Textured",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Textured - Mike.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-mike-v2.glb",
+      "sha256": "66cfba4d406b084ded632eaf6636684eb5389fa911dcd416e86d6e18edd736f4",
+      "bytes": 2926776,
+      "triangles": 6062,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Holding"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Holding"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "animated-mech-stan",
+      "version": "v2",
+      "name": "Stan \u00b7 Textured",
+      "type": "humanoid",
+      "collection": "Animated Mech Pack",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/packs/animatedmech",
+      "credits": "Animated Mech Pack by Quaternius. Repackaged from Textured - Stan.gltf with its original geometry, materials and available clips.",
+      "license": "CC0 1.0 Universal",
+      "asset": "assets/animated-mech-stan-v2.glb",
+      "sha256": "9f5aed9126bf1cb95000e0b6593ee84e2c5eb07ee5d3dfb2c07b010b88ceac4c",
+      "bytes": 2449932,
+      "triangles": 6110,
+      "meshes": 1,
+      "textures": 1,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Dance"
+        },
+        {
+          "name": "Death"
+        },
+        {
+          "name": "Hello"
+        },
+        {
+          "name": "HitRecieve_1"
+        },
+        {
+          "name": "HitRecieve_2"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Jump"
+        },
+        {
+          "name": "Kick"
+        },
+        {
+          "name": "No"
+        },
+        {
+          "name": "Pickup"
+        },
+        {
+          "name": "Punch"
+        },
+        {
+          "name": "Run"
+        },
+        {
+          "name": "Run_Holding"
+        },
+        {
+          "name": "Shoot"
+        },
+        {
+          "name": "SwordSlash"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Walk_Holding"
+        },
+        {
+          "name": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "warden-environment-city",
+      "version": "v1",
+      "name": "Warden \u00b7 City District",
+      "asset": null,
+      "sha256": "e1ecd0065ab27c55c5ea5c1a8827a8786758aa5e4be3a3f76e75e9a3a62dfd6f",
+      "bytes": 9168832,
+      "triangles": 47056,
+      "meshes": 70,
+      "textures": 33,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "environment",
+      "credits": "GLB recovered unchanged from Warden_Environment_Viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Environment Studies",
+      "originalFile": "warden-environment-city-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-environment-city-v1.glb.part1",
+          "bytes": 3056278,
+          "sha256": "4efafc0b5c42a2a667cc8d34a8f95041d9ba0c1b4cd92e4c4dc76f84589f0ed5"
+        },
+        {
+          "asset": "assets/warden-environment-city-v1.glb.part2",
+          "bytes": 3056278,
+          "sha256": "56df3bf1c381fdf57f1009bab1f15c367036db49d6fc882fda145f05b820181c"
+        },
+        {
+          "asset": "assets/warden-environment-city-v1.glb.part3",
+          "bytes": 3056276,
+          "sha256": "e25b7bb4a3641785004649eb5b1ce1e4779f9a8235b5a3cc465396f659545537"
+        }
+      ]
+    },
+    {
+      "id": "warden-environment-industrial",
+      "version": "v1",
+      "name": "Warden \u00b7 Industrial Pressure Module",
+      "asset": null,
+      "sha256": "015b94eb6660dda6d563127045d7a37e29b59c069f2666ee5dc339473f125bd2",
+      "bytes": 6920388,
+      "triangles": 30047,
+      "meshes": 51,
+      "textures": 21,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "environment",
+      "credits": "GLB recovered unchanged from Warden_Environment_Viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Environment Studies",
+      "originalFile": "warden-environment-industrial-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-environment-industrial-v1.glb.part1",
+          "bytes": 2306796,
+          "sha256": "7c20aa2101fb5cba949bae96e874b9537ee0f3a45d91c799bbb072e687af21f2"
+        },
+        {
+          "asset": "assets/warden-environment-industrial-v1.glb.part2",
+          "bytes": 2306796,
+          "sha256": "fdf8591cad58ff44bf974441d6bfe2e49f664456aa9ce83d5f0c26ee6a0148c9"
+        },
+        {
+          "asset": "assets/warden-environment-industrial-v1.glb.part3",
+          "bytes": 2306796,
+          "sha256": "d688eac6992012309ed036bd1865d4df106f560591453adab234488bd39416fe"
+        }
+      ]
+    },
+    {
+      "id": "warden-environment-forest",
+      "version": "v1",
+      "name": "Warden \u00b7 Luminous Forest",
+      "asset": null,
+      "sha256": "aa5e5f827b0e96f76f66d16c5a1906964552935398571f564af9d41ee72a0ea5",
+      "bytes": 8289488,
+      "triangles": 59378,
+      "meshes": 136,
+      "textures": 18,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "environment",
+      "credits": "GLB recovered unchanged from Warden_Environment_Viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Environment Studies",
+      "originalFile": "warden-environment-forest-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-environment-forest-v1.glb.part1",
+          "bytes": 2763163,
+          "sha256": "f13da17a611fd5fdc3be410e02280e374148371c679799bb8331c9b81ee363c9"
+        },
+        {
+          "asset": "assets/warden-environment-forest-v1.glb.part2",
+          "bytes": 2763163,
+          "sha256": "58341bfcb9e7763d10d9cea40ac74b5e63d90692f908ccd9e483d62283164ff5"
+        },
+        {
+          "asset": "assets/warden-environment-forest-v1.glb.part3",
+          "bytes": 2763162,
+          "sha256": "8779c6d07e0eab1ba2c71ea8aea2fb33cf06f20f1bc5eaf01b71cce792c800b3"
+        }
+      ]
+    },
+    {
+      "id": "warden-environment-cathedral",
+      "version": "v1",
+      "name": "Warden \u00b7 Root Cathedral",
+      "asset": null,
+      "sha256": "a17dfcacc56635c6261fde572139515781e75f5d4a7a68dc1a8a5ec03d25fd1e",
+      "bytes": 7411380,
+      "triangles": 36690,
+      "meshes": 17,
+      "textures": 21,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "environment",
+      "credits": "GLB recovered unchanged from Warden_Environment_Viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Environment Studies",
+      "originalFile": "warden-environment-cathedral-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-environment-cathedral-v1.glb.part1",
+          "bytes": 2470460,
+          "sha256": "7df844e00601c72ada8ee38fa323513964069acf752d8b4b334664647561b248"
+        },
+        {
+          "asset": "assets/warden-environment-cathedral-v1.glb.part2",
+          "bytes": 2470460,
+          "sha256": "b4b5095ba7021757d2bcfc67b13b4916ec14da75e9fe5f21cb4c5b8f6b695f63"
+        },
+        {
+          "asset": "assets/warden-environment-cathedral-v1.glb.part3",
+          "bytes": 2470460,
+          "sha256": "be6dd1b61decfd3282bce42d2fd46f2b7416a471b6412e7e920a2e4af0e9b5f4"
+        }
+      ]
+    },
+    {
+      "id": "warden-environment-house",
+      "version": "v1",
+      "name": "Warden \u00b7 Tiled Residence",
+      "asset": null,
+      "sha256": "814def5306f086200888307afe0920eb07fe238ca17e90295365a53790d9ec46",
+      "bytes": 8408888,
+      "triangles": 39660,
+      "meshes": 37,
+      "textures": 27,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "environment",
+      "credits": "GLB recovered unchanged from Warden_Environment_Viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Environment Studies",
+      "originalFile": "warden-environment-house-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-environment-house-v1.glb.part1",
+          "bytes": 2802963,
+          "sha256": "c340e2804a5ab9db4b84be2917041f4f417c90396f5998234d022f57ce47579b"
+        },
+        {
+          "asset": "assets/warden-environment-house-v1.glb.part2",
+          "bytes": 2802963,
+          "sha256": "397ef55c97bd4046f8fabca61b1cd93ac60642ebb7d781263232258e45593b11"
+        },
+        {
+          "asset": "assets/warden-environment-house-v1.glb.part3",
+          "bytes": 2802962,
+          "sha256": "feedb85196cc7191171ada03347b69a2ec2121a661f718e6dfbc6acb222d0ddc"
+        }
+      ]
+    },
+    {
+      "id": "warden-pod-a-mount",
+      "version": "v1",
+      "name": "Warden Pods A \u00b7 Mount",
+      "asset": "assets/warden-pod-a-mount-v1.glb",
+      "sha256": "6e7db5a6715253ae47bc01053f41877795fe6513200472e3b1dfb456975907a1",
+      "bytes": 462128,
+      "triangles": 13488,
+      "meshes": 8,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden-pod-viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Pods"
+    },
+    {
+      "id": "warden-pod-a-pod",
+      "version": "v1",
+      "name": "Warden Pods A \u00b7 Pod Module",
+      "asset": "assets/warden-pod-a-pod-v1.glb",
+      "sha256": "f12bea939e87022bd9011c26bb12d5d25d03a27773298ca56462b7ab01b182ab",
+      "bytes": 1648100,
+      "triangles": 33980,
+      "meshes": 8,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden-pod-viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Pods"
+    },
+    {
+      "id": "warden-pod-b-mount",
+      "version": "v1",
+      "name": "Warden Pods B \u00b7 Mount",
+      "asset": "assets/warden-pod-b-mount-v1.glb",
+      "sha256": "bb754ac61dbadc4940aad4c7a0c975a28ccab47a5274c9cfc48a359b4a48600f",
+      "bytes": 363684,
+      "triangles": 5360,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden-pod-viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Pods"
+    },
+    {
+      "id": "warden-pod-b-pod",
+      "version": "v1",
+      "name": "Warden Pods B \u00b7 Pod Module",
+      "asset": "assets/warden-pod-b-pod-v1.glb",
+      "sha256": "833f756a1b51fdae701a18fcea8ff1d3e05f29d40b168c3aaa8bf508e7f0606e",
+      "bytes": 967500,
+      "triangles": 13280,
+      "meshes": 2,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden-pod-viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Pods"
+    },
+    {
+      "id": "warden-reference-arc-coil-pistol",
+      "version": "v2",
+      "name": "Warden \u00b7 Arc Coil Heavy Weapon",
+      "asset": "assets/warden-reference-arc-coil-pistol-v2.glb",
+      "sha256": "60a1bfdc8a9ce474e47877061442e473d58a0d8e720bdf81f049e24754e6c4b6",
+      "bytes": 4727384,
+      "triangles": 7880,
+      "meshes": 10,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Charge"
+        },
+        {
+          "name": "Recoil"
+        }
+      ],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden_reference_viewer (1).html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Collection"
+    },
+    {
+      "id": "warden-reference-arc-coil-pistol",
+      "version": "v1",
+      "name": "Warden \u00b7 Arc Coil Pistol",
+      "asset": "assets/warden-reference-arc-coil-pistol-v1.glb",
+      "sha256": "e8cc83a529710e1f3818aa43483232fc65abd8ab3c0cf42ecfcce763c677de19",
+      "bytes": 4597060,
+      "triangles": 6896,
+      "meshes": 9,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Charge"
+        },
+        {
+          "name": "Recoil"
+        }
+      ],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden_reference_viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Collection"
+    },
+    {
+      "id": "warden-reference-cinder-twin-thermal-gun",
+      "version": "v1",
+      "name": "Warden \u00b7 Cinder Twin Thermal Gun",
+      "asset": "assets/warden-reference-cinder-twin-thermal-gun-v1.glb",
+      "sha256": "3fe5aab2dc19ac765dc53911334b040d55af1880384e80b79a48a7ed082ed01d",
+      "bytes": 5108348,
+      "triangles": 12260,
+      "meshes": 15,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Charge"
+        },
+        {
+          "name": "Recoil"
+        }
+      ],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden_reference_viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Collection"
+    },
+    {
+      "id": "warden-reference-cinder-twin-thermal-gun",
+      "version": "v2",
+      "name": "Warden \u00b7 Cinder Twin Thermal Heavy Weapon",
+      "asset": "assets/warden-reference-cinder-twin-thermal-gun-v2.glb",
+      "sha256": "bce2cca6f435833e1b6ce5cb8311af7f1aaf6a21d7b254daa48c65cbd24343a3",
+      "bytes": 5218092,
+      "triangles": 13232,
+      "meshes": 16,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Charge"
+        },
+        {
+          "name": "Recoil"
+        }
+      ],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden_reference_viewer (1).html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Collection"
+    },
+    {
+      "id": "warden-reference-rounded-mech-lod1",
+      "version": "v1",
+      "name": "Warden \u00b7 Rounded Assault Mech \u00b7 LOD1",
+      "asset": null,
+      "sha256": "ac584bd55b600f2b7697bce4c7616258be5d96e9526db66570f142c62017d495",
+      "bytes": 6136500,
+      "triangles": 17902,
+      "meshes": 3,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Aim_Preview"
+        },
+        {
+          "name": "Articulation_Check"
+        },
+        {
+          "name": "Idle"
+        },
+        {
+          "name": "Walk_Preview"
+        }
+      ],
+      "type": "humanoid",
+      "credits": "GLB recovered unchanged from warden_reference_viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Collection",
+      "originalFile": "warden-reference-rounded-mech-lod1-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-reference-rounded-mech-lod1-v1.glb.part1",
+          "bytes": 2045500,
+          "sha256": "744557d5633b92e18cdef25a613204e1c7d59ae0f9b6ce54a29d878199878b75"
+        },
+        {
+          "asset": "assets/warden-reference-rounded-mech-lod1-v1.glb.part2",
+          "bytes": 2045500,
+          "sha256": "3e4115f13de754d7ed82dd61c92dc1088efc7e37d389c619fcc9049fb81bb9c2"
+        },
+        {
+          "asset": "assets/warden-reference-rounded-mech-lod1-v1.glb.part3",
+          "bytes": 2045500,
+          "sha256": "85ec120c1fb98ded745470337c7d29b86f1cf29f89c8561620fa66918fdf194c"
+        }
+      ]
+    },
+    {
+      "id": "warden-reference-vesper-twin-drum-pistol",
+      "version": "v2",
+      "name": "Warden \u00b7 Vesper Twin Drum Heavy Weapon",
+      "asset": "assets/warden-reference-vesper-twin-drum-pistol-v2.glb",
+      "sha256": "713fff9ebbd4c8c51def27fdb4657af2765444ea4e5c4bdf859c7dae05a58c80",
+      "bytes": 4837328,
+      "triangles": 9092,
+      "meshes": 10,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Drum_Index"
+        },
+        {
+          "name": "Recoil"
+        }
+      ],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden_reference_viewer (1).html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Collection"
+    },
+    {
+      "id": "warden-reference-vesper-twin-drum-pistol",
+      "version": "v1",
+      "name": "Warden \u00b7 Vesper Twin Drum Pistol",
+      "asset": "assets/warden-reference-vesper-twin-drum-pistol-v1.glb",
+      "sha256": "967e005ecfe37e3f78218f18e57cfd07211e3a33f7121e33ff2e4df3da24a5a3",
+      "bytes": 4731464,
+      "triangles": 8540,
+      "meshes": 9,
+      "textures": 3,
+      "rig": "skinned",
+      "clips": [
+        {
+          "name": "Drum_Index"
+        },
+        {
+          "name": "Recoil"
+        }
+      ],
+      "type": "gear",
+      "credits": "GLB recovered unchanged from warden_reference_viewer.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Warden Reference Collection"
+    },
+    {
+      "id": "drum-walker",
+      "version": "v2",
+      "name": "Drum Walker \u00b7 Painted",
+      "asset": null,
+      "sha256": "d2f3e036392d62b5261ea0093514f07c5743cf37cef25177fd624397514b76c6",
+      "bytes": 11958872,
+      "triangles": 177312,
+      "meshes": 92,
+      "textures": 54,
+      "rig": "articulated",
+      "clips": [
+        {
+          "name": "Stand"
+        },
+        {
+          "name": "Walk"
+        },
+        {
+          "name": "Bore rush"
+        },
+        {
+          "name": "Shield check"
+        },
+        {
+          "name": "Pile driver"
+        },
+        {
+          "name": "Gravel blast"
+        }
+      ],
+      "type": "other",
+      "credits": "GLB recovered unchanged from drum-walker-painted-v2.html.",
+      "license": "No public reuse license specified.",
+      "collection": "Workshop Mechs",
+      "originalFile": "drum-walker-v2.glb",
+      "parts": [
+        {
+          "asset": "assets/drum-walker-v2.glb.part1",
+          "bytes": 3986291,
+          "sha256": "8e94fb46e12d7a70bb32e0c78b35a2a7db9f0970592e12a8b3bed3b5e59ff9b0"
+        },
+        {
+          "asset": "assets/drum-walker-v2.glb.part2",
+          "bytes": 3986291,
+          "sha256": "c012508fa6f4542e93f7a82de2cae0c5af94c59c8100421264a84ef6670d248a"
+        },
+        {
+          "asset": "assets/drum-walker-v2.glb.part3",
+          "bytes": 3986290,
+          "sha256": "2b9e88b216ade4b38543802f1cf4200ae7bd4418cc5cf9abcbef35b9b7a1694d"
+        }
+      ]
+    },
+    {
+      "id": "saturn-warden",
+      "name": "Warden 20M",
+      "version": "v1",
+      "type": "humanoid",
+      "collection": "Saturn\u2019s Gravity",
+      "license": "No public reuse license specified.",
+      "credits": "Warden 20M preset with the God Arm underframe and the authored Warden shell. Static geometry and materials captured from the original Three.js model in saturns_gravity_warden_mech_combo.html.",
+      "sha256": "ecb60a5416c277b16001a6ff1e5b84eccdbd3ce6db9213457f358ab9c45ee901",
+      "bytes": 617548,
+      "triangles": 10094,
+      "meshes": 231,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "asset": "assets/saturn-warden-v1.glb"
+    },
+    {
+      "id": "saturn-warden-exact-fit",
+      "name": "God Arm + Megalith",
+      "version": "v1",
+      "type": "humanoid",
+      "collection": "Saturn\u2019s Gravity",
+      "license": "No public reuse license specified.",
+      "credits": "Exact Fit preset with the authored God Arm and Megalith models. Static geometry and materials captured from the original Three.js model in saturns_gravity_warden_mech_combo.html.",
+      "sha256": "d056449745a9d3dccf2ed8226677520c6a689f5852e447152893d40931e870a8",
+      "bytes": 506760,
+      "triangles": 9178,
+      "meshes": 198,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "asset": "assets/saturn-warden-exact-fit-v1.glb"
+    },
+    {
+      "id": "saturn-warden-mixer",
+      "name": "Warden Mech Mixer",
+      "version": "v1",
+      "type": "humanoid",
+      "collection": "Saturn\u2019s Gravity",
+      "license": "No public reuse license specified.",
+      "credits": "Warden pose from the procedural silhouette mixer. Static geometry and materials captured from the original Three.js model in saturns_gravity_warden_mech_combo.html.",
+      "sha256": "7ba925847d9fb9cf70292c5ea814caa4d85d68e7e5ea8f0337bb16b30ba4f544",
+      "bytes": 259560,
+      "triangles": 2196,
+      "meshes": 103,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "asset": "assets/saturn-warden-mixer-v1.glb"
+    },
+    {
+      "id": "saturn-warden-stone-wanderer",
+      "version": "v1",
+      "name": "Stone Wanderer \u00b7 Top-Down Warden",
+      "type": "humanoid",
+      "collection": "Saturn\u2019s Gravity",
+      "bytes": 449548,
+      "sha256": "58f3e71dcc536b99542b3c29cdffb7ca3f32a08bb070a795a3f85c8054a02c8d",
+      "source": "https://github.com/nigh3252-prog/Top-Down-Shooter-with-Controller-/blob/8b3e98e23408019771a42bc60ddd2f0ae1bd291e/src/stone-wanderer.js",
+      "credits": "The locked player-character builder used by combat-arena.html, with authored faceted geometry, Great Helm, stone textures, and glyph masks. Deterministic static capture from the original Three.js r165 runtime. Material textures and flat normals are stored in portable glTF form.",
+      "license": "No public reuse license specified.",
+      "triangles": 956,
+      "meshes": 44,
+      "textures": 7,
+      "rig": "unrigged",
+      "clips": [],
+      "asset": "assets/saturn-warden-stone-wanderer-v1.glb"
+    },
+    {
+      "id": "warden-floating-axe-audition",
+      "version": "v1",
+      "name": "Warden Floating Axe \u00b7 Audition Prop",
+      "type": "gear",
+      "collection": "Warden Floating Axe Audition",
+      "sha256": "5036928289dd2138c09dc7a895686655ba4707a6fb8211c80d2313a185998258",
+      "credits": "Exact static cosmetic game-art GLB embedded in warden_horizontal_audition.html. The original viewer supplies motion in JavaScript.",
+      "license": "No public reuse license specified.",
+      "triangles": 80340,
+      "meshes": 205,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "bytes": 3914524,
+      "asset": "assets/warden-floating-axe-audition-v1.glb"
+    },
+    {
+      "id": "warden-floating-axe-audition-armor",
+      "version": "v1",
+      "name": "Warden Normal Armor \u00b7 Audition",
+      "type": "humanoid",
+      "collection": "Warden Floating Axe Audition",
+      "sha256": "aa24a5249d95543bd957e07d85a0c53a7aaa3acf1580c2f939333c5ccec0978d",
+      "credits": "Exact static Warden normal-armor GLB embedded in warden_horizontal_audition.html. This is the armor used as the preview body in the floating axe audition.",
+      "license": "No public reuse license specified.",
+      "triangles": 171332,
+      "meshes": 1,
+      "textures": 0,
+      "rig": "unrigged",
+      "clips": [],
+      "bytes": 9692712,
+      "asset": null,
+      "originalFile": "warden-floating-axe-audition-armor-v1.glb",
+      "parts": [
+        {
+          "asset": "assets/warden-floating-axe-audition-armor-v1.glb.part1",
+          "bytes": 3230904,
+          "sha256": "b0bb4397e838ffeef6465c7f60d2e968ecd31590a2b646ccfa06ab7e136bcf89"
+        },
+        {
+          "asset": "assets/warden-floating-axe-audition-armor-v1.glb.part2",
+          "bytes": 3230904,
+          "sha256": "13bb52217eef722b0823bd8a804b37d6c83f32a064e954fd0a5256c6bfb752de"
+        },
+        {
+          "asset": "assets/warden-floating-axe-audition-armor-v1.glb.part3",
+          "bytes": 3230904,
+          "sha256": "708e011fbdd9563e81a7846187a0ef503ec87c4d212da58d4be821391f47125a"
+        }
+      ]
+    },
+    {
       "id": "armory-blasters-blaster-a",
       "version": "v1",
       "name": "Blaster A",

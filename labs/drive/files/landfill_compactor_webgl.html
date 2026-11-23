@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>WebGL Landfill Compactor Drive Test</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #151812;
+    touch-action: none;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #f3f3df;
+  }
+  canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    background: linear-gradient(#7c9aa0, #c9c19b 52%, #4d5c3f 53%, #283322);
+  }
+  #hud {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    background: rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 12px;
+    padding: 9px 11px;
+    font-size: 12px;
+    line-height: 1.35;
+    user-select: none;
+    pointer-events: none;
+    backdrop-filter: blur(3px);
+  }
+  #hud b { font-size: 13px; color: #fff6bd; }
+  #speed {
+    position: fixed;
+    right: 10px;
+    top: 10px;
+    background: rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 12px;
+    padding: 9px 11px;
+    min-width: 92px;
+    text-align: right;
+    font-size: 13px;
+    pointer-events: none;
+    user-select: none;
+  }
+  #stickZone {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 52vw;
+    height: 50vh;
+    touch-action: none;
+  }
+  #stickBase, #stickKnob {
+    position: fixed;
+    display: none;
+    border-radius: 999px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  #stickBase {
+    width: 112px;
+    height: 112px;
+    border: 2px solid rgba(255,255,255,.4);
+    background: rgba(255,255,255,.08);
+  }
+  #stickKnob {
+    width: 48px;
+    height: 48px;
+    border: 2px solid rgba(255,255,255,.58);
+    background: rgba(255,244,176,.28);
+    box-shadow: 0 0 18px rgba(255,244,176,.18);
+  }
+  #buttons {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  button {
+    color: #f8f3d4;
+    background: rgba(0,0,0,.48);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 14px;
+    min-width: 116px;
+    backdrop-filter: blur(3px);
+  }
+  button:active { transform: translateY(1px); background: rgba(70,70,40,.7); }
+  #msg {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-size: 13px;
+    opacity: .9;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="hud">
+  <b>Landfill Compactor</b><br>
+  Drag left side to drive/steer<br>
+  WASD / arrows also work<br>
+  Space = brake · R = reset
+</div>
+<div id="speed">0 mph<br><small>packed: 0</small></div>
+<div id="stickZone"></div>
+<div id="stickBase"></div>
+<div id="stickKnob"></div>
+<div id="buttons">
+  <button id="viewBtn">Camera: chase</button>
+  <button id="resetBtn">Reset</button>
+</div>
+<div id="msg">Crush trash piles by driving over them</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("gl");
+  const gl = canvas.getContext("webgl", { antialias: true, alpha: false });
+  if (!gl) {
+    document.body.innerHTML = "<p style='padding:20px'>WebGL is not available on this device/browser.</p>";
+    return;
+  }
+
+  const hudSpeed = document.getElementById("speed");
+  const viewBtn = document.getElementById("viewBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const stickZone = document.getElementById("stickZone");
+  const stickBase = document.getElementById("stickBase");
+  const stickKnob = document.getElementById("stickKnob");
+
+  const vs = `
+    attribute vec3 a_pos;
+    attribute vec3 a_norm;
+    uniform mat4 u_mvp;
+    uniform mat4 u_model;
+    uniform mat3 u_normal;
+    uniform vec3 u_color;
+    uniform vec3 u_lightDir;
+    varying vec3 v_color;
+    varying float v_fog;
+    void main() {
+      vec4 world = u_model * vec4(a_pos, 1.0);
+      vec3 n = normalize(u_normal * a_norm);
+      float diff = max(dot(n, normalize(u_lightDir)), 0.0);
+      float shade = 0.34 + diff * 0.72;
+      v_color = u_color * shade;
+      v_fog = clamp((length(world.xz) - 28.0) / 75.0, 0.0, 1.0);
+      gl_Position = u_mvp * vec4(a_pos, 1.0);
+    }`;
+  const fs = `
+    precision mediump float;
+    varying vec3 v_color;
+    varying float v_fog;
+    void main() {
+      vec3 fog = vec3(0.54, 0.62, 0.58);
+      gl_FragColor = vec4(mix(v_color, fog, v_fog * 0.62), 1.0);
+    }`;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+
+  const loc = {
+    pos: gl.getAttribLocation(prog, "a_pos"),
+    norm: gl.getAttribLocation(prog, "a_norm"),
+    mvp: gl.getUniformLocation(prog, "u_mvp"),
+    model: gl.getUniformLocation(prog, "u_model"),
+    normal: gl.getUniformLocation(prog, "u_normal"),
+    color: gl.getUniformLocation(prog, "u_color"),
+    lightDir: gl.getUniformLocation(prog, "u_lightDir")
+  };
+
+  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK);
+  gl.clearColor(0.54, 0.62, 0.58, 1);
+
+  const M = {
+    ident() {
+      return [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
+    },
+    mul(a,b) {
+      const o = new Array(16);
+      for (let r=0;r<4;r++) for (let c=0;c<4;c++) {
+        o[c*4+r] = a[0*4+r]*b[c*4+0] + a[1*4+r]*b[c*4+1] + a[2*4+r]*b[c*4+2] + a[3*4+r]*b[c*4+3];
+      }
+      return o;
+    },
+    trans(x,y,z) {
+      return [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1];
+    },
+    scale(x,y,z) {
+      return [x,0,0,0, 0,y,0,0, 0,0,z,0, 0,0,0,1];
+    },
+    rotX(a) {
+      const c=Math.cos(a), s=Math.sin(a);
+      return [1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1];
+    },
+    rotY(a) {
+      const c=Math.cos(a), s=Math.sin(a);
+      return [c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1];
+    },
+    rotZ(a) {
+      const c=Math.cos(a), s=Math.sin(a);
+      return [c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1];
+    },
+    persp(fov, aspect, near, far) {
+      const f = 1 / Math.tan(fov / 2), nf = 1 / (near - far);
+      return [f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,(2*far*near)*nf,0];
+    },
+    lookAt(eye, target, up) {
+      const z = norm(sub(eye, target));
+      const x = norm(cross(up, z));
+      const y = cross(z, x);
+      return [
+        x[0], y[0], z[0], 0,
+        x[1], y[1], z[1], 0,
+        x[2], y[2], z[2], 0,
+        -dot(x,eye), -dot(y,eye), -dot(z,eye), 1
+      ];
+    },
+    normal3(m) {
+      // Good enough here because models only use translate/rotate/uniform-ish scales.
+      return [m[0],m[1],m[2], m[4],m[5],m[6], m[8],m[9],m[10]];
+    }
+  };
+
+  function v3(x,y,z){return [x,y,z];}
+  function add(a,b){return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];}
+  function sub(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+  function muls(a,s){return [a[0]*s,a[1]*s,a[2]*s];}
+  function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+  function cross(a,b){return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];}
+  function len(a){return Math.hypot(a[0],a[1],a[2]);}
+  function norm(a){const l=len(a)||1; return [a[0]/l,a[1]/l,a[2]/l];}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function smooth(t){return t*t*(3-2*t);}
+
+  function makeMesh(verts, norms, indices) {
+    const vbo = gl.createBuffer();
+    const nbo = gl.createBuffer();
+    const ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(norms), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    return { vbo, nbo, ibo, count: indices.length };
+  }
+
+  function boxMesh() {
+    const p = [], n = [], idx = [];
+    const faces = [
+      [[-1,-1, 1],[ 1,-1, 1],[ 1, 1, 1],[-1, 1, 1],[0,0,1]],
+      [[ 1,-1,-1],[-1,-1,-1],[-1, 1,-1],[ 1, 1,-1],[0,0,-1]],
+      [[-1, 1, 1],[ 1, 1, 1],[ 1, 1,-1],[-1, 1,-1],[0,1,0]],
+      [[-1,-1,-1],[ 1,-1,-1],[ 1,-1, 1],[-1,-1, 1],[0,-1,0]],
+      [[ 1,-1, 1],[ 1,-1,-1],[ 1, 1,-1],[ 1, 1, 1],[1,0,0]],
+      [[-1,-1,-1],[-1,-1, 1],[-1, 1, 1],[-1, 1,-1],[-1,0,0]]
+    ];
+    for (const f of faces) {
+      const base = p.length/3;
+      for (let i=0;i<4;i++) { p.push(...f[i]); n.push(...f[4]); }
+      idx.push(base,base+1,base+2, base,base+2,base+3);
+    }
+    return makeMesh(p,n,idx);
+  }
+
+  function cylinderMesh(segments=28) {
+    const p=[], n=[], idx=[];
+    // axis along X; radius in YZ.
+    for (let i=0;i<=segments;i++) {
+      const a = i/segments * Math.PI*2;
+      const y = Math.cos(a), z = Math.sin(a);
+      p.push(-1,y,z, 1,y,z);
+      n.push(0,y,z, 0,y,z);
+    }
+    for (let i=0;i<segments;i++) {
+      const b=i*2;
+      idx.push(b,b+1,b+3, b,b+3,b+2);
+    }
+    const leftCenter = p.length/3; p.push(-1,0,0); n.push(-1,0,0);
+    const rightCenter = p.length/3; p.push(1,0,0); n.push(1,0,0);
+    for (let i=0;i<segments;i++) {
+      const b=i*2, nb=((i+1)%segments)*2;
+      idx.push(leftCenter, nb, b);
+      idx.push(rightCenter, b+1, nb+1);
+    }
+    return makeMesh(p,n,idx);
+  }
+
+  function groundMesh(size=92, divisions=46) {
+    const p=[], n=[], idx=[];
+    for (let z=0; z<=divisions; z++) for (let x=0; x<=divisions; x++) {
+      const wx = (x/divisions-.5)*size;
+      const wz = (z/divisions-.5)*size;
+      const h = terrainH(wx,wz) - 0.06;
+      p.push(wx,h,wz);
+      n.push(0,1,0);
+    }
+    for (let z=0; z<divisions; z++) for (let x=0; x<divisions; x++) {
+      const i=z*(divisions+1)+x;
+      idx.push(i,i+1,i+divisions+2, i,i+divisions+2,i+divisions+1);
+    }
+    return makeMesh(p,n,idx);
+  }
+
+  function terrainH(x,z) {
+    return Math.sin(x*.19)*.13 + Math.sin(z*.13+1.7)*.11 + Math.sin((x+z)*.08)*.08;
+  }
+
+  const meshes = {
+    box: boxMesh(),
+    cyl: cylinderMesh(32),
+    ground: null
+  };
+  meshes.ground = groundMesh();
+
+  const colors = {
+    yellow: [0.92,0.68,0.18],
+    dirtyYellow: [0.68,0.52,0.18],
+    darkSteel: [0.15,0.16,0.14],
+    tire: [0.055,0.06,0.055],
+    lug: [0.09,0.095,0.085],
+    glass: [0.15,0.28,0.35],
+    rust: [0.48,0.22,0.12],
+    trash1: [0.34,0.38,0.27],
+    trash2: [0.43,0.36,0.25],
+    trash3: [0.28,0.32,0.35],
+    ground: [0.29,0.42,0.25],
+    paper: [0.70,0.66,0.46],
+    red: [0.55,0.10,0.07],
+    shadow: [0.05,0.06,0.045]
+  };
+
+  function draw(mesh, model, color, vp) {
+    const mvp = M.mul(vp, model);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
+    gl.vertexAttribPointer(loc.pos, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc.pos);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.nbo);
+    gl.vertexAttribPointer(loc.norm, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc.norm);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
+    gl.uniformMatrix4fv(loc.mvp, false, new Float32Array(mvp));
+    gl.uniformMatrix4fv(loc.model, false, new Float32Array(model));
+    gl.uniformMatrix3fv(loc.normal, false, new Float32Array(M.normal3(model)));
+    gl.uniform3fv(loc.color, new Float32Array(color));
+    gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_SHORT, 0);
+  }
+
+  function compose(...mats) {
+    return mats.reduce((a,b)=>M.mul(a,b), M.ident());
+  }
+
+  const compactor = {
+    x: 0, z: 0, y: 0,
+    yaw: 0,
+    speed: 0,
+    steer: 0,
+    wheelSpin: 0,
+    packed: 0,
+    rumble: 0
+  };
+
+  const input = {
+    throttle: 0,
+    steer: 0,
+    brake: false,
+    keys: Object.create(null),
+    pointer: null,
+    stickStart: [0,0]
+  };
+
+  const camera = {
+    mode: 0,
+    pos: [0,7,12],
+    target: [0,1,0]
+  };
+
+  const trashPiles = [];
+  const props = [];
+  let seed = 7;
+  function rnd() { seed = (seed*1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+
+  function resetWorld() {
+    trashPiles.length = 0;
+    props.length = 0;
+    seed = 11;
+    for (let i=0;i<42;i++) {
+      let x=(rnd()-.5)*72, z=(rnd()-.5)*72;
+      if (Math.hypot(x,z)<8) { i--; continue; }
+      trashPiles.push({
+        x,z,
+        r: lerp(1.0,2.4,rnd()),
+        h: lerp(.45,1.25,rnd()),
+        c: [colors.trash1, colors.trash2, colors.trash3, colors.paper][Math.floor(rnd()*4)],
+        squish: 0,
+        gone: false,
+        rot: rnd()*Math.PI*2
+      });
+    }
+    for (let i=0;i<22;i++) {
+      let x=(rnd()-.5)*76, z=(rnd()-.5)*76;
+      if (Math.hypot(x,z)<7) { i--; continue; }
+      props.push({
+        x,z,
+        type: rnd()<.55 ? "barrel" : "block",
+        rot: rnd()*Math.PI*2,
+        c: rnd()<.5 ? colors.rust : colors.red
+      });
+    }
+  }
+  resetWorld();
+
+  function resetCar() {
+    compactor.x = 0; compactor.z = 0; compactor.y = 0; compactor.yaw = 0;
+    compactor.speed = 0; compactor.steer = 0; compactor.wheelSpin = 0; compactor.packed = 0;
+    for (const p of trashPiles) { p.squish = 0; p.gone = false; }
+  }
+
+  function drawCompactor(vp, t) {
+    const x=compactor.x, z=compactor.z;
+    const groundY = terrainH(x,z);
+    const bob = Math.sin(t*16 + compactor.wheelSpin*.25) * Math.min(Math.abs(compactor.speed)*.015, .06);
+    const base = compose(
+      M.trans(x, groundY + .85 + bob, z),
+      M.rotY(compactor.yaw),
+      M.rotZ(Math.sin(t*7)*compactor.speed*.006)
+    );
+
+    // Contact shadow
+    draw(meshes.cyl, compose(M.trans(x, groundY+.035, z), M.rotY(compactor.yaw), M.scale(2.8,.09,1.55)), colors.shadow, vp);
+
+    // Main square body
+    draw(meshes.box, M.mul(base, compose(M.trans(0,.62,0), M.scale(1.9,.72,1.2))), colors.yellow, vp);
+
+    // Rear engine box / counterweight
+    draw(meshes.box, M.mul(base, compose(M.trans(-1.55,.45,0), M.scale(.78,.54,1.18))), colors.dirtyYellow, vp);
+
+    // Front blade / compactor face
+    draw(meshes.box, M.mul(base, compose(M.trans(2.08,.12,0), M.scale(.22,.42,1.32))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(2.24,-.18,0), M.scale(.14,.16,1.55))), colors.darkSteel, vp);
+
+    // Cab
+    draw(meshes.box, M.mul(base, compose(M.trans(.55,1.45,0), M.scale(.78,.58,.82))), colors.yellow, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.65,1.5,.84), M.scale(.56,.38,.035))), colors.glass, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(.65,1.5,-.84), M.scale(.56,.38,.035))), colors.glass, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(1.12,1.48,0), M.scale(.035,.34,.56))), colors.glass, vp);
+
+    // Exhaust stack
+    draw(meshes.cyl, M.mul(base, compose(M.trans(-.9,1.72,.78), M.rotZ(Math.PI/2), M.scale(.07,.07,.5))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-.9,2.25,.78), M.scale(.12,.05,.12))), colors.darkSteel, vp);
+
+    // Axle blocks
+    draw(meshes.box, M.mul(base, compose(M.trans(.8,-.22,0), M.scale(.15,.12,1.56))), colors.darkSteel, vp);
+    draw(meshes.box, M.mul(base, compose(M.trans(-1.05,-.22,0), M.scale(.15,.12,1.56))), colors.darkSteel, vp);
+
+    // Wheels with lug teeth
+    const wheelPositions = [[.88,-.02,1.28],[.88,-.02,-1.28],[-1.05,-.02,1.28],[-1.05,-.02,-1.28]];
+    for (const wp of wheelPositions) {
+      const side = wp[2] > 0 ? 1 : -1;
+      const steerYaw = wp[0] > 0 ? compactor.steer*.28 : 0;
+      const wheelBase = M.mul(base, compose(
+        M.trans(wp[0], wp[1], wp[2]),
+        M.rotY(steerYaw),
+        M.rotZ(compactor.wheelSpin * side),
+        M.scale(.36,.72,.72)
+      ));
+      draw(meshes.cyl, wheelBase, colors.tire, vp);
+      draw(meshes.cyl, M.mul(base, compose(
+        M.trans(wp[0], wp[1], wp[2]),
+        M.rotY(steerYaw),
+        M.rotZ(compactor.wheelSpin * side),
+        M.scale(.39,.48,.48)
+      )), colors.darkSteel, vp);
+
+      // Circumferential lugs
+      for (let i=0;i<12;i++) {
+        const a = i/12*Math.PI*2 + compactor.wheelSpin * side;
+        const yy = Math.cos(a)*.72;
+        const zz = Math.sin(a)*.72;
+        const lug = M.mul(base, compose(
+          M.trans(wp[0], wp[1] + yy, wp[2] + side*zz),
+          M.rotY(steerYaw),
+          M.rotX(-a),
+          M.scale(.42,.10,.055)
+        ));
+        draw(meshes.box, lug, colors.lug, vp);
+      }
+
+      // Side lugs/ridges
+      for (let i=0;i<8;i++) {
+        const a = i/8*Math.PI*2 + compactor.wheelSpin*side + .15;
+        const yy = Math.cos(a)*.57;
+        const zz = Math.sin(a)*.57;
+        for (const offset of [-.22,.22]) {
+          draw(meshes.box, M.mul(base, compose(
+            M.trans(wp[0]+offset, wp[1]+yy, wp[2]+side*zz),
+            M.rotY(steerYaw),
+            M.rotZ(a*.4),
+            M.scale(.08,.12,.05)
+          )), colors.lug, vp);
+        }
+      }
+    }
+  }
+
+  function drawTrash(vp, dt) {
+    for (const p of trashPiles) {
+      if (p.gone) continue;
+      const d = Math.hypot(compactor.x-p.x, compactor.z-p.z);
+      if (d < p.r + 1.55 && Math.abs(compactor.speed) > .4) {
+        p.squish = Math.min(1, p.squish + dt*.8 + Math.abs(compactor.speed)*dt*.14);
+        compactor.rumble = 1;
+        if (p.squish >= 1) {
+          p.gone = true;
+          compactor.packed++;
+        }
+      }
+      const y = terrainH(p.x,p.z);
+      const h = p.h * (1 - p.squish*.76);
+      const s = p.r * (1 + p.squish*.35);
+      draw(meshes.box, compose(M.trans(p.x,y+h*.45,p.z), M.rotY(p.rot), M.scale(s*.72,h*.45,s*.58)), p.c, vp);
+      draw(meshes.box, compose(M.trans(p.x+.35,y+h*.75,p.z-.18), M.rotY(p.rot+1.2), M.scale(s*.45,h*.25,s*.28)), p.c.map(v=>v*1.08), vp);
+    }
+  }
+
+  function drawProps(vp) {
+    for (const p of props) {
+      const y = terrainH(p.x,p.z);
+      if (p.type === "barrel") {
+        draw(meshes.cyl, compose(M.trans(p.x,y+.42,p.z), M.rotZ(Math.PI/2), M.scale(.35,.35,.42)), p.c, vp);
+        draw(meshes.cyl, compose(M.trans(p.x,y+.86,p.z), M.rotZ(Math.PI/2), M.scale(.36,.36,.05)), colors.darkSteel, vp);
+      } else {
+        draw(meshes.box, compose(M.trans(p.x,y+.28,p.z), M.rotY(p.rot), M.scale(.55,.28,.42)), colors.trash3, vp);
+      }
+    }
+  }
+
+  function drawRampAndLandfill(vp) {
+    // Distant berms
+    for (let i=0;i<16;i++) {
+      const a = i/16*Math.PI*2;
+      const x=Math.cos(a)*45, z=Math.sin(a)*45;
+      const y=terrainH(x,z);
+      draw(meshes.box, compose(M.trans(x,y+.45,z), M.rotY(-a), M.scale(5.5,.45,1.4)), [0.20,0.30,0.18], vp);
+    }
+
+    // A simple ramp / mound
+    draw(meshes.box, compose(M.trans(-9,terrainH(-9,9)+.28,9), M.rotY(.55), M.scale(4.2,.25,1.8)), [0.36,0.31,0.20], vp);
+    draw(meshes.box, compose(M.trans(11,terrainH(11,-8)+.18,-8), M.rotY(-.4), M.scale(3.8,.18,1.3)), [0.32,0.38,0.25], vp);
+  }
+
+  function updateInput() {
+    let th=0, st=0;
+    if (input.keys["w"] || input.keys["arrowup"]) th += 1;
+    if (input.keys["s"] || input.keys["arrowdown"]) th -= 1;
+    if (input.keys["a"] || input.keys["arrowleft"]) st -= 1;
+    if (input.keys["d"] || input.keys["arrowright"]) st += 1;
+    if (input.pointer) {
+      th = input.pointer.throttle;
+      st = input.pointer.steer;
+    }
+    input.throttle = clamp(th,-1,1);
+    input.steer = clamp(st,-1,1);
+  }
+
+  function update(dt) {
+    updateInput();
+
+    const accel = input.throttle > 0 ? 8.0 : 5.6;
+    const drag = 2.7;
+    const brakeForce = input.brake ? 12.5 : 0;
+    compactor.speed += input.throttle * accel * dt;
+    compactor.speed -= compactor.speed * drag * dt * (input.throttle === 0 ? 1.2 : .65);
+    if (input.brake) compactor.speed -= Math.sign(compactor.speed) * Math.min(Math.abs(compactor.speed), brakeForce*dt);
+    compactor.speed = clamp(compactor.speed, -5.5, 8.5);
+
+    const targetSteer = input.steer;
+    compactor.steer = lerp(compactor.steer, targetSteer, 1 - Math.pow(.001, dt));
+    const turn = compactor.steer * (0.82 + Math.abs(compactor.speed)*.08) * clamp(compactor.speed/5, -1, 1);
+    compactor.yaw += turn * dt;
+
+    compactor.x += Math.sin(compactor.yaw) * compactor.speed * dt;
+    compactor.z += Math.cos(compactor.yaw) * compactor.speed * dt;
+    const limit = 43;
+    if (Math.abs(compactor.x)>limit) { compactor.x=clamp(compactor.x,-limit,limit); compactor.speed *= -.25; }
+    if (Math.abs(compactor.z)>limit) { compactor.z=clamp(compactor.z,-limit,limit); compactor.speed *= -.25; }
+
+    compactor.wheelSpin -= compactor.speed * dt * 2.4;
+    compactor.y = terrainH(compactor.x, compactor.z);
+
+    // Bump props a little.
+    for (const p of props) {
+      const d = Math.hypot(compactor.x-p.x, compactor.z-p.z);
+      if (d < 1.7) {
+        const ax = p.x - compactor.x, az = p.z - compactor.z;
+        const l = Math.hypot(ax,az)||1;
+        p.x += ax/l * dt * Math.abs(compactor.speed)*.8;
+        p.z += az/l * dt * Math.abs(compactor.speed)*.8;
+        compactor.speed *= .985;
+      }
+    }
+  }
+
+  function updateCamera(dt) {
+    const fwd = [Math.sin(compactor.yaw),0,Math.cos(compactor.yaw)];
+    const right = [Math.cos(compactor.yaw),0,-Math.sin(compactor.yaw)];
+    let desired, target;
+    if (camera.mode === 0) {
+      desired = add([compactor.x, terrainH(compactor.x,compactor.z), compactor.z], add(muls(fwd,-9.2), [0,5.2,0]));
+      target = add([compactor.x, terrainH(compactor.x,compactor.z)+1.2, compactor.z], muls(fwd,4.6));
+    } else if (camera.mode === 1) {
+      desired = add([compactor.x, terrainH(compactor.x,compactor.z), compactor.z], [0,14,0.01]);
+      target = [compactor.x, terrainH(compactor.x,compactor.z), compactor.z];
+    } else {
+      desired = add([compactor.x, terrainH(compactor.x,compactor.z)+2.0, compactor.z], add(muls(right,5.5), muls(fwd,-5.5)));
+      target = [compactor.x, terrainH(compactor.x,compactor.z)+.8, compactor.z];
+    }
+    const k = 1 - Math.pow(.004, dt);
+    camera.pos = [lerp(camera.pos[0],desired[0],k), lerp(camera.pos[1],desired[1],k), lerp(camera.pos[2],desired[2],k)];
+    camera.target = [lerp(camera.target[0],target[0],k), lerp(camera.target[1],target[1],k), lerp(camera.target[2],target[2],k)];
+  }
+
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.floor(innerWidth * dpr);
+    const h = Math.floor(innerHeight * dpr);
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w; canvas.height = h;
+    }
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }
+
+  let last=performance.now();
+  function frame(now) {
+    const dt = Math.min(.033, (now-last)/1000 || .016);
+    last = now;
+    resize();
+    update(dt);
+    updateCamera(dt);
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniform3fv(loc.lightDir, new Float32Array(norm([-0.42, 0.82, 0.25])));
+
+    const aspect = canvas.width / canvas.height;
+    const proj = M.persp(Math.PI/3.1, aspect, .08, 150);
+    const view = M.lookAt(camera.pos, camera.target, [0,1,0]);
+    const vp = M.mul(proj, view);
+
+    draw(meshes.ground, M.ident(), colors.ground, vp);
+    drawRampAndLandfill(vp);
+    drawTrash(vp, dt);
+    drawProps(vp);
+    drawCompactor(vp, now/1000);
+
+    const mph = Math.round(Math.abs(compactor.speed) * 5.7);
+    hudSpeed.innerHTML = `${mph} mph<br><small>packed: ${compactor.packed}</small>`;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  function showStick(x,y) {
+    stickBase.style.display = "block";
+    stickKnob.style.display = "block";
+    stickBase.style.left = x + "px";
+    stickBase.style.top = y + "px";
+    stickKnob.style.left = x + "px";
+    stickKnob.style.top = y + "px";
+  }
+  function moveStick(x,y) {
+    const dx = x - input.stickStart[0], dy = y - input.stickStart[1];
+    const max = 50;
+    const mag = Math.hypot(dx,dy);
+    const k = mag > max ? max/mag : 1;
+    const kx = dx*k, ky = dy*k;
+    stickKnob.style.left = (input.stickStart[0]+kx) + "px";
+    stickKnob.style.top = (input.stickStart[1]+ky) + "px";
+    input.pointer = {
+      steer: clamp(kx/max, -1, 1),
+      throttle: clamp(-ky/max, -1, 1)
+    };
+  }
+  function hideStick() {
+    input.pointer = null;
+    stickBase.style.display = "none";
+    stickKnob.style.display = "none";
+  }
+
+  stickZone.addEventListener("pointerdown", e => {
+    stickZone.setPointerCapture(e.pointerId);
+    input.stickStart = [e.clientX, e.clientY];
+    showStick(e.clientX, e.clientY);
+    moveStick(e.clientX, e.clientY);
+  });
+  stickZone.addEventListener("pointermove", e => {
+    if (stickZone.hasPointerCapture(e.pointerId)) moveStick(e.clientX, e.clientY);
+  });
+  stickZone.addEventListener("pointerup", e => { hideStick(); });
+  stickZone.addEventListener("pointercancel", e => { hideStick(); });
+
+  addEventListener("keydown", e => {
+    input.keys[e.key.toLowerCase()] = true;
+    if (e.key === " ") input.brake = true;
+    if (e.key.toLowerCase() === "r") resetCar();
+  });
+  addEventListener("keyup", e => {
+    input.keys[e.key.toLowerCase()] = false;
+    if (e.key === " ") input.brake = false;
+  });
+
+  viewBtn.addEventListener("click", () => {
+    camera.mode = (camera.mode + 1) % 3;
+    viewBtn.textContent = "Camera: " + ["chase", "top", "side"][camera.mode];
+  });
+  resetBtn.addEventListener("click", () => resetCar());
+
+  // Prevent accidental browser scrolling/zooming on mobile.
+  document.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+})();
+</script>
+</body>
+</html>

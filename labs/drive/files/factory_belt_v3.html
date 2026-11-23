@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Factory Belt Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Scrolling fix: html+body must not have overflow:hidden.
+   overflow-x:hidden on body alone blocks Android touch-scroll in many browsers.
+   Instead we clip a wrapper. */
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  background: #090909;
+  -webkit-overflow-scrolling: touch;
+}
+body {
+  color: #ccc;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px 36px;
+  gap: 8px;
+  /* No overflow-x:hidden here — it kills Android scrolling */
+}
+h1 {
+  color: #e8a020;
+  font-size: 1.05em;
+  letter-spacing: 4px;
+  text-shadow: 0 0 18px rgba(232,160,32,0.4);
+  user-select: none;
+  padding-top: 4px;
+  white-space: nowrap;
+}
+.controls {
+  width: 100%;
+  max-width: 420px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.62em;
+  color: #505050;
+  letter-spacing: 1.5px;
+}
+.ctrl-row { display: flex; align-items: center; gap: 6px; }
+.ctrl span { color: #e8a020; min-width: 16px; text-align: right; }
+input[type=range] {
+  -webkit-appearance: none;
+  flex: 1; height: 3px;
+  background: #252525; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  background: #e8a020; border-radius: 0; cursor: pointer;
+}
+select {
+  background: #161616; color: #bbb;
+  border: 1px solid #2a2a2a;
+  padding: 5px 6px;
+  font-family: inherit; font-size: 0.63em;
+  letter-spacing: 1px; cursor: pointer; outline: none; width: 100%;
+}
+.full { grid-column: 1 / -1; }
+.btn-row { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 2px; }
+button {
+  flex: 1;
+  background: transparent; color: #e8a020;
+  border: 1px solid #e8a020;
+  padding: 8px; cursor: pointer;
+  font-family: inherit; font-size: 0.68em;
+  letter-spacing: 2px; text-transform: uppercase;
+  transition: background 0.1s, color 0.1s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button:hover  { background: #e8a020; color: #0a0a0a; }
+button:active { background: #b07010; border-color: #b07010; color: #0a0a0a; }
+#canvasWrap { width: 100%; max-width: 420px; }
+/* touch-action: pan-y lets Android scroll vertically through the canvas */
+#canvas { display: block; border: 1px solid #181818; touch-action: pan-y; }
+.footer {
+  font-size: 0.56em; color: #1e1e1e;
+  letter-spacing: 2px; text-transform: uppercase; text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>⚙ FACTORY BELT GENERATOR ⚙</h1>
+
+<div class="controls">
+  <div class="ctrl">
+    BUILDINGS
+    <div class="ctrl-row">
+      <input type="range" id="sCount" min="4" max="16" value="9">
+      <span id="lCount">9</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    DENSITY
+    <div class="ctrl-row">
+      <input type="range" id="sDensity" min="1" max="4" value="2">
+      <span id="lDensity">2</span>
+    </div>
+  </div>
+  <div class="ctrl full">
+    VISUAL STYLE
+    <select id="sStyle">
+      <option value="factorio">FACTORIO BELTS</option>
+      <option value="circuit">CIRCUIT TRACES</option>
+      <option value="network">NETWORK CABLES</option>
+    </select>
+  </div>
+  <div class="btn-row">
+    <button id="btnGen">⟳ GENERATE</button>
+    <button id="btnAnim">⏸ PAUSE</button>
+  </div>
+</div>
+
+<div id="canvasWrap"><canvas id="canvas"></canvas></div>
+<div class="footer">A* routing · lane offsetting · bridge crossings · port indicators</div>
+
+<script>
+// ── Canvas sizing ─────────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+const wrap   = document.getElementById('canvasWrap');
+
+const TILE = 18;
+const COLS = Math.floor(Math.min(wrap.clientWidth || 360, 420) / TILE);
+const ROWS = Math.floor(COLS * 2.2);
+canvas.width  = COLS * TILE;
+canvas.height = ROWS * TILE;
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let buildings    = [];
+let paths        = [];
+let cellGrid     = [];
+let cellMeta     = new Map();
+let pathCellLane = new Map();
+let bridgeCells  = new Map();
+let underSet     = new Set();
+let buildingPorts = []; // per-building array of port descriptors
+
+let animating = true;
+let globalT   = 0;
+let rafId     = null;
+
+// ── Building catalogue ────────────────────────────────────────────────────────
+const BTYPES = [
+  { name:'ASSEMBLER', w:3, h:3, bg:'#0e2235', border:'#1a4870', accent:'#3a88c0', icon:'⚙' },
+  { name:'FURNACE',   w:2, h:2, bg:'#321008', border:'#6a2810', accent:'#c04428', icon:'🔥' },
+  { name:'DRILL',     w:2, h:2, bg:'#1e2a0a', border:'#3c5614', accent:'#6ca020', icon:'⛏' },
+  { name:'CHEST',     w:1, h:1, bg:'#2c1c08', border:'#6a4a14', accent:'#b07828', icon:'📦' },
+  { name:'RADAR',     w:2, h:2, bg:'#0c1a2c', border:'#1a3860', accent:'#3070c0', icon:'📡' },
+  { name:'SCIENCE',   w:3, h:3, bg:'#1c0a2e', border:'#44188a', accent:'#8040d0', icon:'🧪' },
+  { name:'REFINERY',  w:3, h:3, bg:'#281408', border:'#604020', accent:'#c07030', icon:'🏭' },
+  { name:'BOILER',    w:2, h:2, bg:'#2a1820', border:'#683040', accent:'#c05080', icon:'💧' },
+];
+
+const PALETTE = [
+  '#f0b830','#40c890','#5090e0','#e05030','#a060e0',
+  '#40c0c0','#e08020','#60e050','#c040a0','#70b0f0',
+  '#d0d040','#50d0a0','#c09050','#d06080','#80d0d0',
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getDir(cells, i) {
+  return {
+    inDx:  i > 0              ? cells[i].x - cells[i-1].x : 0,
+    inDy:  i > 0              ? cells[i].y - cells[i-1].y : 0,
+    outDx: i < cells.length-1 ? cells[i+1].x - cells[i].x : 0,
+    outDy: i < cells.length-1 ? cells[i+1].y - cells[i].y : 0,
+  };
+}
+
+function getBorderPts(b) {
+  const pts = [];
+  for(let dy=0;dy<b.h;dy++){const x=b.x+b.w,y=b.y+dy;if(x<COLS&&cellGrid[y]?.[x]!==1)pts.push({x,y});}
+  for(let dy=0;dy<b.h;dy++){const x=b.x-1,y=b.y+dy;if(x>=0&&cellGrid[y]?.[x]!==1)pts.push({x,y});}
+  for(let dx=0;dx<b.w;dx++){const x=b.x+dx,y=b.y+b.h;if(y<ROWS&&cellGrid[y]?.[x]!==1)pts.push({x,y});}
+  for(let dx=0;dx<b.w;dx++){const x=b.x+dx,y=b.y-1;if(y>=0&&cellGrid[y]?.[x]!==1)pts.push({x,y});}
+  return pts;
+}
+
+function shade(hex, amt) {
+  const n=parseInt(hex.replace('#',''),16);
+  return `rgb(${Math.min(255,Math.max(0,(n>>16)+amt))},${Math.min(255,Math.max(0,((n>>8)&0xff)+amt))},${Math.min(255,Math.max(0,(n&0xff)+amt))})`;
+}
+
+// Which face does a port cell adjoin for a given building?
+// Returns {dx, dy} pointing FROM building face OUTWARD toward port cell.
+function faceDir(building, portCell) {
+  const {x,y,w,h} = building;
+  if (portCell.x === x - 1)   return { dx:-1, dy:0 };
+  if (portCell.x === x + w)   return { dx:1,  dy:0 };
+  if (portCell.y === y - 1)   return { dx:0,  dy:-1 };
+  if (portCell.y === y + h)   return { dx:0,  dy:1 };
+  return { dx:0, dy:0 };
+}
+
+// ── A* ────────────────────────────────────────────────────────────────────────
+function astar(sx, sy, ex, ey) {
+  if(sx===ex&&sy===ey) return [{x:sx,y:sy}];
+  const K=(x,y)=>y*COLS+x, H=(x,y)=>Math.abs(x-ex)+Math.abs(y-ey);
+  const g=new Map([[K(sx,sy),0]]), cf=new Map();
+  const open=[{x:sx,y:sy,f:H(sx,sy)}], inO=new Set([K(sx,sy)]), cl=new Set();
+  while(open.length){
+    let bi=0;
+    for(let i=1;i<open.length;i++) if(open[i].f<open[bi].f) bi=i;
+    const {x,y}=open.splice(bi,1)[0], ck=K(x,y);
+    inO.delete(ck);
+    if(cl.has(ck)) continue; cl.add(ck);
+    if(x===ex&&y===ey){
+      const path=[]; let k=ck;
+      while(cf.has(k)){path.unshift({x:k%COLS,y:Math.floor(k/COLS)});k=cf.get(k);}
+      path.unshift({x:sx,y:sy}); return path;
+    }
+    const cg=g.get(ck)||0;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=x+dx,ny=y+dy;
+      if(nx<0||ny<0||nx>=COLS||ny>=ROWS) continue;
+      const nk=K(nx,ny);
+      if(cl.has(nk)||cellGrid[ny][nx]===1) continue;
+      const ng=cg+1;
+      if((g.get(nk)??Infinity)<=ng) continue;
+      g.set(nk,ng); cf.set(nk,ck);
+      if(!inO.has(nk)){open.push({x:nx,y:ny,f:ng+H(nx,ny)});inO.add(nk);}
+    }
+  }
+  return null;
+}
+
+// ── Lane & bridge analysis ────────────────────────────────────────────────────
+function buildLaneData() {
+  cellMeta.clear(); pathCellLane.clear(); bridgeCells.clear(); underSet.clear();
+  const LANE_GAP = 4.5;
+
+  for(let pi=0;pi<paths.length;pi++){
+    const {cells}=paths[pi];
+    for(let ci=0;ci<cells.length;ci++){
+      const c=cells[ci];
+      const {inDx,inDy,outDx,outDy}=getDir(cells,ci);
+      const isH=Math.abs(outDx||inDx)>0;
+      const key=`${c.x},${c.y}`;
+      if(!cellMeta.has(key)) cellMeta.set(key,[]);
+      cellMeta.get(key).push({pi,isH});
+    }
+  }
+
+  cellMeta.forEach((entries, key)=>{
+    const [x,y]=key.split(',').map(Number);
+    const hE=entries.filter(e=>e.isH), vE=entries.filter(e=>!e.isH);
+    if(hE.length>0&&vE.length>0){
+      bridgeCells.set(key,{x,y,hPi:hE[0].pi,vPi:vE[0].pi});
+      vE.forEach(e=>underSet.add(`${e.pi},${x},${y}`));
+    }
+    const assign=(group)=>{
+      const n=group.length;
+      group.forEach((e,i)=>{
+        const offset=n>1?(i-(n-1)/2)*LANE_GAP:0;
+        pathCellLane.set(`${e.pi},${x},${y}`,{offset,isH:e.isH});
+      });
+    };
+    assign(hE); assign(vE);
+  });
+}
+
+function screenPt(pi, c) {
+  const lane=pathCellLane.get(`${pi},${c.x},${c.y}`);
+  let sx=c.x*TILE+TILE/2, sy=c.y*TILE+TILE/2;
+  if(lane){ if(lane.isH) sy+=lane.offset; else sx+=lane.offset; }
+  return [sx,sy];
+}
+
+function buildSegments(pi, cells) {
+  const segs=[], EDGE_INSET=3;
+  let cur=[];
+  for(let ci=0;ci<cells.length;ci++){
+    const c=cells[ci], uKey=`${pi},${c.x},${c.y}`;
+    if(underSet.has(uKey)){
+      const {inDx,inDy,outDx,outDy}=getDir(cells,ci);
+      if(inDx||inDy) cur.push([
+        c.x*TILE+TILE/2+inDx*(-(TILE/2-EDGE_INSET)),
+        c.y*TILE+TILE/2+inDy*(-(TILE/2-EDGE_INSET))
+      ]);
+      if(cur.length>=2) segs.push({pts:[...cur],cap:true});
+      cur=[];
+      if(outDx||outDy) cur.push([
+        c.x*TILE+TILE/2+outDx*(TILE/2-EDGE_INSET),
+        c.y*TILE+TILE/2+outDy*(TILE/2-EDGE_INSET)
+      ]);
+    } else {
+      cur.push(screenPt(pi,c));
+    }
+  }
+  if(cur.length>=2) segs.push({pts:cur,cap:false});
+  return segs;
+}
+
+function polyLen(pts){
+  let L=0;
+  for(let i=1;i<pts.length;i++){const dx=pts[i][0]-pts[i-1][0],dy=pts[i][1]-pts[i-1][1];L+=Math.sqrt(dx*dx+dy*dy);}
+  return L;
+}
+
+function polyLerp(pts,f){
+  const total=polyLen(pts);let target=f*total,dist=0;
+  for(let i=1;i<pts.length;i++){
+    const dx=pts[i][0]-pts[i-1][0],dy=pts[i][1]-pts[i-1][1],segL=Math.sqrt(dx*dx+dy*dy);
+    if(dist+segL>=target){const t=(target-dist)/segL;return [pts[i-1][0]+dx*t,pts[i-1][1]+dy*t];}
+    dist+=segL;
+  }
+  return pts[pts.length-1];
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+function generate() {
+  const count  = +document.getElementById('sCount').value;
+  const density= +document.getElementById('sDensity').value;
+  cellGrid=Array.from({length:ROWS},()=>new Array(COLS).fill(0));
+  buildings=[]; paths=[]; buildingPorts=[];
+
+  // Place buildings
+  let tries=0;
+  while(buildings.length<count&&tries<4000){
+    tries++;
+    const type=BTYPES[Math.floor(Math.random()*BTYPES.length)];
+    const {w,h}=type;
+    const x=1+Math.floor(Math.random()*(COLS-w-2));
+    const y=1+Math.floor(Math.random()*(ROWS-h-2));
+    const margin=Math.max(1,3-density);
+    let ok=true;
+    outer:for(let dy=-margin;dy<h+margin;dy++)
+      for(let dx=-margin;dx<w+margin;dx++){
+        const gy=y+dy,gx=x+dx;
+        if(gy>=0&&gy<ROWS&&gx>=0&&gx<COLS&&cellGrid[gy][gx]!==0){ok=false;break outer;}
+      }
+    if(!ok) continue;
+    for(let dy=0;dy<h;dy++) for(let dx=0;dx<w;dx++) cellGrid[y+dy][x+dx]=1;
+    buildings.push({x,y,w,h,type,ports:[]});
+  }
+  if(buildings.length<2) return;
+
+  buildings.sort((a,b)=>(a.x+a.w/2)-(b.x+b.w/2));
+
+  // Build connections
+  const conns=new Set();
+  for(let i=0;i<buildings.length-1;i++) conns.add(`${i},${i+1}`);
+  const extras=Math.floor(buildings.length*0.4*(density/4));
+  for(let e=0;e<extras;e++){
+    const a=Math.floor(Math.random()*buildings.length);
+    const b=Math.floor(Math.random()*buildings.length);
+    if(a!==b) conns.add([a,b].sort().join(','));
+  }
+
+  // Route paths
+  let ci=0;
+  for(const key of conns){
+    const [ai,bi]=key.split(',').map(Number);
+    const ba=buildings[ai],bb=buildings[bi];
+    const exits=getBorderPts(ba).slice(0,4);
+    const entries=getBorderPts(bb).slice(0,4);
+    let best=null,bestEp=null,bestEn=null,bestLen=Infinity;
+    for(const ep of exits) for(const en of entries){
+      if(ep.x===en.x&&ep.y===en.y) continue;
+      const p=astar(ep.x,ep.y,en.x,en.y);
+      if(p&&p.length<bestLen){bestLen=p.length;best=p;bestEp=ep;bestEn=en;}
+    }
+    if(!best||best.length<2) continue;
+    for(const c of best) if(cellGrid[c.y][c.x]!==1) cellGrid[c.y][c.x]=2;
+
+    const colorIdx = ci % PALETTE.length;
+    paths.push({cells:best, colorIdx, fromIdx:ai, toIdx:bi});
+
+    // Record port on both buildings
+    if(bestEp){
+      const fd=faceDir(ba,bestEp);
+      ba.ports.push({
+        cellX:bestEp.x, cellY:bestEp.y,
+        colorIdx, isEntry:false,
+        dx:fd.dx, dy:fd.dy
+      });
+    }
+    if(bestEn){
+      const fd=faceDir(bb,bestEn);
+      bb.ports.push({
+        cellX:bestEn.x, cellY:bestEn.y,
+        colorIdx, isEntry:true,
+        dx:fd.dx, dy:fd.dy
+      });
+    }
+    ci++;
+  }
+
+  buildLaneData();
+}
+
+// ── Draw BG ───────────────────────────────────────────────────────────────────
+function drawBG(style) {
+  ctx.fillStyle=style==='circuit'?'#030a03':'#080808';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle=style==='circuit'?'#070f07':'#111';
+  ctx.lineWidth=0.5;
+  for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*TILE,0);ctx.lineTo(x*TILE,canvas.height);ctx.stroke();}
+  for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*TILE);ctx.lineTo(canvas.width,y*TILE);ctx.stroke();}
+}
+
+// ── Draw buildings (body only, no ports yet) ──────────────────────────────────
+function drawBuildings() {
+  for(const b of buildings){
+    const px=b.x*TILE,py=b.y*TILE,w=b.w*TILE,h=b.h*TILE,tp=b.type;
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.45)';
+    ctx.fillRect(px+3,py+3,w,h);
+    // Body
+    ctx.fillStyle=tp.bg; ctx.fillRect(px,py,w,h);
+    // Top accent bar
+    ctx.fillStyle=tp.accent; ctx.fillRect(px,py,w,3);
+    // Border
+    ctx.strokeStyle=tp.border; ctx.lineWidth=1.5;
+    ctx.strokeRect(px+.75,py+.75,w-1.5,h-1.5);
+    // Corner brackets
+    const cs=4; ctx.fillStyle=tp.accent;
+    [[0,0],[w-cs,0],[0,h-cs],[w-cs,h-cs]].forEach(([ox,oy])=>{
+      ctx.fillRect(px+ox,py+oy,cs,1.5); ctx.fillRect(px+ox,py+oy,1.5,cs);
+    });
+    // Icon
+    const fs=Math.min(w,h)*0.38;
+    ctx.font=`${fs}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tp.icon,px+w/2,py+h/2+1);
+    // Name
+    if(b.w>=2){
+      ctx.fillStyle='rgba(255,255,255,0.38)'; ctx.font='bold 5px monospace';
+      ctx.textBaseline='bottom'; ctx.fillText(tp.name,px+w/2,py+h-2);
+    }
+    // Status light
+    if(b.w>=3){
+      const lit=Math.sin(globalT*2+b.x)>0.5;
+      ctx.fillStyle=lit?'#40ff60':'#1a3a20';
+      ctx.beginPath(); ctx.arc(px+w-5,py+6,1.8,0,Math.PI*2); ctx.fill();
+    }
+  }
+}
+
+// ── Draw port indicators ──────────────────────────────────────────────────────
+// Called AFTER belt paths so ports draw on top of the belt entry/exit point.
+function drawPorts(style) {
+  for(const b of buildings){
+    for(const port of b.ports){
+      const color  = PALETTE[port.colorIdx];
+      const {dx, dy, isEntry, cellX, cellY} = port;
+      const bpx    = b.x * TILE, bpy = b.y * TILE;
+      const bw     = b.w * TILE, bh  = b.h * TILE;
+
+      // Center of the port cell (1 tile outside the building)
+      const portCX = cellX * TILE + TILE / 2;
+      const portCY = cellY * TILE + TILE / 2;
+
+      // The point on the building wall face closest to this port cell
+      // face wall position = building edge in the direction dx/dy
+      let wallX, wallY, slotW, slotH;
+      if(dx === -1){ // left face
+        wallX=bpx; wallY=portCY;
+        slotW=5; slotH=TILE*0.6;
+      } else if(dx === 1){ // right face
+        wallX=bpx+bw; wallY=portCY;
+        slotW=5; slotH=TILE*0.6;
+      } else if(dy === -1){ // top face
+        wallX=portCX; wallY=bpy;
+        slotW=TILE*0.6; slotH=5;
+      } else { // bottom face
+        wallX=portCX; wallY=bpy+bh;
+        slotW=TILE*0.6; slotH=5;
+      }
+
+      if(style === 'circuit'){
+        drawPortCircuit(color, wallX, wallY, dx, dy, isEntry, slotW, slotH);
+      } else if(style === 'network'){
+        drawPortNetwork(color, wallX, wallY, dx, dy, isEntry, slotW, slotH);
+      } else {
+        drawPortFactorio(color, wallX, wallY, dx, dy, isEntry, slotW, slotH);
+      }
+    }
+  }
+}
+
+function drawPortFactorio(color, wx, wy, dx, dy, isEntry, sw, sh) {
+  ctx.save();
+  const isHoriz = dx !== 0;
+
+  // Slot recess into wall
+  const slotDepth = 6;
+  ctx.fillStyle = '#0a0705';
+  if(isHoriz){
+    const sx = dx < 0 ? wx - slotDepth : wx;
+    ctx.fillRect(sx, wy - sh/2, slotDepth, sh);
+  } else {
+    const sy = dy < 0 ? wy - slotDepth : wy;
+    ctx.fillRect(wx - sw/2, sy, sw, slotDepth);
+  }
+
+  // Belt rails inside the slot
+  ctx.fillStyle = color;
+  if(isHoriz){
+    const sx = dx < 0 ? wx - slotDepth : wx;
+    ctx.fillRect(sx, wy - sh/2,     slotDepth, 1.5);
+    ctx.fillRect(sx, wy + sh/2-1.5, slotDepth, 1.5);
+  } else {
+    const sy = dy < 0 ? wy - slotDepth : wy;
+    ctx.fillRect(wx - sw/2,     sy, 1.5, slotDepth);
+    ctx.fillRect(wx + sw/2-1.5, sy, 1.5, slotDepth);
+  }
+
+  // Arrow triangle showing direction (isEntry: pointing INTO building, else OUT)
+  // Arrow points in direction of belt travel
+  const arrowDir = isEntry ? {ax:-dx, ay:-dy} : {ax:dx, ay:dy};
+  // Position the arrowhead at the wall edge
+  const arrowX = wx + arrowDir.ax * 2;
+  const arrowY = wy + arrowDir.ay * 2;
+  const arrowSize = 4;
+  ctx.translate(arrowX, arrowY);
+  ctx.rotate(Math.atan2(arrowDir.ay, arrowDir.ax));
+  ctx.fillStyle = isEntry ? color : shade(color, 40);
+  ctx.beginPath();
+  ctx.moveTo(arrowSize, 0);
+  ctx.lineTo(-arrowSize, -arrowSize * 0.65);
+  ctx.lineTo(-arrowSize * 0.5, 0);
+  ctx.lineTo(-arrowSize, arrowSize * 0.65);
+  ctx.closePath();
+  ctx.fill();
+
+  // Outer glow ring
+  ctx.restore();
+  ctx.save();
+  const glowR = 4;
+  const gx = ctx.createRadialGradient(wx, wy, 0, wx, wy, glowR * 2.5);
+  gx.addColorStop(0, color + '99');
+  gx.addColorStop(1, color + '00');
+  ctx.fillStyle = gx;
+  ctx.beginPath(); ctx.arc(wx, wy, glowR * 2.5, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawPortCircuit(color, wx, wy, dx, dy, isEntry, sw, sh) {
+  ctx.save();
+  const padW = dy !== 0 ? sw : 4;
+  const padH = dx !== 0 ? sh : 4;
+  const px = wx - padW / 2, py = wy - padH / 2;
+
+  // Solder pad
+  ctx.fillStyle = shade(color, -30);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.8;
+  ctx.fillRect(px, py, padW, padH);
+  ctx.strokeRect(px, py, padW, padH);
+
+  // Via hole in center
+  ctx.fillStyle = '#030a03';
+  ctx.beginPath(); ctx.arc(wx, wy, 1.6, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = color + 'cc'; ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.arc(wx, wy, 1.6, 0, Math.PI*2); ctx.stroke();
+
+  // Directional tick mark showing in/out
+  const tickDir = isEntry ? -1 : 1;
+  ctx.strokeStyle = color; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(wx + dx*3*tickDir, wy + dy*3*tickDir);
+  ctx.lineTo(wx + dx*7*tickDir, wy + dy*7*tickDir);
+  ctx.stroke();
+  // arrowhead on tick
+  const ta = Math.atan2(dy*tickDir, dx*tickDir);
+  ctx.translate(wx + dx*7*tickDir, wy + dy*7*tickDir);
+  ctx.rotate(ta);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.moveTo(3,0); ctx.lineTo(-2,-2); ctx.lineTo(-2,2); ctx.closePath(); ctx.fill();
+
+  // Color label dot
+  ctx.restore();
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(wx, wy, 2.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#030a03';
+  ctx.beginPath(); ctx.arc(wx, wy, 1, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawPortNetwork(color, wx, wy, dx, dy, isEntry, sw, sh) {
+  ctx.save();
+
+  // Wall plate
+  const pw = dy !== 0 ? sw + 2 : 6, ph = dx !== 0 ? sh + 2 : 6;
+  ctx.fillStyle = '#1a1a1a';
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 0.8;
+  ctx.fillRect(wx - pw/2, wy - ph/2, pw, ph);
+  ctx.strokeRect(wx - pw/2, wy - ph/2, pw, ph);
+
+  // Cable port hole
+  ctx.fillStyle = '#050505';
+  ctx.beginPath(); ctx.arc(wx, wy, 3, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(wx, wy, 3, 0, Math.PI*2); ctx.stroke();
+
+  // Colored ring
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(wx, wy, 4.5, 0, Math.PI*2); ctx.stroke();
+
+  // Direction arrow alongside port
+  const arrowDir = isEntry ? {ax:-dx, ay:-dy} : {ax:dx, ay:dy};
+  const ax = wx + arrowDir.ax * 9;
+  const ay = wy + arrowDir.ay * 9;
+  ctx.translate(ax, ay);
+  ctx.rotate(Math.atan2(arrowDir.ay, arrowDir.ax));
+  ctx.fillStyle = color + 'cc';
+  ctx.beginPath(); ctx.moveTo(3.5,0); ctx.lineTo(-2.5,-2); ctx.lineTo(-2.5,2); ctx.closePath(); ctx.fill();
+
+  ctx.restore();
+}
+
+// ── Bridge icons ──────────────────────────────────────────────────────────────
+function drawBridges(style) {
+  bridgeCells.forEach(({x,y,hPi,vPi})=>{
+    const cx=x*TILE+TILE/2, cy=y*TILE+TILE/2;
+    const hColor=PALETTE[paths[hPi]?.colorIdx??0];
+    const vColor=PALETTE[paths[vPi]?.colorIdx??0];
+
+    if(style==='circuit'){
+      const bw=TILE*0.82,bh=6.5;
+      ctx.fillStyle=vColor+'99';
+      ctx.fillRect(cx-bw/2-4,cy-1.5,5,3); ctx.fillRect(cx+bw/2-1,cy-1.5,5,3);
+      ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(cx-bw/2+1.5,cy-bh/2+2,bw,bh);
+      ctx.fillStyle='#0d0d0d'; ctx.fillRect(cx-bw/2,cy-bh/2,bw,bh);
+      ctx.strokeStyle=hColor; ctx.lineWidth=0.8; ctx.strokeRect(cx-bw/2,cy-bh/2,bw,bh);
+      ctx.fillStyle=hColor+'bb'; ctx.beginPath(); ctx.arc(cx-bw/2+3,cy-bh/2+2.5,1.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=hColor; ctx.font='bold 5px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('0Ω',cx,cy);
+      ctx.strokeStyle=hColor; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.moveTo(cx-bw/2-4,cy); ctx.lineTo(cx-bw/2,cy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+bw/2,cy); ctx.lineTo(cx+bw/2+4,cy); ctx.stroke();
+
+    } else if(style==='network'){
+      const bw=TILE*0.85,bh=7,archH=5;
+      ctx.save(); ctx.strokeStyle=vColor+'70'; ctx.lineWidth=4; ctx.setLineDash([2,3]);
+      ctx.beginPath(); ctx.moveTo(cx,cy-TILE*0.35); ctx.lineTo(cx,cy+TILE*0.35); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+      ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(cx-bw/2+1.5,cy-bh/2+2,bw,bh);
+      ctx.fillStyle='#151515'; ctx.strokeStyle='#383838'; ctx.lineWidth=1;
+      ctx.fillRect(cx-bw/2,cy-bh/2,bw,bh); ctx.strokeRect(cx-bw/2,cy-bh/2,bw,bh);
+      ctx.strokeStyle=hColor; ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.beginPath();
+      ctx.moveTo(cx-bw/2+2,cy-bh/2); ctx.lineTo(cx-bw/2+2,cy-bh/2-archH);
+      ctx.lineTo(cx+bw/2-2,cy-bh/2-archH); ctx.lineTo(cx+bw/2-2,cy-bh/2);
+      ctx.stroke();
+      ctx.fillStyle='#404040';
+      ctx.fillRect(cx-bw/2+2,cy-1.5,3,3); ctx.fillRect(cx+bw/2-5,cy-1.5,3,3);
+      ctx.strokeStyle=hColor; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(cx-bw/2-2,cy); ctx.lineTo(cx+bw/2+2,cy); ctx.stroke();
+
+    } else {
+      const bw=TILE*0.9,bh=9;
+      ctx.save(); ctx.strokeStyle=vColor+'60'; ctx.lineWidth=3; ctx.setLineDash([2,3]);
+      ctx.beginPath(); ctx.moveTo(cx,cy-TILE*0.38); ctx.lineTo(cx,cy+TILE*0.38); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+      ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(cx-bw/2+2,cy-bh/2+3,bw,bh);
+      ctx.fillStyle='#1e1408'; ctx.strokeStyle='#c89020'; ctx.lineWidth=1;
+      ctx.fillRect(cx-bw/2,cy-bh/2,bw,bh); ctx.strokeRect(cx-bw/2,cy-bh/2,bw,bh);
+      ctx.strokeStyle='rgba(200,140,30,0.45)'; ctx.lineWidth=0.8;
+      ctx.beginPath();
+      ctx.moveTo(cx-bw/2+2,cy-bh/2+1); ctx.lineTo(cx,cy+bh/2-1);
+      ctx.moveTo(cx+bw/2-2,cy-bh/2+1); ctx.lineTo(cx,cy+bh/2-1);
+      ctx.moveTo(cx-bw/2+2,cy+bh/2-1); ctx.lineTo(cx,cy-bh/2+1);
+      ctx.moveTo(cx+bw/2-2,cy+bh/2-1); ctx.lineTo(cx,cy-bh/2+1);
+      ctx.stroke();
+      ctx.fillStyle='#c89020';
+      ctx.fillRect(cx-bw/2,cy-bh/2,bw,2); ctx.fillRect(cx-bw/2,cy+bh/2-2,bw,2);
+      ctx.fillStyle='#e8a020';
+      ctx.fillRect(cx-bw/2,cy-bh/2,3,bh); ctx.fillRect(cx+bw/2-3,cy-bh/2,3,bh);
+      ctx.fillStyle=hColor; ctx.fillRect(cx-bw/2,cy-1,bw,2);
+    }
+  });
+}
+
+// ── Belt styles ───────────────────────────────────────────────────────────────
+function drawFactorio(t) {
+  for(let pi=0;pi<paths.length;pi++){
+    const path=paths[pi];
+    const color=PALETTE[path.colorIdx];
+    const segs=buildSegments(pi,path.cells);
+    for(const {pts,cap} of segs){
+      if(pts.length<2) continue;
+      ctx.save();
+      // Tray
+      ctx.strokeStyle='#180f00'; ctx.lineWidth=TILE*0.72;
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.beginPath(); pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)); ctx.stroke();
+      // Animated panels
+      const dLen=TILE*0.38,dGap=TILE*0.22;
+      ctx.strokeStyle='#6e4402'; ctx.lineWidth=TILE*0.48;
+      ctx.lineCap='butt'; ctx.setLineDash([dLen,dGap]);
+      ctx.lineDashOffset=-(t*11)%(dLen+dGap);
+      ctx.beginPath(); pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)); ctx.stroke();
+      ctx.setLineDash([]);
+      // Colored side rails
+      const railOff=TILE*0.31;
+      for(const sign of [-1,1]){
+        const rp=pts.map(([x,y],i)=>{
+          let dx=0,dy=0;
+          if(i<pts.length-1){dx=pts[i+1][0]-x;dy=pts[i+1][1]-y;}
+          else{dx=x-pts[i-1][0];dy=y-pts[i-1][1];}
+          const len=Math.sqrt(dx*dx+dy*dy)||1;
+          const nx=-dy/len,ny=dx/len;
+          return [x+nx*railOff*sign,y+ny*railOff*sign];
+        });
+        ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.lineJoin='round';
+        ctx.beginPath(); rp.forEach(([rx,ry],i)=>i===0?ctx.moveTo(rx,ry):ctx.lineTo(rx,ry)); ctx.stroke();
+      }
+      // Chevrons
+      const arrowStep=TILE*2.4;
+      let dist=arrowStep*0.5,segD=0;
+      for(let i=0;i<pts.length-1;i++){
+        const dx=pts[i+1][0]-pts[i][0],dy=pts[i+1][1]-pts[i][1],len=Math.sqrt(dx*dx+dy*dy);
+        while(dist<segD+len){
+          const f=(dist-segD)/len;
+          const ax=pts[i][0]+dx*f,ay=pts[i][1]+dy*f;
+          ctx.save(); ctx.translate(ax,ay); ctx.rotate(Math.atan2(dy,dx));
+          ctx.fillStyle='rgba(255,210,80,0.9)';
+          ctx.beginPath(); ctx.moveTo(5,0); ctx.lineTo(-3,-2.5); ctx.lineTo(-2,0); ctx.lineTo(-3,2.5);
+          ctx.closePath(); ctx.fill(); ctx.restore();
+          dist+=arrowStep;
+        }
+        segD+=len;
+      }
+      if(cap){
+        const [lx,ly]=pts[pts.length-1];
+        ctx.fillStyle=color; ctx.strokeStyle='#000'; ctx.lineWidth=0.8;
+        ctx.beginPath(); ctx.arc(lx,ly,3,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+}
+
+function drawCircuit(t) {
+  for(let pi=0;pi<paths.length;pi++){
+    const path=paths[pi];
+    const color=PALETTE[path.colorIdx];
+    const segs=buildSegments(pi,path.cells);
+    for(const {pts,cap} of segs){
+      if(pts.length<2) continue;
+      const line=(w,c,a=1)=>{
+        ctx.save(); ctx.strokeStyle=c; ctx.lineWidth=w;
+        ctx.lineCap='round'; ctx.lineJoin='miter'; ctx.globalAlpha=a;
+        ctx.beginPath(); pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+        ctx.stroke(); ctx.restore();
+      };
+      line(12,color,0.06); line(6,color,0.12); line(2.5,color); line(1,'rgba(255,255,255,0.22)');
+      // Vias at turns
+      for(let ci=1;ci<path.cells.length-1;ci++){
+        const c=path.cells[ci];
+        if(underSet.has(`${pi},${c.x},${c.y}`)) continue;
+        const {inDx,inDy,outDx,outDy}=getDir(path.cells,ci);
+        if(inDx!==outDx||inDy!==outDy){
+          const [vx,vy]=screenPt(pi,c);
+          ctx.fillStyle=shade(color,-35);
+          ctx.beginPath(); ctx.arc(vx,vy,4,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle='#030a03';
+          ctx.beginPath(); ctx.arc(vx,vy,2,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=color; ctx.lineWidth=0.8;
+          ctx.beginPath(); ctx.arc(vx,vy,4,0,Math.PI*2); ctx.stroke();
+        }
+      }
+      // Signal packet
+      const cycle=((t*0.36+pi*0.23)%1+1)%1;
+      const [sx,sy]=polyLerp(pts,cycle);
+      const grad=ctx.createRadialGradient(sx,sy,0,sx,sy,9);
+      grad.addColorStop(0,color); grad.addColorStop(0.4,color+'55'); grad.addColorStop(1,color+'00');
+      ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(sx,sy,9,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(sx,sy,1.8,0,Math.PI*2); ctx.fill();
+      // End pads
+      for(const ep of [pts[0],pts[pts.length-1]]){
+        ctx.fillStyle=color; ctx.beginPath(); ctx.arc(ep[0],ep[1],4.5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#030a03'; ctx.beginPath(); ctx.arc(ep[0],ep[1],2,0,Math.PI*2); ctx.fill();
+      }
+    }
+  }
+}
+
+function drawNetwork(t) {
+  for(let pi=0;pi<paths.length;pi++){
+    const segs=buildSegments(pi,paths[pi].cells);
+    for(const {pts} of segs){
+      if(pts.length<2) continue;
+      ctx.save(); ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=10;
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.beginPath(); pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x+2,y+2):ctx.lineTo(x+2,y+2));
+      ctx.stroke(); ctx.restore();
+    }
+  }
+  for(let pi=0;pi<paths.length;pi++){
+    const path=paths[pi], color=PALETTE[path.colorIdx];
+    const segs=buildSegments(pi,path.cells);
+    for(const {pts,cap} of segs){
+      if(pts.length<2) continue;
+      const cable=(w,c,a=1)=>{
+        ctx.save(); ctx.strokeStyle=c; ctx.lineWidth=w;
+        ctx.lineCap='round'; ctx.lineJoin='round'; ctx.globalAlpha=a;
+        ctx.beginPath(); pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+        ctx.stroke(); ctx.restore();
+      };
+      cable(9,shade(color,-55)); cable(7,shade(color,-22)); cable(5,color); cable(2,'rgba(255,255,255,0.2)');
+      // Chevrons
+      const step=TILE*3; let dist=step*0.4,segD=0;
+      for(let i=0;i<pts.length-1;i++){
+        const dx=pts[i+1][0]-pts[i][0],dy=pts[i+1][1]-pts[i][1],len=Math.sqrt(dx*dx+dy*dy);
+        while(dist<segD+len){
+          const f=(dist-segD)/len;
+          const ax=pts[i][0]+dx*f,ay=pts[i][1]+dy*f;
+          ctx.save(); ctx.translate(ax,ay); ctx.rotate(Math.atan2(dy,dx));
+          ctx.fillStyle='rgba(255,255,255,0.38)';
+          ctx.beginPath(); ctx.moveTo(5,0); ctx.lineTo(-3,-2.5); ctx.lineTo(-3,2.5); ctx.closePath(); ctx.fill();
+          ctx.restore(); dist+=step;
+        }
+        segD+=len;
+      }
+      // Ripple
+      const cycle=((t*0.29+pi*0.19)%1+1)%1;
+      const [rx,ry]=polyLerp(pts,cycle);
+      const grad=ctx.createRadialGradient(rx,ry,0,rx,ry,11);
+      grad.addColorStop(0,'rgba(255,255,255,0.75)');
+      grad.addColorStop(0.3,color+'90'); grad.addColorStop(1,color+'00');
+      ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(rx,ry,11,0,Math.PI*2); ctx.fill();
+      // RJ45 plugs
+      for(const ep of [pts[0],pts[pts.length-1]]){
+        const [ex,ey]=ep;
+        ctx.fillStyle=shade(color,-40); ctx.strokeStyle=color; ctx.lineWidth=1.2;
+        ctx.fillRect(ex-4,ey-3,8,6); ctx.strokeRect(ex-4,ey-3,8,6);
+        ctx.fillStyle='#050505';
+        for(let p=0;p<3;p++) ctx.fillRect(ex-2+p*1.6,ey-1.5,1.1,3);
+      }
+    }
+  }
+}
+
+// ── Render loop ───────────────────────────────────────────────────────────────
+function frame(ts) {
+  globalT = ts / 1000;
+  const style = document.getElementById('sStyle').value;
+  drawBG(style);
+
+  // Draw paths first
+  if(style === 'factorio')     drawFactorio(globalT);
+  else if(style === 'circuit') drawCircuit(globalT);
+  else                         drawNetwork(globalT);
+
+  // Bridges on top of paths
+  drawBridges(style);
+
+  // Buildings on top (they clip over belt ends naturally)
+  drawBuildings();
+
+  // Ports last — drawn on building edges, on top of everything
+  drawPorts(style);
+
+  if(animating) rafId = requestAnimationFrame(frame);
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+document.getElementById('sCount').addEventListener('input', function(){
+  document.getElementById('lCount').textContent = this.value;
+});
+document.getElementById('sDensity').addEventListener('input', function(){
+  document.getElementById('lDensity').textContent = this.value;
+});
+
+const redraw = () => requestAnimationFrame(ts => {
+  globalT = ts / 1000;
+  const s = document.getElementById('sStyle').value;
+  drawBG(s);
+  if(s === 'factorio') drawFactorio(globalT);
+  else if(s === 'circuit') drawCircuit(globalT);
+  else drawNetwork(globalT);
+  drawBridges(s);
+  drawBuildings();
+  drawPorts(s);
+});
+
+document.getElementById('btnGen').addEventListener('click', () => {
+  generate();
+  if(!animating) redraw();
+});
+document.getElementById('btnAnim').addEventListener('click', function(){
+  animating = !animating;
+  this.textContent = animating ? '⏸ PAUSE' : '▶ PLAY';
+  if(animating) rafId = requestAnimationFrame(frame);
+});
+document.getElementById('sStyle').addEventListener('change', () => {
+  if(!animating) redraw();
+});
+
+generate();
+rafId = requestAnimationFrame(frame);
+</script>
+</body>
+</html>
