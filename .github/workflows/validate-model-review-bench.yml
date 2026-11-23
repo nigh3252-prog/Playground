@@ -28,6 +28,10 @@ jobs:
         run: |
           npm install --prefix /tmp/model-bench-check playwright@1.56.1
           /tmp/model-bench-check/node_modules/.bin/playwright install --only-shell chromium
+      - name: Test the VR room placement and persistence in Chromium
+        env:
+          MODEL_BENCH_PLAYWRIGHT_MODULE: /tmp/model-bench-check/node_modules/playwright
+        run: node --test models/tests/vr-room.test.mjs
       - name: Test the shared viewer on desktop and phone
         env:
           MODEL_BENCH_PLAYWRIGHT_MODULE: /tmp/model-bench-check/node_modules/playwright
