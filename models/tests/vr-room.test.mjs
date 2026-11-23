@@ -42,10 +42,10 @@ test('VR room loads the three models and restores the tray, shelf placements, an
 
     await page.getByText('Desktop controls', {exact: true}).click();
     await page.getByRole('button', {name: 'Pull out tray'}).click();
-    await page.getByLabel('Miniature', {exact: true}).selectOption(PIECES[0].id);
+    await page.locator('#miniature').selectOption(PIECES[0].id);
     await page.getByRole('button', {name: 'Turn 45°'}).click();
     await page.getByRole('button', {name: 'Place on shelf 1'}).click();
-    await page.getByLabel('Miniature', {exact: true}).selectOption(PIECES[1].id);
+    await page.locator('#miniature').selectOption(PIECES[1].id);
     assert(await page.getByRole('button', {name: 'Place on shelf 1'}).isDisabled());
     await page.getByRole('button', {name: 'Place on shelf 2'}).click();
     assert.deepEqual(errors, []);
@@ -56,7 +56,7 @@ test('VR room loads the three models and restores the tray, shelf placements, an
     await page.getByText('Mike, Warden, and Keraunos are ready.').waitFor({timeout: 30000});
     await page.getByText('Desktop controls', {exact: true}).click();
     assert.equal(await page.getByRole('button', {name: 'Close tray'}).getAttribute('aria-expanded'), 'true');
-    const options = await page.getByLabel('Miniature', {exact: true}).locator('option').allTextContents();
+    const options = await page.locator('#miniature').locator('option').allTextContents();
     assert.deepEqual(options.slice(1), ['Mike · Shelf 1', 'Warden · Shelf 2', 'Keraunos · Tray 3']);
     const layout = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), STORAGE_KEY);
     assert.equal(layout.pieces[PIECES[0].id].yaw, Math.PI / 4);
